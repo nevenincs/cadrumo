@@ -12,6 +12,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
+    AdministrationSubject,
     administration_subject,
     changed,
 )
@@ -112,6 +113,34 @@ def _invoke_reference(*, invoke_cli, profile_id: UUID, reference: UUID, command:
     )
 
 
+def _enroll_view_only_api_key(subject: AdministrationSubject) -> tuple[str, UUID, UUID]:
+    """Approve a profile-view-scoped enrollment and return its secret, credential reference and profile id."""
+    requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
+    subject.owner.requesting = requester
+    subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
+        requester=requester, secrets_store=subject.client_native
+    )
+    scope = _view_scope(requester.client_id)
+    facts = subject.owner.current
+    assert facts.session is not None
+    subject.owner.current = changed(
+        facts,
+        profile=changed(facts.profile, scope=scope),
+        session=changed(facts.session, scope=scope),
+    )
+    proposal = changed(subject.proposal, scope=scope)
+    request_id = uuid4()
+    subject.service.request(request_id, proposal)
+    completed = subject.approve(request_id)
+    reference = completed.credential_reference
+    assert isinstance(reference, UUID)
+    record = next(item for item in subject.store.enrollment_state().requests if item.request_id == request_id)
+    credential = subject.owner.delivery.endpoint.possession(record)
+    assert credential is not None and completed.key_id is not None
+    secret: str = credential.get_secret_value().decode("ascii")
+    return secret, reference, subject.store.binding.profile_id
+
+
 def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_become_human(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, run_cadrumo_cli
 ) -> None:
@@ -124,30 +153,7 @@ def test_enrolled_api_key_and_reference_read_only_their_profile_and_cannot_becom
     with administration_subject(
         tmp_path, os_owner_id=owner_id(), installation_id=installation_record.installation_id
     ) as subject:
-        requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
-        subject.owner.requesting = requester
-        subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
-            requester=requester, secrets_store=subject.client_native
-        )
-        scope = _view_scope(requester.client_id)
-        facts = subject.owner.current
-        assert facts.session is not None
-        subject.owner.current = changed(
-            facts,
-            profile=changed(facts.profile, scope=scope),
-            session=changed(facts.session, scope=scope),
-        )
-        proposal = changed(subject.proposal, scope=scope)
-        request_id = uuid4()
-        subject.service.request(request_id, proposal)
-        completed = subject.approve(request_id)
-        assert completed.credential_reference is not None
-        record = next(item for item in subject.store.enrollment_state().requests if item.request_id == request_id)
-        credential = subject.owner.delivery.endpoint.possession(record)
-        assert credential is not None and completed.key_id is not None
-        secret = credential.get_secret_value().decode("ascii")
-        reference = completed.credential_reference
-        profile_id = subject.store.binding.profile_id
+        secret, reference, profile_id = _enroll_view_only_api_key(subject)
 
         close_active_bucket_session()
         create, decode = profile_authority_contexts()
