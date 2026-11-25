@@ -15,9 +15,11 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.aggregation.source_profile import ProfileSourceResolver
+from .....application.user_profile.tests.profile_values import complete_profile_facts
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.calculations.registry.tests.published_authority import published_profile_schema
 from .....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -48,12 +50,16 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
+    # A COMPLETE fixture must pass the completion door, so every other owed fact is stated too.
     return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
-            UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+        facts=complete_profile_facts(
+            published_profile_schema(),
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
+                UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+            ),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

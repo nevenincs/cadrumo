@@ -17,6 +17,7 @@ yanked = "deny"
 ignore = [
     { id = "RUSTSEC-2024-0429", reason = "glib 0.18.5 VariantStrIter unsoundness: patched only in glib 0.20, which the gtk 0.18 bindings pinned by tauri's wry/tao/muda cannot use; Linux-only, and cadrumo calls no glib API" },
     { id = "RUSTSEC-2024-0370", reason = "proc-macro-error 1.0.4 is unmaintained (no patched release exists): a compile-time dependency of glib-macros and gtk3-macros in the same Linux-only gtk3 stack" },
+    { id = "RUSTSEC-2026-0543", reason = "informational: unmaintained, no known vulnerability; transitive via tauri-utils and serde_with; replacement not proportionate" },
 ]
 
 [licenses]

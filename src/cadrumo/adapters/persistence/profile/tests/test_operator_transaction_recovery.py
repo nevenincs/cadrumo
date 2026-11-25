@@ -243,8 +243,14 @@ def test_concurrent_first_workflow_writers_retry_absent_row_collision(
 def test_concurrent_auth_writers_are_serialized_without_losing_events(
     tmp_path: Path,
 ) -> None:
-    """Two real writer threads preserve both workflow and durable events."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    """Two real writer threads preserve both workflow and durable events.
+
+    Both writers run under the one unlocked session the process holds, as two
+    operations of one runtime do. The record authority is process-wide, so a
+    session opened and closed per thread would zeroise the key the other
+    writer is still using whenever the first one finished mid-write.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path), open_test_profile_session(_BUCKET_ID):
         _create_profile(provider="clave_movil")
         certificate_path = tmp_path / "operator.p12"
         certificate_path.write_bytes(b"certificate")
@@ -252,8 +258,7 @@ def test_concurrent_auth_writers_are_serialized_without_losing_events(
 
         def configure(provider: str, path: Path | None) -> None:
             barrier.wait(timeout=10)
-            with open_test_profile_session(_BUCKET_ID):
-                configure_operator_auth(provider, certificate_path=path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            configure_operator_auth(provider, certificate_path=path, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         contexts = (copy_context(), copy_context())
         with ThreadPoolExecutor(max_workers=2) as executor:
@@ -274,9 +279,8 @@ def test_concurrent_auth_writers_are_serialized_without_losing_events(
             for future in futures:
                 future.result(timeout=30)
 
-        with open_test_profile_session(_BUCKET_ID):
-            final = workflow_state_repository().load()
-            durable = BucketEventHistoryRepository().load()
+        final = workflow_state_repository().load()
+        durable = BucketEventHistoryRepository().load()
 
         configured_workflow_objects = {
             event.object_id for event in final.bucket_events if event.action == "auth.provider.configured"
