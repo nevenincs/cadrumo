@@ -2454,7 +2454,180 @@ async function stageStatements(busyText) {
   };
 }
 
+// The persona world leaves a year's earlier returns unfiled and lets the window
+// drive them, and the annual Modelo 100 reads the year's Modelo 130 quarters, so
+// until those are filed it has no source for that figure and cannot calculate.
+const EARLIER_MODELO = "130";
+
+/** The record-as-filed button of the shown view panel, marked for a click; null when not shown. */
+function pageRecordButton(record) {
+  for (const old of document.querySelectorAll("[data-ux-record]"))
+    old.removeAttribute("data-ux-record");
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (e) => e.getClientRects().length > 0;
+  const panel = [
+    ...document.querySelectorAll(
+      'section.declarations-workspace [role="tabpanel"]',
+    ),
+  ].find(shown);
+  const button = [...(panel?.querySelectorAll("button") ?? [])].find(
+    (b) => shown(b) && norm(b.textContent) === record,
+  );
+  if (!button) return null;
+  button.setAttribute("data-ux-record", "1");
+  return {
+    disabled: button.disabled,
+    around: norm(button.parentElement?.innerText).slice(0, 300),
+  };
+}
+
+/**
+ * Mark the accept button of the open confirmation dialog. Its words are the
+ * application's, so it is found by place: the last enabled worded button of
+ * the footer, after the cancel.
+ */
+function pageMarkAccept() {
+  for (const old of document.querySelectorAll("[data-ux-accept]"))
+    old.removeAttribute("data-ux-accept");
+  const shown = (e) => e.getClientRects().length > 0;
+  const dialog = [...document.querySelectorAll('[role="dialog"]')]
+    .filter((e) => shown(e) && !e.matches(".sign-in"))
+    .at(-1);
+  const footer = dialog?.querySelector('[data-slot="dialog-footer"]') ?? dialog;
+  const buttons = [...(footer?.querySelectorAll("button") ?? [])].filter(
+    (b) => shown(b) && (b.textContent ?? "").trim() !== "" && !b.disabled,
+  );
+  if (buttons.length < 2) return false;
+  buttons.at(-1).setAttribute("data-ux-accept", "1");
+  return true;
+}
+
+/** The journey's filing step status of the open declaration, or null when not drawn. */
+const filingStepStatus = () =>
+  exec(
+    () =>
+      document
+        .querySelector('[data-journey] [data-step="file"]')
+        ?.getAttribute("data-status") ?? null,
+  );
+
+/**
+ * Record the verified open declaration as filed through the filing view's own
+ * door, as a person does: a local PRESENTADO revision, nothing is sent. Answers
+ * null once the journey shows the filing step done, else why it did not.
+ */
+async function recordFiled() {
+  const record = label("workspace.modelo.filing.record_as_filed");
+  const busyText = label("desktop.navigation.busy");
+  await chooseTab(VIEWS, label("workspace.modelo.filing.title"));
+  if ((await filingStepStatus()) === "done") return null;
+  let last = null;
+  const enabled = await waitFor(
+    async () => {
+      if (await exec(pageHeaderBusy, busyText)) return null;
+      if (await readAgainIfHeld()) return null;
+      last = await exec(pageRecordButton, record);
+      return last && !last.disabled ? true : null;
+    },
+    {
+      timeout: 60_000,
+      what: "the record-as-filed button",
+      soft: true,
+      interval: 500,
+    },
+  );
+  if (!enabled)
+    return last
+      ? `the record-as-filed button stayed disabled: ${last.around}`
+      : "the record-as-filed button is not shown";
+  await clickSelector('[data-ux-record="1"]');
+  const asked = await waitFor(() => exec(pageMarkAccept), {
+    timeout: 15_000,
+    what: "the filing confirmation",
+    soft: true,
+    interval: 300,
+  });
+  if (!asked) return "the filing confirmation did not open";
+  await clickSelector('[data-ux-accept="1"]');
+  const filed = await waitFor(
+    async () => {
+      if (await readAgainIfHeld()) return null;
+      return (await filingStepStatus()) === "done" ? true : null;
+    },
+    {
+      timeout: 120_000,
+      what: "the local filing",
+      soft: true,
+      interval: 600,
+    },
+  );
+  if (filed) return null;
+  const now = await exec(
+    pageExportState,
+    exportNames(),
+    busyText,
+    label("workspace.modelo.outcome.not_done"),
+  );
+  return `the filing step is ${(await filingStepStatus()) ?? "not shown"} after the confirmation; panel: ${now.panelText}`;
+}
+
+let earlierReturns = null;
+
+/**
+ * File the year's earlier returns of the Modelo 100 locally through the
+ * window, once per run: each is calculated and verified by the header's own
+ * steps, then recorded as filed. Answers { filed, problem }; problem is null
+ * when every one is filed (or the world lists none).
+ */
+function fileEarlierReturns() {
+  earlierReturns ??= (async () => {
+    const filed = [];
+    const target = rowOf("100");
+    if (!target)
+      return { filed, problem: "the world lists no prepared Modelo 100" };
+    const earlier = world.rows.filter(
+      (row) =>
+        row.modelo === EARLIER_MODELO &&
+        row.prepared &&
+        String(row.year) === String(target.year),
+    );
+    for (const row of earlier) {
+      const name = `Modelo ${row.modelo} ${row.year} ${row.period}`;
+      try {
+        await setSize(...DEFAULT_SIZE);
+        await openDeclaration(row);
+        const reach = await reachExport();
+        if (!reach.reached)
+          return {
+            filed,
+            problem: `${name} did not reach a verified return: ${reach.reason}`,
+          };
+        const why = await recordFiled();
+        if (why) return { filed, problem: `${name} was not filed: ${why}` };
+        filed.push(`${row.modelo}/${row.year}/${row.period}`);
+      } catch (error) {
+        return { filed, problem: `${name}: ${error.message}` };
+      }
+    }
+    // Leave the workspace so the next check opens its own declaration.
+    await clickText("section.declarations-workspace header", "button", [
+      label("workspace.declarations.destination.overview"),
+    ]).catch(() => false);
+    await sleep(1000);
+    return { filed, problem: null };
+  })();
+  return earlierReturns;
+}
+
+/** Fail as UNMEASURED, naming the cause, when the year's earlier returns could not be filed. */
+async function requireEarlierReturns(t) {
+  const { filed, problem } = await fileEarlierReturns();
+  t.diagnostic(JSON.stringify({ probe: "earlier-returns", filed, problem }));
+  if (problem) assert.fail(`UNMEASURED: ${problem}`);
+}
+
 ux("UX-24 a single click opens a Modelo view tab", async (t) => {
+  await requireEarlierReturns(t);
   await open("100");
   const views = `${SECTION} ${tablist("desktop.modelo.views.label")}`;
   const startTab =
@@ -2649,6 +2822,7 @@ ux(
   "UX-22 the Modelo export shows the operation running from the press until it settles",
   async (t) => {
     exportRun = null;
+    await requireEarlierReturns(t);
     await open("100");
     const inner = await setSize(...DEFAULT_SIZE);
     const reach = await reachExport();
