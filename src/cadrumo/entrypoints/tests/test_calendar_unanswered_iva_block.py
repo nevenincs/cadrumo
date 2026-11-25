@@ -15,12 +15,15 @@ Every read and edit is a registered operation in a replayed persona world. No do
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
 import pytest
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import replace_test_profile_record
+from ...application.overview.calendar_models import OverviewCalendar, OverviewCalendarEntry, SuppressedCalendarEntry
 from ...application.overview.coverage import CoverageAdviceReason
 from ...application.overview.read_payload import OverviewCalendarRead
 from ...application.overview.read_request import OVERVIEW_READ_DEFINITION_IDS, OverviewReadKind, OverviewReadRequest
@@ -129,53 +132,112 @@ def _unanswer_yes_no_facts(world: PersonaWorld, *, iva_regime: str | None = None
     assert not stored & set(_YES_NO_PATHS), stored & set(_YES_NO_PATHS)
 
 
-def test_the_unanswered_iva_questions_hold_only_the_windows_they_decide(tmp_path: Path) -> None:
-    assert set(_YES_NO_PATHS) <= set(MODELO_IVA_BLOCK_REQUIRED_PATHS)
-    with materialised_persona(_PERSONA, tmp_path, ReplayScope.PROFILE, reuse=True) as replayed:
+@dataclass(frozen=True, slots=True)
+class _CalendarsAcrossTheQuestions:
+    """One persona's calendar with every question answered, with them unanswered, and answered again."""
+
+    periodic: str
+    before: OverviewCalendar
+    held: OverviewCalendar
+    after: OverviewCalendar
+
+
+def _calendar_of(world: PersonaWorld, year: int) -> OverviewCalendar:
+    payload = _read(world, OverviewReadKind.CALENDAR, year).payload
+    assert isinstance(payload, OverviewCalendarRead)
+    assert payload.calendar is not None
+    return payload.calendar.to_calendar()
+
+
+def _modelos(entries: Iterable[OverviewCalendarEntry | SuppressedCalendarEntry]) -> set[str]:
+    return {entry.modelo for entry in entries}
+
+
+def _advised(held: OverviewCalendar) -> dict[str, CoverageAdviceReason]:
+    return {item.modelo: item.reason for item in held.coverage.advised}
+
+
+def _undetermined(held: OverviewCalendar) -> set[str]:
+    """Every modelo the held calendar names as undecided, whether as a held-off row or as coverage advice."""
+    held_off = _modelos(entry for entry in held.suppressed_entries if entry.verdict is ApplicabilityVerdict.INCOMPLETE)
+    advised = {
+        modelo for modelo, reason in _advised(held).items() if reason is CoverageAdviceReason.APPLICABILITY_UNDETERMINED
+    }
+    return held_off | advised
+
+
+@pytest.fixture(scope="module")
+def calendars(tmp_path_factory: pytest.TempPathFactory) -> Iterator[_CalendarsAcrossTheQuestions]:
+    """Read the calendar before the questions are unanswered, while they are, and after they are answered by edit."""
+    with materialised_persona(
+        _PERSONA, tmp_path_factory.mktemp("unanswered-iva"), ReplayScope.PROFILE, reuse=True
+    ) as replayed:
         world = replayed.world
         year = replayed.persona.fiscal_year.resolve(world.envelope)
         periodic = str(form_for_role("iva.periodic", authority=world.operation))
-        answered = _read(world, OverviewReadKind.CALENDAR, year).payload
+        before = _calendar_of(world, year)
         _unanswer_yes_no_facts(world)
-        unanswered = _read(world, OverviewReadKind.CALENDAR, year).payload
+        held = _calendar_of(world, year)
         _answer(world, dict.fromkeys(_YES_NO_PATHS, "false"))
-        reanswered = _read(world, OverviewReadKind.CALENDAR, year).payload
+        after = _calendar_of(world, year)
+        yield _CalendarsAcrossTheQuestions(periodic=periodic, before=before, held=held, after=after)
 
-    for payload in (answered, unanswered, reanswered):
-        assert isinstance(payload, OverviewCalendarRead)
-        assert payload.calendar is not None
-    assert isinstance(answered, OverviewCalendarRead) and answered.calendar is not None
-    assert isinstance(unanswered, OverviewCalendarRead) and unanswered.calendar is not None
-    assert isinstance(reanswered, OverviewCalendarRead) and reanswered.calendar is not None
-    before = answered.calendar.to_calendar()
-    held = unanswered.calendar.to_calendar()
-    after = reanswered.calendar.to_calendar()
 
-    # ANTI-VACUITY: with every question answered the 303 quarters are deadlines.
-    assert periodic in {entry.modelo for entry in before.entries}
-    # Unanswered: the read loads, every row the answered facts decide stays, and each
-    # modelo that leaves the schedule is held as undetermined, never dropped as not owed.
+def test_the_four_questions_are_required_by_the_modelo_iva_block() -> None:
+    assert set(_YES_NO_PATHS) <= set(MODELO_IVA_BLOCK_REQUIRED_PATHS)
+
+
+def test_with_every_question_answered_the_periodic_quarters_are_deadlines(
+    calendars: _CalendarsAcrossTheQuestions,
+) -> None:
+    # ANTI-VACUITY: the held assertions below only mean something while this holds.
+    assert calendars.periodic in _modelos(calendars.before.entries)
+
+
+def test_unanswered_the_read_loads_and_keeps_every_row_the_answered_facts_decide(
+    calendars: _CalendarsAcrossTheQuestions,
+) -> None:
+    held = calendars.held
     assert held.taxpayer_model_declared
-    kept = {entry.modelo for entry in held.entries}
-    lost = {entry.modelo for entry in before.entries} - kept
+    kept = _modelos(held.entries)
     assert kept, kept
-    assert kept <= {entry.modelo for entry in before.entries}, kept
-    assert periodic in lost
-    held_off = {entry.modelo for entry in held.suppressed_entries if entry.verdict is ApplicabilityVerdict.INCOMPLETE}
-    advised = {item.modelo: item.reason for item in held.coverage.advised}
-    undetermined = held_off | {m for m, r in advised.items() if r is CoverageAdviceReason.APPLICABILITY_UNDETERMINED}
+    assert kept <= _modelos(calendars.before.entries), kept
+    assert calendars.periodic in _modelos(calendars.before.entries) - kept
+
+
+def test_unanswered_each_modelo_that_leaves_the_schedule_is_held_as_undetermined_never_dropped(
+    calendars: _CalendarsAcrossTheQuestions,
+) -> None:
+    lost = _modelos(calendars.before.entries) - _modelos(calendars.held.entries)
+    undetermined = _undetermined(calendars.held)
     assert lost <= undetermined, (sorted(lost), sorted(undetermined))
-    undecided = [entry for entry in held.suppressed_entries if entry.modelo == periodic]
+
+
+def test_unanswered_the_periodic_windows_are_held_as_undecided_with_the_door_to_the_redeme_question(
+    calendars: _CalendarsAcrossTheQuestions,
+) -> None:
+    held = calendars.held
+    undecided = [entry for entry in held.suppressed_entries if entry.modelo == calendars.periodic]
     assert undecided
     assert all(entry.verdict is ApplicabilityVerdict.INCOMPLETE for entry in undecided)
     assert all(entry.actions for entry in undecided)
     assert all("REDEME" in entry.reason for entry in undecided)
-    assert advised.get(periodic) is CoverageAdviceReason.APPLICABILITY_UNDETERMINED
-    named = {warning.code: warning for warning in held.warnings}
-    for path in _YES_NO_PATHS:
-        assert path in named, path
-        assert named[path].affected_modelos, path
-    # Answered again through the profile edit: the same deadlines as before, no question left.
+    assert _advised(held).get(calendars.periodic) is CoverageAdviceReason.APPLICABILITY_UNDETERMINED
+
+
+@pytest.mark.parametrize("path", _YES_NO_PATHS)
+def test_unanswered_each_question_arrives_as_a_named_warning_with_the_modelos_it_distorts(
+    calendars: _CalendarsAcrossTheQuestions, path: str
+) -> None:
+    named = {warning.code: warning for warning in calendars.held.warnings}
+    assert path in named, path
+    assert named[path].affected_modelos, path
+
+
+def test_answered_again_through_the_profile_edit_the_same_deadlines_return_and_no_question_is_left(
+    calendars: _CalendarsAcrossTheQuestions,
+) -> None:
+    after, before = calendars.after, calendars.before
     assert [(e.modelo, e.period) for e in after.entries] == [(e.modelo, e.period) for e in before.entries]
     assert not {warning.code for warning in after.warnings} & set(_YES_NO_PATHS)
 
