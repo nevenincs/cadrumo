@@ -57,6 +57,7 @@ from ..sequences.checks import (
     discover_sequences,
     english_pinned_environment,
     refresh_sequences,
+    refresh_units,
 )
 from ..sequences.cli import main as sequences_cli_main
 from ..sequences.compare import compare_transcript_to_golden
@@ -572,6 +573,21 @@ def _write_fixture_docs(root: Path) -> tuple[Path, Path]:
     return docs_root, goldens_root
 
 
+def _enrol_contract(docs_root: Path, page: str, sequence_id: str) -> None:
+    """Write the fixture body as ``sequence_id``'s private contract on ``page``."""
+    contract_dir = docs_root / "_sequences" / "contracts" / page
+    contract_dir.mkdir(parents=True, exist_ok=True)
+    (contract_dir / f"{sequence_id}.seq").write_text(_FIXTURE_BODY + "\n", encoding="utf-8")
+
+
+def _enrol_fixture_sequence(docs_root: Path, page: str, sequence_id: str) -> None:
+    """Append one more fixture-bodied sequence to an existing fixture page."""
+    target = docs_root / f"{page}.md"
+    directive = f"\n```{{cli-sequence}} {sequence_id}\n:verify: Confirm the profile listing succeeds again.\n```\n"
+    target.write_text(target.read_text(encoding="utf-8") + directive, encoding="utf-8")
+    _enrol_contract(docs_root, page, sequence_id)
+
+
 def _refresh_fixture_golden(docs_root: Path, goldens_root: Path) -> Path:
     """Execute the fixture sequence and write its (correct) committed golden."""
     written, problems, _advisories = refresh_sequences(docs_root=docs_root, goldens_root=goldens_root)
@@ -707,6 +723,50 @@ class TestBothSurfacesRedOnDivergence:
         problems = check_sequences_in_subprocess(docs_root=docs_root, goldens_root=goldens_root, jobs=2)
         assert problems != ()
         assert any("golden expects 99" in problem for problem in problems), problems
+
+    def test_a_page_split_across_children_is_checked_once_per_sequence_and_names_its_divergence(
+        self,
+        tmp_path: Path,
+        _hermetic_env: None,
+    ) -> None:
+        """A page heavier than its share of the pool is checked by one child per sequence.
+
+        Through real child interpreters against a real fixture tree, every
+        executed sequence is addressed exactly once (clean and recorded on the
+        first pass), and a golden corrupted on the split page reds the check
+        naming that page, that sequence and the injected divergence, and only
+        that one.
+        """
+        docs_root, goldens_root = _write_fixture_docs(tmp_path)
+        _enrol_fixture_sequence(docs_root, "index", "fixture-second")
+        (docs_root / "other.md").write_text(
+            _FIXTURE_INDEX.replace(_FIXTURE_SEQUENCE_ID, "fixture-other"), encoding="utf-8"
+        )
+        _enrol_contract(docs_root, "other", "fixture-other")
+        written, problems, _advisories = refresh_sequences(docs_root=docs_root, goldens_root=goldens_root)
+        assert problems == (), problems
+        assert len(written) == 3
+        discovered, discovery_problems = discover_sequences(docs_root=docs_root)
+        assert discovery_problems == ()
+        units = refresh_units(discovered, jobs=2)
+        assert sorted(unit.sequence_id or unit.page for unit in units) == sorted(
+            [_FIXTURE_SEQUENCE_ID, "fixture-second", "other"]
+        ), "the fixture must split its heavier page so the per-sequence children are what run"
+
+        clean = check_sequences_in_subprocess(
+            docs_root=docs_root, goldens_root=goldens_root, jobs=2, reuse_verdicts=False
+        )
+        assert clean == (), clean
+
+        _corrupt_golden_exit_code(goldens_root / "index" / "fixture-second.json")
+        problems = check_sequences_in_subprocess(
+            docs_root=docs_root, goldens_root=goldens_root, jobs=2, reuse_verdicts=False
+        )
+        assert len(problems) == 1, problems
+        assert "page 'index' sequence 'fixture-second' frame 0" in problems[0], problems[0]
+        assert "golden expects 99" in problems[0]
+        assert _FIXTURE_SEQUENCE_ID not in problems[0]
+        assert "fixture-other" not in problems[0]
 
     def test_bounded_check_reports_the_last_real_frame_before_expiry(
         self,

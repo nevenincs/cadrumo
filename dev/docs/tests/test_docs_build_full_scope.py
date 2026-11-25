@@ -22,7 +22,9 @@ from pathlib import Path
 import pytest
 
 from dev.packaging.command_execution import CommandResult
+from dev.paths import REPO_ROOT
 
+from ..strict_build_record import STRICT_BUILD_RECORD_ENV, strict_build_record_problems
 from .sphinx_build_harness import (
     copy_docs_source,
     gate_build_env,
@@ -68,9 +70,22 @@ def test_sphinx_nitpicky_build_is_clean(tmp_path: Path) -> None:
     fire) raise no warnings under ``-W``; it does not need rendered HTML, so
     rendered-page emission is skipped.
 
+    A lane that already ran the strict full-scope build names its record in
+    ``CADRUMO_DOCS_STRICT_BUILD_RECORD``; the record then stands in for this
+    build only while it is clean, was taken under the proving configuration
+    and the documentation inputs still have the digest it recorded. Anything
+    else fails here rather than building again.
+
     Args:
         tmp_path: Pytest-provided isolated output directory.
     """
+    recorded = os.environ.get(STRICT_BUILD_RECORD_ENV, "").strip()
+    if recorded:
+        problems = strict_build_record_problems(Path(recorded), repo_root=REPO_ROOT)
+        assert problems == (), "the recorded strict full-scope build does not prove this contract:\n" + "\n".join(
+            problems
+        )
+        return
     docs_source = copy_docs_source(tmp_path)
     result = run_nitpicky_dummy_build(
         docs_source,

@@ -33,6 +33,13 @@ from .download_matrix import descriptor_path, inject_download_matrix
 from .output_cleanup import remove_noncanonical_build_entries, remove_orphan_pages
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 from .sitemap import write_deployment_sitemap
+from .strict_build_record import (
+    STRICT_BUILD_RECORD_ENV,
+    StrictBuildConfiguration,
+    strict_build_input_digest,
+    warning_log_path,
+    write_strict_build_record,
+)
 
 if TYPE_CHECKING:
     from .pagefind_index import InjectCallback
@@ -559,6 +566,7 @@ def build_docs(
     output_root: Path | None = None,
     isolated_source: bool = False,
     flavor: str = "web",
+    record: Path | None = None,
 ) -> None:
     """Run Sphinx against the selected targets.
 
@@ -593,8 +601,17 @@ def build_docs(
 
     ``flavor`` names the flavor the caller selected (:func:`docs_build_flavor`).
     A ``desktop`` build has no web base URL, so it writes no sitemap.
+
+    ``record`` makes a strict full build write a
+    :mod:`~dev.docs.strict_build_record` record there: its outcome, warning
+    count, configuration and the digest its declared inputs had before it
+    started. Such a build reads no earlier build's inventory, so the record
+    depends only on those inputs. The record is written whether the build
+    passes or fails.
     """
     docs_root = repo_root / "docs"
+    if record is not None and (not strict or not plan.full_build_required or single_page):
+        raise SystemExit("--record applies to a strict whole-scope build; pass --strict and no paths or preview.")
     build_root = pin_docs_build_root(repo_root)
     canonical_html_root = build_root / "html"
     html_output_root = output_root if output_root is not None else canonical_html_root
@@ -611,7 +628,11 @@ def build_docs(
         base=os.environ,
     )
 
-    if plan.full_build_required:
+    if plan.full_build_required and record is not None:
+        result = _build_recorded_full_docs(
+            repo_root, docs_root, html_output_root, output_root, command, env, isolated_source, scope, record
+        )
+    elif plan.full_build_required:
         result = _build_full_docs(repo_root, docs_root, html_output_root, output_root, command, env, isolated_source)
     elif single_page:
         result = _build_preview_docs(repo_root, docs_root, plan, scope, command, env)
@@ -748,6 +769,7 @@ def main(argv: list[str] | None = None) -> int:
         output_root=output_root,
         isolated_source=args.isolated_source,
         flavor=flavor,
+        record=args.record,
     )
     if args.rag_index:
         update_rag_index(repo_root)
@@ -891,6 +913,67 @@ def _build_full_docs(
     return result
 
 
+#: Variables that would narrow a full build or feed it an earlier build's output.
+_UNRECORDABLE_BUILD_ENV: Final[tuple[str, ...]] = (
+    "CADRUMO_DOCS_ONLY",
+    "CADRUMO_DOCS_MASTER_DOC",
+    "CADRUMO_DOCS_SINGLE_PAGE",
+)
+_SELF_INVENTORY_ENV: Final[str] = "CADRUMO_DOCS_SELF_INVENTORY"
+
+
+def _build_recorded_full_docs(
+    repo_root: Path,
+    docs_root: Path,
+    html_output_root: Path,
+    output_root: Path | None,
+    command: list[str],
+    env: dict[str, str],
+    isolated_source: bool,
+    scope: str,
+    record: Path,
+) -> subprocess.CompletedProcess[bytes]:
+    """Run the full build and write its strict build record, whatever its outcome."""
+    narrowing = [name for name in _UNRECORDABLE_BUILD_ENV if env.get(name, "")]
+    if narrowing:
+        raise SystemExit(f"--record needs a whole build; unset {', '.join(narrowing)}.")
+    # The previous build's inventory is output, not a declared input, so a recorded
+    # build resolves its references without it.
+    env.pop(_SELF_INVENTORY_ENV, None)
+    record.unlink(missing_ok=True)
+    warnings = warning_log_path(record)
+    warnings.unlink(missing_ok=True)
+    warnings.parent.mkdir(parents=True, exist_ok=True)
+    input_digest = strict_build_input_digest(repo_root)
+    result = _build_full_docs(
+        repo_root,
+        docs_root,
+        html_output_root,
+        output_root,
+        [*command, "-w", str(warnings)],
+        env,
+        isolated_source,
+    )
+    written = write_strict_build_record(
+        record,
+        input_digest=input_digest,
+        configuration=StrictBuildConfiguration(
+            scope=scope,
+            language=docs_build_language(env).value,
+            flavor=docs_build_flavor(env),
+            builder=command[command.index("-b") + 1],
+            nitpicky="-n" in command,
+            warnings_as_errors="-W" in command,
+            offline=bool(env.get("CADRUMO_DOCS_OFFLINE")),
+            self_inventory=False,
+        ),
+        returncode=result.returncode,
+    )
+    verdict = "clean" if written.clean else f"not clean ({written.warnings} warning(s))"
+    print(f"Strict build record written: {record} ({verdict})", flush=True)
+    return result
+
+
 def _build_preview_docs(
     repo_root: Path, docs_root: Path, plan: DocBuildPlan, scope: str, command: list[str], env: dict[str, str]
 ) -> subprocess.CompletedProcess[bytes]:
@@ -948,6 +1031,17 @@ def docs_build_arguments(argv: list[str] | None) -> argparse.Namespace:
         help="Optional repository-relative paths to build; a full build runs when none are given.",
     )
     parser.add_argument("--strict", action="store_true", help="Use nitpicky warnings-as-errors mode.")
+    parser.add_argument(
+        "--record",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help=(
+            "With --strict on a whole build, write the strict build record to PATH: the outcome, warning count, "
+            "configuration and the content digest of the build's declared inputs, so a later check can rely on "
+            f"this build instead of compiling again (see {STRICT_BUILD_RECORD_ENV})."
+        ),
+    )
     parser.add_argument(
         "--rag-index",
         action="store_true",

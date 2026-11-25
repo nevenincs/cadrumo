@@ -24,7 +24,9 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.storage_environment import configured_storage_root
 from cadrumo.tests.golden_comparison import canonicalise
+from dev.cache_root import DEV_CACHE_ROOT_ENV, dev_cache_root
 from dev.dependency_observation.observation import active_observation, unobserved
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
@@ -52,10 +54,17 @@ from .runner import (
 from .sandbox import owned_scratch_directory
 from .schema import FrameKind, ParsedSequence, SequenceId
 from .seed_generator import check_seeds
-from .verdict_cache import SequenceVerdicts, published_sequence_verdicts, reuse_forced_off
+from .verdict_cache import (
+    FORCE_ENV,
+    SEQUENCE_JOBS_ENV,
+    SequenceVerdicts,
+    published_sequence_verdicts,
+    reuse_forced_off,
+)
 
 __all__ = [
     "ADVISORY_PREFIX",
+    "DEFAULT_CHECK_JOBS",
     "DEFAULT_REFRESH_JOBS",
     "EXECUTE_ALL_OPTION",
     "PROBLEM_PREFIX",
@@ -77,6 +86,7 @@ __all__ = [
     "refresh_pages",
     "refresh_sequences",
     "refresh_units",
+    "sequence_pool_jobs",
     "unused_capture_advisories",
 ]
 
@@ -110,6 +120,10 @@ READER_FRAME_OUTPUT_ADVISORY_BYTES: Final[int] = 64 * 1024
 #: Sequences are hermetically independent, so only the schedule changes; eight
 #: is the fleet's explicit lane width for a shared host, never the whole machine.
 DEFAULT_REFRESH_JOBS: Final[int] = 8
+
+#: Whole-corpus check children run at once when the caller names no pool size
+#: (:data:`~dev.docs.sequences.verdict_cache.SEQUENCE_JOBS_ENV`): the same lane width.
+DEFAULT_CHECK_JOBS: Final[int] = 8
 
 #: Line prefixes a refresh child prints and its parent reads back. The CLI's own
 #: report uses the same constants, so the two ends cannot drift apart.
@@ -418,7 +432,7 @@ def pages_running_command(discovered: Sequence[DiscoveredSequence], command: Seq
 
 @dataclass(frozen=True)
 class RefreshUnit:
-    """One child's share of a refresh: a whole page, or one sequence of a heavy page."""
+    """One child's share of a refresh or golden check: a whole page, or one sequence of a heavy page."""
 
     page: str
     sequence_id: str | None
@@ -435,7 +449,7 @@ def _sequence_refresh_weight(item: DiscoveredSequence) -> int:
 
 
 def refresh_units(discovered: Sequence[DiscoveredSequence], *, jobs: int) -> tuple[RefreshUnit, ...]:
-    """Cut the executable sequences into the units one child each refreshes, in discovery order.
+    """Cut the executable sequences into the units one child each refreshes or checks, in discovery order.
 
     A page is one unit, so its sequences share one interpreter and one start-up. A
     page heavier than an even share of the whole corpus across ``jobs`` workers
@@ -754,7 +768,51 @@ def english_pinned_environment() -> dict[str, str]:
         environment[AUTHORITY_ROOT_ENV] = str(Path(authority_root))
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
+    # Pinned, so a parent reading the children's verdict records names their directory.
+    environment[DEV_CACHE_ROOT_ENV] = str(_child_dev_cache_root(environment))
+    if reuse_forced_off():
+        environment[FORCE_ENV] = os.environ[FORCE_ENV]
     return environment
+
+
+def _child_dev_cache_root(environment: dict[str, str]) -> Path:
+    """Return the development cache root a child under ``environment`` uses.
+
+    An explicit relocation in this process is the operator's choice for every
+    cache and is kept. Otherwise the child resolves the default beneath its own
+    storage root, which is not this process's when this process was pointed at
+    scratch storage (as a documentation build is), so the default is rebased
+    onto the child's root.
+    """
+    resolved = dev_cache_root()
+    if os.environ.get(DEV_CACHE_ROOT_ENV, "").strip():
+        return resolved
+    own_storage = configured_storage_root()
+    if not resolved.is_relative_to(own_storage):
+        return resolved
+    return configured_storage_root(environ=environment) / resolved.relative_to(own_storage)
+
+
+def sequence_pool_jobs(default: int = DEFAULT_CHECK_JOBS) -> int:
+    """Return how many whole-corpus check children the caller's budget allows.
+
+    Read from :data:`~dev.docs.sequences.verdict_cache.SEQUENCE_JOBS_ENV`, so a
+    gate runner holding a worker budget sizes the pool; ``default`` otherwise.
+
+    Raises:
+        SequenceEngineError: When the variable is set to anything but a whole
+            number of at least 1.
+    """
+    raw = os.environ.get(SEQUENCE_JOBS_ENV, "").strip()
+    if not raw:
+        return default
+    try:
+        jobs = int(raw)
+    except ValueError:
+        jobs = 0
+    if jobs < 1:
+        raise SequenceEngineError(f"{SEQUENCE_JOBS_ENV} must be a whole number of at least 1; got {raw!r}")
+    return jobs
 
 
 def timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
@@ -836,9 +894,13 @@ def _scoped_check_command(
     goldens_root: Path | None,
     coherence: bool,
     reuse_verdicts: bool = True,
+    sequence_id: str | None = None,
 ) -> list[str]:
-    """Build one page-scoped ``check`` child command line."""
-    command = [sys.executable, "-m", "dev.docs.sequences", "check", "--page", page]
+    """Build one page-scoped ``check`` child command line, or one scoped to ``sequence_id`` on that page."""
+    if sequence_id is not None and coherence:
+        raise ValueError("the page-coherence tier is page-scoped; it cannot address one sequence")
+    scope = ("--page", page) if sequence_id is None else ("--sequence", sequence_id)
+    command = [sys.executable, "-m", "dev.docs.sequences", "check", *scope]
     if coherence:
         command.append("--coherence")
     elif not reuse_verdicts:
@@ -859,82 +921,133 @@ def _check_pages_in_subprocesses(
     coherence: bool = False,
     reuse_verdicts: bool = True,
 ) -> tuple[str, ...]:
-    """Shard the unscoped check across page-scoped children, ``jobs`` at a time.
+    """Shard the unscoped check across scoped children, ``jobs`` at a time.
 
     Verdict parity with the serial unscoped run holds because sequences are
     hermetically independent (each executes in its own fresh sandbox) and the
     only CROSS-page discovery fault — a duplicate sequence id declared on two
     pages — is re-detected here by the parent's own unscoped discovery pass
     (parse-only, no execution) and prepended to the merged report. A page-local
-    discovery fault is reported by both the parent and its page's child; on an
-    already-red gate the repetition is cosmetic.
+    discovery fault is reported by both the parent and its page's children; on
+    an already-red gate the repetition is cosmetic.
 
-    In the golden tier with ``reuse_verdicts``, a page whose every executed
-    sequence has a recorded clean verdict starts no child at all; the parent
-    reports each verdict it reused. A page with any unrecorded sequence starts
-    its child, which reuses and records sequence by sequence through the same
-    cache.
+    The golden tier cuts the sequences into :func:`refresh_units`, the same
+    units a refresh writes the goldens in: a page is one child, and a page
+    heavier than an even share of the pool splits into one child per sequence,
+    so the slowest page no longer sets the finish time. Every executed sequence
+    belongs to exactly one unit. The coherence tier runs one child per page,
+    because its pages accumulate state across their sequences.
+
+    With ``reuse_verdicts``, a sequence (golden tier) or page (coherence tier)
+    with a recorded clean verdict for its exact inputs starts no child; the
+    parent keys it under the children's own environment and reports each
+    verdict it reused. Every other unit starts its child, which reuses and
+    records through the same cache.
 
     Returns:
         The merged report tuple: the parent discovery problems (if any)
-        followed by one complete diagnostic report per failing page child.
+        followed by one complete diagnostic report per failing child.
         Empty on a clean pass.
     """
     discovered, discovery_problems = discover_sequences(docs_root=docs_root)
-    counts: dict[str, int] = {}
-    for item in discovered:
-        counts[item.page] = counts.get(item.page, 0) + 1
-    # Longest page first: with bounded workers, scheduling the heaviest pages
-    # early keeps the tail short (the largest page bounds the ideal wall).
-    pages = sorted(counts, key=lambda page: counts[page], reverse=True)
-    if not coherence and reuse_verdicts and not discovery_problems:
-        pages = _pages_needing_execution(discovered, pages, docs_root=docs_root, goldens_root=goldens_root)
+    reuse = reuse_verdicts and not discovery_problems
+    if coherence:
+        commands = [
+            _scoped_check_command(page=page, docs_root=docs_root, goldens_root=None, coherence=True)
+            for page in _coherence_pages_needing_execution(discovered, docs_root=docs_root, reuse=reuse)
+        ]
+    else:
+        units = _golden_units_needing_execution(
+            discovered, jobs=jobs, docs_root=docs_root, goldens_root=goldens_root, reuse=reuse
+        )
+        commands = [
+            _scoped_check_command(
+                page=unit.page,
+                sequence_id=unit.sequence_id,
+                docs_root=docs_root,
+                goldens_root=goldens_root,
+                coherence=False,
+                reuse_verdicts=reuse_verdicts,
+            )
+            # Heaviest first: with bounded workers the largest unit bounds the ideal wall.
+            for unit in sorted(units, key=lambda unit: unit.weight, reverse=True)
+        ]
 
     reports: list[str] = []
     if discovery_problems:
         reports.append("\n".join(f"FAIL: {problem}" for problem in discovery_problems))
-    if pages:
-        commands = [
-            _scoped_check_command(
-                page=page,
-                docs_root=docs_root,
-                goldens_root=goldens_root,
-                coherence=coherence,
-                reuse_verdicts=reuse_verdicts,
-            )
-            for page in pages
-        ]
+    if commands:
         with ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
             for child_report in pool.map(lambda command: _run_check_child(command, timeout=timeout), commands):
                 reports.extend(child_report)
     return tuple(reports)
 
 
-def _pages_needing_execution(
+def _child_verdicts(*, docs_root: Path | None, goldens_root: Path | None) -> SequenceVerdicts:
+    """Key the corpus as the check children will, under their environment and record directory."""
+    return published_sequence_verdicts(
+        docs_root=docs_root if docs_root is not None else default_docs_root(),
+        goldens_root=goldens_root,
+        environment=english_pinned_environment(),
+    )
+
+
+def _golden_units_needing_execution(
     discovered: Sequence[DiscoveredSequence],
-    pages: list[str],
     *,
+    jobs: int,
     docs_root: Path | None,
     goldens_root: Path | None,
-) -> list[str]:
-    """Drop the pages whose every executed sequence has a recorded clean verdict, reporting each reuse."""
+    reuse: bool,
+) -> tuple[RefreshUnit, ...]:
+    """Cut the sequences without a recorded clean verdict into units, reporting each reuse no child repeats."""
+    if not reuse:
+        return refresh_units(discovered, jobs=jobs)
     policy = VerdictPolicy()
-    verdicts = policy.open(docs_root=docs_root, goldens_root=goldens_root)
-    reused: dict[str, list[str]] = {}
-    pending: set[str] = set()
+    verdicts = _child_verdicts(docs_root=docs_root, goldens_root=goldens_root)
+    reused: dict[str, str] = {}
+    pending: list[DiscoveredSequence] = []
     for item in discovered:
         if not item.sequence.executed_frames:
             continue
         description = verdicts.reused(item)
         if description is None:
-            pending.add(item.page)
+            pending.append(item)
         else:
-            reused.setdefault(item.page, []).append(f"{item.page}/{item.sequence_id}: {description}")
+            reused[item.sequence_id] = description
+    units = refresh_units(pending, jobs=jobs)
+    # A page child reuses and reports its own recorded sequences; the parent reports the rest.
+    page_children = {unit.page for unit in units if unit.sequence_id is None}
+    for item in discovered:
+        description = reused.get(item.sequence_id)
+        if description is not None and item.page not in page_children:
+            policy.report(f"{item.page}/{item.sequence_id}: {description}")
+    return units
+
+
+def _coherence_pages_needing_execution(
+    discovered: Sequence[DiscoveredSequence], *, docs_root: Path | None, reuse: bool
+) -> list[str]:
+    """Return the pages whose cumulative run has no recorded clean verdict, longest first, reporting each reuse."""
+    by_page: dict[str, list[DiscoveredSequence]] = {}
+    for item in discovered:
+        by_page.setdefault(item.page, []).append(item)
+    # Longest page first: with bounded workers, scheduling the heaviest pages
+    # early keeps the tail short (the largest page bounds the ideal wall).
+    pages = sorted(by_page, key=lambda page: len(by_page[page]), reverse=True)
+    if not reuse:
+        return pages
+    policy = VerdictPolicy()
+    verdicts = _child_verdicts(docs_root=docs_root, goldens_root=None)
+    remaining: list[str] = []
     for page in pages:
-        if page not in pending:
-            for line in reused.get(page, ()):
-                policy.report(line)
-    return [page for page in pages if page in pending]
+        executable = [item for item in by_page[page] if item.sequence.executed_frames]
+        description = verdicts.reused_coherence(page, executable)
+        if description is None:
+            remaining.append(page)
+        else:
+            policy.report(f"{page} (page coherence): {description}")
+    return remaining
 
 
 def check_sequences_in_subprocess(
@@ -1021,6 +1134,12 @@ def check_page_coherence_in_subprocess(
     accumulating only within the page), so pages are independent and shard
     cleanly.
 
+    Each child reuses a page's recorded clean coherence verdict for its exact
+    inputs and records each coherent page it runs, and the parent starts no
+    child for a page whose verdict it can reuse.
+    :data:`~dev.docs.sequences.verdict_cache.FORCE_ENV` set in this process
+    reaches the children too, so every page runs.
+
     Children run to completion unless the caller explicitly supplies an
     elapsed-time deadline.
 
@@ -1046,6 +1165,7 @@ def check_page_coherence_in_subprocess(
         jobs=jobs,
         timeout=timeout,
         coherence=True,
+        reuse_verdicts=not reuse_forced_off(),
     )
 
 
@@ -1060,6 +1180,7 @@ def check_page_coherence(
     *,
     docs_root: Path | None = None,
     page: str | None = None,
+    verdicts: VerdictPolicy | None = None,
 ) -> tuple[str, ...]:
     """Check every enrolled page reads true when followed top to bottom.
 
@@ -1073,6 +1194,13 @@ def check_page_coherence(
     accumulates by design, and goldens remain the separate per-sequence
     isolated contract.
 
+    With ``verdicts``, a page whose coherence key
+    (:meth:`~dev.docs.sequences.verdict_cache.SequenceVerdicts.coherence_key`)
+    has a recorded clean verdict is reported as reused instead of run (unless
+    the policy only records), and each page that runs coherent is recorded as
+    soon as it does. Nothing is reused or recorded while discovery reports a
+    problem.
+
     Returns:
         Accumulated problems: discovery faults (shared with the golden tier)
         plus coherence-tier failures, each prefixed with
@@ -1083,8 +1211,11 @@ def check_page_coherence(
         SequenceEngineError: When a sequence would execute and the registry
             authority the runner reads is not current.
     """
-    discovered, problems = discover_sequences(docs_root=docs_root, page=page)
-    if any(item.sequence.executed_frames for item in discovered):
+    with unobserved():
+        # As in the golden tier: discovery's reads are keyed, not observed product inputs.
+        discovered, problems = discover_sequences(docs_root=docs_root, page=page)
+    executes = any(item.sequence.executed_frames for item in discovered)
+    if executes:
         require_current_authority()
     all_problems = list(problems)
 
@@ -1092,11 +1223,33 @@ def check_page_coherence(
     for item in discovered:
         by_page.setdefault(item.page, []).append(item)
 
+    observation = active_observation()
+    keyed = (
+        None if verdicts is None or problems or not executes else verdicts.open(docs_root=docs_root, goldens_root=None)
+    )
+    if keyed is not None and observation is None:
+        keyed.prepare_unobserved_run()
     for docname, items in by_page.items():
         # An all-@static sequence runs nothing, so it produces no transcript;
         # only executable sequences take part in the cumulative page run and the
         # transcript alignment below.
-        _check_page_coherence_items(docname, items, all_problems)
+        executable = [item for item in items if item.sequence.executed_frames]
+        key = None if keyed is None else keyed.coherence_key(docname, executable)
+        if keyed is not None and verdicts is not None and verdicts.reuse:
+            reused = keyed.reused_coherence(docname, executable)
+            if reused is not None:
+                verdicts.report(f"{docname} (page coherence): {reused}")
+                continue
+        page_problems: list[str] = []
+        _check_page_coherence_items(docname, items, page_problems)
+        all_problems.extend(page_problems)
+        if keyed is not None and key is not None and not page_problems:
+            if observation is not None:
+                observation.note_imported_modules()
+            try:
+                keyed.record_clean_coherence(docname, executable, key=key, observation=observation)
+            except SequenceEngineError as exc:
+                all_problems.append(str(exc))
     return tuple(all_problems)
 
 
