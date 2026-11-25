@@ -9,7 +9,7 @@ related:
   - '[[2026-11-25-gate-60-minutes-research]]'
 modified: '2026-11-25'
 body_schema: body-v2
-body_hash: 'sha256:a4914edf86508e91ddbf8991c9b2df6219ba03cb89917f489f849c3b53922b27'
+body_hash: 'sha256:3d3c80cace606b289d4bcfecff4c014b4fa2e10abf64b8b9473de2c8847c548b'
 ---
 
 <!-- LINK RULES:
@@ -146,7 +146,7 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 ## Steps
 
 - [x] `S01` - Build the concurrent gate runner: node graph with ordering and exclusive resources, one global worker budget, continue past red, separate parallel and serial nodes, tree digest at start and end, durable per-node record with JUnit and per-file timing aggregation; `dev/test_runs`.
-- [ ] `S02` - Compose gate-local on the runner so every current population runs exactly once: one harness run, sequence check skipped inside the gate docs build, prerequisites once, CPU-budget benchmarks last and alone; `justfile`.
+- [x] `S02` - Compose gate-local on the runner so every current population runs exactly once: one harness run, sequence check skipped inside the gate docs build, prerequisites once, CPU-budget benchmarks last and alone; `justfile`.
 - [ ] `S03` - Balance shards by recorded per-file seconds with size fallback and distribute tail-setting files across workers by test; `dev/ci/gate_shards.py`.
 - [x] `S04` - Load the compiled bundled registry from a digest-keyed disk copy proven equal to a fresh compile, and make the clean-validation record survive process exit; `dev/registry`.
 - [x] `S05` - Compile the documentation strictly once per gate with a digest-keyed record read by the strict-build test, size the sequence pool to the budget, split the golden check per sequence, and key the parent page skip on the child environment; `dev/docs`.
