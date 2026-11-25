@@ -167,8 +167,10 @@ pub(crate) fn agent_selection_available(
 /// and 48 such reads kept a window waiting minutes.
 pub(crate) const STATUS_BUSY_PATIENCE: Duration = Duration::from_secs(12);
 
-/// The window's own status read waits less: it draws the busy answer as the
-/// agent starting and reads again when the service publishes the agent ready.
+/// The window's own status read asks again after `busy` for less time: it draws
+/// the busy answer as the agent starting and reads again when the service
+/// publishes the agent ready. It bounds those repeated asks only, never an
+/// exchange the service is answering.
 const WINDOW_STATUS_PATIENCE: Duration = Duration::from_secs(4);
 
 /// A cold sign-in probe or catalog read outlives the service's bounded status
@@ -199,28 +201,29 @@ pub(crate) fn read_status(
 /// the settings until the window asks again. A service still starting when the
 /// bound elapses answers the busy word the window retries; a service that is
 /// not starting reaches `call`, which refuses as it always has.
-/// The window's status read, answered within `limit`. It is not waited for while the
-/// service starts the agent: the window draws the busy answer at once and reads again
-/// when the service publishes the agent ready, which it does only after admission. An
-/// exchange the service holds past `limit` (behind a cold catalog read) is answered busy
-/// too; the read is left to finish on its own and the window's next read asks again.
+/// The window's status read. It is not waited for while the service starts the agent:
+/// the window draws the busy answer at once and reads again when the service publishes
+/// the agent ready, which it does only after admission. A `busy` answer is asked again
+/// for at most `limit`. An exchange under way is collected within the host's own status
+/// exchange bound, never cut at `limit`: the service's status reads only the store and
+/// never waits for the agent, so a slow one is a store read under a loaded machine
+/// (seconds behind the profile guard), and cutting it answered every read busy and left
+/// the settings without lanes, while nothing cued the window to ask for the answer the
+/// service still gave.
 pub(crate) async fn window_status(
     admitted: impl FnOnce() -> AdminWait + Send + 'static,
     exchange: impl FnMut() -> Result<Value, ApplicationError> + Send + 'static,
     limit: Duration,
 ) -> Result<Status, CommandFailure> {
-    let read = tauri::async_runtime::spawn_blocking(move || {
+    tauri::async_runtime::spawn_blocking(move || {
         when_admitted(admitted, || {
             read_status(exchange, Duration::from_millis(250), limit)
         })
-    });
-    match tokio::time::timeout(limit, read).await {
-        Err(_) => Err(Refusal::Busy.into()),
-        Ok(joined) => joined
-            .map_err(|_| invalid().with_reason("provider_settings_task_failed"))
-            .map_err(CommandFailure::from)
-            .and_then(|result| result),
-    }
+    })
+    .await
+    .map_err(|_| invalid().with_reason("provider_settings_task_failed"))
+    .map_err(CommandFailure::from)
+    .and_then(|result| result)
 }
 
 pub(crate) fn when_admitted<T>(
@@ -476,15 +479,30 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn a_status_exchange_held_past_the_windows_patience_answers_busy_within_it() {
-        let limit = Duration::from_millis(400);
-        let began = Instant::now();
+    async fn a_status_exchange_slower_than_the_windows_patience_is_collected_with_its_lanes() {
+        // A store read behind a loaded profile guard took seconds; cutting it
+        // at the window's patience answered busy and showed no lanes.
+        let limit = Duration::from_millis(200);
         let read = window_status(
             || AdminWait::Admitted,
             || {
-                std::thread::sleep(Duration::from_secs(3));
-                Err(invalid().with_reason("held_behind_a_catalog_read"))
+                std::thread::sleep(Duration::from_millis(800));
+                Ok(json!({"providers":[signed_out_lane()],"reads_pending":false}))
             },
+            limit,
+        )
+        .await
+        .expect("a slow exchange answers with its status");
+        assert_eq!(read.providers.len(), 1);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_window_read_answered_busy_asks_again_only_within_its_patience() {
+        let limit = Duration::from_millis(600);
+        let began = Instant::now();
+        let read = window_status(
+            || AdminWait::Admitted,
+            || Ok(json!({"kind":"refused","code":"busy"})),
             limit,
         )
         .await;
@@ -493,6 +511,25 @@ mod tests {
             "answered after {:?}",
             began.elapsed()
         );
+        assert!(matches!(
+            read,
+            Err(CommandFailure::Refused(wire::Refused {
+                code: Refusal::Busy,
+                ..
+            }))
+        ));
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_window_read_while_the_service_starts_answers_busy_without_an_exchange() {
+        let read = window_status(
+            || AdminWait::StillStarting,
+            || -> Result<Value, ApplicationError> {
+                panic!("no exchange is made before admission")
+            },
+            WINDOW_STATUS_PATIENCE,
+        )
+        .await;
         assert!(matches!(
             read,
             Err(CommandFailure::Refused(wire::Refused {
