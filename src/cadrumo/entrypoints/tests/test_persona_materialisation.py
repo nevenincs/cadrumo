@@ -531,7 +531,7 @@ def test_a_history_replay_files_and_calculates_each_declared_return_with_aeat_co
 
 
 def test_a_stopped_operation_settles_with_the_words_the_application_serves_for_it(tmp_path: Path) -> None:
-    with materialised_persona("autonomo-fontanero", tmp_path, ReplayScope.PROFILE) as materialised:
+    with materialised_persona("autonomo-fontanero", tmp_path, ReplayScope.PROFILE, reuse=True) as materialised:
         world = materialised.world
         with pytest.raises(PersonaMaterialisationError) as raised:
             settle_operation(

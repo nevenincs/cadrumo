@@ -699,7 +699,9 @@ def test_a_book_claimed_purchase_reaches_0181_and_leaves_0183_in_every_supported
     }
     assert set(expected) == set(_INVENTORY_CASILLAS), f"{_BOOK_CLAIMING_RETAILER} states {sorted(expected)} for {year}"
 
-    with materialised_persona(_BOOK_CLAIMING_RETAILER, tmp_path, _scope(persona), horizon=horizon) as materialised:
+    with materialised_persona(
+        _BOOK_CLAIMING_RETAILER, tmp_path, _scope(persona), horizon=horizon, reuse=True
+    ) as materialised:
         world = materialised.world
         created = settle_operation(
             world,

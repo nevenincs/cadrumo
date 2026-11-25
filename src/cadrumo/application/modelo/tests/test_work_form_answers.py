@@ -10,6 +10,8 @@ takes cannot hide in a revision this test does not name.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pytest
 from pydantic import ValidationError
 
@@ -18,6 +20,7 @@ from ....core.i18n.render import lookup_translation
 from ....core.period import Period, accepted_filing_period_codes
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import EjercicioOrdenNotYetPublishedError, NoRevisionForPeriodError
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import (
@@ -44,6 +47,7 @@ from ..work_form_models import (
     ModeloWorkForm,
 )
 from ..work_form_service import modelo_form_snapshot
+from ..work_review import ModeloWorkReview
 from .work_form_fixture import built_form, uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -68,6 +72,21 @@ def _reachable(operation: PinnedAuthorityOperation) -> dict[tuple[str, str], tup
     return contexts
 
 
+def _built(
+    review: ModeloWorkReview, snapshot: RegistrySnapshot, layout: FormLayoutDefinition | None, language: OutputLanguage
+) -> ModeloWorkForm:
+    return build_modelo_work_form(
+        review=review,
+        snapshot=snapshot,
+        layout=layout,
+        revision=None,
+        permitted_surface=None,
+        entered_casilla_ids=frozenset(),
+        overridden_binding_ids=frozenset(),
+        language=language,
+    )
+
+
 def _form(
     operation: PinnedAuthorityOperation,
     modelo: str,
@@ -81,17 +100,63 @@ def _form(
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
     snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
     review = uncalculated_review(snapshot, operation, modelo=modelo, filing_year=year, period=period)
-    form = build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=layout if layout is not None else operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=frozenset(),
-        overridden_binding_ids=frozenset(),
-        language=language,
+    form = _built(
+        review,
+        snapshot,
+        layout if layout is not None else operation.form_layout(modelo, snapshot.revision.id),
+        language,
     )
     return form, snapshot
+
+
+@dataclass(frozen=True, slots=True)
+class _LaidOutRevision:
+    """One reachable revision with a form layout, and everything about it that no output language changes."""
+
+    modelo: str
+    revision_id: str
+    code: str
+    snapshot: RegistrySnapshot
+    review: ModeloWorkReview
+    layout: FormLayoutDefinition
+    admitted: frozenset[str]
+
+    def form(self, language: OutputLanguage) -> ModeloWorkForm:
+        return _built(self.review, self.snapshot, self.layout, language)
+
+
+@dataclass(frozen=True, slots=True)
+class _Envelope:
+    """Every revision the support envelope reaches, and those of them a form lays out."""
+
+    reachable: int
+    laid_out: tuple[_LaidOutRevision, ...]
+
+
+@pytest.fixture(scope="module")
+def envelope_revisions(operation: PinnedAuthorityOperation) -> _Envelope:
+    """Read each reachable revision's snapshot, review and admission once for every language this module asks in."""
+    laid_out: list[_LaidOutRevision] = []
+    with validating_governed_facts(operation):
+        contexts = _reachable(operation)
+        for (modelo, revision_id), (year, code) in sorted(contexts.items()):
+            layout = operation.form_layout(modelo, revision_id)
+            if layout is None:
+                continue
+            period = Period.from_year_and_code(year, code)
+            snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
+            laid_out.append(
+                _LaidOutRevision(
+                    modelo=modelo,
+                    revision_id=revision_id,
+                    code=code,
+                    snapshot=snapshot,
+                    review=uncalculated_review(snapshot, operation, modelo=modelo, filing_year=year, period=period),
+                    layout=layout,
+                    admitted=frozenset(_admitted_overrides(snapshot, code, layout)),
+                )
+            )
+    return _Envelope(reachable=len(contexts), laid_out=tuple(laid_out))
 
 
 def _admitted_overrides(snapshot: RegistrySnapshot, code: str, layout: FormLayoutDefinition | None) -> set[str]:
@@ -153,19 +218,17 @@ def _answer(form: ModeloWorkForm, binding_id: str) -> ModeloFormField:
     return next(field for field in form.answers if field.address == ModeloFormBindingAddressV1(binding_id=binding_id))
 
 
-def test_every_admitted_override_of_every_revision_is_taken_by_a_field(operation: PinnedAuthorityOperation) -> None:
-    contexts = _reachable(operation)
-    assert contexts, "the support envelope reaches no revision, so this proves nothing"
+def test_every_admitted_override_of_every_revision_is_taken_by_a_field(
+    operation: PinnedAuthorityOperation, envelope_revisions: _Envelope
+) -> None:
+    assert envelope_revisions.reachable, "the support envelope reaches no revision, so this proves nothing"
 
     untaken: list[str] = []
     answered = 0
-    for (modelo, revision_id), (year, code) in sorted(contexts.items()):
-        layout = operation.form_layout(modelo, revision_id)
-        if layout is None:
-            continue
-        form, snapshot = _form(operation, modelo, year, code)
-        rows = _row_bindings(layout, snapshot)
-        admitted = _admitted_overrides(snapshot, code, layout)
+    for laid_out in envelope_revisions.laid_out:
+        modelo, revision_id, admitted = laid_out.modelo, laid_out.revision_id, laid_out.admitted
+        form = laid_out.form(OutputLanguage.EN)
+        rows = _row_bindings(laid_out.layout, laid_out.snapshot)
         # A column of repeated lines has no single override to give, however the registry spells its source.
         assert not admitted & rows, f"{modelo}/{revision_id}: {sorted(admitted & rows)}"
         for binding_id in sorted(admitted):
@@ -184,17 +247,15 @@ def test_every_admitted_override_of_every_revision_is_taken_by_a_field(operation
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
 def test_every_answer_of_every_revision_is_named_in_words(
-    operation: PinnedAuthorityOperation, language: OutputLanguage
+    operation: PinnedAuthorityOperation, envelope_revisions: _Envelope, language: OutputLanguage
 ) -> None:
     unnamed: list[str] = []
-    for (modelo, revision_id), (year, code) in sorted(_reachable(operation).items()):
-        period = Period.from_year_and_code(year, code)
-        snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
+    for laid_out in envelope_revisions.laid_out:
         # A revision that admits no override for the period can serve no answer, so its form is not built.
-        layout = operation.form_layout(modelo, revision_id)
-        if layout is None or not _admitted_overrides(snapshot, code, layout):
+        if not laid_out.admitted:
             continue
-        form, _snapshot = _form(operation, modelo, year, code, language)
+        modelo, revision_id = laid_out.modelo, laid_out.revision_id
+        form = laid_out.form(language)
         unnamed.extend(
             f"{modelo}/{revision_id}: {field.address} {field.label.text!r}"
             for field in form.answers

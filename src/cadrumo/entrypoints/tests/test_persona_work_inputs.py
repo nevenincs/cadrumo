@@ -312,7 +312,9 @@ def test_a_given_value_an_expectation_of_its_return_states_by_casilla_is_refused
 
 @pytest.fixture(scope="module")
 def company(tmp_path_factory: pytest.TempPathFactory) -> Iterator[MaterialisedPersona]:
-    with materialised_persona(_PERSONA, tmp_path_factory.mktemp("persona"), ReplayScope.FULL) as materialised:
+    with materialised_persona(
+        _PERSONA, tmp_path_factory.mktemp("persona"), ReplayScope.FULL, reuse=True
+    ) as materialised:
         yield materialised
 
 

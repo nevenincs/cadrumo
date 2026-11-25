@@ -25,7 +25,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_the_register_holds_the_accounts_a_persona_states_with_their_designations(
     tmp_path: Path, persona_id: str
 ) -> None:
-    with materialised_persona(persona_id, tmp_path, ReplayScope.FULL) as materialised:
+    with materialised_persona(persona_id, tmp_path, ReplayScope.FULL, reuse=True) as materialised:
         persona, world = materialised.persona, materialised.world
         listed = run_operation(
             world,
@@ -48,7 +48,7 @@ def test_the_register_holds_the_accounts_a_persona_states_with_their_designation
 
 
 def test_a_persona_with_a_refund_states_the_account_that_receives_it(tmp_path: Path) -> None:
-    with materialised_persona("asalariada-familia", tmp_path, ReplayScope.FULL) as materialised:
+    with materialised_persona("asalariada-familia", tmp_path, ReplayScope.FULL, reuse=True) as materialised:
         persona, world = materialised.persona, materialised.world
         listed = run_operation(
             world,
