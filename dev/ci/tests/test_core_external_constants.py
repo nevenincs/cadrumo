@@ -566,14 +566,13 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
     assert offenders == []
 
 
-def test_runtime_tunables_are_settings_not_registry_constants() -> None:
+def test_runtime_tunables_are_settings_not_registry_constants(monkeypatch: pytest.MonkeyPatch) -> None:
     """Runtime knobs live on :class:`Settings`, not the external registry."""
 
     constants = load_external_constants()
 
     assert not hasattr(constants.aeat, "timeouts_ms")
     assert not hasattr(constants.online_services, "llm_endpoints")
-    settings = Settings()
     expected_defaults: dict[str, object] = {
         "cadrumo_browser_navigation_timeout_ms": 30_000,
         "cadrumo_browser_form_interaction_timeout_ms": 10_000,
@@ -598,6 +597,11 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         "cadrumo_log_root_level": "INFO",
         "cadrumo_google_drive_vault_folder_name": "cadrumo-vault",
     }
+    # The root conftest bridges an operator's local env/.env into the process
+    # environment, so a developer's own log level would otherwise stand in for the default.
+    for field_name in (*expected_defaults, "cadrumo_live_iva_surface_timeout_ms"):
+        monkeypatch.delenv(field_name.upper(), raising=False)
+    settings = Settings()
 
     for field_name, expected_value in expected_defaults.items():
         assert getattr(settings, field_name) == expected_value, field_name
