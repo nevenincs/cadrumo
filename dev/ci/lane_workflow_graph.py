@@ -220,7 +220,7 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
         text = workflow.read_text(encoding=UTF_8)
         events = effective.get(f"{WORKFLOW_DIR}/{workflow.name}", ())
         for step in workflow_run_steps(text, events):
-            reached = recipe_closure(step.command, bodies, parameterless)
+            reached = recipe_closure(step.command, bodies, parameterless, root=root)
             for name in reached:
                 accumulated.setdefault(name, set()).update(step.events)
     return MappingProxyType({name: tuple(sorted(events)) for name, events in accumulated.items()})
@@ -255,7 +255,7 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     for workflow in scan_directory(workflow_dir, pattern="*.yml"):
         text = workflow.read_text(encoding=UTF_8)
         for step in workflow_run_steps(text, ()):
-            reached = recipe_closure(step.command, bodies, parameterless)
+            reached = recipe_closure(step.command, bodies, parameterless, root=root)
             for name in reached:
                 routed.setdefault(name, set()).add(step.opt_in)
     return frozenset(name for name, states in routed.items() if states == {True})

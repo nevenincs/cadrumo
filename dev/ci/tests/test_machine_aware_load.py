@@ -175,21 +175,61 @@ def _pytest_lines(
                 match = JUST_CALL.search(line)
                 if match is None:
                     continue
-                recipe = match.group("recipe")
-                env_prefix = step_environment + line[: match.start()]
-                call_args = line[match.end() :].split()
-                for raw_body_line in recipe_bodies.get(recipe, []):
-                    body_line = next(iter(executed_lines(raw_body_line)), "")
-                    if re.search(r"(?:^|\s)pytest(?:\s|$)", body_line) is None:
-                        continue
-                    resolved = _resolve_recipe_line(
-                        body_line,
-                        params=recipe_params.get(recipe, []),
-                        call_args=call_args,
-                        env_prefix=env_prefix,
-                        env_backed_variables=env_backed_variables,
+                lines.extend(
+                    _delegated_pytest_lines(
+                        match.group("recipe"),
+                        call_args=line[match.end() :].split(),
+                        env_prefix=step_environment + line[: match.start()],
+                        recipes=(recipe_bodies, recipe_params, env_backed_variables),
+                        callers=frozenset(),
                     )
-                    lines.append(f"{env_prefix}{resolved}")
+                )
+    return lines
+
+
+def _delegated_pytest_lines(
+    recipe: str,
+    *,
+    call_args: list[str],
+    env_prefix: str,
+    recipes: tuple[dict[str, list[str]], dict[str, list[str]], dict[str, str]],
+    callers: frozenset[str],
+) -> list[str]:
+    """Resolve the pytest lines ``just <recipe> <call_args>`` runs, through nested ``just`` calls.
+
+    A recipe that delegates each of its passes to a recipe of its own still runs
+    those passes, so a call is followed to every depth with the caller's
+    arguments substituted at each one; stopping at the first hop would read an
+    aggregate of delegated passes as running no pytest at all.
+    """
+    if recipe in callers:
+        return []
+    recipe_bodies, recipe_params, env_backed_variables = recipes
+    lines: list[str] = []
+    for raw_body_line in recipe_bodies.get(recipe, []):
+        body_line = next(iter(executed_lines(raw_body_line)), "").removeprefix("@")
+        resolved = _resolve_recipe_line(
+            body_line,
+            params=recipe_params.get(recipe, []),
+            call_args=call_args,
+            env_prefix=env_prefix,
+            env_backed_variables=env_backed_variables,
+        )
+        if re.search(r"(?:^|\s)pytest(?:\s|$)", resolved):
+            lines.append(f"{env_prefix}{resolved}")
+            continue
+        match = JUST_CALL.search(resolved)
+        if match is None:
+            continue
+        lines.extend(
+            _delegated_pytest_lines(
+                match.group("recipe"),
+                call_args=resolved[match.end() :].split(),
+                env_prefix=env_prefix + resolved[: match.start()],
+                recipes=recipes,
+                callers=callers | {recipe},
+            )
+        )
     return lines
 
 

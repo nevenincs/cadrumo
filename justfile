@@ -1293,7 +1293,19 @@ test-tooling: test-test-policy test-repository-contracts test-ci-contracts
 [doc('Run repository test-policy and lane-contract tests, including the lane transport serial population.')]
 [group('test')]
 test-test-policy:
+    @just test-test-policy-parallel
+    @just test-test-policy-serial
+
+# The two passes of `test-test-policy` as their own recipes, so the concurrent
+# gate can give each its own node and verdict. Each line lives only here.
+[doc('Run the parallel pass of the repository test-policy and lane-contract tests.')]
+[group('test')]
+test-test-policy-parallel:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
+
+[doc('Run the serial pass of the repository test-policy and lane-contract tests, including the lane transport serial population.')]
+[group('test')]
+test-test-policy-serial:
     @uv run --no-sync pytest -v -n0 -m "integration and serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/tests dev/test_runs/tests --ignore=dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py --ignore=dev/tests/test_registry_conformance_gate.py --ignore=dev/tests/test_registry_identity_enrolment.py
 
 # `docs-check` owns the documentation build's tests. They compile the whole
@@ -1302,7 +1314,17 @@ test-test-policy:
 [doc('Run repository and developer-tool contract tests outside the registry, packaging, CI, documentation-build, and capability populations.')]
 [group('test')]
 test-repository-contracts:
+    @just test-repository-contracts-parallel
+    @just test-repository-contracts-serial
+
+[doc('Run the parallel pass of the repository and developer-tool contract tests.')]
+[group('test')]
+test-repository-contracts-parallel:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/acceptance dev/mcp_eval/tests dev/audit/tests dev/corpus/tests dev/dependency_observation/tests dev/desktop_agent_live/tests dev/docs dev/env/tests dev/fixture_projections/tests dev/identity/tests dev/ingest_harness/tests dev/init/tests dev/locales/tests dev/measure/tests dev/operation_contract_manifest/tests dev/quality/tests dev/readme/tests dev/runtime_lifecycle/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests {{harness_exclusions}} --ignore=dev/docs/tests --ignore=dev/docs/apidocs/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
+
+[doc('Run the serial pass of the repository and developer-tool contract tests.')]
+[group('test')]
+test-repository-contracts-serial:
     @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not native_package and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/acceptance dev/mcp_eval/tests dev/runtime_lifecycle/tests/test_installed_linux_refusal_stdio.py
 
 [doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
@@ -1332,9 +1354,16 @@ test-ci-contracts:
 [doc('Run the deterministic CI, deployment, and release contracts, holding the CPU-budget gates out.')]
 [group('test')]
 test-ci-contracts-gate:
+    @just test-ci-contracts-parallel
+    @just test-ci-contracts-serial
+
+# The deployment contracts read real built pages, so the single-page build
+# stays in front of the pass that reads them.
+[doc('Build the single-page documentation, then run the parallel pass of the deterministic CI, deployment, and release contracts.')]
+[group('test')]
+test-ci-contracts-parallel:
     @uv run --no-sync python -m dev.docs.build --single-page docs/index.md
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus and not google_publisher_client" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
-    @just test-ci-contracts-serial
 
 # Its own recipe purely to tolerate pytest's exit 5, the way the merge gate's
 # serial leg already does. Every serial test these paths held was a CPU budget
@@ -2026,9 +2055,32 @@ docs-availability-check:
 [doc('Run blocking read-only documentation checks; stream failure identities as they happen.')]
 [group('docs')]
 docs-check workers="auto":
-    @uv run --no-sync pytest -v -n {{workers}} {{harness_exclusions}} dev/docs/tests dev/docs/apidocs/tests -m "docs or unit or (integration and not serial)"
+    @just docs-check-tests {{workers}}
     @just test-pytest-harness
+    @just docs-check-prose
+    @just docs-check-docstring-coverage
+
+# The members of `docs-check` other than the harness, which the concurrent gate
+# runs once as its own node rather than a second time inside this aggregate.
+# The test selection is declared once in these variables; the gate's split of
+# it below is derived from them.
+docs_test_paths := "dev/docs/tests dev/docs/apidocs/tests"
+docs_test_markers := "docs or unit or (integration and not serial)"
+docs_strict_build_test := "dev/docs/tests/test_docs_build_full_scope.py"
+
+[doc('Run the documentation build and docstring structure tests; stream failure identities as they happen.')]
+[group('docs')]
+docs-check-tests workers=pytest_workers:
+    @uv run --no-sync pytest -v -n {{workers}} {{harness_exclusions}} {{docs_test_paths}} -m "{{docs_test_markers}}"
+
+[doc('Check documentation prose with doc8; read-only.')]
+[group('docs')]
+docs-check-prose:
     @uv run --no-sync doc8 docs
+
+[doc('Check docstring coverage with interrogate; read-only.')]
+[group('docs')]
+docs-check-docstring-coverage:
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
 # ── Database migrations ──────────────────────────────────────────────────────
@@ -2130,10 +2182,79 @@ release-runtime-matrix PHASE:
 #   a hotfix. The gates before it prove the source is well-formed and the tests
 #   pass; only this one proves the artifact a user receives can still be
 #   produced from it.
+#
+# `gate-local` runs that composition concurrently: dev/ci/gate-local.toml names
+# every member population once as its own node, with the ordering and the
+# exclusive resources between them, and the runner shares one worker budget
+# among the running nodes. Each run keeps a record under var/gate-runs/, which
+# is ignored by the source-tree digest and by every cleaning sweep, and the
+# per-file seconds are taken from it even when the gate is red. LABEL names the
+# tree under test in that record. `gate-local-sequential` keeps the one-after-
+# another composition for comparison.
+gate_budget := env_var_or_default("CADRUMO_GATE_BUDGET", "23")
+gate_record_dir := justfile_directory() / "var" / "gate-runs" / datetime_utc("%Y%m%dT%H%M%SZ")
 
-# Run the local policy gate, including all implementation languages.
+[doc('Run the local policy gate concurrently under one worker budget and keep a durable record; LABEL names the tree.')]
 [group('meta')]
-gate-local:
+[unix]
+gate-local LABEL="unlabelled":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    gate_status=0
+    uv run --no-sync python -m dev.test_runs gate --graph dev/ci/gate-local.toml --budget {{gate_budget}} --record-dir {{quote(gate_record_dir)}} --head-label {{quote(LABEL)}} || gate_status=$?
+    timing_status=0
+    uv run --no-sync python -m dev.test_runs gate-timing --record-dir {{quote(gate_record_dir)}} || timing_status=$?
+    if [ "$gate_status" -ne 0 ]; then
+        exit "$gate_status"
+    fi
+    exit "$timing_status"
+
+[doc('Run the local policy gate concurrently under one worker budget and keep a durable record; LABEL names the tree.')]
+[group('meta')]
+[windows]
+gate-local LABEL="unlabelled":
+    #!pwsh
+    $ErrorActionPreference = 'Continue'
+    uv run --no-sync python -m dev.test_runs gate --graph dev/ci/gate-local.toml --budget {{gate_budget}} --record-dir {{quote(gate_record_dir)}} --head-label {{quote(LABEL)}}
+    $gateStatus = $LASTEXITCODE
+    uv run --no-sync python -m dev.test_runs gate-timing --record-dir {{quote(gate_record_dir)}}
+    $timingStatus = $LASTEXITCODE
+    if ($gateStatus -ne 0) { exit $gateStatus }
+    exit $timingStatus
+
+# Gate-only members of the graph. The runner gives every node its own
+# CADRUMO_CI_REPORTS_DIR, <record>/reports/<node>, so the run's record directory
+# is two levels above it and these files land in the record of the run that
+# wrote them. That variable is outside the code-quality suite's verdict key,
+# so no per-run value reaches the key. The verdict store outlives the runs and
+# sits beside them, outside the digested tree.
+gate_verdict_dir := justfile_directory() / "var" / "gate-verdicts" / "code-quality"
+
+[private]
+_gate-check-code:
+    @uv run --no-sync python -m dev.quality.suite --all-languages --jobs 6 --verdict-dir {{quote(gate_verdict_dir)}} --report {{quote(parent_directory(parent_directory(env_var("CADRUMO_CI_REPORTS_DIR"))) / "check-code.json")}}
+
+# The one strict full-scope documentation build of a gate; it writes the record
+# the strict-build test reads instead of compiling the site again.
+[private]
+_gate-docs-build:
+    @uv run --no-sync python -m dev.docs.build --strict --isolated-source --record {{quote(parent_directory(parent_directory(env_var("CADRUMO_CI_REPORTS_DIR"))) / "docs-strict-build.json")}}
+
+# `docs-check-tests` without the strict-build test, so the long build is not in
+# front of the rest of the documentation tests.
+[private]
+_gate-docs-tests workers=pytest_workers:
+    @uv run --no-sync pytest -v -n {{workers}} {{harness_exclusions}} {{docs_test_paths}} --ignore={{docs_strict_build_test}} -m "{{docs_test_markers}}"
+
+# The strict-build test alone, reading the record `_gate-docs-build` wrote in
+# the same run; the parameter is exported to the test as its variable.
+[private]
+_gate-docs-strict-build-test $CADRUMO_DOCS_STRICT_BUILD_RECORD=(parent_directory(parent_directory(env_var("CADRUMO_CI_REPORTS_DIR"))) / "docs-strict-build.json"):
+    @uv run --no-sync pytest -v -n0 {{docs_strict_build_test}} -m "{{docs_test_markers}}"
+
+# Run the local policy gate one recipe after another, including all implementation languages.
+[group('meta')]
+gate-local-sequential:
     @just check-code
     @just check-registry
     @just fixtures-check

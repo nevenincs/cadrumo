@@ -1,0 +1,266 @@
+# The concurrent composition of `just gate-local`.
+#
+# Every population the sequential gate (`just gate-local-sequential`) runs is a
+# node here exactly once, and an aggregate recipe is split into its members so
+# each node carries one verdict. The one population the sequential gate runs
+# twice, `test-pytest-harness` (inside `docs-check` and inside `test-product`),
+# runs once. `dev/ci/tests/test_gate_local_graph.py` proves both claims from
+# the justfile.
+#
+# Node order is scheduling priority: the longest chains come first so they
+# start first. Weights are budget slots; a pytest node's `workers` reaches its
+# child as CADRUMO_PYTEST_WORKERS. Initial weights follow measured summed test
+# seconds and are meant to be tuned from gate records.
+#
+# Exclusive resources:
+#   authority     - the published registry authority under .authority/
+#   fixtures      - generated fixture projections (seeding and checking)
+#   cmake         - the host preset's CMake configure and build tree
+#   docs-output   - the documentation build root, build/docs
+#   distributions - build/distributions and its work tree
+#
+# The authority publication is a prerequisite of every node that reads the
+# published authority: when it fails, those nodes are reported as not run.
+
+schema = "cadrumo-gate-graph/v1"
+
+# ── Prerequisites ───────────────────────────────────────────────────────────
+
+[[node]]
+name = "authority"
+kind = "prerequisite"
+command = ["just", "registry-publish-authority-if-authority-stale"]
+exclusive = ["authority"]
+
+[[node]]
+name = "desktop-frontend-setup"
+kind = "prerequisite"
+command = ["just", "setup-desktop-frontend"]
+
+[[node]]
+name = "registry-collect"
+kind = "prerequisite"
+command = ["just", "_test-registry-collect"]
+after = ["authority"]
+
+[[node]]
+name = "registry-load"
+kind = "prerequisite"
+command = ["just", "_test-registry-load"]
+after = ["authority"]
+
+# The window projections the desktop request tests bundle; produced through
+# the published authority, by a producer that runs from the frontend packages.
+[[node]]
+name = "registry-seed"
+kind = "prerequisite"
+command = ["just", "_test-registry-seed"]
+after = ["authority", "desktop-frontend-setup"]
+exclusive = ["fixtures"]
+
+# ── Long test populations ───────────────────────────────────────────────────
+
+[[node]]
+name = "unit"
+kind = "pytest-parallel"
+command = ["just", "test-unit"]
+weight = 6
+workers = 6
+after = ["authority"]
+
+[[node]]
+name = "integration-parallel"
+kind = "pytest-parallel"
+command = ["just", "test-integration-parallel"]
+weight = 6
+workers = 6
+after = ["authority"]
+
+# `--no-deps`: the seed is its own prerequisite node above.
+[[node]]
+name = "registry-conformance"
+kind = "pytest-parallel"
+command = ["just", "--no-deps", "_test-registry-conformance"]
+weight = 4
+workers = 4
+after = ["authority", "desktop-frontend-setup", "registry-collect", "registry-load", "registry-seed"]
+
+# Runs once for the whole gate. It executes the sequence corpus, so the
+# documentation build below skips its own copy of that check; the corpus pool
+# is sized to the node's weight.
+[[node]]
+name = "harness"
+kind = "pytest-serial"
+command = ["just", "test-pytest-harness"]
+weight = 6
+after = ["authority"]
+env = { CADRUMO_DOCS_SEQUENCE_JOBS = "6" }
+
+# `check-code` run six gates at a time, reusing clean verdicts whose inputs
+# are unchanged; weight follows the job count. It runs check-frontend and
+# check-rust itself: check-frontend seeds every fixture family and both
+# configure the host CMake preset.
+[[node]]
+name = "check-code"
+kind = "static"
+command = ["just", "_gate-check-code"]
+weight = 6
+after = ["authority", "desktop-frontend-setup"]
+exclusive = ["fixtures", "cmake"]
+
+[[node]]
+name = "repository-contracts-parallel"
+kind = "pytest-parallel"
+command = ["just", "test-repository-contracts-parallel"]
+weight = 3
+workers = 3
+after = ["authority"]
+
+# ── Documentation ───────────────────────────────────────────────────────────
+
+# The gate's one strict full-scope build, serial and long. It writes the
+# record the strict-build test reads, and leaves the sequence corpus to the
+# harness. Only the strict-build test waits on it.
+[[node]]
+name = "docs-build"
+kind = "build"
+command = ["just", "_gate-docs-build"]
+after = ["authority"]
+exclusive = ["docs-output"]
+env = { CADRUMO_DOCS_SKIP_SEQUENCE_CHECK = "1" }
+
+# The documentation tests except the strict-build test.
+[[node]]
+name = "docs-tests"
+kind = "pytest-parallel"
+command = ["just", "_gate-docs-tests"]
+weight = 2
+workers = 2
+after = ["authority"]
+
+[[node]]
+name = "docs-strict-build-test"
+kind = "pytest-serial"
+command = ["just", "_gate-docs-strict-build-test"]
+after = ["authority", "docs-build"]
+
+[[node]]
+name = "docs-prose"
+kind = "static"
+command = ["just", "docs-check-prose"]
+
+[[node]]
+name = "docs-docstring-coverage"
+kind = "static"
+command = ["just", "docs-check-docstring-coverage"]
+
+# ── Static checks ───────────────────────────────────────────────────────────
+
+[[node]]
+name = "check-registry"
+kind = "static"
+command = ["just", "check-registry"]
+after = ["authority"]
+
+# Compares stored window projections, which check-code's frontend check seeds.
+[[node]]
+name = "fixtures-check"
+kind = "static"
+command = ["just", "fixtures-check"]
+after = ["authority", "check-code"]
+exclusive = ["fixtures"]
+
+# The members of `check-repository`.
+[[node]]
+name = "check-identity"
+kind = "static"
+command = ["just", "check-identity"]
+
+[[node]]
+name = "check-docs-api"
+kind = "pytest-serial"
+command = ["just", "check-docs-api"]
+
+[[node]]
+name = "check-workflows"
+kind = "static"
+command = ["just", "check-workflows"]
+
+[[node]]
+name = "check-dependency-vulnerabilities"
+kind = "static"
+command = ["just", "check-dependency-vulnerabilities"]
+
+# ── Short test populations ──────────────────────────────────────────────────
+
+[[node]]
+name = "registry-calculations"
+kind = "pytest-parallel"
+command = ["just", "_test-registry-calculations-parallel"]
+weight = 1
+workers = 1
+after = ["authority", "registry-collect", "registry-load"]
+
+[[node]]
+name = "integration-serial"
+kind = "pytest-serial"
+command = ["just", "test-integration-serial"]
+after = ["authority"]
+
+[[node]]
+name = "test-policy-parallel"
+kind = "pytest-parallel"
+command = ["just", "test-test-policy-parallel"]
+weight = 1
+workers = 1
+after = ["authority"]
+
+[[node]]
+name = "test-policy-serial"
+kind = "pytest-serial"
+command = ["just", "test-test-policy-serial"]
+after = ["authority"]
+
+[[node]]
+name = "repository-contracts-serial"
+kind = "pytest-serial"
+command = ["just", "test-repository-contracts-serial"]
+after = ["authority"]
+
+# Rebuilds the single-page site into the documentation build root, so it waits
+# for the documentation build and the tests that read the site.
+[[node]]
+name = "ci-contracts-parallel"
+kind = "pytest-parallel"
+command = ["just", "test-ci-contracts-parallel"]
+weight = 1
+workers = 1
+after = ["authority", "docs-tests", "docs-strict-build-test"]
+exclusive = ["docs-output"]
+
+[[node]]
+name = "ci-contracts-serial"
+kind = "pytest-serial"
+command = ["just", "test-ci-contracts-serial"]
+after = ["authority"]
+
+# ── Release build ───────────────────────────────────────────────────────────
+
+# `--no-deps`: its one dependency, the operation contract manifest check, is
+# already a member of check-code.
+[[node]]
+name = "build-distributions"
+kind = "build"
+command = ["just", "--no-deps", "build-distributions"]
+after = ["authority"]
+exclusive = ["distributions"]
+
+# ── Last, alone ─────────────────────────────────────────────────────────────
+
+# CPU-budget assertions measure cost only on an otherwise idle machine. Being
+# the last declared node, it starts once every other node has finished.
+[[node]]
+name = "ci-perf"
+kind = "pytest-serial"
+command = ["just", "test-ci-perf"]
+alone = true

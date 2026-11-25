@@ -136,17 +136,19 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-integration-serial",
         "test-calculations",
         "test-registry-conformance",
-        "test-test-policy",
-        "test-repository-contracts",
+        "test-test-policy-parallel",
+        "test-test-policy-serial",
+        "test-repository-contracts-parallel",
+        "test-repository-contracts-serial",
         # The documentation build's tests compile the whole site, so they have
         # the one owner CI runs once, not the repository contracts it runs on
         # every supported interpreter.
-        "docs-check",
+        "docs-check-tests",
         # `test-ci-contracts` itself holds no pytest invocation: it is the
         # local aggregate over these two, which own the population between
         # them. The release proof runs each as its own step and the merge gate
         # runs only the first.
-        "test-ci-contracts-gate",
+        "test-ci-contracts-parallel",
         "test-ci-perf",
         "test-packaging-contracts",
         "test-packaging-serial",
@@ -1038,8 +1040,8 @@ def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() 
             f"testpaths fallback; got {lane.paths!r}"
         )
 
-    docs_check_lanes = [lane for lane in lanes if lane.recipe == "docs-check"]
-    assert docs_check_lanes, "docs-check must still be declared"
+    docs_check_lanes = [lane for lane in lanes if lane.recipe == "docs-check-tests"]
+    assert docs_check_lanes, "docs-check-tests must still be declared"
     for lane in docs_check_lanes:
         assert lane.paths == (
             "dev/docs/tests",

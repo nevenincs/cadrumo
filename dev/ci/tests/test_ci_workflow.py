@@ -313,15 +313,25 @@ def test_ci_contracts_builds_real_docs_before_running_deployment_tests() -> None
     CI contract unnecessarily expensive.
     """
     lines = _JUSTFILE.read_text(encoding="utf-8").splitlines()
-    # `test-ci-contracts-gate`, not the `test-ci-contracts` aggregate above it:
-    # the aggregate is two `just` calls, and the docs corpus has to exist before
-    # the pytest pass that reads it, which is this recipe's.
-    start = lines.index("test-ci-contracts-gate:")
-    body: list[str] = []
-    for line in lines[start + 1 :]:
-        if line and not line.startswith((" ", "\t")):
-            break
-        body.append(line.strip())
+
+    def body_of(header: str) -> list[str]:
+        start = lines.index(header)
+        body: list[str] = []
+        for line in lines[start + 1 :]:
+            if line and not line.startswith((" ", "\t")):
+                break
+            body.append(line.strip())
+        return body
+
+    # The workflow names `test-ci-contracts-gate`, which runs the parallel pass
+    # first and the serial pass after it, each a recipe of its own.
+    assert body_of("test-ci-contracts-gate:")[:2] == [
+        "@just test-ci-contracts-parallel",
+        "@just test-ci-contracts-serial",
+    ]
+    # The docs corpus has to exist before the pytest pass that reads it, which
+    # is the parallel pass's own.
+    body = body_of("test-ci-contracts-parallel:")
 
     build = "uv run --no-sync python -m dev.docs.build --single-page docs/index.md"
     assert body.count(f"@{build}") == 1, "the CI contract must provision one canonical single-page docs build"
