@@ -584,7 +584,7 @@ async function closeDialog() {
   return exec((name) => {
     const button = [
       ...document.querySelectorAll(
-        '[data-slot="dialog-content"] [data-slot="icon-button"]',
+        '[data-slot="dialog-content"] [data-slot="dialog-corner-close"]',
       ),
     ].find(
       (el) =>
@@ -898,7 +898,10 @@ for (const provider of PROVIDERS) {
           timeout: 15_000,
           what: "the sign-in dialog",
         });
-        await closeDialog();
+        assert(
+          await closeDialog(),
+          "no corner close control is shown in the sign-in dialog",
+        );
         await waitFor(async () => !(await exec(pageDialog)).open, {
           timeout: 15_000,
           what: "the first dialog to close",
