@@ -40,6 +40,7 @@ import {
   chooseTab,
   closeSettings,
   dismissSetup,
+  openAllPeriods,
   openDeclaration,
   openLedgerSection,
   openRailPage,
@@ -536,6 +537,16 @@ ux(
           size,
           reached: false,
           reason: opened.reason,
+        });
+        return;
+      }
+      const all = await openAllPeriods();
+      if (!all.reached) {
+        report(t, {
+          page: "ledger/movements",
+          size,
+          reached: false,
+          reason: all.empty ? "world has no movements" : all.reason,
         });
         return;
       }

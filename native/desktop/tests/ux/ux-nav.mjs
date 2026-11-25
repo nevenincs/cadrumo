@@ -365,6 +365,103 @@ export async function openLedgerSection(id, setup) {
     : { reached: false, reason: `setup button does not show "${name}"` };
 }
 
+const LEDGER_DATA_ROWS =
+  'section.ledger-page [role="grid"] [role="row"][data-kind="data"]';
+
+/** How many elements the selector matches that the page draws. */
+function pageShownCount(selector) {
+  return [...document.querySelectorAll(selector)].filter(
+    (el) => el.getClientRects().length > 0,
+  ).length;
+}
+
+/**
+ * Press the first drawn match as a pointer does. The period menu is a Radix
+ * popover, which the WebDriver click does not always open.
+ */
+function pagePointerPress(selector) {
+  const el = [...document.querySelectorAll(selector)].find(
+    (e) => e.getClientRects().length > 0,
+  );
+  if (!el) return false;
+  const at = el.getBoundingClientRect();
+  const base = {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    button: 0,
+    clientX: at.left + at.width / 2,
+    clientY: at.top + at.height / 2,
+  };
+  el.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      ...base,
+      buttons: 1,
+      pointerType: "mouse",
+      isPrimary: true,
+    }),
+  );
+  el.dispatchEvent(new MouseEvent("mousedown", { ...base, buttons: 1 }));
+  el.dispatchEvent(
+    new PointerEvent("pointerup", {
+      ...base,
+      pointerType: "mouse",
+      isPrimary: true,
+    }),
+  );
+  el.dispatchEvent(new MouseEvent("mouseup", base));
+  el.dispatchEvent(new MouseEvent("click", base));
+  return true;
+}
+
+/**
+ * Show the Ledger movements of every period. The Libro opens on the current
+ * quarter, and a world's movements can lie in an earlier year, so a grid read
+ * before this step can be empty without the world being so. Waits for drawn
+ * data rows; answers { reached, reason, rows, empty }, where empty is true
+ * when the period was chosen and the grid still drew no data row.
+ */
+export async function openAllPeriods({ timeout = 60_000 } = {}) {
+  const item = ".ledger-period-menu .ledger-period-all";
+  if (!(await exec(pagePointerPress, "button.ledger-period")))
+    return { reached: false, reason: "no period choice is shown", rows: 0 };
+  const offered = await waitFor(() => exec(pageShownCount, item), {
+    timeout: 10_000,
+    what: "the All periods item",
+    soft: true,
+  });
+  if (!offered)
+    return {
+      reached: false,
+      reason: "the period menu did not offer All periods",
+      rows: 0,
+    };
+  await exec(pagePointerPress, item);
+  const closed = await waitFor(
+    async () => (await exec(pageShownCount, ".ledger-period-menu")) === 0,
+    { timeout: 10_000, what: "the period menu to close", soft: true },
+  );
+  if (!closed)
+    return {
+      reached: false,
+      reason: "the period menu stayed open after All periods",
+      rows: 0,
+    };
+  const rows = await waitFor(() => exec(pageShownCount, LEDGER_DATA_ROWS), {
+    timeout,
+    what: "movements in the grid",
+    soft: true,
+  });
+  return rows
+    ? { reached: true, rows }
+    : {
+        reached: false,
+        reason: `no data row was drawn within ${timeout} ms of choosing All periods`,
+        rows: 0,
+        empty: true,
+      };
+}
+
 /** Which page the window shows now: the roots drawn and the rail buttons pressed. */
 export function pageNow() {
   const drawn = (sel) =>
