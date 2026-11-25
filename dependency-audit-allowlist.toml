@@ -15,3 +15,11 @@ expires = 2027-01-21
 id = "RUSTSEC-2024-0370"
 reason = "proc-macro-error 1.0.4 is unmaintained and has no patched release: a compile-time dependency of glib-macros and gtk3-macros in the same Linux-only gtk3 stack"
 expires = 2027-01-21
+
+# chrono is reached only through tauri's own dependencies (cadrumo-desktop -> tauri-utils ->
+# serde_with -> chrono); no cadrumo crate names it, and 0.4.45 is the newest release.
+
+[[suppression]]
+id = "RUSTSEC-2026-0543"
+reason = "informational: unmaintained, no known vulnerability; transitive via tauri-utils and serde_with; replacement not proportionate"
+expires = 2027-02-23
