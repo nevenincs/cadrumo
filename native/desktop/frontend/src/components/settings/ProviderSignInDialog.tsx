@@ -58,9 +58,12 @@ const STATUS_MISSES = 5;
  * is being stopped for a terminal sign-in is tried again on its own: the
  * service retires the agent and refuses until it is gone, so the window asks
  * again with the freshly read revision, and after the bound it offers the
- * person's own retry. */
+ * person's own retry. The bound is the attempt's own lifetime: on a loaded
+ * machine the agent's stop outlasted a minute while the service still
+ * answered that it was stopping, and the window gave up on a step that was
+ * under way and asked the person to try again. */
 const AGENT_STOP_RETRY_MS = 3_000;
-const AGENT_STOP_WAIT_MS = 60_000;
+const AGENT_STOP_WAIT_MS = LIFETIME_MS;
 const TRANSIENT_STATUS_FAILURES = new Set([
   "read_failed",
   "timed_out",

@@ -661,7 +661,11 @@ test.describe("a start refused while the agent is stopped for a terminal sign-in
     const dialog = await startSignIn(target, shape);
     const progress = dialog.locator('[data-slot="sign-in-agent-stopping"]');
     await expect(progress).toBeVisible();
+    // A stop that outlasts a minute on a loaded machine is still waited for.
     for (let elapsed = 0; elapsed < 75_000; elapsed += 2_500)
+      await target.clock.runFor(2_500);
+    await expect(progress).toBeVisible();
+    for (let elapsed = 75_000; elapsed < 315_000; elapsed += 2_500)
       await target.clock.runFor(2_500);
     const alert = dialog.locator('p[role="alert"]').first();
     await expect(alert).toContainText(
