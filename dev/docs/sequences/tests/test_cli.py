@@ -14,6 +14,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.env_scope import scoped_env_var
+from dev.cache_root import DEV_CACHE_ROOT_ENV
+
 from ..checks import (
     COHERENCE_TIER_PREFIX,
     check_page_coherence,
@@ -499,18 +502,20 @@ class TestPageCoherenceMode:
         page = discovered[0].page
         timeout = 60.0
 
-        exit_code = main(
-            [
-                "check",
-                "--coherence",
-                "--page",
-                page,
-                "--docs-root",
-                str(tmp_path),
-                "--timeout",
-                str(timeout),
-            ],
-        )
+        # An empty verdict cache, so the child runs the page instead of reusing an earlier run's verdict.
+        with scoped_env_var(DEV_CACHE_ROOT_ENV, str(tmp_path / "verdicts")):
+            exit_code = main(
+                [
+                    "check",
+                    "--coherence",
+                    "--page",
+                    page,
+                    "--docs-root",
+                    str(tmp_path),
+                    "--timeout",
+                    str(timeout),
+                ],
+            )
 
         captured = capsys.readouterr()
         assert exit_code == 0

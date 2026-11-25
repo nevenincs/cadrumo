@@ -34,6 +34,12 @@ interrupted run keeps the verdicts it completed. A divergence is never
 recorded, so a record can cost a re-run but can never turn a failing sequence
 green. A record is refused when any input changed while the sequence ran, and
 every reuse reports which recorded verdict stood in for execution.
+
+The page-coherence tier runs a page's sequences cumulatively in one sandbox.
+Its verdict is a pure function of the same corpus inputs, of every executed
+sequence on the page in page order (each through its own key) and of the
+product the page run was observed to read, so a clean page run is recorded
+and reused under a page key built from exactly those parts.
 """
 
 from __future__ import annotations
@@ -44,14 +50,14 @@ import os
 import platform
 import sys
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, Protocol
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev.cache_root import dev_cache_dir
+from dev.cache_root import DEV_CACHE_ROOT_ENV, dev_cache_dir
 from dev.dependency_observation.observation import (
     Observation,
     file_digest,
@@ -71,8 +77,12 @@ from .schema import ParsedSequence
 
 #: Set to bypass reuse and always execute every sequence; passing sequences are still recorded.
 FORCE_ENV: Final[str] = "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK"
+#: Set to the number of check children a whole-corpus check runs at once; the caller sizes the pool.
+#: Only the parent reads it and the children never see it, so it enters no key the children record under.
+SEQUENCE_JOBS_ENV: Final[str] = "CADRUMO_DOCS_SEQUENCE_JOBS"
 _CACHE_NAME: Final[str] = "docs-sequence-verdicts"
 _RECORD_FORMAT: Final[str] = "cli-sequence-verdict/5"
+_COHERENCE_FORMAT: Final[str] = "cli-sequence-page-coherence/1"
 _OBSERVED: Final[str] = "observed"
 _CLOSURE: Final[str] = "closure"
 _PRUNED: Final[tuple[str, ...]] = ("__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache")
@@ -113,9 +123,7 @@ _ENVIRONMENT_NAMES: Final[frozenset[str]] = frozenset(
         "TERM",
     }
 )
-_TOOLING_ENVIRONMENT: Final[frozenset[str]] = frozenset(
-    {"CADRUMO_DEV_CACHE_ROOT", "CADRUMO_DOCS_FORCE_SEQUENCE_CHECK", "CADRUMO_PYTEST_WORKERS"}
-)
+_TOOLING_ENVIRONMENT: Final[frozenset[str]] = frozenset({DEV_CACHE_ROOT_ENV, FORCE_ENV, "CADRUMO_PYTEST_WORKERS"})
 #: Under ``docs/_sequences`` these subtrees hold per-sequence inputs, keyed
 #: sequence by sequence; everything else there (seeds, fixtures) is shared.
 _CONTRACTS_DIRECTORY: Final[str] = "contracts"
@@ -263,19 +271,31 @@ def authority_compiler_closure(repo_root: Path = REPO_ROOT) -> tuple[str, ...]:
     return tuple(sorted(path.relative_to(repo_root).as_posix() for path in closure if not path.is_relative_to(tooling)))
 
 
-def configuring_environment() -> tuple[tuple[str, str], ...]:
-    """Return the environment variables that can change what a sequence prints, sorted."""
+def configuring_environment(environment: Mapping[str, str] | None = None) -> tuple[tuple[str, str], ...]:
+    """Return the variables of ``environment`` (this process's by default) that can change what a sequence prints.
+
+    Returns:
+        The ``(name, value)`` pairs, sorted.
+    """
+    source = os.environ if environment is None else environment
     return tuple(
         sorted(
             (name, value)
-            for name, value in os.environ.items()
+            for name, value in source.items()
             if (name.startswith(_ENVIRONMENT_PREFIX) or name in _ENVIRONMENT_NAMES) and name not in _TOOLING_ENVIRONMENT
         )
     )
 
 
-def _record_path(key: str) -> Path:
-    return dev_cache_dir(_CACHE_NAME) / f"{key}.json"
+def _records_directory(environment: Mapping[str, str] | None) -> Path:
+    """Return where the records of a process running under ``environment`` live.
+
+    A process that runs the sequences itself resolves its own development cache.
+    A parent keying on behalf of its children reads the cache root it pinned
+    into their environment, so both ends name one directory.
+    """
+    pinned = "" if environment is None else environment.get(DEV_CACHE_ROOT_ENV, "").strip()
+    return Path(pinned) / _CACHE_NAME if pinned else dev_cache_dir(_CACHE_NAME)
 
 
 def reuse_forced_off() -> bool:
@@ -300,6 +320,7 @@ class SequenceVerdicts:
         repo_root: Path = REPO_ROOT,
         contracts_root: Path | None = None,
         authority_files: tuple[Path, ...] = (),
+        environment: Mapping[str, str] | None = None,
     ) -> None:
         """Hash the corpus inputs once.
 
@@ -307,11 +328,17 @@ class SequenceVerdicts:
             authority_files: The published authority's files; they enter the
                 depfile so a republication re-runs the check, while the key
                 carries only ``authority_identity``.
+            environment: The environment the sequences execute under, when
+                that is not this process's own: a parent keying for the child
+                interpreters it starts passes theirs, so its keys and record
+                directory are the ones the children use.
         """
         self._authority_files = authority_files
         self._docs_root = docs_root
         self._goldens_root = goldens_root
         self._contracts_root = contracts_root
+        self._environment = environment
+        self._records = _records_directory(environment)
         self._repo_root = repo_root.resolve()
         self._opened_ns = time.time_ns()
         self._trace = _InputTrace()
@@ -326,7 +353,7 @@ class SequenceVerdicts:
         self._unrecorded = tuple(
             path.resolve()
             for path in (
-                dev_cache_dir(_CACHE_NAME).parent,
+                self._records.parent,
                 *(file.parent for file in authority_files),
                 *sequence_inputs,
             )
@@ -342,7 +369,7 @@ class SequenceVerdicts:
             f"{_RECORD_FORMAT}\npython:{sys.version}\nplatform:{platform.system()}\n"
             f"authority:{authority_identity}\n".encode()
         )
-        for name, value in configuring_environment():
+        for name, value in configuring_environment(self._environment):
             digest.update(f"environment:{name}={value}\n".encode())
         for relative in engine_import_closure(repo_root):
             self._trace.hash_tree(digest, repo_root / relative, label=f"engine-import/{relative}")
@@ -415,22 +442,50 @@ class SequenceVerdicts:
             digest.update(hashlib.sha256(content).digest())
         return digest.hexdigest()
 
+    def coherence_key(self, page: str, items: Sequence[KeyedSequence]) -> str:
+        """Return the content key of a page-coherence verdict over ``page``'s executed ``items``, in page order.
+
+        Each sequence enters through its own key, which already carries the
+        corpus inputs, so a change to any shared or per-sequence input, or a
+        sequence added, removed or reordered on the page, gives a new key.
+        """
+        digest = hashlib.sha256()
+        digest.update(f"{_COHERENCE_FORMAT}\ncorpus:{self._corpus_key}\npage:{page}\n".encode())
+        for item in items:
+            if item.page != page:
+                raise ValueError(f"sequence {item.sequence_id!r} belongs to page {item.page!r}, not {page!r}")
+            digest.update(f"sequence:{item.sequence_id}:{self.key(item)}\n".encode())
+        return digest.hexdigest()
+
     def reused(self, item: KeyedSequence) -> str | None:
         """Describe the recorded clean verdict standing in for ``item``, or ``None`` to execute it."""
         if reuse_forced_off():
             return None
         with unobserved():
-            key = self.key(item)
-            try:
-                document = json.loads(_record_path(key).read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                return None
-            if not isinstance(document, dict) or document.get("verdict") != "clean" or document.get("key") != key:
-                return None
-            product = self._product_still_matches(document.get("product"))
+            return self._reused_record(self.key(item))
+
+    def reused_coherence(self, page: str, items: Sequence[KeyedSequence]) -> str | None:
+        """Describe the recorded clean page-coherence verdict standing in for ``page``, or ``None`` to run it."""
+        if reuse_forced_off():
+            return None
+        with unobserved():
+            return self._reused_record(self.coherence_key(page, items))
+
+    def _reused_record(self, key: str) -> str | None:
+        """Describe the clean record held under exactly ``key`` whose observed product still holds, else ``None``."""
+        try:
+            document = json.loads(self._record_path(key).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not isinstance(document, dict) or document.get("verdict") != "clean" or document.get("key") != key:
+            return None
+        product = self._product_still_matches(document.get("product"))
         if product is None:
             return None
         return f"reused clean verdict {key[:12]} recorded {document.get('recorded_at')} ({product})"
+
+    def _record_path(self, key: str) -> Path:
+        return self._records / f"{key}.json"
 
     def _product_still_matches(self, product: object) -> str | None:
         """Return how the recorded product part still holds, or ``None`` when any of it moved."""
@@ -454,7 +509,7 @@ class SequenceVerdicts:
         """Yield the product inputs ``item``'s current record was observed to read, for the depfile."""
         with unobserved():
             try:
-                document = json.loads(_record_path(self.key(item)).read_text(encoding="utf-8"))
+                document = json.loads(self._record_path(self.key(item)).read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 return
             if isinstance(document, dict):
@@ -489,23 +544,71 @@ class SequenceVerdicts:
                 nothing is recorded.
         """
         with unobserved():
+            current = self.key(item)
+        self._record(
+            key=key,
+            current_key=current,
+            label=f"{item.page}/{item.sequence_id}",
+            fields={"format": _RECORD_FORMAT, "page": item.page, "sequence_id": item.sequence_id},
+            observation=observation,
+        )
+
+    def record_clean_coherence(
+        self,
+        page: str,
+        items: Sequence[KeyedSequence],
+        *,
+        key: str,
+        observation: Observation | None = None,
+    ) -> None:
+        """Record that ``page``'s cumulative run over ``items`` was coherent under ``key``, taken before it ran.
+
+        The product part is recorded exactly as :meth:`record_clean` records a
+        sequence's, from the observation of the whole page run.
+
+        Raises:
+            SequenceEngineError: When any input changed while the page ran;
+                nothing is recorded.
+        """
+        with unobserved():
+            current = self.coherence_key(page, items)
+        self._record(
+            key=key,
+            current_key=current,
+            label=f"{page} (page coherence)",
+            fields={
+                "format": _COHERENCE_FORMAT,
+                "page": page,
+                "sequence_ids": [item.sequence_id for item in items],
+            },
+            observation=observation,
+        )
+
+    def _record(
+        self,
+        *,
+        key: str,
+        current_key: str,
+        label: str,
+        fields: dict[str, object],
+        observation: Observation | None,
+    ) -> None:
+        """Write a clean record under ``key`` unless an input moved since ``key`` was taken."""
+        with unobserved():
             changed = list(self.changed_inputs())
-            if self.key(item) != key:
-                changed.append(Path(f"{item.page}/{item.sequence_id}"))
+            if current_key != key:
+                changed.append(Path(label))
             product = None if changed else self._recorded_product(observation, changed)
             if changed or product is None:
                 detail = ", ".join(str(path) for path in changed[:5])
                 raise SequenceEngineError(
-                    f"cli-sequence inputs changed during execution ({detail}); "
-                    f"no verdict was recorded for {item.page}/{item.sequence_id}"
+                    f"cli-sequence inputs changed during execution ({detail}); no verdict was recorded for {label}"
                 )
-        record = _record_path(key)
+        record = self._record_path(key)
         document = {
-            "format": _RECORD_FORMAT,
+            **fields,
             "key": key,
             "verdict": "clean",
-            "page": item.page,
-            "sequence_id": item.sequence_id,
             "recorded_at": datetime.now(UTC).isoformat(),
             "product": product,
         }
@@ -623,9 +726,16 @@ def published_authority_identity() -> str:
 
 
 def published_sequence_verdicts(
-    *, docs_root: Path, goldens_root: Path | None, contracts_root: Path | None = None
+    *,
+    docs_root: Path,
+    goldens_root: Path | None,
+    contracts_root: Path | None = None,
+    environment: Mapping[str, str] | None = None,
 ) -> SequenceVerdicts:
     """Return the verdict authority for ``docs_root`` under the published authority the runner reads.
+
+    ``environment`` is the one the sequences execute under when that is a child
+    interpreter's rather than this process's (:class:`SequenceVerdicts`).
 
     Raises:
         SequenceEngineError: When the published authority is not current.
@@ -638,6 +748,7 @@ def published_sequence_verdicts(
         contracts_root=contracts_root,
         authority_identity=published_authority_identity(),
         authority_files=(bundled_authority_descriptor_path(),),
+        environment=environment,
     )
 
 

@@ -252,7 +252,7 @@ def _coherence_mode(args: argparse.Namespace) -> int:
         return 2
     try:
         coherence_problems = (
-            check_page_coherence(docs_root=args.docs_root, page=args.page)
+            check_page_coherence(docs_root=args.docs_root, page=args.page, verdicts=VerdictPolicy())
             if args.timeout is None
             else check_page_coherence_in_subprocess(
                 docs_root=args.docs_root,
