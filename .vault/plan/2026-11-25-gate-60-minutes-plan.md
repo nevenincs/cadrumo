@@ -9,7 +9,7 @@ related:
   - '[[2026-11-25-gate-60-minutes-research]]'
 modified: '2026-11-25'
 body_schema: body-v2
-body_hash: 'sha256:1f82d9f609fa434c63280a445a4e6ecff4a655a9572bf210a91e7fde4954f8e1'
+body_hash: 'sha256:a4914edf86508e91ddbf8991c9b2df6219ba03cb89917f489f849c3b53922b27'
 ---
 
 <!-- LINK RULES:
@@ -145,14 +145,14 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 
 ## Steps
 
-- [ ] `S01` - Build the concurrent gate runner: node graph with ordering and exclusive resources, one global worker budget, continue past red, separate parallel and serial nodes, tree digest at start and end, durable per-node record with JUnit and per-file timing aggregation; `dev/test_runs`.
+- [x] `S01` - Build the concurrent gate runner: node graph with ordering and exclusive resources, one global worker budget, continue past red, separate parallel and serial nodes, tree digest at start and end, durable per-node record with JUnit and per-file timing aggregation; `dev/test_runs`.
 - [ ] `S02` - Compose gate-local on the runner so every current population runs exactly once: one harness run, sequence check skipped inside the gate docs build, prerequisites once, CPU-budget benchmarks last and alone; `justfile`.
 - [ ] `S03` - Balance shards by recorded per-file seconds with size fallback and distribute tail-setting files across workers by test; `dev/ci/gate_shards.py`.
-- [ ] `S04` - Load the compiled bundled registry from a digest-keyed disk copy proven equal to a fresh compile, and make the clean-validation record survive process exit; `dev/registry`.
-- [ ] `S05` - Compile the documentation strictly once per gate with a digest-keyed record read by the strict-build test, size the sequence pool to the budget, split the golden check per sequence, and key the parent page skip on the child environment; `dev/docs`.
-- [ ] `S06` - Run the static checks concurrently and reuse a clean verdict when the content-digest input key matches, keeping each positive control under the same key; `dev/quality`.
+- [x] `S04` - Load the compiled bundled registry from a digest-keyed disk copy proven equal to a fresh compile, and make the clean-validation record survive process exit; `dev/registry`.
+- [x] `S05` - Compile the documentation strictly once per gate with a digest-keyed record read by the strict-build test, size the sequence pool to the budget, split the golden check per sequence, and key the parent page skip on the child environment; `dev/docs`.
+- [x] `S06` - Run the static checks concurrently and reuse a clean verdict when the content-digest input key matches, keeping each positive control under the same key; `dev/quality`.
 - [x] `S07` - Establish whether the rendering capture serialises the registry payload twice; finding: it does not (the two digests hash two different serialisations by contract and the payload is not a function of generation, modelo and revision), so no product change is made; `src/cadrumo/domain/modelos/calculation_revision_rendering.py`.
-- [ ] `S08` - Hoist per-revision work in the work-form answer tests to module scope, use persona replay reuse where a test needs no fresh replay, and add the producing-source digest to the sealed-world key; `src/cadrumo/adapters/persistence/profile/tests`.
+- [x] `S08` - Hoist per-revision work in the work-form answer tests to module scope, use persona replay reuse where a test needs no fresh replay, and add the producing-source digest to the sealed-world key; `src/cadrumo/adapters/persistence/profile/tests`.
 - [ ] `S09` - Apply the three recorded coverage reductions after showing the retained tests assert every claim of the removed cases; `dev/acceptance/iva/tests`.
 - [ ] `S10` - Seed the shared wheel cohort from the one gate distribution build and move the uncached wheel-building tests onto it; `dev/packaging`.
 - [ ] `S11` - Measure a full gate on a still tree and a quiet machine, record per-node times against the 60 minute target, and write the status report; `.tmp/2026-11-25-evidence/GATE60-STATUS.md`.

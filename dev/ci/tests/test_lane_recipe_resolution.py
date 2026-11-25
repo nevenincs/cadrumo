@@ -23,7 +23,7 @@ import pytest
 from dev.paths import REPO_ROOT
 
 from ..lane_recipe_commands import recipe_bodies, recipes_invoked_by
-from ..lane_workflow_graph import workflow_run_steps
+from ..lane_workflow_graph import ci_invoked_recipes, workflow_run_steps
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,7 +55,7 @@ def _workflow_callees(root: Path) -> dict[str, set[str]]:
         return callees
     for workflow in sorted(path for path in workflow_dir.iterdir() if path.suffix in (".yml", ".yaml")):
         for step in workflow_run_steps(workflow.read_text(encoding=_UTF_8), ()):
-            for name in recipes_invoked_by(step.command):
+            for name in recipes_invoked_by(step.command, root=root):
                 callees.setdefault(name, set()).add(workflow.name)
     return callees
 
@@ -66,7 +66,7 @@ def _body_callees(root: Path) -> dict[str, set[str]]:
     bodies = recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
     callees: dict[str, set[str]] = {}
     for caller, text in bodies.items():
-        for name in recipes_invoked_by(text):
+        for name in recipes_invoked_by(text, root=root):
             callees.setdefault(name, set()).add(caller)
     return callees
 
@@ -91,17 +91,65 @@ def test_every_workflow_just_call_names_a_declared_recipe() -> None:
     assert _unresolved_workflow_callees(REPO_ROOT) == []
 
 
-def test_every_recipe_body_callee_resolves() -> None:
-    """Every recipe-to-recipe call names a declared recipe."""
-    declared = _declared_recipes(REPO_ROOT)
-    unresolved = {
-        (caller, name)
-        for name, callers in _body_callees(REPO_ROOT).items()
-        if name not in declared
-        for caller in callers
+def _unresolved_body_callees(root: Path) -> set[tuple[str, str]]:
+    """Return every (caller, callee) recipe call naming no declared recipe."""
+    declared = _declared_recipes(root)
+    return {
+        (caller, name) for name, callers in _body_callees(root).items() if name not in declared for caller in callers
     }
 
-    assert unresolved == set()
+
+def test_every_recipe_body_callee_resolves() -> None:
+    """Every recipe-to-recipe call names a declared recipe, including the nodes of a gate graph."""
+    assert _unresolved_body_callees(REPO_ROOT) == set()
+
+
+_GATE_RECIPE_BODY: Final = (
+    "gate:\n"
+    "    uv run python -m dev.test_runs gate --graph ci/gate.toml --budget {{budget}} --head-label {{quote(LABEL)}}\n\n"
+)
+
+
+def _gate_tree(root: Path, node_recipe: str) -> None:
+    """Write a tree whose `gate` recipe reaches `graph-only` solely through its gate graph."""
+    (root / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding=_UTF_8)
+    (root / "justfile").write_text(_GATE_RECIPE_BODY + "graph-only:\n    pytest -q src -m unit\n", encoding=_UTF_8)
+    (root / "ci").mkdir()
+    (root / "ci" / "gate.toml").write_text(
+        'schema = "cadrumo-gate-graph/v1"\n\n[[node]]\nname = "only"\nkind = "pytest-parallel"\n'
+        f'command = ["just", "--no-deps", "{node_recipe}"]\n',
+        encoding=_UTF_8,
+    )
+    workflows = root / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "gate.yml").write_text(
+        "name: g\non: push\njobs:\n  j:\n    steps:\n      - run: just gate\n", encoding=_UTF_8
+    )
+
+
+def test_a_recipe_reached_only_through_a_gate_graph_is_invoked(tmp_path: Path) -> None:
+    """`dev.test_runs gate` names no lane; its recipes are its graph's nodes, read from the graph file."""
+    _gate_tree(tmp_path, "graph-only")
+    body = recipe_bodies((tmp_path / "justfile").read_text(encoding=_UTF_8))["gate"]
+
+    assert recipes_invoked_by(body, root=tmp_path) == {"graph-only"}
+    assert ci_invoked_recipes(tmp_path) == frozenset({"gate", "graph-only"})
+    assert _unresolved_body_callees(tmp_path) == set()
+
+
+def test_a_gate_graph_naming_a_missing_recipe_is_unresolved(tmp_path: Path) -> None:
+    """A node naming a recipe the justfile lost is reported, not read as invoking nothing."""
+    _gate_tree(tmp_path, "renamed-away")
+
+    assert _unresolved_body_callees(tmp_path) == {("gate", "renamed-away")}
+
+
+def test_a_gate_call_whose_graph_cannot_be_read_fails_loudly(tmp_path: Path) -> None:
+    """A graph that cannot be read must not read as a gate that invokes nothing."""
+    with pytest.raises(FileNotFoundError):
+        recipes_invoked_by("python -m dev.test_runs gate --graph absent.toml --budget 1\n", root=tmp_path)
+    with pytest.raises(ValueError, match="unresolved template"):
+        recipes_invoked_by("python -m dev.test_runs gate --graph {{graph}} --budget 1\n", root=tmp_path)
 
 
 def test_a_renamed_recipe_is_named_rather_than_read_as_invoking_nothing(tmp_path: Path) -> None:

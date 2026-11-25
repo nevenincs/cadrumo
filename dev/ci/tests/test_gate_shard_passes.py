@@ -38,7 +38,7 @@ exit 97
 """
 
 
-def _run_shard(tmp_path: Path, parallel: int, serial: int) -> tuple[int, list[str]]:
+def _run_shard(tmp_path: Path, parallel: int, serial: int) -> tuple[int, list[str], str]:
     shims = tmp_path / "bin"
     shims.mkdir()
     stand_in = shims / "uv"
@@ -70,7 +70,7 @@ def _run_shard(tmp_path: Path, parallel: int, serial: int) -> tuple[int, list[st
     )
     passes = pass_log.read_text(encoding="utf-8").split() if pass_log.exists() else []
     assert "unexpected uv call" not in result.stderr, result.stderr
-    return result.returncode, passes
+    return result.returncode, passes, result.stderr
 
 
 @pytest.mark.parametrize(
@@ -87,12 +87,13 @@ def _run_shard(tmp_path: Path, parallel: int, serial: int) -> tuple[int, list[st
 def test_the_shard_runs_both_passes_and_fails_with_the_first_failed_one(
     tmp_path: Path, parallel: int, serial: int, expected: int
 ) -> None:
-    status, passes = _run_shard(tmp_path, parallel, serial)
-    assert passes == ["parallel", "serial"]
+    status, passes, stderr = _run_shard(tmp_path, parallel, serial)
+    # just runs this bash recipe through `cygpath` on Windows; without it no pass runs and stderr says so.
+    assert passes == ["parallel", "serial"], stderr
     assert status == expected
 
 
 def test_a_shard_that_selects_no_test_in_either_pass_fails(tmp_path: Path) -> None:
-    status, passes = _run_shard(tmp_path, 5, 5)
-    assert passes == ["parallel", "serial"]
+    status, passes, stderr = _run_shard(tmp_path, 5, 5)
+    assert passes == ["parallel", "serial"], stderr
     assert status == 1

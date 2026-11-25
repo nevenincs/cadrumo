@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import re
 import shlex
 import shutil
@@ -10,7 +11,8 @@ from typing import Final
 
 from dev.first_party_source import FIRST_PARTY_ROOTS
 from dev.packaging.command_execution import run_command
-from dev.paths import UTF_8
+from dev.paths import REPO_ROOT, UTF_8
+from dev.test_runs.gate_graph import load_gate_graph
 from dev.test_runs.lanes import lane_command_parser
 
 from .lane_contracts import Lane
@@ -34,7 +36,9 @@ _RECIPE_HEADER: Final = re.compile(r"^(?P<name>_?[a-z][\w-]*)\b[^:\n]*:(?![=])")
 
 
 #: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
-JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)")
+#: ``--no-deps`` is the one option a call here places before the recipe; it
+#: changes which dependencies run, never which recipe is named.
+JUST_CALL: Final = re.compile(r"\bjust\s+(?:--no-deps\s+)?(?P<recipe>_?[a-z][\w-]*)")
 
 
 #: A bare `{{name}}` justfile interpolation. Deliberately narrow: an expression
@@ -169,7 +173,7 @@ def justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     return lanes
 
 
-def recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) -> set[str]:
+def recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset(), *, root: Path = REPO_ROOT) -> set[str]:
     """Return every recipe name an EXECUTED ``just <recipe>`` call in ``text`` names.
 
     Executed, because this reads justfile recipe BODIES as well as workflow
@@ -187,10 +191,14 @@ def recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) -
     this was already closed -- ``run:`` blocks are read out of parsed YAML, so
     step names and workflow comments never reach here -- and the justfile side
     was not.
+
+    A gate graph a ``python -m dev.test_runs gate --graph FILE`` call names is
+    read from ``root``, and the recipes its nodes run count as invoked. An
+    unreadable or invalid graph raises rather than reading as invoking nothing.
     """
     invoked: set[str] = set()
     for line in executed_lines(text):
-        invoked.update(_lane_transport_recipes(line))
+        invoked.update(_lane_transport_recipes(line, parameterless, root))
         for match in JUST_CALL.finditer(line):
             recipe = match.group("recipe")
             invoked.add(recipe)
@@ -208,12 +216,17 @@ def recipes_invoked_by(text: str, parameterless: frozenset[str] = frozenset()) -
 _LANE_TRANSPORT_MODULE: Final = "dev.test_runs"
 
 
-def _lane_transport_recipes(line: str) -> set[str]:
-    """Return the recipes a ``python -m dev.test_runs lanes ...`` call runs.
+#: The transport action whose commands live in a graph file, not on its command line.
+_GATE_ACTION: Final = "gate"
+
+
+def _lane_transport_recipes(line: str, parameterless: frozenset[str], root: Path) -> set[str]:
+    """Return the recipes a ``python -m dev.test_runs lanes|gate ...`` call runs.
 
     The transport invokes each named lane as ``just <lane>``, so those names
     are recipe calls the ``just`` pattern cannot see. They are read with the
     transport's own parser, so an option value is never mistaken for a lane.
+    A ``gate`` call names no lane; its recipes are the nodes of its graph.
     """
     try:
         tokens = shlex.split(line)
@@ -228,11 +241,41 @@ def _lane_transport_recipes(line: str) -> set[str]:
             if argument in {"&&", "||", ";", "|"}:
                 break
             arguments.append(argument)
+        if arguments[:1] == [_GATE_ACTION]:
+            recipes.update(_gate_graph_recipes(arguments[1:], parameterless, root))
+            continue
         try:
             parsed, _ = lane_command_parser().parse_known_args(arguments)
         except SystemExit:
             continue
         recipes.update(str(lane) for lane in parsed.lane)
+    return recipes
+
+
+def _gate_graph_recipes(arguments: list[str], parameterless: frozenset[str], root: Path) -> set[str]:
+    """Return the recipes the nodes of the graph a ``gate`` call names run.
+
+    Only ``--graph`` and ``--only`` decide that, so only they are read: the
+    other values are often unresolved ``{{...}}`` templates in recipe text,
+    which the transport's typed parser would refuse and so drop the call.
+    The graph is loaded by the runner's own loader, so a node this reads is a
+    node the runner would run.
+    """
+    reader = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    reader.add_argument("--graph")
+    reader.add_argument("--only", action="append", default=[])
+    parsed, _ = reader.parse_known_args(arguments)
+    graph_argument = parsed.graph
+    if not isinstance(graph_argument, str) or not graph_argument:
+        raise ValueError("a `dev.test_runs gate` call names no --graph file")
+    if "{{" in graph_argument:
+        raise ValueError(f"the gate graph path is an unresolved template: {graph_argument}")
+    graph_path = Path(graph_argument)
+    graph = load_gate_graph(graph_path if graph_path.is_absolute() else root / graph_path)
+    selected = graph.select(tuple(str(name) for name in parsed.only))
+    recipes: set[str] = set()
+    for node in selected.nodes:
+        recipes.update(recipes_invoked_by(shlex.join(node.command), parameterless, root=root))
     return recipes
 
 
@@ -361,14 +404,16 @@ def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
     return tuple(line.removeprefix("@") for line in executed_lines(body))
 
 
-def recipe_closure(command: str, bodies: dict[str, str], parameterless: frozenset[str]) -> set[str]:
+def recipe_closure(
+    command: str, bodies: dict[str, str], parameterless: frozenset[str], *, root: Path = REPO_ROOT
+) -> set[str]:
     """Close over all recipe calls while retaining already reached names."""
-    reached = recipes_invoked_by(command, parameterless)
+    reached = recipes_invoked_by(command, parameterless, root=root)
     frontier = set(reached)
     while frontier:
         nxt: set[str] = set()
         for name in frontier:
-            for called in recipes_invoked_by(bodies.get(name, ""), parameterless):
+            for called in recipes_invoked_by(bodies.get(name, ""), parameterless, root=root):
                 if called not in reached:
                     reached.add(called)
                     nxt.add(called)
