@@ -58,6 +58,12 @@ from .profile_schema import (
 from .runtime_catalogues import compile_runtime_catalogues
 from .source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
+from .validated_authority_copy import (
+    ValidatedAuthorityCopy,
+    publish_validated_authority_copy,
+    read_validated_authority_copy,
+    validated_authority_copy_key,
+)
 from .validation_verdict_cache import (
     ValidationVerdictScope,
     is_validated,
@@ -203,10 +209,30 @@ def compile_validated_authority_uncached(
     a registry-wide verdict skips validation, a per-modelo verdict skips that
     modelo, and a clean run records both for later processes.
     """
+    return _compile_and_validate(
+        registry_root,
+        source_root,
+        identity=identity,
+        profile_schema_path=profile_schema_path,
+        captured_profile_schema=captured_profile_schema,
+        verdicts=verdicts,
+    )[1]
+
+
+def _compile_and_validate(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity | None,
+    profile_schema_path: Path | None,
+    captured_profile_schema: CapturedProfileSchema | None,
+    verdicts: ValidationVerdictScope | None,
+) -> tuple[StructuralRegistryComponents, ValidatedRegistryAuthority]:
+    """Compile and validate, returning the structural components beside the authority."""
     root, sources_root = canonical_authoring_root_pair(registry_root, source_root)
     if identity is None:
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
-    authority = compile_structural_authority(
+    components = compile_structural_authority(
         root,
         sources_root,
         identity=identity,
@@ -214,11 +240,11 @@ def compile_validated_authority_uncached(
         captured_profile_schema=captured_profile_schema,
     )
     if verdicts is None:
-        return _validated_structural_authority(authority, sources_root, verdicts=None)
+        return components, _validated_structural_authority(components, sources_root, verdicts=None)
     # Workers that start together on the same inputs wait here for the first
     # one's verdict instead of each validating the whole registry.
     with verdict_validation_lock(verdicts.registry_key):
-        return _validated_structural_authority(authority, sources_root, verdicts=verdicts)
+        return components, _validated_structural_authority(components, sources_root, verdicts=verdicts)
 
 
 def _validated_structural_authority(
@@ -327,16 +353,54 @@ def compile_validated_authority(
             registry_identity_digest=receipt.identity.digest,
             source_receipt=receipt.source_receipt,
             compiler_source_tree_digest=receipt.compiler_source_tree_digest,
-            build=lambda: compile_validated_authority_uncached(
-                pair.registry_root,
-                pair.source_root,
-                identity=receipt.identity,
-                profile_schema_path=receipt.profile_schema_path,
-                captured_profile_schema=receipt.captured_profile_schema,
-                verdicts=receipt.verdicts,
-            ),
+            build=lambda: _compile_through_validated_copy(receipt),
         )
     register_authoring_authority(authority, source_root=pair.source_root)
+    return authority
+
+
+def _compile_through_validated_copy(receipt: CompilationReceipt) -> ValidatedRegistryAuthority:
+    """Read the bundled registry's validated copy for this receipt, or compile and publish it.
+
+    The copy is consulted only while the clean validation it was published
+    under is still on record; any other root, or a missing record, compiles.
+    """
+    validation_key = receipt.verdicts.registry_key if receipt.verdicts is not None else None
+    copy_key = validated_authority_copy_key(
+        registry_root=receipt.pair.registry_root,
+        source_root=receipt.pair.source_root,
+        registry_identity_digest=receipt.identity.digest,
+        source_receipt=receipt.source_receipt,
+        compiler_source_tree_digest=receipt.compiler_source_tree_digest,
+        validation_key=validation_key,
+    )
+    if copy_key is not None and validation_key is not None and is_validated(validation_key):
+        copy = read_validated_authority_copy(copy_key)
+        if copy is not None and copy.identity_digest == receipt.identity.digest:
+            return ValidatedRegistryAuthority.from_validated_components(
+                modelos=copy.modelos,
+                catalogues=copy.catalogues,
+                identity_digest=copy.identity_digest,
+                profile_schema=copy.profile_schema,
+            )
+    components, authority = _compile_and_validate(
+        receipt.pair.registry_root,
+        receipt.pair.source_root,
+        identity=receipt.identity,
+        profile_schema_path=receipt.profile_schema_path,
+        captured_profile_schema=receipt.captured_profile_schema,
+        verdicts=receipt.verdicts,
+    )
+    if copy_key is not None and validation_key is not None and is_validated(validation_key):
+        publish_validated_authority_copy(
+            copy_key,
+            ValidatedAuthorityCopy(
+                modelos=components.modelos,
+                catalogues=components.catalogues,
+                identity_digest=components.identity_digest,
+                profile_schema=components.profile_schema,
+            ),
+        )
     return authority
 
 
@@ -530,7 +594,8 @@ def compiled_bundled_authority() -> ValidatedRegistryAuthority:
     Runtime reads only the digest-checked published artifact. Development tools, screens and tests
     compile the same sources instead. The result is cached by registry identity,
     so an unchanged tree compiles once per process and any change to the sources
-    compiles afresh.
+    compiles afresh. Across processes the validated copy serves the same inputs
+    without compiling them again.
     """
     registry_root, source_root = canonical_authoring_root_pair(bundled_path("registry", "aeat"), bundled_path())
     return compile_validated_authority(registry_root, source_root)

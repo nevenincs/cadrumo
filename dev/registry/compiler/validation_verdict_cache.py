@@ -32,6 +32,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import lru_cache
+from importlib import import_module
 from pathlib import Path
 from types import MappingProxyType
 from typing import Final
@@ -43,6 +44,14 @@ from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.type_guards import is_str_keyed_dict
 from dev.cache_root import dev_cache_dir
+
+# The development path constants seed the checkout's storage root when the
+# environment names none. Loading them before any store below is resolved keeps
+# one process's lookup, lock and record in one directory. Validation imports
+# them lazily, so without this a fresh process looked its verdict up under the
+# default storage root and recorded it under the checkout's, and no later
+# process ever found it.
+import_module("dev.paths")
 
 VERDICT_CACHE_DIR_ENV: Final = "CADRUMO_REGISTRY_VERDICT_CACHE_DIR"
 _SCHEMA: Final = "registry-validation-verdict/v1"
