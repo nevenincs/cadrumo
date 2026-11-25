@@ -42,7 +42,7 @@ import {
   win,
 } from "./ux-driver.mjs";
 import { callsSince, pageTimeInvokes } from "./ux-calls.mjs";
-import { dismissSetup, openRailPage } from "./ux-nav.mjs";
+import { dismissSetup, openAllPeriods, openRailPage } from "./ux-nav.mjs";
 
 const STAGED_SHA256 = (process.env.CADRUMO_UX_STAGED_SHA256 ?? "")
   .trim()
@@ -316,27 +316,12 @@ async function resetGrid() {
   assert(reached.reached, reached.reason ?? "the ledger did not open");
   // The Libro opens on the current quarter; the world's movements span the
   // horizon year, so every walk works on all periods.
-  await pressOrFail("button.ledger-period", "the period choice");
-  await shownWithin(
-    ".ledger-period-menu .ledger-period-all",
-    "All periods",
-    10_000,
-  );
-  await pressOrFail(".ledger-period-menu .ledger-period-all", "All periods");
-  await waitFor(async () => !(await exec(pageShown, ".ledger-period-menu")), {
-    timeout: 10_000,
-    what: "the period menu to close",
-  });
-  const filled = await waitFor(async () => (await ledger()).rows.length > 0, {
-    timeout: ANSWER_MS,
-    what: "movements in the grid",
-    soft: true,
-  });
-  if (!filled) {
+  const all = await openAllPeriods({ timeout: ANSWER_MS });
+  if (!all.reached) {
     const path = await shot("no-movements");
     const page = await exec(pageText, PAGE);
     assert.fail(
-      `no movements in the grid (screenshot ${path}): ${(page ?? "no ledger page").slice(0, 600)}`,
+      `no movements in the grid: ${all.reason} (screenshot ${path}): ${(page ?? "no ledger page").slice(0, 600)}`,
     );
   }
   if ((await ledger()).rows.some((row) => row.selected)) await escape();
