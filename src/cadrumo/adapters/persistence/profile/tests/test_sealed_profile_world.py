@@ -22,7 +22,9 @@ from .....core.config import load_settings
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import frozen_clock, now
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.user_profile.values import UserProfileFact
+from .....tests.run_artifact import RUN_ARTIFACT_ROOT_ENV
 from ...storage.master_key.active_session import close_active_bucket_session, current_active_bucket_session
 from ...storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
@@ -35,8 +37,10 @@ from .sealed_profile_world import (
     SealedProfileWorld,
     copied_profile_world,
     copy_sealed_tree,
+    producing_sources_digest,
     sealed_profile_world,
     sealed_tree,
+    sealed_world_digest,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -88,6 +92,54 @@ def test_copy_leaves_only_the_storage_roots_coordination_behind(tmp_path: Path) 
     assert not (nested / "cadrumo-storage" / coordination).exists()
     assert (nested / "cadrumo-storage" / buckets / coordination / "kept").is_file()
     assert (nested / "sibling-secrets" / "key").read_text() == "substrate"
+
+
+def test_a_world_sealed_by_other_producing_code_is_not_served_and_the_same_code_is(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The world's run cache entry is keyed by the code that produced it as well as by its named inputs."""
+    monkeypatch.setenv(RUN_ARTIFACT_ROOT_ENV, str(tmp_path / "run-cache"))
+    current = producing_sources_digest()
+    assert len(current) == 64 and current == producing_sources_digest()
+    registered: list[str] = []
+    create, decode = profile_authority_contexts()
+
+    def register() -> str:
+        profile_id = register_profile_with_credentials(
+            label="sources keyed",
+            passphrase=_password(),
+            profile_create_context=create,
+            profile_decode_context=decode,
+        ).profile_id
+        registered.append(profile_id)
+        return profile_id
+
+    def sealed_by(sources: str) -> SealedProfileWorld:
+        monkeypatch.setattr(
+            "cadrumo.adapters.persistence.profile.tests.sealed_profile_world.producing_sources_digest",
+            lambda: sources,
+        )
+        return sealed_profile_world(("sealed-world-proof", "sources keyed", str(tmp_path)), register)
+
+    older, newer = "a" * 64, current
+    first = sealed_by(older)
+    # Forget this process's worlds, so the same code is served from the run cache as another worker would be.
+    monkeypatch.setattr("cadrumo.adapters.persistence.profile.tests.sealed_profile_world._WORLDS", {})
+    again = sealed_by(older)
+    changed = sealed_by(newer)
+
+    assert again == first, "the same producing code must be served the world it sealed"
+    assert len(registered) == 2, "a world sealed by other producing code was served"
+    assert changed.origin != first.origin and changed.profile_id != first.profile_id
+    with bundled_indexed_authority().operation() as operation:
+        generation = str(operation.generation)
+    for world, sources in ((first, older), (changed, newer)):
+        assert world.origin.parent.name == sealed_world_digest(
+            ("sealed-world-proof", "sources keyed", str(tmp_path)),
+            generation=generation,
+            password=_password(),
+            sources=sources,
+        )
 
 
 def test_a_tree_is_built_once_per_key_and_again_when_its_directory_is_gone(tmp_path: Path) -> None:

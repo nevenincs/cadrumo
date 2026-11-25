@@ -40,6 +40,7 @@ from collections.abc import Callable, Generator, Hashable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
+from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, cast
@@ -53,7 +54,14 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_indexed_authority
-from .....tests.run_artifact import RunArtifact, file_inputs_digest, run_artifact, run_artifact_root
+from .....tests.inventory import REPO_ROOT, SRC_CADRUMO, python_files_under
+from .....tests.run_artifact import (
+    RunArtifact,
+    file_inputs_digest,
+    run_artifact,
+    run_artifact_root,
+    run_scoped_digest,
+)
 from ...storage.custody.tests.portable_password_custody import portable_password_custody
 from ...storage.master_key.active_session import close_active_bucket_session, current_active_bucket_session
 from ...storage.sql.engine import dispose_engine
@@ -69,9 +77,11 @@ __all__ = [
     "copy_sealed_tree",
     "copy_world_into_storage_root",
     "derived_profile_world",
+    "producing_sources_digest",
     "publish_world_session",
     "sealed_profile_world",
     "sealed_tree",
+    "sealed_world_digest",
     "storage_root_is_unused",
 ]
 
@@ -87,6 +97,9 @@ _WORLD_RECORD = "world.json"
 #: Every key is its own world rather than a newer version of one, so a run keeps all it publishes.
 _WORLD_RETAIN = 4096
 _WORLDS: dict[str, tuple[RunArtifact, SealedProfileWorld]] = {}
+_SOURCES_KIND = "sealed-profile-world-sources"
+#: The packages whose code registers, imports, replays and seals a world, the tests' own support included.
+_PRODUCING_PACKAGES = (SRC_CADRUMO, REPO_ROOT / "src" / "cadrumo_runtime")
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,6 +191,36 @@ def _read_world(entry: Path) -> SealedProfileWorld | None:
         return None
 
 
+def _producing_sources() -> list[Path]:
+    return [path for package in _PRODUCING_PACKAGES for path in python_files_under(package, include_data=False)]
+
+
+@cache
+def producing_sources_digest() -> str:
+    """Digest the Python source of every package whose code builds a world, once per run.
+
+    A world is the output of that code as much as of its key, so a world sealed
+    by older registration, import or replay code must not be served to newer
+    code. The first process of a run hashes the sources and the rest of the run
+    reads its record, so a peer's edit in a shared worktree cannot key one
+    run's worlds twice; each process then holds the value.
+    """
+
+    def compute() -> str:
+        return file_inputs_digest(_SOURCES_KIND, REPO_ROOT, _producing_sources())
+
+    try:
+        return run_scoped_digest(_SOURCES_KIND, compute)
+    except RuntimeError:
+        # Outside a test run there is no run to agree with, so the process takes its own reading.
+        return compute()
+
+
+def sealed_world_digest(key: Hashable, *, generation: str, password: str, sources: str) -> str:
+    """The run cache entry of the world ``key`` names, sealed under ``generation``, ``password`` and ``sources``."""
+    return sha256_hex(repr((key, generation, sha256_hex(password.encode()), sources)).encode())[:32]
+
+
 def sealed_profile_world(key: Hashable, register: Callable[[], str]) -> SealedProfileWorld:
     """Return this run's world for ``key``, registering its one profile on first use anywhere in the run.
 
@@ -187,7 +230,9 @@ def sealed_profile_world(key: Hashable, register: Callable[[], str]) -> SealedPr
     in this process rather than launched as a child, because the child is not
     what any copy goes on to test. ``key`` must name every input ``register``
     depends on; it is identified by its ``repr`` together with the authority
-    generation and password a copy opens under.
+    generation and password a copy opens under and the digest of the code that
+    produces it (:func:`producing_sources_digest`). A derived world's key names
+    its base world's entry, so it inherits all three.
 
     The world's synthetic key is recorded beside its tree, because a copy is
     resumed from it in whichever worker takes the copy; the wrapped key it
@@ -196,7 +241,7 @@ def sealed_profile_world(key: Hashable, register: Callable[[], str]) -> SealedPr
     with bundled_indexed_authority().operation() as operation:
         generation = str(operation.generation)
     password = load_settings().cadrumo_dev_test_database_password.get_secret_value()
-    digest = sha256_hex(repr((key, generation, sha256_hex(password.encode()))).encode())[:32]
+    digest = sealed_world_digest(key, generation=generation, password=password, sources=producing_sources_digest())
     return _published_world(digest, lambda tree: _register_world(tree, register))
 
 

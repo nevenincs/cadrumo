@@ -256,7 +256,9 @@ def test_a_persona_without_prorrata_exports_before_filing_and_files_the_ninguna_
 def _export_then_file_the_last_return(tmp_path: Path, persona_id: str, horizon: int) -> ProrrataEntryProjection:
     _persona_for(persona_id, horizon)
     year = horizon - 1
-    with materialised_persona(persona_id, tmp_path / "world", ReplayScope.RECORDS, horizon=horizon) as materialised:
+    with materialised_persona(
+        persona_id, tmp_path / "world", ReplayScope.RECORDS, horizon=horizon, reuse=True
+    ) as materialised:
         world = materialised.world
         _file_the_first_three_quarters(world, year)
         assert _entry(world, year) is None
@@ -348,7 +350,9 @@ def _export_refuses_a_register_declared_after_verification(
     """The export of a verified revision refuses the register declared after it and writes nothing."""
     horizon = _top_horizon()
     year = horizon - 1
-    with materialised_persona(_PERSONA, tmp_path / "world", ReplayScope.RECORDS, horizon=horizon) as materialised:
+    with materialised_persona(
+        _PERSONA, tmp_path / "world", ReplayScope.RECORDS, horizon=horizon, reuse=True
+    ) as materialised:
         world = materialised.world
         _file_the_first_three_quarters(world, year)
         work_unit_id, revision_id, _values = _calculate(world, year, _LAST)
@@ -372,7 +376,9 @@ def _verify_refuses_a_register_declared_before_calculation(
     """
     horizon = _top_horizon()
     year = horizon - 1
-    with materialised_persona(_PERSONA, tmp_path / "world", ReplayScope.RECORDS, horizon=horizon) as materialised:
+    with materialised_persona(
+        _PERSONA, tmp_path / "world", ReplayScope.RECORDS, horizon=horizon, reuse=True
+    ) as materialised:
         world = materialised.world
         _file_the_first_three_quarters(world, year)
         declare(world, year)

@@ -46,7 +46,9 @@ _LEFT_OPEN = r"the check refused the stated carries: .*code='carry_left_open'.*b
 @pytest.fixture(scope="module")
 def renta_world(tmp_path_factory: pytest.TempPathFactory) -> Iterator[MaterialisedPersona]:
     """The persona's profile without the history scope, so no earlier Modelo 100 is held for any year."""
-    with materialised_persona(_PERSONA, tmp_path_factory.mktemp("persona"), ReplayScope.FULL) as materialised:
+    with materialised_persona(
+        _PERSONA, tmp_path_factory.mktemp("persona"), ReplayScope.FULL, reuse=True
+    ) as materialised:
         yield materialised
 
 
