@@ -401,7 +401,8 @@ def test_native_gate_reports_missing_just_as_unavailable(monkeypatch: pytest.Mon
         raise RuntimeError("just unavailable")
 
     monkeypatch.setattr(suite, "resolve_just_executable", missing)
-    results = suite.native_gate_results()
+    gates, results = suite.native_gates()
+    assert gates == []
     assert [result.name for result in results] == ["check-frontend", "check-rust"]
     assert all(result.returncode == TOOL_MISSING and "just unavailable" in result.output for result in results)
 

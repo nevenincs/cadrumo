@@ -254,6 +254,30 @@ def test_pyrefly_resolves_project_dependencies_without_losing_type_errors(
     assert all(finding.rule != "missing-import" for finding in findings)
 
 
+def test_basedpyright_resolves_project_dependencies_and_reports_a_planted_type_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The real basedpyright run turns a clean module red when a type error is planted in it."""
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.basedpyright]\ninclude = ["sample.py"]\ntypeCheckingMode = "standard"\n', encoding="utf-8"
+    )
+    source = tmp_path / "sample.py"
+    source.write_text("from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    target = TargetPlatform(key="linux", basedpyright="Linux")
+
+    assert collect_basedpyright(target) == []
+
+    source.write_text(
+        "from pydantic import BaseModel\nclass Record(BaseModel):\n    value: int\n"
+        "record = Record(value=1)\ntext: str = record.value\n",
+        encoding="utf-8",
+    )
+    findings = collect_basedpyright(target)
+    assert any(finding.rule == "reportAssignmentType" and finding.line == 5 for finding in findings)
+    assert all(finding.rule != "reportMissingImports" for finding in findings)
+
+
 def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPatch) -> None:
     """A single pinned platform would be deterministic and half-blind.
 
