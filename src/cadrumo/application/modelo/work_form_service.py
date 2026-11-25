@@ -54,6 +54,7 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.form_context import resolve_form_context_field
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_wallet_carry_targets import revision_offers_iva_wallet
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormLayoutDefinition
 from ...domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ...domain.iva.refund_eligibility import RedemeEnrolmentState, redeme_enrolment_state
@@ -76,7 +77,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
-from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceDiagnostic
 from ..filing.export_producer_m303 import (
     M303_LEXICAL_PRODUCER_KEYS,
     M303FilingLexicals,
@@ -86,6 +87,7 @@ from ..filing.export_producer_m303 import (
     m303_filing_lexicals,
 )
 from ..live.borrador_100_import import borrador_pdf_extraction_profile
+from ..user_profile.profile_read_ports import ProfileReadPorts
 from ..user_profile.projections import declared_redeme_enrolment, profile_path_values_for_bucket
 from .calculation_note_gate import (
     NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
@@ -129,6 +131,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+    from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
@@ -507,6 +510,7 @@ class _FormReads:
     filed_findings: tuple[ModeloVerificationFinding, ...]
     last_export: ModeloFormExport | None
     verification_out_of_date: bool
+    sources_arrived: bool
 
     @property
     def entered_casilla_ids(self) -> frozenset[CasillaId] | None:
@@ -553,6 +557,7 @@ def _read_form(
     activity_assets: ActivityAssetHistoryRepository | None,
     credit_resolutions: CreditResolutionReader | None,
     transactions: TransactionCatalogueRepositoryProtocol | None,
+    observations: CalculationObservationRepositoryProtocol | None,
 ) -> _FormReads:
     """Read the review, layout, operator layer and every fact the form classifies its boxes with."""
     work_unit_repository, calculation_repository, verification_repository = repositories
@@ -612,6 +617,9 @@ def _read_form(
         filed_findings=_filed_findings(head, review.work_unit_id, work_unit_repository, operation=operation),
         last_export=_last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id),
         verification_out_of_date=_verification_out_of_date(review, head, transactions),
+        sources_arrived=_calculation_sources_arrived(
+            head, snapshot, review, bucket_id=bucket_id, observations=observations, operation=operation
+        ),
     )
 
 
@@ -635,6 +643,7 @@ def load_modelo_work_form(
     credit_resolutions: CreditResolutionReader | None = None,
     transactions: TransactionCatalogueRepositoryProtocol | None = None,
     m303_arrivals: M303ArrivalPorts | None = None,
+    observations: CalculationObservationRepositoryProtocol | None = None,
 ) -> ModeloWorkFormLoadV1:
     """Read one declaration's review, layout and operator layer and build its form.
 
@@ -661,6 +670,9 @@ def load_modelo_work_form(
 
     ``m303_arrivals`` are the ledger and register repositories a Modelo 303's period
     facts are folded from, as its export folds them; without them those facts stay unknown.
+    ``observations`` is the profile's store of filed returns, read only to tell
+    whether an earlier return the calculation found nothing of is held now;
+    without it the form never says so.
     """
     reads = _read_form(
         bucket_id,
@@ -675,6 +687,7 @@ def load_modelo_work_form(
         activity_assets=activity_assets,
         credit_resolutions=credit_resolutions,
         transactions=transactions,
+        observations=observations,
     )
     review, snapshot, layout, head = reads.review, reads.snapshot, reads.layout, reads.head
     surface = (
@@ -716,6 +729,7 @@ def load_modelo_work_form(
         filed_findings=reads.filed_findings,
         last_export=reads.last_export,
         verification_out_of_date=reads.verification_out_of_date,
+        calculation_sources_arrived=reads.sources_arrived,
     )
     form = form.model_copy(
         update={
@@ -752,6 +766,7 @@ def load_modelo_work_form_summary(
     activity_assets: ActivityAssetHistoryRepository | None = None,
     credit_resolutions: CreditResolutionReader | None = None,
     transactions: TransactionCatalogueRepositoryProtocol | None = None,
+    observations: CalculationObservationRepositoryProtocol | None = None,
 ) -> ModeloWorkFormSummaryLoad:
     """Read one declaration as :func:`load_modelo_work_form` reads it and classify its form, presenting no field.
 
@@ -773,6 +788,7 @@ def load_modelo_work_form_summary(
         activity_assets=activity_assets,
         credit_resolutions=credit_resolutions,
         transactions=transactions,
+        observations=observations,
     )
     summary = summarize_modelo_work_form(
         review=reads.review,
@@ -793,6 +809,7 @@ def load_modelo_work_form_summary(
         filed_findings=reads.filed_findings,
         last_export=reads.last_export,
         verification_out_of_date=reads.verification_out_of_date,
+        calculation_sources_arrived=reads.sources_arrived,
     )
     verified, filed = reads.verified, reads.filed
     return ModeloWorkFormSummaryLoad(
@@ -829,6 +846,64 @@ def _verification_out_of_date(
     if recorded is None or head is None or transactions is None:
         return False
     return verification_sources_digest(head, transactions.load()) != recorded
+
+
+@dataclass(frozen=True, slots=True)
+class _SessionProfilePathValues:
+    """The session's path-keyed profile projection, which scopes the periods a relation reads."""
+
+    def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
+        """Return the profile's path values, or ``None`` when the bucket has no profile."""
+        return profile_path_values_for_bucket(bucket_id)
+
+
+def _calculation_sources_arrived(
+    head: CalculationRevision | None,
+    snapshot: RegistrySnapshot,
+    review: ModeloWorkReview,
+    *,
+    bucket_id: BucketId,
+    observations: CalculationObservationRepositoryProtocol | None,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether a relation the calculation found no value for resolves now, so working it out again would read it.
+
+    A relation the calculation resolved keeps its value among the revision's
+    bindings, so only one absent there counts, and only when the relation
+    resolver, reading the store as a calculation does, resolves it now: a
+    source still missing stays missing and the form asks what it asked
+    before. A declaration recorded as filed is a record, not a calculation to
+    work out again.
+    """
+    if head is None or observations is None or head.state in FILED_REVISION_STATES:
+        return False
+    held = head.binding_overrides.keys() | head.relation_overrides.keys()
+    lacked = {
+        binding.id
+        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+        if binding.id not in held
+    }
+    if not lacked:
+        return False
+    from ..calculations.relation_prefill import RelationPrefillSourceResolver
+
+    resolution = RelationPrefillSourceResolver(
+        repository=observations,
+        profile_read_ports=ProfileReadPorts(path_values=_SessionProfilePathValues()),
+        operation=operation,
+        registry_snapshot=snapshot,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=bucket_id,
+            work_unit_id=review.work_unit_id,
+            modelo=str(review.modelo),
+            filing_year=review.filing_year,
+            period=review.period,
+            revision=snapshot.revision,
+            operation=operation,
+        )
+    )
+    return not lacked.isdisjoint(resolution.relation_values)
 
 
 def _last_export(

@@ -319,12 +319,17 @@ class ModeloWorkFormSummary:
     presented: Mapping[str, ModeloFormField]
     alias_blocks: frozenset[tuple[str, str, str]] = frozenset()
     records: tuple[ModeloFormRecordBlock, ...] = ()
+    #: Whether an earlier return a relation of the calculation found nothing of is held now.
+    calculation_sources_arrived: bool = False
 
     @property
     def calculation_out_of_date(self) -> bool:
         """Whether the calculation must be worked out again before it can be checked, exported or recorded."""
         return form_calculation_out_of_date(
-            self.issues, self.calculation_notes, verification_out_of_date=self.verification_out_of_date
+            self.issues,
+            self.calculation_notes,
+            verification_out_of_date=self.verification_out_of_date,
+            sources_arrived=self.calculation_sources_arrived,
         )
 
     @property

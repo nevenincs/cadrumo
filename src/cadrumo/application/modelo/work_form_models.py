@@ -146,6 +146,10 @@ def _is_empty(value: tuple[object, ...]) -> bool:
     return not value
 
 
+def _is_unset(value: bool) -> bool:
+    return not value
+
+
 _CARRY_STATEMENT_INTENTS: Final = frozenset(
     {ModeloEditBindingIntentKind.ATTEST_NO_AMOUNT, ModeloEditBindingIntentKind.ATTEST_PRIOR_VALUE}
 )
@@ -954,6 +958,9 @@ class ModeloWorkForm(ModeloFormBase):
     #: since, so its findings may no longer stand and the check is the next thing to run. ``False`` when
     #: they did not, or when the check recorded nothing to compare with.
     verification_out_of_date: bool = False
+    #: Whether an earlier return a relation of the calculation found nothing of is held now, so working the
+    #: calculation out again would read it. ``False`` when none is, or when the store was not read; left out then.
+    calculation_sources_arrived: bool = Field(default=False, exclude_if=_is_unset)
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
     #: The latest file exported for this declaration, or ``None`` when none was ever exported.
@@ -1018,7 +1025,10 @@ class ModeloWorkForm(ModeloFormBase):
     def calculation_out_of_date(self) -> bool:
         """Whether the calculation must be worked out again before it can be checked, exported or recorded."""
         return form_calculation_out_of_date(
-            self.issues, self.calculation_notes, verification_out_of_date=self.verification_out_of_date
+            self.issues,
+            self.calculation_notes,
+            verification_out_of_date=self.verification_out_of_date,
+            sources_arrived=self.calculation_sources_arrived,
         )
 
     @property
@@ -1075,18 +1085,21 @@ def form_calculation_out_of_date(
     notes: tuple[ModeloFormCalculationNote, ...],
     *,
     verification_out_of_date: bool,
+    sources_arrived: bool,
 ) -> bool:
     """Whether a calculation must be worked out again before it can be checked, exported or recorded.
 
     The last check found the records changed after the calculation, unless
     what it read has itself changed since, or the calculation was screened
     against other registry declarations than the pinned ones, which the gate
-    refuses until it is calculated again.
+    refuses until it is calculated again, or an earlier return the
+    calculation found nothing of is held now (``sources_arrived``), which no
+    check has read because the calculation never had it.
     """
     stale_finding = not verification_out_of_date and any(
         issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in issues
     )
-    return stale_finding or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in notes)
+    return sources_arrived or stale_finding or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in notes)
 
 
 def form_filed_before_grade_cap(notes: tuple[ModeloFormCalculationNote, ...]) -> bool:

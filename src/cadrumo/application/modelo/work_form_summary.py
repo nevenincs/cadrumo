@@ -66,13 +66,16 @@ def summarize_work_form(
     last_export: ModeloFormExport | None,
     verification_out_of_date: bool,
     filed_findings: tuple[ModeloVerificationFinding, ...],
+    calculation_sources_arrived: bool = False,
 ) -> ModeloWorkFormSummary:
     """Classify the form ``layout`` arranges, or, without a usable one, every casilla in official box order.
 
     ``notes`` are the latest calculation's note sources and whether this
     session ran it. ``last_export`` and ``verification_out_of_date`` are the
     loader's reads of the declaration's latest file and of whether the
-    movements the last check read changed since.
+    movements the last check read changed since, and
+    ``calculation_sources_arrived`` its read of whether an earlier return the
+    calculation found nothing of is held now.
 
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
@@ -113,6 +116,7 @@ def summarize_work_form(
         presented=_presented_results(every, stated_result_casilla_ids(result_addresses, result), present),
         alias_blocks=alias_blocks,
         records=records,
+        calculation_sources_arrived=calculation_sources_arrived,
     )
 
 
