@@ -138,6 +138,7 @@ export function ProfileToolbar({
     { value: "all", label: t("desktop.profile.view.show_all") },
     { value: "unset", label: t("desktop.profile.view.show_unset") },
     { value: "required", label: t("desktop.profile.view.show_required") },
+    { value: "missing", label: t("desktop.profile.view.show_missing") },
     { value: "filled", label: t("desktop.profile.view.show_filled") },
   ];
   const groupOptions: { value: Group; label: string }[] = [
