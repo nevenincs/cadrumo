@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -123,13 +122,31 @@
         "--idempotency-key",
         "qs-compra"
       ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "expense_id",
-          "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
-        }
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--irpf-estimation-regime",
+        "directa_simplificada",
+        "--irpf-activity-income-imputation-criterion",
+        "cobros_y_pagos",
+        "--irpf-activity-income-imputation-year",
+        "2026",
+        "--no-irpf-codigo-comercio-accounting"
       ],
+      "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -264,11 +281,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "102a888131cd6522333367dc3680feb79576303f3c9d1e3cd2258b81cd71742b",
+          "bucket_event_id": "a2017788a9b514d994de828ac565cf7c3bc8067fff016db73adf2291479d425f",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "f4f353e237771a8fd5cff7711eec0718441d07484b4c28547662a9929a985f93",
-          "file_sha256": "2f214c53d547645260dcf5747f4d57803e68cfeb3bf181e7312272deb70efe05",
+          "calculation_revision_id": "06d416c72c1e6f585eff56d42e9cc2ae57fae9e125ce1d8585bd72ca18553f5c",
+          "file_sha256": "77e3d52f4b731a1ce2a2bc30b3c88ee091ce17b370140d5db054aa32e1a22942",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,
@@ -288,7 +305,7 @@
             "election": "keep"
           },
           "refund_election": null,
-          "resolved_result_disposition": "N",
+          "resolved_result_disposition": "B",
           "software_identity_grade": "development_mock",
           "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },

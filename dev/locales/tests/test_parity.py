@@ -9,17 +9,18 @@ from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILI
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
+from cadrumo.tests.log_records import delivered_records
 
-from .._ast_scanner import scan_namespace_markers, scan_source_tree
-from .._casilla_keys import is_delta_keyed_leaf
-from .._paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
-from .._registry_scanner import scan_form_layout_heading_keys
+from ..ast_scanner import scan_namespace_markers, scan_source_tree
+from ..casilla_keys import is_delta_keyed_leaf
 from ..cli import app
 from ..desktop_chrome import DESKTOP_CHROME_KEYS, desktop_chrome_strings
 from ..errors import LocaleError
+from ..form_layout_heading_scan import scan_form_layout_heading_keys
 from ..locale_nodes import LocaleNode
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
+from ..paths import LOCALE_SOURCE_EXTRA_DIRS, LOCALES_DIR, SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -186,7 +187,7 @@ def manager():
     return LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=LOCALE_SOURCE_EXTRA_DIRS)
 
 
-def _committed_catalogues(manager) -> dict[str, Path]:
+def committed_catalogues(manager) -> dict[str, Path]:
     """Return ``{locale_code: catalogue source}`` for every shipped language.
 
     Resolved per language through the shared helper rather than by scanning
@@ -206,7 +207,7 @@ def _committed_catalogues(manager) -> dict[str, Path]:
 @pytest.fixture(scope="module")
 def locales_state(manager):
     codebase_keys = manager.get_codebase_keys()
-    sources = _committed_catalogues(manager)
+    sources = committed_catalogues(manager)
     # Desktop shell keys are projected from the app, runtime, and service owners
     # into one generated locale resource. Compare those concrete references with
     # the same composed output, not only the app catalogue directory.
@@ -233,7 +234,7 @@ def locales_state(manager):
 def test_locale_integrity(manager):
     """Test 3: No duplicate keys, sections, or unparseable data."""
     errors = []
-    for f in _committed_catalogues(manager).values():
+    for f in committed_catalogues(manager).values():
         try:
             # StrictUniqueKeyLoader refuses a duplicate key with LocaleError, which
             # is not a ValueError; any other malformed catalogue surfaces as a
@@ -254,7 +255,7 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
     manager: LocaleManager,
 ) -> None:
     """English copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(_committed_catalogues(manager)["en"])
+    data = manager.load_locale(committed_catalogues(manager)["en"])
 
     assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
         "Google OAuth cannot resolve the selected Cadrumo profile state."
@@ -307,11 +308,11 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     manager: LocaleManager,
 ) -> None:
     """Spanish copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(_committed_catalogues(manager)["es"])
+    data = manager.load_locale(committed_catalogues(manager)["es"])
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
-        "La carpeta vault de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
-        "usa la carpeta vault de Cadrumo."
+        "La carpeta de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
+        "usa la carpeta de Cadrumo."
     )
     assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
         "La clasificación '%{value}' la asigna Cadrumo automáticamente y no puede establecerse a mano. "
@@ -361,7 +362,7 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
     manager: LocaleManager,
 ) -> None:
     """Catalan copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(_committed_catalogues(manager)["ca"])
+    data = manager.load_locale(committed_catalogues(manager)["ca"])
 
     assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
         "Google OAuth no pot resoldre l'estat del perfil Cadrumo seleccionat."
@@ -370,8 +371,8 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "No hi ha cap perfil Cadrumo actiu enllaçat per a Google OAuth."
     )
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
-        "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
-        "usa la carpeta vault de Cadrumo."
+        "La carpeta de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
+        "usa la carpeta de Cadrumo."
     )
     _assert_unmounted_catalogue_strings(
         data,
@@ -418,11 +419,11 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
     manager: LocaleManager,
 ) -> None:
     """Hungarian copy follows the contextual product and executable naming contract."""
-    data = manager.load_locale(_committed_catalogues(manager)["hu"])
+    data = manager.load_locale(committed_catalogues(manager)["hu"])
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
-        "A Google Drive vault mappa {vault_folder_name} az előző termékhez tartozik és nem használható; "
-        "használd a Cadrumo vault mappát."
+        "A Google Drive {vault_folder_name} mappája az előző termékhez tartozik és nem használható; "
+        "használd a Cadrumo mappát."
     )
     assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
         "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
@@ -505,7 +506,7 @@ def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
         "Cadrumo - local-first workflow with AEAT",
         "cadrumo - local-first workflow with AEAT",
         "CADRUMO - local-first workflow with CADRUMO",
-        "CADRUMO - local-first workflow with the AEAT, run aeat config check",
+        "CADRUMO - local-first workflow with the AEAT, run aeat config profile list",
     ):
         corrupted_catalogue: dict[str, LocaleNode] = {
             "cli": {"operator_surface": {"help": {"root": {"heading": corrupted}}}}
@@ -919,13 +920,13 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     )
     (tmp_path / "broken_surface.py").write_text("def broken(:\n", encoding="utf-8")
 
-    caplog.set_level(logging.DEBUG, logger="dev.locales._ast_scanner")
+    caplog.set_level(logging.DEBUG, logger="dev.locales.ast_scanner")
 
     assert "cli.locales.app_help" in scan_source_tree(tmp_path)
     assert "wizard.errors.*" in scan_namespace_markers(tmp_path)
     assert any(
         "locale ast scan: parse failure" in record.getMessage() and "broken_surface.py" in record.getMessage()
-        for record in caplog.records
+        for record in delivered_records(caplog)
     )
 
 

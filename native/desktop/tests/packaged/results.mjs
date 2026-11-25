@@ -2,12 +2,15 @@
 // evidence/ folder, with one PASS, FAIL, SKIP or INFO line per check.
 import {
   closeSync,
+  fstatSync,
   mkdirSync,
   openSync,
   readSync,
   writeFileSync,
 } from "node:fs";
 import { resolve } from "node:path";
+
+const LOG_EVIDENCE_LIMIT = 4 * 1024 * 1024;
 
 export class Results {
   constructor(directory) {
@@ -64,13 +67,18 @@ export class Results {
     return `evidence/${name}`;
   }
 
-  /** Snapshot a test-owned log even after a browser crash, with bounded reads. */
-  logEvidence(name, source) {
-    const limit = 4 * 1024 * 1024;
+  /**
+   * Snapshot a test-owned log even after a browser crash, with bounded reads.
+   * A log over the limit keeps its last bytes, since the final shutdown lines
+   * are the ones that matter.
+   */
+  logEvidence(name, source, limit = LOG_EVIDENCE_LIMIT) {
     let descriptor;
     try {
       descriptor = openSync(source, "r");
-      const bytes = Buffer.alloc(limit + 1);
+      const size = fstatSync(descriptor).size;
+      const start = Math.max(0, size - limit);
+      const bytes = Buffer.alloc(Math.min(size, limit));
       let length = 0;
       while (length < bytes.length) {
         const count = readSync(
@@ -78,14 +86,20 @@ export class Results {
           bytes,
           length,
           bytes.length - length,
-          null,
+          start + length,
         );
         if (count === 0) break;
         length += count;
       }
-      if (length > limit)
-        return { name, status: "over_limit", limitBytes: limit };
       this.evidence(name, bytes.subarray(0, length).toString("utf8"));
+      if (start > 0)
+        return {
+          name,
+          status: "truncated_head",
+          bytes: length,
+          originalBytes: size,
+          limitBytes: limit,
+        };
       return { name, status: "captured", bytes: length };
     } catch {
       return { name, status: "unavailable" };

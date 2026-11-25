@@ -14,12 +14,20 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
-    relation_source_requirements,
 )
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    revision_last_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.calculations.registry.tests.synthetic_quarterly_relations import (
+    relation_values_from_synthetic_quarters,
+)
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -29,6 +37,11 @@ _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
+# The base edition and the open-ended one that the 2023 Orden amends.
+_HISTORICAL_REVISION = str(authored_revisions("180")[0].id)
+_CURRENT_REVISION = str(open_ended_revision("180").id)
+_LAST_HISTORICAL_YEAR = revision_last_exercise("180", _HISTORICAL_REVISION)
+_HORIZON = filing_year_envelope().horizon
 _M180_2023_AMENDMENT_REF = "orden-hfp-1284-2023:art-7"
 _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
@@ -66,8 +79,8 @@ def _nested_legal_refs(value: object) -> set[str]:
 def test_modelo_180_amendment_is_scoped_to_the_amended_revision() -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo("180")
-    historical_refs = _nested_legal_refs(modelo.revisions["2019-2022"].model_dump(mode="python"))
-    current_refs = _nested_legal_refs(modelo.revisions["2023-y-siguientes"].model_dump(mode="python"))
+    historical_refs = _nested_legal_refs(modelo.revisions[_HISTORICAL_REVISION].model_dump(mode="python"))
+    current_refs = _nested_legal_refs(modelo.revisions[_CURRENT_REVISION].model_dump(mode="python"))
 
     assert _M180_2023_AMENDMENT_REF not in historical_refs
     assert _M180_2023_AMENDMENT_REF in current_refs
@@ -101,8 +114,8 @@ def test_modelo_180_guidance_and_layout_sources_are_separated() -> None:
 @pytest.mark.parametrize(
     ("revision_id", "expected_refs"),
     [
-        ("2019-2022", _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS),
-        ("2023-y-siguientes", _M180_2023_PROFILE_TARGET_LEGAL_REFS),
+        (_HISTORICAL_REVISION, _M180_HISTORICAL_PROFILE_TARGET_LEGAL_REFS),
+        (_CURRENT_REVISION, _M180_2023_PROFILE_TARGET_LEGAL_REFS),
     ],
 )
 def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
@@ -126,8 +139,8 @@ def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
 
 
 # One year on each side of the 2023 orden boundary, both inside the supported
-# filing-year envelope; 2021 sits below its floor and no longer resolves.
-@pytest.mark.parametrize(("filing_year", "period"), [(2022, "0A"), (2025, "0A")])
+# filing-year envelope: the base edition's last exercise and the horizon.
+@pytest.mark.parametrize(("filing_year", "period"), [(_LAST_HISTORICAL_YEAR, "0A"), (_HORIZON, "0A")])
 def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summary(
     filing_year: int,
     period: str,
@@ -143,7 +156,7 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
         period=period,
     )
 
-    if filing_year <= 2022:
+    if filing_year <= _LAST_HISTORICAL_YEAR:
         assert snapshot.revision.orden_aplicabilidad == ("orden-hap-1732-2014:art-2",)
     else:
         assert snapshot.revision.orden_aplicabilidad == (
@@ -181,8 +194,8 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
 
 def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("180", filing_year=2025, period="0A")
-    snapshot_115 = authority.snapshot("115", filing_year=2025, period="1T")
+    snapshot = authority.snapshot("180", filing_year=_HORIZON, period="0A")
+    snapshot_115 = authority.snapshot("115", filing_year=_HORIZON, period="1T")
 
     modelo_115_outputs = {casilla.id for casilla in snapshot_115.revision.casillas}
     relation_source_casilla_ids = {
@@ -199,37 +212,16 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
 
 def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -> None:
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("180", filing_year=2025, period="0A")
-    snapshot_115 = authority.snapshot("115", filing_year=2025, period="1T")
-    source_casilla_ids = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
-    for requirement in requirements:
-        source_casilla_id = requirement.source_casilla_ids[0]
-        source_casilla = source_casilla_ids[source_casilla_id]
-        for index, period in enumerate(requirement.periods):
-            value = _value_for(source_casilla.data_type, index)
-            observed_by_period.setdefault(period, {})[source_casilla_id] = value
-    observations = tuple(
-        registry_grounded_modelo_observation(
-            modelo="115",
-            filing_year=2025,
-            period=period,
-            casilla_values=casilla_values,
-        )
-        for period, casilla_values in sorted(observed_by_period.items())
-    )
-    relation_values = resolve_relation_values_from_observations(
-        snapshot.revision,
-        observations,
-        filing_year=2025,
-        period="0A",
+    snapshot = authority.snapshot("180", filing_year=_HORIZON, period="0A")
+    snapshot_115 = authority.snapshot("115", filing_year=_HORIZON, period="1T")
+    relation_values = relation_values_from_synthetic_quarters(
+        snapshot, snapshot_115, source_modelo="115", filing_year=_HORIZON
     )
     binding_values = {"modelo-180-115-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(_HORIZON, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -242,11 +234,11 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
-    snapshot = compiled_bundled_authority().snapshot("180", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("180", filing_year=_HORIZON, period="0A")
     incomplete_observations = (
         registry_grounded_modelo_observation(
             modelo="115",
-            filing_year=2025,
+            filing_year=_HORIZON,
             period="1T",
             casilla_values={_M115_BASE_CASILLA: Decimal("1")},
         ),
@@ -256,13 +248,6 @@ def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
         resolve_relation_values_from_observations(
             snapshot.revision,
             incomplete_observations,
-            filing_year=2025,
+            filing_year=_HORIZON,
             period="0A",
         )
-
-
-def _value_for(data_type: str, period_index: int) -> Decimal:
-    quarter = Decimal(period_index + 1)
-    if data_type == "integer":
-        return quarter
-    return Decimal("10") * quarter

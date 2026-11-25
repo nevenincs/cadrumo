@@ -1,0 +1,33 @@
+[fact]
+fact_id = "modelo-360-page-one-form-codes"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-360-page-one-form-codes:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-360-2010"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-360-2010"
+required_text = ["CALIDAD MEDIA", "CALIDAD MÁXIMA", "Presentación inicial", "Hacienda Foral de establecimiento", "Las Palmas", "En calidad de (Solicitante / representante)"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "nivel_calidad.media", value = "1" },
+  { key = "nivel_calidad.maxima", value = "2" },
+  { key = "causa.inicial", value = "0" },
+  { key = "causa.modificacion", value = "1" },
+  { key = "hacienda_foral.alava", value = "01" },
+  { key = "hacienda_foral.gipuzkoa", value = "20" },
+  { key = "hacienda_foral.navarra", value = "31" },
+  { key = "hacienda_foral.bizkaia", value = "48" },
+  { key = "delegacion.las_palmas", value = "35" },
+  { key = "delegacion.tenerife", value = "38" },
+  { key = "delegacion.ceuta", value = "55" },
+  { key = "delegacion.melilla", value = "56" },
+  { key = "titular.solicitante", value = "A" },
+  { key = "titular.representante", value = "R" },
+]

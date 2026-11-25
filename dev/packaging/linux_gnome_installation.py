@@ -41,7 +41,8 @@ def _directory_flags() -> int:
 
 
 @contextmanager
-def _extensions_directory(*, create: bool) -> Generator[int]:
+def extensions_directory(*, create: bool) -> Generator[int]:
+    """Open the GNOME extensions directory by descriptor, optionally creating it."""
     if sys.platform != "linux":
         raise _refusal()
     uid = os.getuid()
@@ -172,7 +173,7 @@ def _inspect(parent: int, expected: dict[str, bytes]) -> bool:
 
 
 def _check_parent_binding(parent: int) -> None:
-    with _extensions_directory(create=False) as current:
+    with extensions_directory(create=False) as current:
         before, after = os.fstat(parent), os.fstat(current)
         if (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino):
             raise _refusal(RefusalCode.PEER_UNTRUSTED)
@@ -193,10 +194,11 @@ def _native_publish_directory(parent: int, staging: str) -> None:
         raise _refusal()
 
 
-class _StagedProducer:
+class StagedProducer:
     """Own only this invocation's staging directory and exclusively created files."""
 
     def __init__(self, parent: int) -> None:
+        """Bind the staging producer to the parent directory descriptor."""
         self.parent = parent
         self.name = _STAGING_PREFIX + uuid4().hex
         self.directory: int | None = None
@@ -204,7 +206,8 @@ class _StagedProducer:
         self.created: dict[str, tuple[int, int]] = {}
         self.published = False
 
-    def __enter__(self) -> _StagedProducer:
+    def __enter__(self) -> StagedProducer:
+        """Create the private staging directory and return the producer."""
         os.mkdir(self.name, mode=0o700, dir_fd=self.parent)
         try:
             self.directory = os.open(self.name, _directory_flags(), dir_fd=self.parent)
@@ -272,6 +275,7 @@ class _StagedProducer:
                 self.directory = None
 
     def __exit__(self, *_: object) -> None:
+        """Close the staging producer."""
         self.close()
 
 
@@ -281,7 +285,7 @@ def inspect_gnome_login_producer() -> bool:
         expected = _packaged_files()
         with ExitStack() as owned:
             try:
-                parent = owned.enter_context(_extensions_directory(create=False))
+                parent = owned.enter_context(extensions_directory(create=False))
             except FileNotFoundError:
                 return False
             result = _inspect(parent, expected)
@@ -299,11 +303,11 @@ def install_gnome_login_producer() -> bool:
     """
     try:
         expected = _packaged_files()
-        with _extensions_directory(create=True) as parent:
+        with extensions_directory(create=True) as parent:
             if _inspect(parent, expected):
                 _check_parent_binding(parent)
                 return False
-            with _StagedProducer(parent) as staged:
+            with StagedProducer(parent) as staged:
                 for name, payload in expected.items():
                     staged.write(name, payload)
                 staged.publish(expected)

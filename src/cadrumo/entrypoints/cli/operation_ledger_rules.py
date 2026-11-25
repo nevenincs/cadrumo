@@ -7,12 +7,10 @@ from uuid import UUID
 import typer
 from pydantic import BaseModel
 
-from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ...application.ledger.rule_contracts import (
     LedgerRuleAddProjection,
@@ -27,17 +25,14 @@ from ...application.ledger.rule_operation import (
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
 )
+from ...application.ledger.rule_remove_operation import (
+    LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID,
+    LedgerRuleRemoveProjection,
+    LedgerRuleRemoveRequest,
+)
 from ...application.ledger.rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .common import active_bucket_id_or_refuse
-
-
-def _client(ctx: typer.Context, profile_id: UUID) -> FrontendClient:
-    """Return only the runtime client bound to the active immutable profile."""
-    expected_profile_id = UUID(active_bucket_id_or_refuse())
-    if profile_id != expected_profile_id:
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    return require_profile_client(ctx, expected_profile_id=expected_profile_id)
+from .profile_bound_clients import exact_profile_client
 
 
 def _submit[ProjectionT: BaseModel](
@@ -52,7 +47,7 @@ def _submit[ProjectionT: BaseModel](
     profile_id = getattr(request, "profile_id", None)
     if not isinstance(profile_id, UUID):
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    client = _client(ctx, profile_id)
+    client = exact_profile_client(ctx, profile_id)
     return run_registered_operation(
         client,
         request,
@@ -140,7 +135,37 @@ def submit_ledger_rule_apply(
     return completed
 
 
-__all__ = ["submit_ledger_rule_add", "submit_ledger_rule_apply", "submit_ledger_rule_list"]
+def submit_ledger_rule_remove(
+    ctx: typer.Context,
+    request: LedgerRuleRemoveRequest,
+) -> RegisteredOperationCompletion[LedgerRuleRemoveProjection]:
+    """Submit one guarded removal and correlate its outcome with the receipt's effect."""
+    completed = _submit(
+        ctx,
+        request,
+        definition_id=LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID,
+        result_type=LedgerRuleRemoveProjection,
+        allow_refusal_detail=False,
+    )
+    projection = completed.projection
+    removed = projection.outcome == "removed"
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or projection.profile_id != request.profile_id
+        or completed.effect is not (OperationEffect.UPDATED if removed else OperationEffect.NONE)
+        or (projection.rule is not None and projection.rule.rule_id != request.rule_id)
+    ):
+        raise invalid_completion_error(completed)
+    return completed
+
+
+__all__ = [
+    "submit_ledger_rule_add",
+    "submit_ledger_rule_apply",
+    "submit_ledger_rule_list",
+    "submit_ledger_rule_remove",
+]
 
 
 def _ledger_rule_add_refusal(

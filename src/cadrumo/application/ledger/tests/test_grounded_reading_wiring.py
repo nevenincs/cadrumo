@@ -24,21 +24,20 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings, load_settings
-from ....core.config_support import LLMProvider
+from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.error_codes import build_error_envelope
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.iva.regime_legend import resolve_regime_legends
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
 from .. import invoice_draft_extraction as invoice_draft_extraction_module
+from ..confirmation_gate import confirmation_blockers
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ..evidence_input import EvidenceInput
@@ -46,8 +45,8 @@ from ..evidence_input_ports import EvidenceInputPorts
 from ..evidence_textlayer import transcribe_text_layer
 from ..grounded_reading import (
     GROUNDABLE_ORIGINS,
-    _identity_candidates,
     ground_draft_against_transcription,
+    identity_candidates,
     verified_provenance,
 )
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
@@ -61,15 +60,15 @@ from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..preconditions import LedgerPreconditionCondition
 from ..structured_invoice_ports import StructuredInvoiceRecord
-from ._evidence_textlayer_test_support import text_layer_ports_for_pages
+from .evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _DOCUMENT_TEXT = (
     "FACTURA 2026-0142\n"
-    "Proveedor: EJEMPLO SL B12345674\n"
-    "Cliente: OTRA SL A82645177\n"
+    "Proveedor: EJEMPLO SL B00015016\n"
+    "Cliente: OTRA SL A00010017\n"
     "Base imponible 100,00 EUR\n"
     "TOTAL 121,00 EUR\n"
 )
@@ -86,7 +85,7 @@ _CONTROL = _CORPUS / "com_2026_0005_layout_minimal.pdf"
 
 #: The filer on this purchase invoice is the RECIPIENT, whose identifier is the
 #: one checksum-valid token on the page.
-_FILER_CIF = "B17283946"
+_FILER_CIF = "B00015024"
 _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
 #: The page prints the real figures only. The reader's fabricated anchor must
 #: be genuinely absent from it, or the anti-fabrication cases below would find
@@ -113,7 +112,6 @@ def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
     def unavailable(
         _transcription: DocumentTranscription,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         _authority_values: object,
         /,
@@ -127,7 +125,6 @@ def _reader_unavailable_ports() -> InvoiceDraftExtractionPorts:
         _images: tuple[VisionImage, ...],
         _prompt: str,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         /,
     ) -> DocumentTranscription:
@@ -220,7 +217,7 @@ def test_the_reader_output_starts_entirely_unverified() -> None:
 
 def test_grounding_upgrades_a_real_anchor_to_anchored() -> None:
     """The upgrade the wiring exists to perform, on the real control document."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -235,7 +232,7 @@ def test_grounding_upgrades_a_real_anchor_to_anchored() -> None:
 
 def test_grounding_upgrades_a_percentage_anchor() -> None:
     """`21%` is the most common field in the corpus; it must survive the chain."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -255,7 +252,7 @@ def test_a_fabricated_anchor_is_not_upgraded() -> None:
     anchor, no matter how confidently the reader claimed it.
     """
     assert _FABRICATED_IVA_ANCHOR not in _control_transcription().text, "the fixture must not print the fabrication"
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -278,7 +275,7 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
     operator acts differently on the two, and downstream every trace of the
     first is gone the moment the anchor is cleared without recording it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         offered_nothing = FieldProvenance(
             field="currency",
             origin=FieldOrigin.TEXT_LAYER,
@@ -309,7 +306,7 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
 
 def test_a_located_anchor_records_no_refusal() -> None:
     """The negative leg: a passing check must not stamp a refusal it did not reach."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -324,7 +321,7 @@ def test_a_located_anchor_records_no_refusal() -> None:
 
 def test_grounding_attaches_the_closure_finding() -> None:
     """The second leg runs on the wired path, not only in its own suite."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -338,7 +335,7 @@ def test_grounding_attaches_the_closure_finding() -> None:
 
 def test_role_resolution_runs_when_the_filer_is_known() -> None:
     """Both identity guards reach the live path on the control document."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -360,7 +357,7 @@ def test_role_resolution_is_skipped_when_the_filer_is_unknown() -> None:
     Skipping is the honest behaviour, and it must be visible as an absence of
     findings rather than as a resolution nobody could justify.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
@@ -419,7 +416,6 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     def reader(
         transcription: DocumentTranscription,
         _settings: Settings,
-        _off_host_provider: LLMProvider | None,
         _consent_token: EvidenceConsentProof | None,
         _authority_values: object,
         /,
@@ -428,7 +424,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
         return _reader_output()
 
     ports = dataclasses.replace(_reader_unavailable_ports(), read_text=reader)
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         draft = invoice_draft_extraction_module.extract_invoice_draft_from_evidence(
             bucket_id="c" * 64,
             evidence_id="d" * 16,
@@ -461,10 +457,10 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
 
 def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     """A missing reader is a typed refusal, not an inferred recovery command."""
-    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
-        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("no provider reachable"))
+        refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("no provider reachable"))
 
     envelope = build_error_envelope(raised.value)
     assert envelope.code == "REFUSED_LEDGER_EVIDENCE_READER"
@@ -479,32 +475,6 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
         "reader_error_type": "_ReaderUnavailableForTestError",
     }
     assert raised.value.terminal_precondition_verdict.evidence[0].values == raised.value.context
-
-
-def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose() -> None:
-    """The dependency registry identity crosses the ledger boundary unchanged."""
-    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
-
-    dependency_error = MissingOptionalExtraError(LLM_EXTRA)
-    with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
-        _refuse_a_text_read_with_no_reader(dependency_error)
-
-    expected_facts = {
-        "extra": LLM_EXTRA.extra,
-        "import_name": LLM_EXTRA.import_name,
-        "importable": False,
-    }
-    envelope = build_error_envelope(raised.value)
-    assert envelope.code == "REFUSED_LEDGER_EVIDENCE_READER"
-    assert envelope.retryable is True
-    assert str(dependency_error) not in str(raised.value), "install prose must not cross the boundary"
-    assert raised.value.context == expected_facts
-    assert raised.value.__cause__ is dependency_error
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
-    assert verdict.action is None
-    assert verdict.evidence[0].values == expected_facts
 
 
 def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
@@ -526,11 +496,11 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     reader is the ENVIRONMENT this case is about, and making it unavailable is
     the condition being reproduced. Nothing about the router is stubbed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        from ..invoice_draft_extraction import _read_transcription_semantically
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        from ..invoice_draft_extraction import read_transcription_semantically
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-            _read_transcription_semantically(
+            read_transcription_semantically(
                 _control_evidence(),
                 _control_transcription(),
                 settings=load_settings(),
@@ -580,7 +550,7 @@ def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:
     }
 
     assert "transcribe_text_layer" in guarded_calls, "the transcription is no longer inside a fallback try"
-    assert "_read_transcription_semantically" not in guarded_calls, (
+    assert "read_transcription_semantically" not in guarded_calls, (
         "the fallback try wraps the semantic read; the missing-reader refusal will be swallowed"
     )
 
@@ -614,10 +584,10 @@ def test_the_reader_refusal_preserves_its_typed_no_recovery_outcome() -> None:
     no draft at all, so there is no provenance for a notice to describe; the
     non-blocking notice channel is for a draft that exists but degraded.
     """
-    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
+    from ..invoice_draft_extraction import refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("Ollama is not reachable"))
+        refuse_a_text_read_with_no_reader(_ReaderUnavailableForTestError("Ollama is not reachable"))
 
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
@@ -690,7 +660,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
                 for field, value in values.items()
             ),
         )
-        return _identity_candidates(
+        return identity_candidates(
             draft=draft,
             envelopes=draft.provenance,
             transcription=cls._transcription(text),
@@ -698,7 +668,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
 
     def test_no_candidate_arrives_carrying_evidence_the_reader_merely_asserted(self) -> None:
         """With nothing printed to copy, the reader supplies nothing at all."""
-        candidates = self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177")
+        candidates = self._candidates(supplier_tax_id="B00015016", customer_tax_id="A00010017")
 
         assert candidates, "the fixture must produce candidates, or this passes vacuously"
         assert all(not candidate.role_evidence for candidate in candidates)
@@ -711,7 +681,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=self._candidates(supplier_tax_id="B1234567X", customer_tax_id="B12345674"),
+            candidates=self._candidates(supplier_tax_id="B1234567X", customer_tax_id="B00015016"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
             operation=operation,
@@ -730,15 +700,15 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
             candidates=(
-                IdentityCandidate(value="B12345674", role_evidence="printed under 'Proveedor'"),
-                IdentityCandidate(value="A82645177"),
+                IdentityCandidate(value="B00015016", role_evidence="printed under 'Proveedor'"),
+                IdentityCandidate(value="A00010017"),
             ),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
             operation=operation,
         )
 
-        assert resolution.resolved == "B12345674"
+        assert resolution.resolved == "B00015016"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
 
     def test_the_no_role_evidence_fallback_note_finally_renders(self, operation: PinnedAuthorityOperation) -> None:
@@ -751,7 +721,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177"),
+            candidates=self._candidates(supplier_tax_id="B00015016", customer_tax_id="A00010017"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
             operation=operation,
@@ -774,13 +744,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         whose.
         """
         candidates = self._candidates(
-            supplier_tax_id="B12345674",
-            customer_tax_id="A82645177",
+            supplier_tax_id="B00015016",
+            customer_tax_id="A00010017",
             role_evidence={"supplier_tax_id": "Proveedor:"},
         )
 
         evidenced = [candidate for candidate in candidates if candidate.role_evidence]
-        assert [candidate.value for candidate in evidenced] == ["B12345674"]
+        assert [candidate.value for candidate in evidenced] == ["B00015016"]
 
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
@@ -790,7 +760,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             operation=operation,
         )
 
-        assert resolution.resolved == "B12345674"
+        assert resolution.resolved == "B00015016"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
         assert resolution.provenance.role_evidence is None or "Proveedor" in str(resolution.provenance.note)
 
@@ -803,11 +773,11 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         so an invented heading cannot promote anything.
 
         Mutation that must trip this: drop the ``printed_excerpt_occurs`` guard
-        in ``_identity_candidates`` and pass the claim through unchecked.
+        in ``identity_candidates`` and pass the claim through unchecked.
         """
         candidates = self._candidates(
-            supplier_tax_id="B12345674",
-            customer_tax_id="A82645177",
+            supplier_tax_id="B00015016",
+            customer_tax_id="A00010017",
             role_evidence={"supplier_tax_id": "Lieferant:"},
         )
 
@@ -835,8 +805,8 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         first-match selection with a heading attached to it.
         """
         candidates = self._candidates(
-            supplier_tax_id="B12345674",
-            customer_tax_id="A82645177",
+            supplier_tax_id="B00015016",
+            customer_tax_id="A00010017",
             role_evidence={"supplier_tax_id": "Proveedor:", "customer_tax_id": "Cliente:"},
         )
 
@@ -863,13 +833,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         can see it.
         """
         draft = InvoiceDraft(
-            supplier_tax_id="B12345674",
+            supplier_tax_id="B00015016",
             provenance=(
                 FieldProvenance(
                     field="supplier_tax_id",
                     origin=FieldOrigin.TEXT_LAYER,
                     grounding=FieldGroundingOutcome.UNANCHORED,
-                    anchor="B12345674",
+                    anchor="B00015016",
                     role_evidence="Lieferant:",
                 ),
             ),
@@ -879,7 +849,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         assert recorded.role_evidence == "Lieferant:", "the reading stage must record the claim verbatim"
         assert recorded.grounding is FieldGroundingOutcome.UNANCHORED, "and must pass no verdict on it"
 
-        candidates = _identity_candidates(
+        candidates = identity_candidates(
             draft=draft,
             envelopes=draft.provenance,
             transcription=self._transcription(),
@@ -887,3 +857,66 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         assert all(not candidate.role_evidence for candidate in candidates), (
             "the grounding stage must drop a claim the document does not carry"
         )
+
+
+_UNPRINTED_SUPPLIER_DOCUMENT = (
+    "FACTURA 2026-0142\n"
+    "Proveedor: EJEMPLO SL\n"
+    "Cliente: ESTUDIO SL B00015024\n"
+    "Base imponible 2.000,00 EUR\n"
+    "TOTAL 2.420,00 EUR\n"
+)
+"""A page whose supplier heading is printed but whose supplier identifier is not."""
+
+
+def _ground_unprinted_supplier(*, anchor: str | None) -> InvoiceDraft:
+    """Ground a draft naming a checksum-valid supplier NIF the page never prints."""
+    draft = InvoiceDraft(
+        supplier_tax_id="B00015016",
+        customer_tax_id=_FILER_CIF,
+        provenance=(
+            FieldProvenance(
+                field="supplier_tax_id",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                anchor=anchor,
+                role_evidence="Proveedor:",
+            ),
+        ),
+    )
+    transcription = DocumentTranscription(
+        text=_UNPRINTED_SUPPLIER_DOCUMENT,
+        page_count=1,
+        source_content_sha256="d" * 64,
+        transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL,
+            origin=FieldOrigin.TEXT_LAYER,
+            name="pdfplumber",
+            revision="gate",
+        ),
+    )
+    with bundled_indexed_authority().operation() as operation:
+        return ground_draft_against_transcription(
+            draft=draft,
+            transcription=transcription,
+            legends=_registry_legends(operation),
+            taxpayer_tax_id=_FILER_CIF,
+            operation=operation,
+        )
+
+
+@pytest.mark.parametrize("anchor", ["B00015016", None], ids=["refused_anchor", "no_anchor_offered"])
+def test_a_printed_heading_cannot_promote_a_tax_id_the_page_never_prints(anchor: str | None) -> None:
+    """Two 2,000 EUR invoices from a supplier recorded under an invented NIF would
+    otherwise reach Modelo 347 as one counterparty; the heading alone must not
+    stand in for the identifier's own printed form."""
+    grounded = _ground_unprinted_supplier(anchor=anchor)
+
+    supplier = next(e for e in grounded.provenance if e.field == "supplier_tax_id")
+    assert supplier.grounding is not FieldGroundingOutcome.ANCHORED
+    assert supplier.anchor is None
+    assert DraftDiscrepancyKind.ROLE_UNRESOLVED in {f.kind for f in grounded.discrepancies}
+    assert any(
+        blocker.reason is ConfirmationBlockReason.UNRESOLVED_DIRECTION and blocker.field == "supplier_tax_id"
+        for blocker in confirmation_blockers(grounded)
+    )

@@ -7,7 +7,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
-from datetime import timedelta
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -22,14 +21,10 @@ from cadrumo.adapters.persistence.storage.custody.automation_native_identity imp
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
-from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import ClientHello
-from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_decision import run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -42,6 +37,9 @@ from cadrumo_runtime.commands import runtime_automation_request
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
+from ..automation_proposal_support import enrollment_proposal
+from ..served_runtime import SyntheticLogin
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -49,38 +47,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "cli-automation-create-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-def _proposal() -> EnrollmentProposal:
-    return EnrollmentProposal(
-        kind=EnrollmentKind.ENROLL,
-        scope=AccessScope(
-            operations=frozenset({"user-profile.field-mutation"}),
-            actions=frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT}),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        expires_at=now() + timedelta(days=30),
-        key_expires_at=now() + timedelta(days=15),
-        unattended=True,
-        allow_os_lock=False,
-    )
 
 
 def test_installed_create_waits_for_separate_human_decision_and_protects_candidate(
@@ -109,7 +75,7 @@ def test_installed_create_waits_for_separate_human_decision_and_protects_candida
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("cli-automation-create-native-login"),
             secret_store=lambda: server_native,
         )
         profiles.prepare_registry()
@@ -120,10 +86,10 @@ def test_installed_create_waits_for_separate_human_decision_and_protects_candida
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                proposal = _proposal()
+                proposal = enrollment_proposal()
 
                 def invoke_create() -> Result:
-                    with override_settings(cadrumo_local_storage_root=root, cadrumo_output_language="en"):
+                    with override_settings(cadrumo_storage_root=root, cadrumo_output_language="en"):
                         return invoke_runtime_cli(
                             (
                                 "--format",

@@ -8,7 +8,7 @@ import re
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
-from .casilla_lineage_seed_paths import _MODELOS_ROOT, _UTF_8
+from .casilla_lineage_seed_paths import MODELOS_ROOT, UTF_8
 from .casilla_lineage_seed_types import LineagePlan
 
 _LINEAGE_KEYS = ("continuidad_id", "continuidad_origin", "continuidad_evidence")
@@ -97,7 +97,7 @@ def _edit_block(block: list[str], casilla_id: str, keys: Mapping[str, str]) -> l
 
 
 def _casilla_files(modelo_id: str, revision: str) -> Iterator[Path]:
-    yield from sorted((_MODELOS_ROOT / modelo_id / "revisions" / revision / "casillas").rglob("*.toml"))
+    yield from sorted((MODELOS_ROOT / modelo_id / "revisions" / revision / "casillas").rglob("*.toml"))
 
 
 def apply_plan(plan: LineagePlan) -> int:
@@ -109,10 +109,10 @@ def apply_plan(plan: LineagePlan) -> int:
     for revision, edits in sorted(by_revision.items()):
         remaining = dict(edits)
         for path in _casilla_files(plan.modelo, revision):
-            text = path.read_text(encoding=_UTF_8)
+            text = path.read_text(encoding=UTF_8)
             new_text, done = insert_lineage_keys(text, revision, remaining)
             if new_text != text:
-                path.write_text(new_text, encoding=_UTF_8, newline="\n")
+                path.write_text(new_text, encoding=UTF_8, newline="\n")
             for casilla_id in done:
                 remaining.pop(casilla_id)
             edited += len(done)

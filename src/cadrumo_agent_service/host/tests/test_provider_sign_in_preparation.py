@@ -4,29 +4,54 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from types import SimpleNamespace
-from typing import cast
+from typing import Any, cast, override
 from uuid import uuid4
 
 import pytest
 
+from cadrumo_client.contracts.service_access import ServiceLease
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
-from ... import service as service_module
+from ... import service_startup as service_module
 from ...adapters.agent_programs import AgentImage
+from ...adapters.agent_provider_auth_status import AgentProviderAuthStatusProbe
 from ...providers.application.contracts import (
     ProviderSettingsActionAccepted,
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
+    ProviderSettingsStatus,
     ProviderStatusEntry,
 )
 from ...providers.application.tests.synthetic_catalog import synthetic_catalog
+from ...providers.domain.record import LocalEngine
 from ...service import AgentService
+from ..auth_attempt import AuthAttempt
 from ..launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _lease() -> ServiceLease:
+    return ServiceLease(
+        lease_id=uuid4(),
+        session_id=uuid4(),
+        profile_id=uuid4(),
+        parent_session_id=uuid4(),
+        descriptor_digest="2" * 64,
+        service_id="cadrumo-agent-service",
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+    )
+
+
+def _served(answer: dict[str, Any]) -> dict[str, Any]:
+    """The answer without its log reference, which must be a short id."""
+    assert re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", answer["log_ref"])
+    return {key: value for key, value in answer.items() if key != "log_ref"}
 
 
 def _entry() -> ProviderStatusEntry:
@@ -36,6 +61,8 @@ def _entry() -> ProviderStatusEntry:
             "provider": "example",
             "transport": "cli",
             "display_name": "Example",
+            "reads_off_host": True,
+            "sign_out_available": False,
             "auth_kind": "provider_sign_in_only",
             "consumers": ["assistant"],
             "mode": "provider_sign_in",
@@ -62,14 +89,18 @@ def _entry() -> ProviderStatusEntry:
         "revoked",
         "unsupported",
         "api_lane",
+        "keyless_lane",
+        "gui_keyless_lane",
         "gui_unsupported",
+        "gui_method_unsupported",
     ),
 )
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     outcome: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))
+    client = SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway"),
@@ -97,9 +128,23 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
         )
     monkeypatch.setattr(service_module, "hosted_python", lambda: python)
     monkeypatch.setattr(service._catalog, "catalog", synthetic_catalog)
-    monkeypatch.setattr(service._catalog, "sign_in_providers", lambda: () if outcome == "unsupported" else ("example",))
     monkeypatch.setattr(
-        service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example",)
+        service._catalog, "sign_in_providers", lambda: () if outcome == "unsupported" else ("example", "local")
+    )
+    monkeypatch.setattr(
+        service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example", "local")
+    )
+    monkeypatch.setattr(
+        service._catalog,
+        "gui_sign_in_methods",
+        lambda: (
+            {}
+            if outcome == "gui_unsupported"
+            else {
+                "example": ("device",) if outcome == "gui_method_unsupported" else ("browser",),
+                "local": ("browser",),
+            }
+        ),
     )
     calls: list[str] = []
 
@@ -115,23 +160,33 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     monkeypatch.setenv(EXTERNAL_BIN_DIRECTORIES_VARIABLE, str(tmp_path))
     monkeypatch.setenv("CODEX_HOME", "must-not-cross")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "must-not-cross")
-    lane = "example_api" if outcome == "api_lane" else "example_cli"
+    # A keyless lane is refused by its kind alone, although its provider is listed as signing in.
+    lane = {"api_lane": "example_api", "keyless_lane": "local_api", "gui_keyless_lane": "local_api"}.get(
+        outcome, "example_cli"
+    )
     answer = service.admin(
         "connect" if outcome.startswith("gui_") else "sign_in",
         provider=lane,
         expected_revision="0" * 64,
         method="browser",
     )
-    if outcome in {"unsupported", "api_lane", "gui_unsupported"}:
+    if outcome in {
+        "unsupported",
+        "api_lane",
+        "keyless_lane",
+        "gui_keyless_lane",
+        "gui_unsupported",
+        "gui_method_unsupported",
+    }:
         assert calls == []
-        assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
+        assert _served(answer) == {"kind": "refused", "code": "sign_in_unavailable", "cause": "lane_not_signable"}
         assert not (tmp_path / "agent").exists()
         return
     assert calls == ["example_cli"]
     if outcome == "revision_conflict":
-        assert answer == {"code": "revision_conflict"}
+        assert _served(answer) == {"code": "revision_conflict", "cause": "settings_refused"}
     elif outcome == "revoked":
-        assert answer == {"kind": "refused", "code": "signed_out"}
+        assert _served(answer) == {"kind": "refused", "code": "signed_out", "cause": "profile_signed_out"}
     else:
         assert answer["kind"] == "sign_in_prepared"
         assert answer["entry"]["readiness"] == "sign_in_required"
@@ -153,7 +208,10 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
 
 def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=None)),
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
@@ -164,16 +222,127 @@ def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
     }
 
 
+def test_submit_code_rejects_stale_attempt_and_retired_owner(tmp_path: Path) -> None:
+    service = AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
+        ),
+        storage_root=tmp_path,
+        gateway_bearer=bytearray(),
+        emit=lambda _event: None,
+    )
+    attempt = AuthAttempt(
+        provider="example",
+        lane="example_cli",
+        executable=tmp_path / "absent.exe",
+        arguments=(),
+        directory=tmp_path,
+        environment={},
+        valid=lambda: False,
+    )
+    attempt.close()
+    service._auth_attempt = attempt
+    for attempt_id in (str(uuid4()), attempt.id):
+        result = service.admin("connect_submit_code", attempt_id=attempt_id, secret=bytearray(b"synthetic-code"))
+        assert result == {"kind": "refused", "code": "invalid_request"}
+
+
 @pytest.mark.parametrize("code", list(ProviderSettingsRefusalCode))
 def test_status_preserves_refusal_without_adding_success_metadata(
     code: ProviderSettingsRefusalCode, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(
+            InstalledServiceClient,
+            SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None)),
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
     )
-    monkeypatch.setattr(service._providers, "status", lambda: ProviderSettingsRefusal(code=code))
+    monkeypatch.setattr(service._providers, "status", lambda **_reads: ProviderSettingsRefusal(code=code))
 
     assert service.admin("status") == {"code": code.value}
+
+
+class _CountingProbe(AgentProviderAuthStatusProbe):
+    """The real probe, counting how often its kept read is dropped."""
+
+    forgotten = 0
+
+    @override
+    def forget(self) -> None:
+        type(self).forgotten += 1
+        super().forget()
+
+
+def _service(tmp_path: Path, *, woken: list[str] | None = None) -> AgentService:
+    client = SimpleNamespace(lease=_lease(), connection=SimpleNamespace(close=lambda: None))
+    return AgentService(
+        local_engine_default=LocalEngine.LLAMACPP,
+        client=cast(InstalledServiceClient, client),
+        storage_root=tmp_path,
+        gateway_bearer=bytearray(),
+        emit=lambda _event: None,
+        wake=(lambda: woken.append("woken")) if woken is not None else (lambda: None),
+    )
+
+
+def test_status_answer_serves_the_console_command_template_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = _service(tmp_path)
+    monkeypatch.setattr(
+        service._providers,
+        "status",
+        lambda *, reads_pending: ProviderSettingsStatus(
+            providers=(_entry(),), reads_pending=reads_pending((_entry(),))
+        ),
+    )
+    monkeypatch.setattr(service._catalog, "gui_sign_in_methods", lambda: {})
+    answer = service.admin("status")
+    assert answer["console_sign_in_command"] == "cadrumo-agent-service provider-login --provider {provider}"
+    assert "providers" in answer
+    assert all("console_sign_in_command" not in provider for provider in answer["providers"])
+
+
+def test_connect_asks_for_causes_confirms_status_and_forgets_reads_at_both_ends(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    woken: list[str] = []
+    service = _service(tmp_path, woken=woken)
+    captured: dict[str, Any] = {}
+
+    class _Attempt:
+        id = "attempt"
+
+        def __init__(self, **keywords: Any) -> None:
+            captured.update(keywords)
+
+        def observe(self) -> dict[str, str]:
+            return {"event": "starting"}
+
+    monkeypatch.setattr(service_module, "AuthAttempt", _Attempt)
+    monkeypatch.setattr(service._catalog, "catalog", synthetic_catalog)
+    monkeypatch.setattr(service._catalog, "gui_sign_in_methods", lambda: {"example": ("browser",)})
+    monkeypatch.setattr(service._credentials, "current_generations", lambda **_k: object())
+    image = AgentImage(tmp_path / "cadrumo-agent.exe", (), tmp_path / "agent")
+    monkeypatch.setattr(
+        service,
+        "_prepare_sign_in",
+        lambda *_a, **_k: {
+            "kind": "sign_in_prepared",
+            "entry": {"provider": "example"},
+            "launch": {"executable": str(image.executable), "directory": str(image.directory), "environment": {}},
+        },
+    )
+    service._login_status = _CountingProbe(context=lambda: None)
+    service.admin("connect", provider="example_cli", expected_revision="0" * 64, method="browser")
+    assert captured["arguments"][-3:] == ("--timeout", "300", "--causes")
+    assert _CountingProbe.forgotten == 1
+    captured["settled"]()
+    assert _CountingProbe.forgotten == 2
+    assert woken == ["woken"]
+    assert callable(captured["confirm"])

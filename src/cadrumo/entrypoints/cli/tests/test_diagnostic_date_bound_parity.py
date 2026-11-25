@@ -9,7 +9,7 @@ import pytest
 import typer
 from pydantic import ValidationError
 
-from ..app_diagnostics_commands import _parse_iso_date as parse_diagnostics_date
+from ..app_diagnostics_commands import parse_iso_date
 from ..diagnostics_results import (
     ErrorsBreakdownResult,
     LatencyPercentilesPayload,
@@ -18,19 +18,19 @@ from ..diagnostics_results import (
     RunHealthResult,
     RunsListResult,
 )
-from ..ledger_read_commands import _parse_iso_date as parse_ledger_date
+from ..ledger_read_commands import parse_iso_date as parse_ledger_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("parser", (parse_diagnostics_date, parse_ledger_date))
+@pytest.mark.parametrize("parser", (parse_iso_date, parse_ledger_date))
 def test_supplied_blank_date_bound_refuses(parser: Callable[[str | None, str], date | None]) -> None:
     """A blank supplied --since is never widened into an unbounded query."""
     with pytest.raises(typer.BadParameter):
         parser("", "--since")
 
 
-@pytest.mark.parametrize("parser", (parse_diagnostics_date, parse_ledger_date))
+@pytest.mark.parametrize("parser", (parse_iso_date, parse_ledger_date))
 def test_absent_date_bound_remains_optional(parser: Callable[[str | None, str], date | None]) -> None:
     """Only an omitted date option remains an unbounded query."""
     assert parser(None, "--since") is None

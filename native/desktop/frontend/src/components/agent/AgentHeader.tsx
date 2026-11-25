@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { PaneHeaderFrame } from "@/components/ui/pane-header";
+import { useDockedPane } from "../docking/PaneChrome";
+import { described } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import type { OpenMenu } from "../ContextMenu";
 import { AgentIconAction } from "./AgentAction";
@@ -24,6 +26,7 @@ export function AgentHeader({
   onRename,
   onMenu,
   onNewConversation,
+  newConversationHeldBy,
   historyOpen = false,
   onToggleHistory,
   documentsOpen = false,
@@ -41,6 +44,8 @@ export function AgentHeader({
   /** Opens a menu for the title. */
   onMenu?: OpenMenu;
   onNewConversation?: () => void;
+  /** Why a new conversation would change nothing now. */
+  newConversationHeldBy?: string;
   historyOpen?: boolean;
   onToggleHistory?: () => void;
   documentsOpen?: boolean;
@@ -56,6 +61,7 @@ export function AgentHeader({
   onToggleMaximize?: () => void;
 }) {
   const t = useStrings();
+  const docked = useDockedPane();
   const count = Math.max(0, documentCount);
   const documents = t("desktop.agent.documents");
   const attached =
@@ -64,7 +70,7 @@ export function AgentHeader({
   const [editing, setEditing] = useState(false);
   const renaming = editing && onRename !== undefined;
   return (
-    <PaneHeaderFrame onToggleMaximize={onToggleMaximize}>
+    <PaneHeaderFrame onToggleMaximize={docked ? undefined : onToggleMaximize}>
       <div className="grid min-w-0 flex-1">
         {renaming ? (
           <TitleEditor
@@ -97,12 +103,12 @@ export function AgentHeader({
                         {
                           id: "rename",
                           label: t("desktop.agent.rename"),
+                          icon: "edit",
                           enabled: true,
                           run: () => setEditing(true),
                         },
                       ],
                       { x: event.clientX, y: event.clientY },
-                      true,
                     );
                   }
                 : undefined
@@ -124,6 +130,7 @@ export function AgentHeader({
         icon="plus"
         label={t("desktop.agent.new_conversation")}
         onAction={onNewConversation}
+        heldBy={newConversationHeldBy}
       />
       <AgentIconAction
         icon="clock"
@@ -137,7 +144,7 @@ export function AgentHeader({
         hint={attached}
         // The name holds the badge as it is drawn, then the exact count.
         accessibleName={
-          attached ? `${documents}, ${shown}, ${attached}` : undefined
+          attached ? described(t, documents, shown, attached) : undefined
         }
         aria-pressed={documentsOpen}
         onAction={onToggleDocuments}
@@ -159,7 +166,7 @@ export function AgentHeader({
         aria-pressed={settingsOpen}
         onAction={onToggleSettings}
       />
-      {trailing && (
+      {!docked && trailing && (
         <>
           <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
           {trailing}

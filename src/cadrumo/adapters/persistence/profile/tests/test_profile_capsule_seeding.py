@@ -25,14 +25,17 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
+    seed_test_profile_record,
 )
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....domain.user_profile.values import ProfileSetupState, UserProfileRecord
@@ -44,7 +47,7 @@ _BUCKET_ID = "6f1f7d4e-9d64-4a1a-9a2f-2c0d4e5b7a10"
 
 
 def _loaded(bucket_id: str) -> UserProfileRecord:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     return ProfileRecordRepository.for_current_session(
         bucket_id, profile_decode_context=_profile_decode_context_for_test
     ).load(bucket_id)
@@ -59,11 +62,11 @@ def test_a_profile_seeded_complete_loads_back_complete(tmp_path: Path) -> None:
         )
 
         seeded = seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_complete_facts(),
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
 
@@ -81,11 +84,11 @@ def test_the_seeded_facts_survive_alongside_the_promoted_state(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         facts = _complete_facts()
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=facts,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
 
@@ -102,11 +105,11 @@ def test_a_profile_seeded_incomplete_is_left_incomplete(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.INCOMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_complete_facts(),
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
 
@@ -115,4 +118,4 @@ def test_a_profile_seeded_incomplete_is_left_incomplete(tmp_path: Path) -> None:
 
 def _complete_facts():
     """Return the fact set a completed profile carries, from a real seeding caller."""
-    return MODELO_READY_PROFILE_FACTS
+    return persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION,))

@@ -1,7 +1,10 @@
-//! The keys the signed-in profile has issued to agents outside Cadrumo, as
-//! short-lived canonical CLI invocations of the sign-in view's own channel:
-//! the digest-verified runtime image, its projected environment, its lanes, deadline
-//! and output bound.
+//! The keys the signed-in profile has issued to agents outside Cadrumo.
+//!
+//! Listing is the registered inventory read, submitted as the person over
+//! the profile relay the host already holds, like the other profile reads.
+//! Revoking is a short-lived canonical CLI invocation of the sign-in view's
+//! own channel: the digest-verified runtime image, its projected
+//! environment, its lanes, deadline and output bound.
 //!
 //! Listing and revoking are the person's own acts, and the product refuses
 //! them to an agent. Neither takes a password, an argument that is not a
@@ -20,29 +23,14 @@ use crate::shell::sign_in::{
     process::Children,
     wire::{self as envelope, Outcome},
 };
+use crate::shell::user_profile::ProfileHost;
 use cadrumo_application::diagnostics::helper::{HelperExecutable, HelperIdentity};
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use std::{process::Command, sync::Arc};
 use tauri::State;
 use wire::{Answer, CommandFailure, Refusal, Revoked};
 
-const LIST_LEAF: &str = "profile.automation.list";
 const DENY_LEAF: &str = "profile.automation.deny";
-
-/// The arguments of a listing: every word is fixed.
-fn list_arguments() -> Vec<String> {
-    [
-        "--format",
-        "json",
-        "config",
-        "profile",
-        "automation",
-        "list",
-    ]
-    .iter()
-    .map(|word| (*word).to_owned())
-    .collect()
-}
 
 /// The arguments of a revoke of one grant, which the product revokes with
 /// its keys. The grant is a UUID that was checked, so it is neither an option
@@ -87,19 +75,6 @@ fn after_revoke(error: ApplicationError) -> CommandFailure {
     }
 }
 
-/// Runs a built listing on the read lane and decodes the one envelope it
-/// prints. The child is settled on every path.
-fn read_list(children: &Children, command: Command) -> std::result::Result<Answer, CommandFailure> {
-    let output = children.read(
-        HelperIdentity {
-            command: "config.profile.automation.list",
-            executable: HelperExecutable::Runtime,
-        },
-        command,
-    )?;
-    wire::list(envelope::decode(LIST_LEAF, &output)?)
-}
-
 /// Runs a built revoke on the mutation lane. Nothing is written to the
 /// child's input, and the revoke is attempted once.
 fn run_revoke(
@@ -136,14 +111,13 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 /// changes nothing.
 #[tauri::command]
 pub async fn agent_access_list(
-    state: State<'_, Arc<SignIn>>,
+    host: State<'_, Arc<ProfileHost>>,
 ) -> std::result::Result<Answer, CommandFailure> {
-    let state = state.inner().clone();
-    super::blocking(move || {
-        let command = command_of(&state, list_arguments())?;
-        Ok(read_list(&state.children, command))
-    })
-    .await?
+    let projection = host
+        .automation_inventory()
+        .await
+        .map_err(wire::read_failure)?;
+    wire::inventory(projection)
 }
 
 /// Issuing a key is refused until the product offers it as one act of the
@@ -182,18 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn each_call_is_the_contracts_command_line_with_no_secret_channel() {
-        assert_eq!(
-            list_arguments(),
-            [
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "automation",
-                "list"
-            ]
-        );
+    fn a_revoke_is_the_contracts_command_line_with_no_secret_channel() {
         assert_eq!(
             revoke_arguments(GRANT),
             [
@@ -208,7 +171,7 @@ mod tests {
             ]
         );
         // Nothing is read from standard input: no call asks for a channel.
-        for word in list_arguments().iter().chain(&revoke_arguments(GRANT)) {
+        for word in &revoke_arguments(GRANT) {
             assert!(
                 !word.contains("secrets") && !word.contains("password"),
                 "{word}"
@@ -298,21 +261,6 @@ mod tests {
     }
 
     #[cfg(windows)]
-    const LISTING: &str = "[Console]::Out.Write('{\"schema_version\":\"2\",\"command\":\"config.profile.automation.list\",\"status\":\"success\",\"result\":{\"profile_id\":\"0a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d\",\"operation_id\":\"op\",\"inventory\":{\"grants\":[{\"grant_id\":\"6f1b0c1e-2a3d-4e5f-8a9b-0c1d2e3f4a5b\",\"state\":\"active\",\"scope\":{\"all_agent_operations\":false,\"disclosure_categories\":[{\"category\":\"tax_values\"}]},\"valid_from\":\"2026-10-13T09:30:00Z\",\"expires_at\":\"2027-10-13T09:30:00Z\"}],\"keys\":[],\"requests\":[]}}}')";
-
-    // A real child: what it prints is read through the same decoder as the
-    // product's own answer, on the lane the product's call would use.
-    #[cfg(windows)]
-    #[test]
-    fn a_listing_read_through_a_real_child_parses_the_envelope() {
-        let children = Children::default();
-        let answer = read_list(&children, powershell(LISTING)).unwrap();
-        assert_eq!(answer.credentials.len(), 1);
-        assert_eq!(answer.credentials[0].id, GRANT);
-        assert_eq!(answer.credentials[0].last_used_at, None);
-    }
-
-    #[cfg(windows)]
     #[test]
     fn a_revoke_through_a_real_child_is_read_and_the_child_gets_no_input() {
         let children = Children::default();
@@ -359,10 +307,6 @@ mod tests {
             refused(run_revoke(&children, powershell(envelope), GRANT).unwrap_err()),
             serde_json::json!({"code": "profile_locked"})
         );
-        assert_eq!(
-            refused(read_list(&children, powershell(envelope)).unwrap_err()),
-            serde_json::json!({"code": "profile_locked"})
-        );
     }
 
     #[cfg(windows)]
@@ -370,8 +314,6 @@ mod tests {
     fn a_child_that_floods_its_output_is_bounded_and_reaped() {
         let children = Children::default();
         let flood = "while ($true) { [Console]::Out.Write(('x' * 8192)) }";
-        let listing = read_list(&children, powershell(flood)).unwrap_err();
-        assert_eq!(refused(listing)["code"], "output_limit");
         // A revoke that may have run is not reported as a failure to run.
         let revoke = run_revoke(&children, powershell(flood), GRANT).unwrap_err();
         assert_eq!(

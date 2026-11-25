@@ -51,7 +51,7 @@ $storageRoot = Join-Path $traceRoot 'storage'
 $temporaryRoot = Join-Path $storageRoot 'tmp'
 $cacheRoot = Join-Path $storageRoot 'cache'
 New-Item -ItemType Directory -Force -Path $temporaryRoot, $cacheRoot | Out-Null
-$storageNames = @('CADRUMO_STORAGE_ROOT', 'CADRUMO_LOCAL_STORAGE_ROOT', 'CADRUMO_TEMP_DIR', 'CADRUMO_TOOL_CACHE_DIR', 'XDG_CACHE_HOME', 'TEMP', 'TMP', 'TMPDIR')
+$storageNames = @('CADRUMO_STORAGE_ROOT', 'CADRUMO_TOOL_CACHE_DIR', 'XDG_CACHE_HOME', 'TEMP', 'TMP', 'TMPDIR')
 $originalStorageEnvironment = @{}
 foreach ($name in $storageNames) {
     $originalStorageEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
@@ -61,8 +61,6 @@ $instance = 'CadrumoNative-' + [Guid]::NewGuid().ToString('N')
 $profile = Join-Path $PSScriptRoot 'windows-filesystem.wprp'
 try {
     $env:CADRUMO_STORAGE_ROOT = $storageRoot
-    $env:CADRUMO_LOCAL_STORAGE_ROOT = $storageRoot
-    $env:CADRUMO_TEMP_DIR = $temporaryRoot
     $env:CADRUMO_TOOL_CACHE_DIR = $cacheRoot
     $env:XDG_CACHE_HOME = $cacheRoot
     foreach ($name in @('TEMP', 'TMP', 'TMPDIR')) {
@@ -80,7 +78,7 @@ with tempfile.NamedTemporaryFile(dir=os.environ['TEMP']) as f:
  f.write(b'cadrumo native trace')
  f.flush()
 child=subprocess.check_output([sys.executable,'-c','import os,tempfile; f=tempfile.TemporaryFile(dir=os.environ["TEMP"]); f.write(b"child trace"); f.close(); print(os.getpid())'],text=True)
-print(json.dumps({'pids':[os.getpid(),int(child)],'user_root':os.environ['CADRUMO_LOCAL_STORAGE_ROOT'],'cache':gencache.GetGeneratePath()}))
+print(json.dumps({'pids':[os.getpid(),int(child)],'user_root':os.environ['CADRUMO_STORAGE_ROOT'],'cache':gencache.GetGeneratePath()}))
 '@
         $result = & "$packagePath/python.exe" -c $probe
         if ($LASTEXITCODE) { throw 'Trace probe failed' }

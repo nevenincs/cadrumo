@@ -25,6 +25,18 @@ modelo:
           a permanent establishment. Annual return of withholdings and payments on
           account.
         title: IRNR annual summary of withholdings and payments on account
+      form:
+        page:
+          m296-declarante:
+            heading: 'Type 1 record: declarant record'
+            section:
+              general:
+                heading: Identification details and summary of the return
+          numbered-boxes:
+            heading: Summary sheet
+        section:
+          resumen:
+            heading: Summary of the data included in the return
       revision:
         '2022':
           field:

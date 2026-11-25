@@ -86,7 +86,6 @@ def test_fixture_verifies_readiness_and_joins_owner_even_when_continuation_fails
             cli_executable=cli,
             storage_root=tmp_path,
             authority_root=tmp_path,
-            runtime_socket_dir=tmp_path / "r",
         ) as evidence:
             assert evidence["runtime_boot_id"] == str(boot)
             assert evidence["native_desktop_login_claimed"] is False
@@ -106,7 +105,8 @@ def test_fixture_verifies_readiness_and_joins_owner_even_when_continuation_fails
     environment = launch_evidence[2]["env"]
     assert "CADRUMO_UNRELATED" not in environment
     assert environment["CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE"] == "1"
-    assert environment["CADRUMO_RUNTIME_SOCKET_DIR"] == str(tmp_path / "r")
+    assert "CADRUMO_RUNTIME_SOCKET_DIR" not in environment
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path)
     assert launch_evidence[2]["stdin"] == asyncio.subprocess.DEVNULL
     assert launch_evidence[2]["start_new_session"] is True
     if cleanup_fails:
@@ -137,7 +137,6 @@ def test_unsafe_namespace_is_refused_before_launch_without_permission_repair(tmp
             cli_executable=cli,
             storage_root=tmp_path,
             authority_root=tmp_path,
-            runtime_socket_dir=tmp_path / "r",
         ),
     ):
         pytest.fail("unsafe endpoint reached continuation")

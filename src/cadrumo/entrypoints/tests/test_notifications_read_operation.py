@@ -44,21 +44,17 @@ from cadrumo.application.live.notifications_read_operation import (
     build_notifications_show_registration,
 )
 from cadrumo.application.live.snapshot_base import SnapshotRepository
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.projection_services import OperationResultProjectionService
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -66,12 +62,22 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
+
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    cli_submit_context,
+    run_to_terminal,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 8, 24, 20, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 8, 24, 20, tzinfo=UTC)
 
 
 class _NeverQuery:
@@ -132,9 +138,9 @@ def _snapshot(*, bucket_id: str, snapshot_id: str, captured_at: datetime) -> Per
         certificado_id="1234567890",
         tipo=NotificationType.NOTIFICACION,
         concepto="Notificación sintética",
-        titular_nif="X1234567L",
+        titular_nif="X0001500M",
         titular_nombre="Titular sintético",
-        destinatario_nif="X1234567L",
+        destinatario_nif="X0001500M",
         destinatario_nombre="Titular sintético",
         fecha_emision=captured_at.date(),
         fecha_notificacion=None,
@@ -148,7 +154,7 @@ def _snapshot(*, bucket_id: str, snapshot_id: str, captured_at: datetime) -> Per
         bucket_id=bucket_id,
         captured_at=captured_at,
         source_url="https://sede.example/notifications",
-        authenticated_identity="X1234567L",
+        authenticated_identity="X0001500M",
         rows=(row,),
         persisted_at=captured_at + timedelta(seconds=1),
     )
@@ -164,9 +170,94 @@ def _ports_factory(repository: _SnapshotRepository):
     return build
 
 
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
+def _assert_empty_latest_projection(empty_latest_projected):
+    empty_latest = empty_latest_projected.projection
+    assert isinstance(empty_latest, NotificationsLatestPublicResultV1)
+    assert empty_latest.snapshot_id is None
+    assert empty_latest.captured_at is None
+    assert empty_latest.source_url is None
+    assert empty_latest.row_count is None
+
+
+def _assert_shown_projection(show_projected):
+    shown = show_projected.projection
+    assert isinstance(shown, NotificationsShowPublicResultV1)
+    assert (shown.snapshot_id, shown.source_url, shown.row_count) == ("2" * 64, "https://sede.example/notifications", 1)
+    row = shown.rows[0]
+    assert (row.certificado_id, row.concepto, row.fecha_emision, row.mode) == (
+        "1234567890",
+        "Notificación sintética",
+        _NOW.date(),
+        "read",
+    )
+    assert "authenticated_identity" not in shown.model_dump()
+    assert set(row.model_dump()) == {
+        "certificado_id",
+        "tipo",
+        "concepto",
+        "titular_nif",
+        "titular_nombre",
+        "destinatario_nif",
+        "destinatario_nombre",
+        "fecha_emision",
+        "fecha_notificacion",
+        "modo_notificacion",
+        "leida",
+        "source_url",
+        "mode",
+    }
+
+
+def _assert_terminals(list_terminal, show_terminal, latest_terminal, empty_latest_terminal, unknown_show_terminal):
+    for terminal in (list_terminal, show_terminal, latest_terminal, empty_latest_terminal):
+        assert terminal.lifecycle is OperationLifecycle.TERMINAL
+        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert terminal.effect is OperationEffect.NONE
+        assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.effect is OperationEffect.NONE
+    assert unknown_show_terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+
+
+def _assert_action_references(list_definition, show_definition, latest_definition):
+    assert list_definition.action_reference is not None
+    assert list_definition.action_reference.action_id == "operator.live.notifications.list"
+    assert show_definition.action_reference is None
+    assert latest_definition.action_reference is None
+    for definition in (list_definition, show_definition, latest_definition):
+        assert definition.capabilities.owned_resources == frozenset()
+
+
+def _assert_latest_projection(latest_projected):
+    latest = latest_projected.projection
+    assert isinstance(latest, NotificationsLatestPublicResultV1)
+    assert (latest.snapshot_id, latest.row_count, latest.source_url) == (
+        "2" * 64,
+        1,
+        "https://sede.example/notifications",
+    )
+
+
+def _assert_listed_projection(list_projected, profile):
+    listed = list_projected.projection
+    assert isinstance(listed, NotificationsListPublicResultV1)
+    assert listed.bucket_id == profile.bucket_id
+    assert listed.count == 2
+    assert tuple((row.snapshot_id, row.row_count) for row in listed.rows) == (("1" * 64, 1), ("2" * 64, 1))
+    assert "source_url" not in listed.model_dump()
+
+
+def _assert_reads_admit_exact_profile(requests, registry, profile_id, authority):
+    for request, _result_type, registration in requests:
+        access_context = cli_submit_context(
+            profile_id=profile_id, contract=registration.contract, authority_operation=authority
+        )
+        admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
+        assert admitted.request.profile_id == profile_id
+        assert admitted.request.period_independent
+        assert admitted.policy.requires_all_periods
+        assert AccessAction.COMMIT not in admitted.policy.actions
+
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
 
 def test_registered_notification_reads_are_exact_profile_and_project_closed_results(tmp_path: Path) -> None:
@@ -236,84 +327,24 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
             ),
         )
 
-        for request, _result_type, registration in requests:
-            access_context = OperationAccessContext(
-                profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-                authority_operation=authority,
-            )
-            admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
-            assert admitted.request.profile_id == profile_id
-            assert admitted.request.period_independent
-            assert admitted.policy.requires_all_periods
-            assert AccessAction.COMMIT not in admitted.policy.actions
-
-            foreign_profile_id = uuid4()
-            foreign_request = request.model_copy(
-                update={
-                    "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                    "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-                }
-            )
-            with pytest.raises(ProfileAccessRefusedError) as refusal:
-                resolve_operation_access(
-                    registry=registry,
-                    request=foreign_request,
-                    context=access_context,
-                )
-            assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
-
-        assert list_definition.action_reference is not None
-        assert list_definition.action_reference.action_id == "operator.live.notifications.list"
-        assert show_definition.action_reference is None
-        assert latest_definition.action_reference is None
-        for definition in (list_definition, show_definition, latest_definition):
-            assert definition.capabilities.owned_resources == frozenset()
-
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _assert_reads_admit_exact_profile(requests, registry, profile_id, authority)
+        _assert_action_references(list_definition, show_definition, latest_definition)
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(
             request: OperationRequest[BaseModel], operation_id: str, result_type: type[BaseModel]
         ) -> tuple[OperationPersistedSnapshot, OperationResultProjectionSuccessV1[BaseModel]]:
-            submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
-            contract = registry.lookup_public_contract(request.definition_id)
-            assert contract.result_schema is not None
-            projected = await result_service.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=submitted_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                ),
-                result_type,
+            terminal, projected = await settle_and_project(
+                supervisor, result_service, registry, request, result_type, operation_id=operation_id
             )
             assert isinstance(projected, OperationResultProjectionSuccessV1)
             return terminal, cast(OperationResultProjectionSuccessV1[BaseModel], projected)
 
         async def run_terminal(request: OperationRequest[BaseModel], operation_id: str) -> OperationPersistedSnapshot:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            return await _run_to_terminal(supervisor, submitted_id)
+            return await run_to_terminal(supervisor, submitted_id)
 
         list_terminal, list_projected = asyncio.run(run(requests[0][0], "3" * 64, requests[0][1]))
         show_terminal, show_projected = asyncio.run(run(requests[1][0], "4" * 64, requests[1][1]))
@@ -327,62 +358,11 @@ def test_registered_notification_reads_are_exact_profile_and_project_closed_resu
         repository.snapshots.clear()
         empty_latest_terminal, empty_latest_projected = asyncio.run(run(requests[2][0], "a" * 64, requests[2][1]))
 
-    for terminal in (list_terminal, show_terminal, latest_terminal, empty_latest_terminal):
-        assert terminal.lifecycle is OperationLifecycle.TERMINAL
-        assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        assert terminal.effect is OperationEffect.NONE
-        assert terminal.terminal_receipt is not None
-        assert terminal.terminal_receipt.effect is OperationEffect.NONE
-    assert unknown_show_terminal.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-
-    listed = list_projected.projection
-    assert isinstance(listed, NotificationsListPublicResultV1)
-    assert listed.bucket_id == profile.bucket_id
-    assert listed.count == 2
-    assert tuple((row.snapshot_id, row.row_count) for row in listed.rows) == (("1" * 64, 1), ("2" * 64, 1))
-    assert "source_url" not in listed.model_dump()
-
-    shown = show_projected.projection
-    assert isinstance(shown, NotificationsShowPublicResultV1)
-    assert (shown.snapshot_id, shown.source_url, shown.row_count) == ("2" * 64, "https://sede.example/notifications", 1)
-    row = shown.rows[0]
-    assert (row.certificado_id, row.concepto, row.fecha_emision, row.mode) == (
-        "1234567890",
-        "Notificación sintética",
-        _NOW.date(),
-        "read",
-    )
-    assert "authenticated_identity" not in shown.model_dump()
-    assert set(row.model_dump()) == {
-        "certificado_id",
-        "tipo",
-        "concepto",
-        "titular_nif",
-        "titular_nombre",
-        "destinatario_nif",
-        "destinatario_nombre",
-        "fecha_emision",
-        "fecha_notificacion",
-        "modo_notificacion",
-        "leida",
-        "source_url",
-        "mode",
-    }
-
-    latest = latest_projected.projection
-    assert isinstance(latest, NotificationsLatestPublicResultV1)
-    assert (latest.snapshot_id, latest.row_count, latest.source_url) == (
-        "2" * 64,
-        1,
-        "https://sede.example/notifications",
-    )
-
-    empty_latest = empty_latest_projected.projection
-    assert isinstance(empty_latest, NotificationsLatestPublicResultV1)
-    assert empty_latest.snapshot_id is None
-    assert empty_latest.captured_at is None
-    assert empty_latest.source_url is None
-    assert empty_latest.row_count is None
+    _assert_terminals(list_terminal, show_terminal, latest_terminal, empty_latest_terminal, unknown_show_terminal)
+    _assert_listed_projection(list_projected, profile)
+    _assert_shown_projection(show_projected)
+    _assert_latest_projection(latest_projected)
+    _assert_empty_latest_projection(empty_latest_projected)
 
 
 def test_notification_read_operations_reject_foreign_bucket_rows(tmp_path: Path) -> None:
@@ -446,7 +426,7 @@ def test_notification_read_operations_reject_foreign_bucket_rows(tmp_path: Path)
             for index, request in enumerate(requests, start=1):
                 operation_id = str(index) * 64
                 submitted_id = await supervisor.submit(request, operation_id=operation_id)
-                terminals.append(await _run_to_terminal(supervisor, submitted_id))
+                terminals.append(await run_to_terminal(supervisor, submitted_id))
             return tuple(terminals)
 
         terminals = asyncio.run(run_all())

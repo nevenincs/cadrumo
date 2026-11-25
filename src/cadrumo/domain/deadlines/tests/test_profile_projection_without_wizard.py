@@ -42,14 +42,14 @@ with bundled_indexed_authority().operation():
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "withholding.has_employees": "true",
-            "irpf.professional_income_withholding_ge_70pct": "true",
+            "irpf.art109_activity_income_withholding_ge_70pct": "true",
         },
         tax_id_default="00000000T",
     )
 print("TAX_ID:" + profile.tax_id)
 print("ENTITY:" + str(profile.entity_type))
 print("EMPLOYEES:" + str(profile.has_employees))
-print("PROFESSIONAL_70PCT:" + str(profile.professional_income_withholding_ge_70pct))
+print("ART109_70PCT:" + str(profile.art109_activity_income_withholding_ge_70pct))
 print("WIZARD:" + ("IMPORTED" if "cadrumo.application.wizard" in sys.modules else "NOT_IMPORTED"))
 """
 
@@ -94,8 +94,8 @@ def test_the_projection_runs_in_a_process_that_never_built_a_setup_ui(tmp_path: 
     assert "WIZARD:NOT_IMPORTED" in out, f"test invalid - the child imported the wizard{detail}"
     assert "TAX_ID:12345678Z" in out, detail
     assert "EMPLOYEES:True" in out, detail
-    assert "PROFESSIONAL_70PCT:True" in out, (
-        f"the art. 109 professional-withholding flag must reach the engine from the record{detail}"
+    assert "ART109_70PCT:True" in out, (
+        f"the art. 109 activity-income coverage flag must reach the engine from the record{detail}"
     )
 
 

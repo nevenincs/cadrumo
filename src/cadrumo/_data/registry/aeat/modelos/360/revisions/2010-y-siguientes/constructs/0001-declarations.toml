@@ -21,8 +21,8 @@ application_links = [
     "modelo-360-filing",
     "modelo-360-deadline",
 ]
-filing_schedules = ["modelo-360-ad-hoc"]
+filing_schedules = ["modelo-360-anual"]
 deadline_windows = [
-    "modelo-360-2024-ad-hoc",
-    "modelo-360-2025-ad-hoc",
+    "modelo-360-2024-anual",
+    "modelo-360-2025-anual",
 ]

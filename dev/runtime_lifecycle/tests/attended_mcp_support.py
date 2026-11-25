@@ -12,8 +12,8 @@ from uuid import UUID
 
 import psutil
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import SessionKind
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.attendance import AttendancePending
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.framing import VerifiedConnection

@@ -38,11 +38,20 @@ from typing import override
 
 import pytest
 
+from cadrumo_client.contracts.model_runs import ModelRunLane
+
 from .....core.config import Settings
 from .....core.config_support import LLMProvider
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.model_catalogue import ModelRole
-from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
+from .....core.hashing import sha256_hex
+from .....core.model_roles import ModelRole
+from .....domain.evidence_consent.record import (
+    EvidenceConsentGrantTerms,
+    EvidenceConsentLedgerEntry,
+    EvidenceConsentRecordKind,
+    evidence_consent_grant_address,
+)
+from .....domain.transactions.classification_job import ClassificationConsentScope
 from ....persistence.llm import consent_ledger as consent_ledger_module
 from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 from ....persistence.storage.master_key.active_session import close_active_bucket_session
@@ -53,7 +62,7 @@ from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError
 from ..models import LLMRequest
 from ..providers.agent import lane_model_label
-from .model_run_support import DEFAULT_LANE, RecordingModelRuns
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -71,9 +80,10 @@ class _CapturingClient(LLMClient):
         *,
         settings: Settings | None = None,
         consent_ledger: EvidenceConsentLedger | None = None,
+        lane: ModelRunLane = DEFAULT_LANE,
     ) -> None:
-        """Forward the two dependencies the cases here vary, and bind the recording service."""
-        self.service = RecordingModelRuns(replies=(_COMPLETION_TEXT,))
+        """Forward the dependencies the cases here vary, and bind the recording service on ``lane``."""
+        self.service = RecordingModelRuns(replies=(_COMPLETION_TEXT,), lane=lane)
         super().__init__(settings=settings, consent_ledger=consent_ledger, model_runs=self.service)
 
 
@@ -173,14 +183,21 @@ def test_save_custody_requires_both_callbacks() -> None:
 
 
 def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:
-    """The ledger records off-host EVIDENCE dispatches, not every completion."""
-    asyncio.run(
-        client.complete(
-            LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
-        )
-    )
+    """The ledger records off-host EVIDENCE dispatches, not every completion.
 
-    assert len(client.service.runs) == 1
+    An evidence read on a lane that stays on this computer completes without
+    an entry. An unmarked request on the off-host lane is sent without consent,
+    so the service refuses it, and it records nothing either.
+    """
+    on_host = _CapturingClient(settings=_consented_settings(), lane=ON_HOST_LANE)
+    on_host_request = _evidence_request().model_copy(update={"consent_token": None})
+    unmarked = LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
+
+    assert asyncio.run(on_host.complete(on_host_request)).text == _COMPLETION_TEXT
+    with pytest.raises(LLMConsentError):
+        asyncio.run(client.complete(unmarked))
+
+    assert (len(on_host.service.runs), len(client.service.runs)) == (1, 1)
     assert EvidenceConsentLedger().load_entries() == ()
 
 
@@ -265,3 +282,55 @@ def test_a_failed_append_refuses_even_a_cache_hit(secure_object_test_profile: ob
     with pytest.raises(LLMConsentError):
         asyncio.run(refused.complete(_evidence_request()))
     assert refused.service.runs == []
+
+
+def _grant_terms(
+    scope: ClassificationConsentScope = ClassificationConsentScope.REMEMBERED,
+) -> EvidenceConsentGrantTerms:
+    return EvidenceConsentGrantTerms(
+        grant_id=sha256_hex(b"synthetic grant"),
+        scope=scope,
+        task_kind="classification",
+        transport="api",
+        job_id=sha256_hex(b"synthetic job") if scope is ClassificationConsentScope.ONCE else None,
+    )
+
+
+def test_a_grant_and_its_revocation_are_recorded_as_their_own_kinds_and_round_trip(
+    secure_object_test_profile: object,
+) -> None:
+    _ = secure_object_test_profile
+    ledger = EvidenceConsentLedger()
+
+    granted = ledger.append_grant(provider="example", model="example-model-1", surface=_SURFACE, grant=_grant_terms())
+    revoked = ledger.append_revocation(granted=granted, surface=_SURFACE)
+
+    assert ledger.load_entries() == (granted, revoked)
+    assert granted.record_kind is EvidenceConsentRecordKind.GRANT
+    assert revoked.record_kind is EvidenceConsentRecordKind.REVOCATION
+    assert revoked.revoked_grant_id == _grant_terms().grant_id
+    assert granted.evidence_content_address == evidence_consent_grant_address(
+        profile_bucket_id=granted.profile_bucket_id, provider="example", model="example-model-1", grant=_grant_terms()
+    )
+
+
+def test_only_a_grant_of_the_open_profile_can_be_revoked(secure_object_test_profile: object) -> None:
+    _ = secure_object_test_profile
+    ledger = EvidenceConsentLedger()
+    granted = ledger.append_grant(provider="example", model="example-model-1", surface=_SURFACE, grant=_grant_terms())
+    foreign = granted.model_copy(update={"profile_bucket_id": "5e7a9b1d-2f4a-4b6c-8d0e-4f6a8b0c1d2e"})
+
+    with pytest.raises(LLMConsentError):
+        ledger.append_revocation(granted=foreign, surface=_SURFACE)
+
+    assert ledger.load_entries() == (granted,)
+
+
+def test_a_grant_is_refused_unrecorded_without_an_open_profile_session(secure_object_test_profile: object) -> None:
+    _ = secure_object_test_profile
+    close_active_bucket_session()
+
+    with pytest.raises(LLMConsentError):
+        EvidenceConsentLedger().append_grant(
+            provider="example", model="example-model-1", surface=_SURFACE, grant=_grant_terms()
+        )

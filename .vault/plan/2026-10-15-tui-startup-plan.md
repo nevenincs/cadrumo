@@ -7,9 +7,9 @@ tier: L1
 related:
   - '[[2026-10-13-startup-performance-operation-contract-manifest-adr]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
-modified: '2026-10-15'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:e37ea47cdc5fcd2bdc08f9f0ec4ae53cc1a2d0800c3dfc758e8b43aed30bac25'
+body_hash: 'sha256:7314e0f1f9d59b8f8f49244c63c92f443020beea244c6bde4ee22b480118fd04'
 ---
 
 # `tui-startup` plan
@@ -22,9 +22,9 @@ S01 follows the accepted incomplete-profile startup amendment in 2026-09-02-unre
 
 ## Steps
 
-- [ ] `S01` - Defer full workbench composition until Home is requested for an authenticated incomplete profile; retain account lifecycle and add startup timings and regression coverage; `src/cadrumo/entrypoints/tui`.
-- [ ] `S02` - Repair native agent profile identity observation without changing ordinary CLI redaction and verify the default-environment contract; `native/desktop/src-tauri/src/shell/sign_in`.
-- [ ] `S03` - Reduce sequential wizard overview reads within existing byte and revision bounds; verify complete reconstruction; `src/cadrumo/application/user_profile`.
+- [x] `S01` - Defer full workbench composition until Home is requested for an authenticated incomplete profile; retain account lifecycle and add startup timings and regression coverage; `src/cadrumo/entrypoints/tui`.
+- [x] `S02` - Repair native agent profile identity observation without changing ordinary CLI redaction and verify the default-environment contract; `native/desktop/src-tauri/src/shell/sign_in`.
+- [x] `S03` - Reduce sequential wizard overview reads within existing byte and revision bounds; verify complete reconstruction; `src/cadrumo/application/user_profile`.
 
 ## Parallelization
 

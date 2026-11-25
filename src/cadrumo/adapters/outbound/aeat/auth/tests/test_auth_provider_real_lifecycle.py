@@ -18,11 +18,13 @@ from ......application.auth.session_types import (
     ClaveMovilSessionDetail,
 )
 from ......application.auth_credentials import unnamed_certificate_credentials
+from ......application.live.errors import LiveIvaAcquisitionFailureMode
 from ......core.async_cleanup import AsyncResourceCleanupError
 from ......core.auth_provider import AuthProviderKind
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
+from ......core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ......core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -32,27 +34,30 @@ from .. import session_store as session_store
 from ..authenticator import AEAT_SESSION_IDLE_TTL
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
-from ..clave_movil_support import ClaveMovilApprovalTimeoutError, ClaveMovilFailureMode
+from ..clave_movil_support import (
+    ClaveMovilApprovalNotReceivedError,
+    ClaveMovilApprovalTimeoutError,
+    ClaveMovilFailureMode,
+)
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
 from ..clave_permanente_support import ClavePermanenteFailureMode
 from ..provider_selection import select_provider
-from ._auth_fixtures import CERTIFICATE_INPUT
-from ._authenticator_support import _build_bundle
+from .auth_fixtures import CERTIFICATE_INPUT
+from .authenticator_support import build_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 _IDENTITY = "12345678Z"
 
 
-def _settings(tmp_path: Path, kind: AuthProviderKind) -> Settings:
+def auth_provider_real_lifecycle_settings(tmp_path: Path, kind: AuthProviderKind) -> Settings:
     values: dict[str, object] = {
-        "cadrumo_local_storage_root": tmp_path / "storage",
-        "cadrumo_token_dir": tmp_path / ".tokens",
+        "cadrumo_storage_root": tmp_path / "storage",
         "cadrumo_browser_close_timeout_ms": 15_000,
     }
     if kind is AuthProviderKind.CERTIFICATE:
         values.update(
-            cadrumo_certificate_path=_build_bundle(tmp_path),
+            cadrumo_certificate_path=build_bundle(tmp_path),
             cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
         )
     elif kind is AuthProviderKind.CLAVE_MOVIL:
@@ -65,7 +70,7 @@ def _settings(tmp_path: Path, kind: AuthProviderKind) -> Settings:
     return Settings.model_validate(values)
 
 
-def _seed_clave_state(kind: AuthProviderKind, *, bucket_id: str) -> None:
+def seed_clave_state(kind: AuthProviderKind, *, bucket_id: str) -> None:
     current = datetime.now(UTC)
     storage_state: dict[str, object] = {"cookies": [], "origins": []}
     storage_sha256 = session_store.storage_state_sha256(storage_state)
@@ -94,16 +99,16 @@ def _seed_clave_state(kind: AuthProviderKind, *, bucket_id: str) -> None:
     )
 
 
-async def _active_provider(
+async def active_provider(
     kind: AuthProviderKind,
     *,
     boundary: LocalHttpBoundary,
     tmp_path: Path,
     bucket_id: str,
 ) -> tuple[AuthProvider, AeatSession]:
-    settings = _settings(tmp_path, kind)
+    settings = auth_provider_real_lifecycle_settings(tmp_path, kind)
     if kind is not AuthProviderKind.CERTIFICATE:
-        _seed_clave_state(kind, bucket_id=bucket_id)
+        seed_clave_state(kind, bucket_id=bucket_id)
     provider = select_provider(
         kind,
         settings=settings,
@@ -146,7 +151,7 @@ async def test_public_verify_rejects_copied_and_wrong_provider_sessions(
     bucket_id = "1f6b0000-0000-4000-8000-00000000a070"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
-            provider, active = await _active_provider(
+            provider, active = await active_provider(
                 kind,
                 boundary=boundary,
                 tmp_path=tmp_path,
@@ -171,7 +176,7 @@ async def test_public_close_waits_for_real_inflight_verification(
     bucket_id = "1f6b0000-0000-4000-8000-00000000a080"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
-            provider, active = await _active_provider(
+            provider, active = await active_provider(
                 kind,
                 boundary=boundary,
                 tmp_path=tmp_path,
@@ -186,16 +191,22 @@ async def test_public_close_waits_for_real_inflight_verification(
             # because real chromium teardown was merely slow under contention,
             # which a fixed 10s budget (shorter than the 15s close budget alone)
             # flaked on.
-            sut = _settings(tmp_path, kind)
+            sut = auth_provider_real_lifecycle_settings(tmp_path, kind)
             completion_budget_s = (
                 sut.cadrumo_browser_navigation_timeout_ms + sut.cadrumo_browser_close_timeout_ms
             ) / 1000 + 5.0
+            # Readiness cannot expire before the provider's own navigation
+            # guard: Chromium may still be starting that navigation under load.
+            readiness_budget_s = sut.cadrumo_browser_navigation_timeout_ms / 1000 + 5.0
             boundary.configure("blocking")
             verify_task = asyncio.create_task(provider.verify(active))
             pending_tasks: list[asyncio.Task[object]] = [verify_task]
             try:
                 await wait_for_task_readiness(
-                    boundary.wait_until_blocked(), verify_task, after="blocked provider verification"
+                    boundary.wait_until_blocked(timeout_seconds=readiness_budget_s),
+                    verify_task,
+                    after="blocked provider verification",
+                    timeout_seconds=readiness_budget_s,
                 )
                 close_task = asyncio.create_task(provider.close())
                 pending_tasks.append(close_task)
@@ -222,7 +233,7 @@ async def test_retryable_cleanup_error_closes_a_real_provider_owner(tmp_path: Pa
     bucket_id = "1f6b0000-0000-4000-8000-00000000a010"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
-            provider, _active = await _active_provider(
+            provider, _active = await active_provider(
                 kind,
                 boundary=boundary,
                 tmp_path=tmp_path,
@@ -246,7 +257,7 @@ async def test_clave_movil_public_authenticate_refuses_real_pending_petition_pag
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-movil-pending")
-            settings = _settings(tmp_path, AuthProviderKind.CLAVE_MOVIL)
+            settings = auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_MOVIL)
             provider = select_provider(
                 AuthProviderKind.CLAVE_MOVIL,
                 settings=settings,
@@ -264,6 +275,41 @@ async def test_clave_movil_public_authenticate_refuses_real_pending_petition_pag
     assert raised.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED.value
     assert raised.value.context is not None
     assert raised.value.context["diagnostic_id"]
+    registered = get_registered_error_code(raised.value)
+    assert registered.category is ErrorCategory.AUTH
+
+
+@pytest.mark.asyncio
+async def test_clave_movil_public_authenticate_refuses_when_phone_approval_never_arrives(tmp_path: Path) -> None:
+    """An approval window that elapses on AEAT's waiting page is an operator refusal, not a fault."""
+    bucket_id = "1f6b0000-0000-4000-8000-00000000a090"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        async with opened_http_boundary() as boundary:
+            boundary.configure("clave-movil-approval-never-arrives")
+            settings = auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_MOVIL).model_copy(
+                update={"cadrumo_clave_movil_timeout_ms": 1_000}
+            )
+            provider = select_provider(
+                AuthProviderKind.CLAVE_MOVIL,
+                settings=settings,
+                browser_session_factory=real_browser_factory(
+                    boundary=boundary,
+                    profile_name="clave-movil-approval-never-arrives",
+                ),
+            )
+            try:
+                with pytest.raises(ClaveMovilApprovalTimeoutError) as raised:
+                    await provider.authenticate()
+            finally:
+                await provider.close()
+
+    assert type(raised.value) is ClaveMovilApprovalNotReceivedError
+    assert raised.value.failure_mode == ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT.value
+    assert raised.value.live_iva_failure_mode is LiveIvaAcquisitionFailureMode.OPERATOR_TIMEOUT
+    assert raised.value.context is not None
+    assert raised.value.context["verification_code_present"] is True
+    registered = get_registered_error_code(raised.value)
+    assert registered.category is ErrorCategory.REFUSED
 
 
 @pytest.mark.asyncio
@@ -272,7 +318,7 @@ async def test_clave_movil_public_verify_drives_real_own_name_representation_gat
     bucket_id = "1f6b0000-0000-4000-8000-00000000a030"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
-            provider, active = await _active_provider(
+            provider, active = await active_provider(
                 AuthProviderKind.CLAVE_MOVIL,
                 boundary=boundary,
                 tmp_path=tmp_path,
@@ -308,7 +354,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-movil-representation-missing")
-            settings_values = _settings(tmp_path, AuthProviderKind.CLAVE_MOVIL).model_dump()
+            settings_values = auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_MOVIL).model_dump()
             settings_values["cadrumo_clave_prefer_non_qr"] = False
             settings = Settings.model_validate(settings_values)
             provider = select_provider(
@@ -348,7 +394,7 @@ async def test_clave_permanente_public_fresh_authenticate_persists_real_browser_
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-permanente-success")
-            settings = _settings(tmp_path, AuthProviderKind.CLAVE_PERMANENTE)
+            settings = auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_PERMANENTE)
             provider = select_provider(
                 AuthProviderKind.CLAVE_PERMANENTE,
                 settings=settings,
@@ -379,7 +425,7 @@ async def test_clave_permanente_public_authenticate_classifies_real_invalid_cred
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         async with opened_http_boundary() as boundary:
             boundary.configure("clave-permanente-invalid")
-            settings = _settings(tmp_path, AuthProviderKind.CLAVE_PERMANENTE)
+            settings = auth_provider_real_lifecycle_settings(tmp_path, AuthProviderKind.CLAVE_PERMANENTE)
             provider = select_provider(
                 AuthProviderKind.CLAVE_PERMANENTE,
                 settings=settings,

@@ -38,6 +38,7 @@ _RESOLVED_STORAGE_DECLARATIONS: Final[frozenset[str]] = frozenset(
         "casilla_removals",
         "casilla_positions",
         "family_storage_baseline",
+        "family_disposition_removals",
         "cleared_families",
         "scoped_families",
         "family_overrides",
@@ -47,6 +48,8 @@ _RESOLVED_STORAGE_DECLARATIONS: Final[frozenset[str]] = frozenset(
     }
 )
 _CASILLA_SECTION: Final = "casillas"
+_DISPOSITIONS_FIELD: Final = "family_dispositions"
+_INHERITED_FROM_FIELD: Final = "inherited_from"
 _COMPLETE_EDITION_FRAGMENT: Final = "complete-edition.toml"
 _SOURCE_NATIVE_SECTIONS: Final[frozenset[str]] = frozenset({"casillas", "casilla_continuidad_evolutions"})
 
@@ -145,11 +148,7 @@ def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path
     edition = materialise_edition(source_modelo_root, revision)
     manifest = parse_toml((source_modelo_root / "revisions" / revision / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(revision, {}))
-    manifest_table = {
-        key: value
-        for key, value in edition.table.items()
-        if key in manifest_members and key not in _RESOLVED_STORAGE_DECLARATIONS
-    }
+    manifest_table = _complete_manifest_table(edition, manifest_members)
     revisions_root = metadata_modelo_root / "revisions" / revision
     revisions_root.mkdir(parents=True, exist_ok=True)
     (revisions_root / "revision.toml").write_bytes(
@@ -192,17 +191,36 @@ def write_complete_edition(revision_root: Path, edition: MaterialisedEdition) ->
     """
     manifest = parse_toml((revision_root / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(edition.revision_id, {}))
-    revision_table = {
-        key: value
-        for key, value in edition.table.items()
-        if key in manifest_members and key not in _RESOLVED_STORAGE_DECLARATIONS
-    }
+    revision_table = _complete_manifest_table(edition, manifest_members)
     staged_rows = _complete_casilla_rows(edition)
     (revision_root / "revision.toml").write_bytes(
         render_toml_bytes("revision.toml", {"revisions": {edition.revision_id: revision_table}}),
     )
     _write_complete_edition_section(revision_root, edition, _CASILLA_SECTION, staged_rows)
     _write_remaining_complete_sections(revision_root, edition)
+
+
+def _complete_manifest_table(edition: MaterialisedEdition, manifest_members: frozenset[str]) -> dict[str, object]:
+    """Return the manifest members a complete edition states, with every resolved disposition.
+
+    A complete edition names no predecessor, so the dispositions it inherited
+    are stated in it outright; the loader's origin marker is dropped because a
+    stated disposition has none.
+    """
+    table = {
+        key: value
+        for key, value in edition.table.items()
+        if key in manifest_members and key not in _RESOLVED_STORAGE_DECLARATIONS
+    }
+    dispositions = edition.table.get(_DISPOSITIONS_FIELD)
+    if isinstance(dispositions, Mapping) and dispositions:
+        table[_DISPOSITIONS_FIELD] = {
+            family: {key: value for key, value in entry.items() if key != _INHERITED_FROM_FIELD}
+            if isinstance(entry, Mapping)
+            else entry
+            for family, entry in dispositions.items()
+        }
+    return table
 
 
 def _complete_casilla_rows(edition: MaterialisedEdition) -> list[dict[str, object]]:

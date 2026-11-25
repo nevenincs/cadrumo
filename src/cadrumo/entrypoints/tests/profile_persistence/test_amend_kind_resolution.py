@@ -21,7 +21,7 @@ See Also:
         resolution.
     :func:`~application.modelo.amend_modelo_revision`
         Public application composition path exercised end to end here.
-    :class:`~CalculationRevisionAmendmentKind`
+    :class:`~FilingDeclarationKind`
         Domain enum for ``complementaria``, ``rectificativa``, and
         ``sustitutiva`` values.
 """
@@ -35,8 +35,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -58,8 +59,9 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....core.result_disposition import ResultDisposition, derive_result_disposition
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.result_casillas import derive_result_disposition
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -68,7 +70,7 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind, M303RectificativaMotive
+from ....domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -81,9 +83,8 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_amendment_action_ports
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ...adapter_composition_work_ports import build_amendment_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -100,22 +101,13 @@ _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000234"
 _BASELINE_JUSTIFICANTE_CSV = "JUST2024303AMENDKIND"
 _PROFILE_LABEL = "Amendment kind resolution test profile"
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="amend-kind-resolution"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+_READY_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="X0001500M"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="amend-kind-resolution"),
+    )
 )
 
 
@@ -130,13 +122,13 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         yield (
@@ -297,7 +289,7 @@ def test_rectificativa_kind_refused_for_pre_boundary_period(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             reason="illegal rectificativa for a pre-boundary period",
             actor="operator-A",
             clock=_T4,
@@ -327,13 +319,14 @@ def test_complementaria_permitted_for_pre_boundary_liability_increase(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="under-reported cuota discovered in audit",
             result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
             actor="operator-A",
             clock=_T4,
         )
     assert record.amends_filing_record_id == baseline.filing_record_id
+    assert record.declaration_kind is FilingDeclarationKind.COMPLEMENTARIA
 
 
 def test_complementaria_refused_for_pre_boundary_liability_decrease(
@@ -358,14 +351,14 @@ def test_complementaria_refused_for_pre_boundary_liability_decrease(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="illegal liability-decreasing complementaria",
             actor="operator-A",
             clock=_T4,
         )
     assert exc_info.value.context is not None
-    assert exc_info.value.context.get("baseline_result") == "100.00"
-    assert exc_info.value.context.get("corrected_result") == "40.00"
+    assert Decimal(str(exc_info.value.context.get("baseline_result"))) == Decimal("100")
+    assert Decimal(str(exc_info.value.context.get("corrected_result"))) == Decimal("40")
 
 
 def test_complementaria_kind_refused_for_post_boundary_period(
@@ -390,7 +383,7 @@ def test_complementaria_kind_refused_for_post_boundary_period(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
             reason="illegal complementaria for a post-boundary period",
             actor="operator-A",
             clock=_T4,
@@ -400,8 +393,8 @@ def test_complementaria_kind_refused_for_post_boundary_period(
         if (exc_info.value.context is not None and exc_info.value.context)
         else ""
     )
-    assert "rectificativa" in accepted
-    assert "sustitutiva" in accepted
+    # The 2025 IVA manual makes the rectificativa the single correction route from this period.
+    assert accepted == "rectificativa"
     assert "complementaria" not in accepted
 
 
@@ -423,7 +416,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             reason="lawful rectificativa lowering the declared result",
             result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "3T")),
@@ -431,6 +424,7 @@ def test_rectificativa_kind_permits_liability_decrease_post_boundary(
             clock=_T4,
         )
     assert record.amends_filing_record_id == baseline.filing_record_id
+    assert record.declaration_kind is FilingDeclarationKind.RECTIFICATIVA
 
 
 def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
@@ -448,10 +442,40 @@ def test_sustitutiva_kind_permitted_at_every_period(repos: _Repos, *, operation:
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             from_filing_record_id=baseline.filing_record_id,
             overrides={_M303_RESULT_CASILLA: Decimal("40.00")},
-            amendment_kind=CalculationRevisionAmendmentKind.SUSTITUTIVA,
+            amendment_kind=FilingDeclarationKind.SUSTITUTIVA,
             reason="material restatement, sustitutiva always permitted",
             result_disposition=_correction_disposition(Decimal("40.00"), Period.from_year_and_code(2024, "2T")),
             actor="operator-A",
             clock=_T4,
         )
     assert record.amends_filing_record_id == baseline.filing_record_id
+    assert record.declaration_kind is FilingDeclarationKind.SUSTITUTIVA
+
+
+def test_an_amendment_cannot_be_filed_as_the_original(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    """The original is the declaration an amendment amends, never one it files as."""
+    _, _, baseline = _seed_m303_external_baseline(
+        repos,
+        result_casilla_value=Decimal("100.00"),
+        filing_year=2024,
+        period_code="2T",
+        operation=operation,
+    )
+
+    with (
+        bundled_indexed_authority().operation() as operation,
+        pytest.raises(AmendmentKindNotPermittedError) as exc_info,
+    ):
+        amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("150.00")},
+            amendment_kind=FilingDeclarationKind.ORIGINAL,
+            reason="an original is not an amendment",
+            result_disposition=_correction_disposition(Decimal("150.00"), Period.from_year_and_code(2024, "2T")),
+            actor="operator-A",
+            clock=_T4,
+        )
+    assert exc_info.value.context is not None
+    assert exc_info.value.context.get("requested_kind") == "original"
+    assert "original" not in str(exc_info.value.context.get("accepted_kinds"))

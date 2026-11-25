@@ -16,6 +16,7 @@ import pytest
 
 from ......core.decimal.grammar import DecimalSeparator
 from ......core.tabular import coerce_cell_text
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests.inventory import FIXTURES_DIR
 from ..base import (
@@ -28,11 +29,14 @@ from ..base import (
 )
 from ..csv import CsvProvider
 from ..detection import detect_provider
+from ..mapped_tabular import MappedTabularProvider
 from ..ofx import OfxProvider
-from ..pdf_n26 import PdfN26Provider
+from ..pdf_statement import PdfStatementProvider
+from ..xls import XlsProvider
 from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _FIXTURES = FIXTURES_DIR / "financial"
 
@@ -42,8 +46,8 @@ def test_raw_transaction_round_trip_uses_mapping_field() -> None:
     original = RawTransaction.model_validate(
         {
             "provider_transaction_id": "csv-provider-deadbeef-2",
-            "booked_date": date(2026, 4, 10),
-            "value_date": date(2026, 4, 10),
+            "booked_date": date(_YEAR, 4, 10),
+            "value_date": date(_YEAR, 4, 10),
             "amount": Decimal("123.45"),
             "currency": "eur",
             "counterparty": "Example SL",
@@ -53,7 +57,7 @@ def test_raw_transaction_round_trip_uses_mapping_field() -> None:
                 "source_sha256": "a" * 64,
                 "source_row_index": 2,
                 "source_format": SourceFormat.CSV,
-                "ingested_at": datetime(2026, 4, 13, 12, 0, tzinfo=UTC),
+                "ingested_at": datetime(_YEAR, 4, 13, 12, 0, tzinfo=UTC),
                 "provider_name": "CSV provider",
             },
             "raw_fields": {"Concepto": "Consulting payment"},
@@ -78,7 +82,6 @@ def test_detect_provider_uses_extension_and_validation() -> None:
         ("synthetic-transactions.csv", "CSV provider"),
         ("synthetic-transactions.xlsx", "XLSX provider"),
         ("synthetic-transactions.ofx", "OFX provider"),
-        ("n26/n26-savings-2025-01.pdf", "n26-pdf"),
     ):
         provider = detect_provider(_FIXTURES / fixture_name)
         assert provider is not None, fixture_name
@@ -95,9 +98,9 @@ def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
 
 def test_financial_archive_cell_text_binds_the_canonical_temporal_policy() -> None:
     """The provider policy must delegate to the sole core coercion authority."""
-    stamp = datetime(2026, 4, 17, 10, 30, 5, 123456)
+    stamp = datetime(_YEAR, 4, 17, 10, 30, 5, 123456)
     assert archive_cell_text(stamp) == coerce_cell_text(stamp, temporal_as_iso=True)
-    assert archive_cell_text(stamp) == "2026-04-17 10:30:05"
+    assert archive_cell_text(stamp) == f"{_YEAR}-04-17 10:30:05"
 
 
 # Scientific notation, with the magnitude the shape really denotes. Sanitisation
@@ -172,7 +175,14 @@ def test_parse_amount_value_tolerance_is_unchanged(raw: str, expected: Decimal) 
 # Corpus discipline: all registered providers must declare class-level attrs
 # ---------------------------------------------------------------------------
 
-_ALL_PROVIDERS = [CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider()]
+_ALL_PROVIDERS = [
+    CsvProvider(),
+    OfxProvider(),
+    XlsxProvider(),
+    XlsProvider(),
+    PdfStatementProvider(),
+    MappedTabularProvider(),
+]
 _VALID_VERIFICATION_SOURCES = frozenset({"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"})
 
 

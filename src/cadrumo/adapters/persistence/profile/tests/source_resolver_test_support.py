@@ -11,12 +11,21 @@ import pytest
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
-from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceCatalogueReader, InvoiceSourceResolverPorts
+from cadrumo.application.invoices.source_resolver_ports import (
+    CounterpartyFilingNameReader,
+    InvoiceSourceCatalogueReader,
+    InvoiceSourceResolverPorts,
+)
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import IntracomOperationType, ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
@@ -25,32 +34,67 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 from .....domain.iva.schema import InvoiceKind
 from .published_authority_support import published_authority_operation
 
-_BUCKET_ID = "24242424-2424-4242-8242-242424242424"
+BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 
-_OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
+OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
 
 
-def _modelo_revision(modelo_id: str, revision_id: str):
+def modelo_revision(modelo_id: str, revision_id: str):
     return published_authority_operation().revision_with_export_layouts(modelo_id, revision_id)
 
 
-secure_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_profile")
+secure_profile = bucket_scoped_runtime_profile_fixture(BUCKET_ID, autouse=False, name="secure_profile")
 
 
 @pytest.fixture(autouse=True)
-def _generation_pinned_authority() -> Iterator[None]:
+def generation_pinned_authority() -> Iterator[None]:
     """Run every test inside one generation-pinned authority operation."""
     with bundled_indexed_authority().operation():
         yield
 
 
-def _resolver(reader: InvoiceSourceCatalogueReader) -> InvoiceCatalogueSourceResolver:
+def source_resolver(
+    reader: InvoiceSourceCatalogueReader,
+    filing_names: CounterpartyFilingNameReader | None = None,
+) -> InvoiceCatalogueSourceResolver:
     return InvoiceCatalogueSourceResolver(
-        ports=InvoiceSourceResolverPorts(catalogue_reader=reader),
+        ports=InvoiceSourceResolverPorts(catalogue_reader=reader, counterparty_filing_names=filing_names),
     )
 
 
-class _InMemoryCatalogueReader:
+def m349_resolution(reader: InvoiceSourceCatalogueReader):
+    """Resolve the committed Modelo 349 revision for 2026 1T against a catalogue reader."""
+    modelos, _catalogues = bundled_registry_tree()
+    modelo_349 = next(candidate for candidate in modelos if candidate.id == "349")
+    return source_resolver(reader).resolve(
+        CalculationSourceContext(
+            bucket_id=BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=select_revision(modelo_349, filing_year=2026, period="1T"),
+        ),
+    )
+
+
+class InMemoryFilingNames:
+    """Adapter-test-owned stated names: each counterparty declared under its printed name, as an entity."""
+
+    def __init__(self, invoices: Sequence[Invoice]) -> None:
+        self._names = {
+            invoice.counterparty_tax_id: DeclaredPartyFilingName(
+                kind=DeclaredPartyKind.ENTITY, razon_social=invoice.counterparty_name
+            )
+            for invoice in invoices
+            if invoice.counterparty_tax_id is not None
+        }
+
+    def filing_name_of(self, tax_identifier: str, *, country_code: str | None) -> DeclaredPartyFilingName | None:
+        del country_code
+        return self._names.get(tax_identifier)
+
+
+class InMemoryCatalogueReader:
     """Adapter-test-owned reader fake for public resolver projections."""
 
     def __init__(self, invoices: Sequence[Invoice]) -> None:
@@ -60,31 +104,31 @@ class _InMemoryCatalogueReader:
         return self._catalogue
 
 
-def _public_resolution(
+def public_resolution(
     invoices: Sequence[Invoice],
     *,
     context: CalculationSourceContext,
 ):
     """Resolve local fixture data through the public application seam."""
-    return _resolver(_InMemoryCatalogueReader(invoices)).resolve(context)
+    return source_resolver(InMemoryCatalogueReader(invoices), InMemoryFilingNames(invoices)).resolve(context)
 
 
-def _public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:
+def public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:
     """Return M349 claves emitted by the resolver's public detail-row seam."""
-    resolution = _public_resolution(
+    resolution = public_resolution(
         invoices,
         context=CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="349",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            revision=_modelo_revision("349", "2020-y-siguientes"),
+            revision=modelo_revision("349", "2020-y-siguientes"),
         ),
     )
     return tuple(row.clave_operacion for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow))
 
 
-def _invoice(
+def source_resolver_invoice(
     *,
     bucket_id: str | None,
     kind: InvoiceKind = InvoiceKind.ISSUED,
@@ -152,7 +196,7 @@ def _invoice(
     )
 
 
-def _domestic_invoice(
+def domestic_invoice(
     *,
     bucket_id: str,
     kind: InvoiceKind,
@@ -165,7 +209,7 @@ def _domestic_invoice(
 ) -> Invoice:
     """A domestic ES invoice carrying real IVA, for the M347 gross-total path.
 
-    Distinct from :func:`_invoice`, which mints a zero-IVA intra-community
+    Distinct from :func:`source_resolver_invoice`, which mints a zero-IVA intra-community
     record: M347 declares the GROSS total, so a fixture whose base and total
     coincide cannot tell the two apart.
     """
@@ -206,9 +250,9 @@ def _domestic_invoice(
     )
 
 
-def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
+def public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
     return (
-        UserProfileFact(path="identity.tax_id", value="Q1234567D"),
+        UserProfileFact(path="identity.tax_id", value="Q0001500H"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
         UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -223,24 +267,20 @@ def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
     )
 
 
-def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
-    return (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(
-            path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,
+def statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
+            UserProfileFact(
+                path="taxpayer_type.declaration_roles",
+                value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,
+            ),
         ),
+        persona_id="sociedad-limitada",
     )
 
 
-def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
+def clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
     """Build a minimal exempt-shaped invoice carrying a category and no operation_type."""
     base = Decimal("1000.00")
     line = InvoiceLine(
@@ -271,18 +311,18 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
     )
 
 
-def _unsettled_reading_refs(resolution) -> list[str | None]:
+def unsettled_reading_refs(resolution) -> list[str | None]:
     return sorted(
         (item.source_ref for item in resolution.diagnostics if item.reason == "unsettled_legal_reading"),
         key=str,
     )
 
 
-def _m347_2026_context(bucket_id: str) -> CalculationSourceContext:
+def m347_2026_context(bucket_id: str) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=bucket_id,
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )

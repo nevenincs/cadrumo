@@ -99,24 +99,26 @@ class LLMProvider(StrEnum):
     It lives in ``core`` because a closed value set is declared in ``core`` by
     the architecture boundary, and because the direction is forced: the
     inference package may import ``core`` (inward), while ``core`` importing
-    the optional inference package is refused by contract. The package consumes
+    the inference package is refused by contract. The package consumes
     this enum; it does not redeclare it.
     """
 
     AGENT = "AGENT"
-    LOCAL = "LOCAL"
 
 
 class RetiredLLMProvider(StrEnum):
-    """Vendor identities that usage, cache and run records written before the agent path name.
+    """Transport identities that usage, cache and run records written before the agent path name.
 
-    Records keep the identity they were written with, so these stay readable.
+    The hosted vendors and the direct on-host transport were each dispatched
+    before every model call went through the agent. Records keep the identity
+    they were written with, so these stay readable.
     No dispatch can select one: :class:`LLMProvider` has no such member.
     """
 
     ANTHROPIC = "ANTHROPIC"
     OPENAI = "OPENAI"
     GEMINI = "GEMINI"
+    LOCAL = "LOCAL"
 
 
 class StorageRouteKind(StrEnum):

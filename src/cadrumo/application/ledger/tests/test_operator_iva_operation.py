@@ -14,7 +14,12 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.errors import TransactionValidationError
@@ -23,7 +28,8 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import operator_iva_contracts as operator_contracts
 from .. import operator_iva_operation as subject
@@ -34,25 +40,13 @@ from ..classify_result_contracts import (
 from ..llm_classification_ports import OperatorIvaDerivationResult
 from ..models import ManualLedgerTransactionResult
 from ..persistence_ports import LedgerPersistenceConflictError
-from .test_classify_operation import _current_transaction
+from .ledger_input_rule_support import current_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _CATEGORY = "domestic_general"
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.effects: list[OperationEffect] = []
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-
-    async def effect(self, effect: OperationEffect) -> None:
-        self.effects.append(effect)
 
 
 class _Operands:
@@ -72,12 +66,12 @@ class _ExecutorPort:
 
     def __init__(self, monkeypatch: pytest.MonkeyPatch, authority: PinnedAuthorityOperation) -> None:
         self.in_commit = False
-        self.current = _current_transaction()
+        self.current = current_transaction()
         self.catalogue = SimpleNamespace(transactions={self.current.transaction_id: self.current})
         self.loads = 0
         self.writes: list[dict[str, object]] = []
         self.writer_failure: Exception | None = None
-        self.events = _Events()
+        self.events = RecordingEvents()
         self.operands = _Operands()
         owner = self
 
@@ -303,7 +297,7 @@ async def test_post_write_failure_retains_updated_effect(
         port.operands.failure = failure
     else:
 
-        def project(*_args: object) -> BaseModel:
+        def project(*_args: object, **_kwargs: object) -> BaseModel:
             raise failure
 
         monkeypatch.setattr(subject, "classification_result_from_action", project)

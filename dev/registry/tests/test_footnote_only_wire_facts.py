@@ -26,6 +26,7 @@ screened.
 
 from __future__ import annotations
 
+from functools import cache
 from typing import Final
 
 import pytest
@@ -52,12 +53,37 @@ from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.render_check import revision_render_inputs
 from ..pipeline.render_profile_eligibility import project_render_profile_eligibility, resolve_render_profile_eligibility
 from ..pipeline.source_defects import NoteGovernedAmountDeclaration, NoteStatedApplicabilityDeclaration
+from .authored_edition_support import authored_revisions_where
 
 #: Named once per module rather than repeated at each read site, where a typo
 #: would be a silent decode change rather than an error.
 _UTF_8: Final[str] = "utf-8"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@cache
+def _revision_citing(modelo: str, source_ref: str) -> str:
+    """Return the id of the one authored revision of ``modelo`` that cites the design source ``source_ref``.
+
+    The shipped adjudications are pinned to a design source, not to a calendar
+    year, so the revision a test screens is the one that cites that source.
+    """
+    (revision,) = authored_revisions_where(modelo, lambda item: source_ref in {str(ref) for ref in item.source_refs})
+    return str(revision.id)
+
+
+def _modelo_200_revision() -> str:
+    return _revision_citing("200", "aeat-dr-200-2025")
+
+
+def _modelo_353_revision() -> str:
+    return _revision_citing("353", "aeat-dr-353-2026")
+
+
+def _modelo_390_revision() -> str:
+    return _revision_citing("390", "aeat-dr-390-2025")
+
 
 #: A digest belonging to no shipped design, so a fixture pinned to it can only
 #: ever be admitted by a matcher that stopped checking the pin.
@@ -113,7 +139,7 @@ def authority() -> ValidatedRegistryAuthority:
 
 @pytest.fixture(scope="module")
 def modelo_200(authority: ValidatedRegistryAuthority) -> tuple[PointerWireFactFinding, ...]:
-    return revision_findings(authority, modelo="200", revision="2025-y-siguientes")
+    return revision_findings(authority, modelo="200", revision=_modelo_200_revision())
 
 
 def test_the_screen_reports_the_footnoted_corporate_tax_amounts(modelo_200: tuple[PointerWireFactFinding, ...]) -> None:
@@ -145,7 +171,7 @@ def test_every_reported_field_is_one_the_predicate_would_newly_admit(
     del modelo_200
     from ..pipeline.render_check import revision_render_inputs
 
-    inputs = revision_render_inputs(authority, modelo="200", revision="2025-y-siguientes")
+    inputs = revision_render_inputs(authority, modelo="200", revision=_modelo_200_revision())
     source = inputs.joined.source
     reported = {
         (field.parser_field.sheet, field.parser_field.source_row)
@@ -185,7 +211,7 @@ def test_the_screen_and_the_renderer_return_one_eligibility_verdict_per_field(
     """
     from ..pipeline.render_check import revision_render_inputs
 
-    inputs = revision_render_inputs(authority, modelo="353", revision="2026-desde-02")
+    inputs = revision_render_inputs(authority, modelo="353", revision=_modelo_353_revision())
     source = inputs.joined.source
     fields = tuple(joined_field.parser_field for joined_field in inputs.joined.fields)
 
@@ -239,7 +265,7 @@ def test_a_vocabulary_miss_does_not_mean_the_note_states_no_wire_fact(
     from ..analysis.footnote_pointer_notes import design_transcription_path
     from ..pipeline.render_check import revision_render_inputs
 
-    inputs = revision_render_inputs(authority, modelo="200", revision="2025-y-siguientes")
+    inputs = revision_render_inputs(authority, modelo="200", revision=_modelo_200_revision())
     corpus_path = bundled_path() / authority.catalogues.sources[inputs.joined.source.source_ref].corpus_path
     extracted = design_transcription_path(corpus_path).read_text(encoding=_UTF_8)
     # The counterexample belongs to the sheet that prints it. This design
@@ -352,7 +378,7 @@ def test_a_cell_covered_by_an_adjudication_is_no_longer_outstanding_work(
     them would hide the covered population, and a screen whose census cannot be
     reconciled against its rows is one nobody can check.
     """
-    findings = revision_findings(authority, modelo="390", revision="2025")
+    findings = revision_findings(authority, modelo="390", revision=_modelo_390_revision())
     assert findings, "modelo 390's pointer-only cells vanished, so this proves nothing"
     outstanding = [item for item in findings if item.kind in OUTSTANDING_KINDS]
     assert not outstanding, f"adjudicated cells still reported as work: {[item.cell for item in outstanding]}"
@@ -376,7 +402,7 @@ def test_an_adjudication_pinned_to_another_digest_covers_nothing(
     """
     from ..pipeline.render_check import revision_render_inputs
 
-    source = revision_render_inputs(authority, modelo="390", revision="2025").joined.source
+    source = revision_render_inputs(authority, modelo="390", revision=_modelo_390_revision()).joined.source
     live = pinned_adjudications(source)
     assert live, "the shipped adjudications no longer reach modelo 390's 2025 design"
 
@@ -458,7 +484,7 @@ def test_an_applicability_reading_stops_a_cell_being_counted_as_unopened(
     reconciled against the census, and a reader would not be able to see the
     mechanism working.
     """
-    findings = revision_findings(authority, modelo="353", revision="2026-desde-02")
+    findings = revision_findings(authority, modelo="353", revision=_modelo_353_revision())
     covered = [item for item in findings if item.kind == "pointer_applicability_adjudicated"]
     assert covered, "modelo 353's read pointer stopped being reported at all"
     for item in covered:
@@ -490,7 +516,7 @@ def test_an_applicability_reading_pinned_elsewhere_covers_nothing(
     """
     from ..pipeline.render_check import revision_render_inputs
 
-    source = revision_render_inputs(authority, modelo="353", revision="2026-desde-02").joined.source
+    source = revision_render_inputs(authority, modelo="353", revision=_modelo_353_revision()).joined.source
     live = pinned_applicability_readings(source)
     assert live, "the shipped applicability readings no longer reach modelo 353's design"
 
@@ -526,7 +552,7 @@ def test_a_stale_pin_refuses_through_the_screens_own_predicate(
     """
     from ..pipeline.render_check import revision_render_inputs
 
-    inputs = revision_render_inputs(authority, modelo="353", revision="2026-desde-02")
+    inputs = revision_render_inputs(authority, modelo="353", revision=_modelo_353_revision())
     field = inputs.joined.fields[0].parser_field
     reissued = inputs.joined.source.model_copy(update={"source_sha256": _FOREIGN_SHA256})
 
@@ -550,7 +576,7 @@ class _RevisionDefinition:
     """
 
     def __init__(self) -> None:
-        self.revisions = {"2026-desde-02": None}
+        self.revisions = {_modelo_353_revision(): None}
 
 
 class _AuthorityRaising:
@@ -596,17 +622,17 @@ def test_screen_authority_refuses_a_stale_pin_instead_of_counting_it_as_nothing_
     as the first - a revision that had silently stopped being screened,
     indistinguishable from one with nothing to read.
     """
-    inputs = revision_render_inputs(authority, modelo="353", revision="2026-desde-02")
+    inputs = revision_render_inputs(authority, modelo="353", revision=_modelo_353_revision())
     reissued = inputs.joined.source.model_copy(update={"source_sha256": _FOREIGN_SHA256})
     with pytest.raises(RegistryValidationError) as captured:
         field_is_render_profile_eligible(inputs.joined.fields[0].parser_field, reissued)
 
-    inapplicable = ValueError("353/2026-desde-02 declares no export layout to render")
+    inapplicable = ValueError(f"353/{_modelo_353_revision()} declares no export layout to render")
     assert screen_authority(_AuthorityRaising(inapplicable), ("353",)) == ()
 
     with pytest.raises(RegistryValidationError, match="refused their own pinned declarations") as refused:
         screen_authority(_AuthorityRaising(captured.value), ("353",))
-    assert "353/2026-desde-02" in str(refused.value)
+    assert f"353/{_modelo_353_revision()}" in str(refused.value)
 
 
 def test_the_live_corpus_carries_no_refusal_today(authority: ValidatedRegistryAuthority) -> None:

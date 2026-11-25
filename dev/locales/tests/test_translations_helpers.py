@@ -21,11 +21,11 @@ from cadrumo.application.wizard.models import WizardChoice, WizardFlow, WizardQu
 from cadrumo.core.i18n.translatable import Translatable as tr
 
 from ..wizard_translation_audit import (
-    _FIXED_RUNTIME_KEYS,
-    _resolves_in,
-    _translation_call_names,
-    _walk_keys,
+    FIXED_RUNTIME_KEYS,
     cli_keys_referenced_in_source,
+    resolves_in,
+    translation_call_names,
+    walk_keys,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -77,9 +77,9 @@ def _build_minimal_flow(*, with_help: bool = False, with_choice_description: boo
 
 def test_walk_keys_returns_only_fixed_runtime_keys_for_empty_flows() -> None:
     """An empty flows iterable contributes only the fixed runtime-error keys."""
-    keys = _walk_keys(())
+    keys = walk_keys(())
 
-    assert keys == _FIXED_RUNTIME_KEYS
+    assert keys == FIXED_RUNTIME_KEYS
 
 
 def test_walk_keys_extracts_every_translatable_from_a_minimal_flow() -> None:
@@ -87,7 +87,7 @@ def test_walk_keys_extracts_every_translatable_from_a_minimal_flow() -> None:
     plus the descriptor-derived flag-help and cli.config.help keys."""
     flow = _build_minimal_flow(with_help=True, with_choice_description=True)
 
-    keys = _walk_keys((flow,))
+    keys = walk_keys((flow,))
 
     expected_keys = {
         "wizard.test.title",
@@ -105,7 +105,7 @@ def test_walk_keys_extracts_every_translatable_from_a_minimal_flow() -> None:
     walked = set(keys)
     assert expected_keys.issubset(walked), expected_keys - walked
     # Fixed runtime keys are always included.
-    for fixed_key in _FIXED_RUNTIME_KEYS:
+    for fixed_key in FIXED_RUNTIME_KEYS:
         assert fixed_key in walked
 
 
@@ -114,7 +114,7 @@ def test_walk_keys_omits_optional_help_when_question_help_is_none() -> None:
     help key to the walked set."""
     flow = _build_minimal_flow(with_help=False, with_choice_description=False)
 
-    keys = _walk_keys((flow,))
+    keys = walk_keys((flow,))
 
     assert "wizard.test.example.help" not in keys
 
@@ -123,7 +123,7 @@ def test_walk_keys_omits_optional_choice_description_when_none() -> None:
     """A choice with ``description=None`` does NOT contribute its key."""
     flow = _build_minimal_flow(with_help=False, with_choice_description=False)
 
-    keys = _walk_keys((flow,))
+    keys = walk_keys((flow,))
 
     assert "wizard.test.example.choices.yes.description" not in keys
 
@@ -133,7 +133,7 @@ def test_walk_keys_includes_derived_flag_help_for_every_question() -> None:
     per-question even when the question has no explicit help text."""
     flow = _build_minimal_flow(with_help=False)
 
-    keys = _walk_keys((flow,))
+    keys = walk_keys((flow,))
 
     assert "wizard.test.flags.example.help" in keys
 
@@ -142,7 +142,7 @@ def test_walk_keys_includes_derived_cli_config_help_per_flow() -> None:
     """One ``cli.config.{flow}.help`` is appended per flow."""
     flow = _build_minimal_flow()
 
-    keys = _walk_keys((flow,))
+    keys = walk_keys((flow,))
 
     assert "cli.config.test.help" in keys
 
@@ -155,7 +155,7 @@ def test_walk_keys_includes_derived_cli_config_help_per_flow() -> None:
 def test_resolves_in_returns_false_for_a_key_that_does_not_exist() -> None:
     """An unknown key returns the raw key from ``tr`` (the python-i18n
     fallback), and ``_resolves_in`` must report False on that condition."""
-    assert _resolves_in("en", "wizard.bogus.does.not.exist.anywhere") is False
+    assert resolves_in("en", "wizard.bogus.does.not.exist.anywhere") is False
 
 
 def test_resolves_in_returns_true_for_a_real_key_in_every_locale() -> None:
@@ -163,7 +163,7 @@ def test_resolves_in_returns_true_for_a_real_key_in_every_locale() -> None:
     the CLI app-help for the root namespace. Walks every project locale
     to ensure the helper does not just say True for English."""
     for locale in ("en", "es", "ca", "hu"):
-        assert _resolves_in(locale, "cli.config.list.help") is True
+        assert resolves_in(locale, "cli.config.list.help") is True
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +226,7 @@ def test_translation_call_names_resolves_reported_package_relative_render_import
     """A package-relative ``.render`` import binds the canonical ``tr`` name."""
     tree = ast.parse("from .render import tr as _tr\n")
 
-    names = _translation_call_names(tree, importer_mod="cadrumo.core.i18n", importer_is_pkg=True)
+    names = translation_call_names(tree, importer_mod="cadrumo.core.i18n", importer_is_pkg=True)
 
     assert names == frozenset({"_tr"})
 
@@ -272,9 +272,9 @@ def test_cli_keys_referenced_in_source_omits_f_string_interpolated_keys() -> Non
 def test_cli_keys_referenced_in_source_root_resolves_under_entrypoints_cli() -> None:
     """Sanity-check that the helper's root path resolution lands on the
     real entrypoints/cli directory (the AST walk visits every .py under it)."""
-    from ..wizard_translation_audit import _cli_entrypoints_root
+    from ..wizard_translation_audit import cli_entrypoints_root
 
-    root = _cli_entrypoints_root()
+    root = cli_entrypoints_root()
     assert root.is_dir()
     assert root.name == "cli"
     assert (root / "__init__.py").is_file()

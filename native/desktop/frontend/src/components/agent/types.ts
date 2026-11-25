@@ -2,6 +2,12 @@
 // only and follow no wire format: whatever serves the column maps its own
 // answers onto these shapes.
 
+import type {
+  AuthKind,
+  ProviderTransport,
+} from "../../shell/agentCatalogContract";
+import type { ToolCallStatus } from "../../shell/agentGatewayContract";
+
 /** One of a few things to choose among, as shown. */
 export type Choice = {
   id: string;
@@ -9,18 +15,25 @@ export type Choice = {
   description?: string;
 };
 
-/** How a provider is reached: its web API, or its own command-line app on
- * this computer. */
-export type ProviderTransport = "api" | "cli";
+/** What the person can do about a lane the catalog holds back: ask again for
+ * a lane whose models could not be read yet, or sign in to one that is signed
+ * out. */
+export type HeldStep = "retry" | "sign_in";
 
 /** One way into a provider, with the models it offers. */
 export type ProviderWay = {
   /** Keys the way's models. Nothing about the way is to be read from it. */
   id: string;
   transport: ProviderTransport;
+  /** What the catalog states the way is authenticated with; a way that needs
+   * nothing is a server on this computer, whatever its transport. */
+  authKind: AuthKind;
   selectable: boolean;
   /** Why it cannot be chosen, shown beside it when `selectable` is false. */
   unavailableReason?: string;
+  /** The step the person can take about a lane that cannot be chosen, where
+   * the catalog's own reason names one. */
+  heldStep?: HeldStep;
   /** The model chosen with it, where its catalog recommends one. */
   defaultModelId?: string;
   /** What the way has been proven able to do on this computer, already
@@ -29,6 +42,12 @@ export type ProviderWay = {
   /** Present where the way lists no models, so the person writes a model's
    * id; the efforts the way accepts with any model they write. */
   modelWritten?: { efforts: readonly Choice[] };
+  /** The way lists a model the catalog says this computer does not hold
+   * yet, which is downloaded from the local AI's settings. */
+  modelsToDownload?: boolean;
+  /** Present where the way's local engine does not run: that and why, already
+   * worded, with the door the service names for the way on. */
+  engineNotRunning?: { words: string; door: string };
 };
 
 /** A model provider the person can choose, or see and not choose. It is one
@@ -54,6 +73,10 @@ export type ModelOption = {
    * no effort setting. */
   efforts: readonly Choice[];
   defaultEffort?: string;
+  /** False where the catalog says this computer does not hold the model: it
+   * is shown, cannot be chosen, and is downloaded from the local AI's
+   * settings. Absent or true, it can be chosen. */
+  installed?: boolean;
 };
 
 /** The provider, the way into it, the model and the effort a conversation
@@ -99,7 +122,8 @@ export type ConversationSummary = {
   title: string;
   /** When it was last active, already worded, e.g. "3 days ago". */
   lastActivityLabel: string;
-  documentCount: number;
+  /** Absent until this conversation's files have been read. */
+  documentCount?: number;
   archived: boolean;
   /** The conversation the column is showing now. */
   current?: boolean;
@@ -111,13 +135,6 @@ export type ConversationGroup = {
   conversations: readonly ConversationSummary[];
 };
 
-/** How a document is used in the conversation. */
-export type DocumentRole = "context" | "information" | "ledger";
-
-/** Where a document is on its way to being usable in the conversation. */
-export type DocumentStatus =
-  "uploading" | "ready" | "extracting" | "needsReview" | "failed" | "skipped";
-
 /** A document that is part of the conversation. */
 export type ConversationDocument = {
   id: string;
@@ -125,14 +142,8 @@ export type ConversationDocument = {
   /** The extension without its dot, as the file is named. */
   extension: string;
   sizeBytes: number;
-  role: DocumentRole;
-  status: DocumentStatus;
   /** What the file is, for its icon; without it the generic page is drawn. */
   kind?: FileKind;
-  /** A preview of an image, already safe to show. */
-  thumbnailUrl?: string;
-  /** The files inside an archive. */
-  members?: readonly ConversationDocument[];
 };
 
 /** A file that went with a message the person sent, as the transcript shows
@@ -163,6 +174,9 @@ export type TranscriptMessage =
       sentAtLabel?: string;
       /** The person's submission is still awaiting acknowledgement. */
       sending?: boolean;
+      /** Where the message was carried from, already worded, when it entered
+       * this conversation as text of an earlier one. */
+      carriedLabel?: string;
     }
   | {
       kind: "agent";
@@ -172,8 +186,9 @@ export type TranscriptMessage =
       state: AgentReplyState;
       /** Why the reply failed, when `state` is `failed`. */
       failureReason?: string;
-      /** An action the host can offer for this failure. */
-      failureAction?: "provider_settings";
+      /** An action the host can offer for this failure: the provider
+       * settings, or the model picker for a model the lane cannot run. */
+      failureAction?: "provider_settings" | "choose_model";
       /** While `state` is `working`: the reply is held until the person
        * answers questions or decides an approval, so it says it is waiting
        * for them rather than working. */
@@ -181,11 +196,10 @@ export type TranscriptMessage =
       /** What the agent thought on the way to the reply, so far, where the
        * agent shared it. Shown only when the person asks. */
       thinking?: string;
+      /** Where the message was carried from, already worded, when it entered
+       * this conversation as text of an earlier one. */
+      carriedLabel?: string;
     };
-
-/** Where a tool the agent called is, in cadrumo-agent's own four states. */
-export type ToolActivityState =
-  "pending" | "in_progress" | "completed" | "failed";
 
 /** A tool the agent called, such as reading ledger entries. */
 export type TranscriptToolActivity = {
@@ -193,9 +207,15 @@ export type TranscriptToolActivity = {
   id: string;
   /** The tool's title, as the agent names it. */
   label: string;
-  state: ToolActivityState;
+  /** Null where the host could not read the call's status: the row then
+   * says no outcome. */
+  state: ToolCallStatus | null;
   /** More about the call, such as what kind of tool it is, already worded. */
   detail?: string;
+  /** What the tool does, in one sentence, where the catalogue words it. */
+  description?: string;
+  /** Why the call failed, as the tool said it, when it failed and said. */
+  failureMessage?: string;
   /** What the call took and gave, as the agent recorded it: shown, as it
    * is, only when the person opens the call. */
   internals?: readonly string[];

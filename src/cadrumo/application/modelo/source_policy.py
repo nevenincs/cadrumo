@@ -9,7 +9,7 @@ product surface owns the data.
 
 The override policy is not decided here. Whether a caller may override a source
 is the calculation's own precedence ladder
-(:data:`~cadrumo.application.aggregation.source_mesh.CALLER_OVERRIDE_PRECEDENCE_LADDER`),
+(:data:`~cadrumo.application.aggregation.source_precedence.CALLER_OVERRIDE_PRECEDENCE_LADDER`),
 and this table reads it rather than restating it: a locked source is fixed at
 its source, a carried one may be overridden with a reason. The few kinds the
 ladder does not govern carry an explicit policy only where the product already
@@ -32,7 +32,8 @@ from pydantic import BaseModel
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from ..aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from .refusal_door_verdicts import registry_defect_verdict
 
 
 class SourceFamily(StrEnum):
@@ -97,6 +98,7 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
             SourceFamily.RECORDS,
             SourceSurface.LEDGER,
         ),
+        BindingSourceKind.ACTIVITY_ASSET_DISPOSAL: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION: (
             SourceFamily.RECORDS,
@@ -112,10 +114,15 @@ _FAMILY_AND_SURFACE: Final[Mapping[BindingSourceKind, tuple[SourceFamily, Source
         BindingSourceKind.M349_INTRACOMMUNITY_OPERATION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.RETENCIONES_AGGREGATION: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.WITHHOLDING: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
+        BindingSourceKind.RETENCION_SOPORTADA: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
+        BindingSourceKind.CAPITAL_MOBILIARIO_POSITION: (SourceFamily.RECORDS, SourceSurface.LEDGER),
+        BindingSourceKind.PREVISION_SOCIAL_CONTRIBUTION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.WITHHOLDING296: (SourceFamily.REGISTERS, SourceSurface.WITHHOLDING),
         BindingSourceKind.INVENTORY: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.RENTA_INMUEBLE: (SourceFamily.RECORDS, SourceSurface.LEDGER),
         BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.PRORRATA_REGULARIZACION: (SourceFamily.REGISTERS, SourceSurface.NONE),
+        BindingSourceKind.PRORRATA_REGISTER_ACTIVITY: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.FOREIGN_ASSET: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.ATRIBUCION_MEMBER: (SourceFamily.REGISTERS, SourceSurface.NONE),
         BindingSourceKind.GASTO193_CONTRIBUTOR: (SourceFamily.REGISTERS, SourceSurface.NONE),
@@ -166,7 +173,12 @@ def source_policy(kind: BindingSourceKind) -> SourcePolicyV1:
     try:
         family, surface = _FAMILY_AND_SURFACE[kind]
     except KeyError:
-        raise UnclassifiedSourceKindError(f"binding source kind {kind.value!r} has no declared family") from None
+        raise UnclassifiedSourceKindError(
+            f"binding source kind {kind.value!r} has no declared family",
+            translated_message="application.modelo.errors.binding_source_kind_unclassified",
+            context={"source_kind": kind.value},
+            precondition_verdict=registry_defect_verdict("source_kind_family"),
+        ) from None
     return SourcePolicyV1(source_kind=kind, family=family, override_policy=_override_policy(kind), surface=surface)
 
 

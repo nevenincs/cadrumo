@@ -4,9 +4,9 @@ This page covers the quarterly Modelo 130 filing: the complete create, calculate
 check and record-filing chain, the cumulative year-to-date behaviour that makes
 each quarter build on the ones before it, and the prior-period values a later
 quarter carries in. Modelo 130 is the IRPF (personal income tax) payment on account
-for self-employed activity under estimación directa; its official title is "Impuesto sobre la Renta
+for self-employed activity under estimación directa; its official title is "<span lang="es">Impuesto sobre la Renta
 de las Personas Físicas. Actividades económicas en estimación directa. Pago
-fraccionado."
+fraccionado.</span>"
 
 `aeat` does not submit Modelo 130 to AEAT. It can produce the fichero-BOE
 file locally from the tax rules, with the software-identity fields left blank. You
@@ -48,8 +48,11 @@ Load-bearing details for building this state yourself:
   them from your own earlier recorded filings instead - see [the cumulative
   behaviour](#each-quarter-is-cumulative) below.
 - With the two entries above, calculate reports cumulative income (box `01`) of
-  `1000.00`, rendimiento neto (box `03`) of `500.00` - income base minus expense
-  base - and a pago fraccionado (box `04`) of `100.00`, 20 percent of the net.
+  `1000.00`. Under simplified direct estimation, the provision for
+  difficult-to-justify expenses is `25.00`: five percent of `1000.00 - 500.00`,
+  within the annual `2000.00` cap. Deductible expenses (box `02`) are `525.00`,
+  net income (box `03`) is `475.00`, and the payment instalment (box `04`) is
+  `95.00`, 20 percent of the net.
 - `verify` reports `completeness complete` and `granted true`. `export` then
   writes the local fichero-BOE file and reports its checksum.
 
@@ -72,7 +75,7 @@ Load-bearing details for building this state yourself:
 
 Modelo 130 calculates the quarter's IRPF payment on account from your activity's
 year-to-date figures: cumulative income (box `01`) minus cumulative deductible
-expenses (box `02`) gives the rendimiento neto (box `03`); the instalment (box
+expenses (box `02`) gives the net income (box `03`); the instalment (box
 `04`) is a percentage of that net; prior instalments already paid this year (box
 `05`) and withholdings you suffered (box `06`) come off; the minoración by
 net-income level (box `13`) and negative results from earlier quarters (box `15`)
@@ -81,8 +84,8 @@ adjust the figure; and box `19` is the final result. A negative balance in box
 
 Your records feed the cumulative income, expense, and withholding figures
 through the rules that fill each box; earlier filings feed the carries. Boxes
-`06`, `08`, `10`, `16`, and `18` are manual inputs for the cases that apply to
-you (withholdings, second-activity volume, vivienda habitual deduction, prior
+`06`, `08`, `10`, `16`, and `18` are inputs for the cases that apply to you
+(withholdings, second-activity volume, home habitual deduction, prior
 complementary results). Inspect which boxes are filled in, missing, or manual:
 
 ```{cli-sequence} modelo-130-inspect-boxes
@@ -91,10 +94,17 @@ complementary results). Inspect which boxes are filled in, missing, or manual:
 
 ## Supply a manual box value
 
-Box `06` (Retenciones e ingresos a cuenta) is a manual box: your records do not
-fill it, so you supply it by hand with `--casilla`. Pass it in the same calculate
-call as the first-period `--binding` values, then review the saved calculation to
-confirm your value landed:
+Box `06` (Retenciones e ingresos a cuenta) takes the withholdings you record in
+the ledger with `aeat app ledger retencion-soportada record`; with none recorded
+it is 0. You can also supply it by hand with `--casilla`. A hand value that
+differs from the recorded withholdings is a disagreement between two sources:
+Cadrumo uses the one that takes precedence, and the check waits until you
+record the withholding that agrees or accept the value in use with `aeat app
+modelo work accept-disagreement`. The example therefore supplies the value on
+a second-quarter draft, so it does not carry into the first-quarter chain that
+the next sections check and file. Pass it in the same `calculate` call as the
+zero `--binding` values, then review the saved calculation to confirm your value
+landed:
 
 ```{cli-sequence} modelo-130-manual-casilla
 :verify: Confirm the manual value you supplied appears in the saved calculation.

@@ -16,7 +16,7 @@ from dev.packaging.command_execution import run_command
 from ..hashing import digest
 from ..identity import identity
 from ..linux_packages import PREINSTALL, author_gates, deb_files, inspect_artifact, rpm_files
-from .test_distribution_prepare import _cmake, _configure_distribution
+from .test_distribution_prepare import configure_distribution, run_cmake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -143,8 +143,8 @@ def test_real_rpm_metadata_guard_and_ownership_are_inspected(tmp_path: Path) -> 
 def test_real_cmake_linux_targets_build_inspected_gated_native_packages(tmp_path: Path) -> None:
     if sys.platform != "linux" or any(shutil.which(tool) is None for tool in ("dpkg-deb", "rpm", "rpmbuild")):
         pytest.skip("native Linux package build tools required")
-    _, source, build = _configure_distribution(tmp_path, "linux-x86-64", manager=True)
-    _cmake(source, "--build", str(build), "--target", "native-package")
+    _, source, build = configure_distribution(tmp_path, "linux-x86-64", manager=True)
+    run_cmake(source, "--build", str(build), "--target", "native-package")
     for package_format in ("deb", "rpm"):
         receipt = json.loads((build / f"packages/linux-inspection/{package_format}.json").read_text(encoding="utf-8"))
         assert receipt["installable"] is False

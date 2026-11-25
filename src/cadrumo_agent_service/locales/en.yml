@@ -2,21 +2,15 @@ desktop:
   agent:
     add_files: Add files
     aeat_setup_check: Check setup and continue
-    aeat_setup_help: Save your authentication details here, then close the editor
-      to return to your conversation. Credentials stay out of chat.
     aeat_setup_resume_message: I have finished with AEAT settings. Please check my
       saved setup again, help with any remaining requirements, and continue our task
       when it is ready.
-    aeat_setup_return: Return to conversation
-    aeat_setup_title: Set up AEAT access
     agent_replied: Agent replied
-    approval_allow_always: Allow
+    already_new: You are already in a new conversation
     approval_allow_once: Allow once
-    approval_allow_server_session: Allow all {server} tools for this session
     approval_allow_session: Allow for this session
     approval_attachment: 'Attachment: {target}'
     approval_operation: 'Operation: {target}'
-    approval_reject_always: Don't allow
     approval_reject_once: Don't allow
     approval_review_title: Review this before Cadrumo does it
     approval_tool_title: The agent is asking for permission
@@ -25,6 +19,30 @@ desktop:
     archived_empty: Nothing archived
     archived_toggle: Archived ({count})
     attach_filter: Documents
+    attachment_grant_document: '{name} to {model}'
+    attachment_grant_images: Page images to {model}
+    attachment_grant_revoke: Revoke
+    attachment_grants_title: Remembered permissions
+    attachment_open_profile: Open the profile
+    attachment_refusal:
+      acknowledgement_missing: You haven't allowed this read.
+      cloud_upload_not_permitted: This installation doesn't allow documents to leave
+        this computer, and no setting in your profile changes that.
+      document_removed: The file has been removed.
+      file_changed_during_read: The file changed. Add it again to read the new version.
+      gestor_mode: Gestor mode never sends documents off this computer.
+      grant_revoked: That permission has already been revoked.
+      not_signed_in: Sign in to answer this.
+      profile_not_eligible: Your profile doesn't allow documents to leave this computer.
+        The profile setting “Off-host document reading” controls it.
+      profile_unreadable: The profile setting “Off-host document reading” couldn't
+        be read just now, so nothing was sent. Try again in a moment.
+      reference_unknown: The agent isn't waiting on this file any more.
+      service_failed: The permission couldn't be recorded, so nothing was sent.
+    attachment_refused: This file wasn't sent. {reason}
+    attachment_refused_group: These files weren't sent. {reason}
+    attachment_refused_named: '{name} wasn''t sent. {reason}'
+    attachment_refused_title: Files not sent
     attachments: Files for the next message
     attachments_refused: 'Not accepted: {count}'
     attachments_uploading: 'Uploading: {count}'
@@ -34,14 +52,39 @@ desktop:
     can_write: write files
     cancel: Cancel
     capabilities: 'Can: {list}'
+    carried_from: Carried from {title}
+    carried_from_unknown: Carried from an earlier conversation
+    carried_omitted: '{omitted} older turns were left out.'
+    carried_omitted_one: '{omitted} older turn was left out.'
+    carried_turns: This conversation began with {carried} turns of the earlier one.
+    carried_turns_one: This conversation began with {carried} turn of the earlier
+      one.
+    carry_back: Back to that conversation
+    carry_pending: Your next message starts a new conversation that carries the newest
+      turns of “{title}”.
+    carry_pending_untitled: Your next message starts a new conversation that carries
+      the newest turns of the earlier one.
+    carry_source_not_settled: The earlier conversation's reply hasn't finished yet.
+      Wait for it, then send again.
+    carry_source_unavailable: The earlier conversation can't be carried over. Send
+      again to start the new conversation without it.
+    catalog_unavailable: Couldn't read the agent's list of providers.
+    choose_another_model: Choose another model
     choose_model: Choose a model
-    choose_provider: Choose a provider
+    choose_to_start: Choose a provider and a model to start.
     close_documents: Close the documents
-    collapse_members: Hide the files in {name}
     condition_budget_exhausted: Budget used up
     condition_credits_exhausted: Out of credits
     condition_invalid_request: The provider rejected the request
+    condition_model_does_not_fit: The model doesn't fit in what this computer can
+      give it. Choose a smaller model or another provider.
+    condition_model_unavailable: This model isn't available on this provider. Choose
+      another model from the list.
+    condition_model_unavailable_named: '{model} isn''t available on {provider} ({connection}).
+      Choose another model from the list.'
     condition_network_unreachable: The provider can't be reached
+    condition_no_answer: The model gave no usable answer for this document. Try a
+      different (instruct) model, or try again.
     condition_provider_overloaded: The provider is overloaded
     condition_throttled: Provider usage limit reached. Check your provider account
       or choose another provider.
@@ -49,13 +92,21 @@ desktop:
     condition_usage_exhausted: Provider usage limit reached. Check your provider account
       or choose another provider.
     consent_allow: Send to {provider}
+    consent_allow_remember: Allow and remember
+    consent_allow_session: Allow for this session
     consent_decline: Don't send
+    consent_document_text: The text read from {name}
     consent_items: What would be sent
     consent_lead: To answer, {model} needs the content below. Sending it takes it
       off this computer to {provider}.
     consent_note: Nothing is sent until you choose. If you don't send it, it stays
       on this computer.
+    consent_page_images: Images of the pages of {name}
+    consent_page_images_warning: Page images show everything on the page and leave
+      this computer. Allowing them for later covers any document read by this model.
+    consent_recall: What has already been sent can't be recalled.
     consent_title: Send this to {provider}?
+    continue_in_new_conversation: Continues in a new conversation
     conversation_deleting: This conversation is being deleted, so it takes no files.
     conversation_id_taken: This conversation can't hold files. Start a new conversation
       to attach them.
@@ -64,11 +115,14 @@ desktop:
     delete_confirm_bare: Delete “{title}”? This can't be undone.
     delete_incomplete: Deletion is not finished yet. Cadrumo will continue cleanup
       when the agent service restarts.
+    document_remove_failed: The file removal could not be confirmed. Refresh the list
+      before trying again.
+    document_selected: Selected for the next message
+    document_selection_limit: A message can reference up to {count} files.
     documents: Documents
     documents_attached: 'In this conversation: {count}'
     documents_empty: No documents in this conversation yet
-    documents_failed: 'Failed: {count}'
-    documents_review: 'Needs review: {count}'
+    download_models: Download models
     drop_accepts: 'Accepted: {types}'
     drop_hint: Hold {key} to drop
     drop_release: Release to add the files
@@ -76,25 +130,38 @@ desktop:
     drop_release_single: Release to add 1 file
     drop_title: Add to this conversation
     effort: Effort
+    effort_catalog_default: 'catalogue default: {effort}'
     effort_default: Default
     effort_high: High
     effort_low: Low
     effort_max: Max
     effort_medium: Medium
+    effort_provider_default: Provider's default
     effort_ultra: Ultra
     effort_xhigh: Extra high
-    expand_members: Show the files in {name}
+    engine_door_local_ai_setup: Repair local AI
+    engine_not_running: The local AI engine isn't running.
+    engine_reason_answer_unreadable: It answered, but not as expected.
+    engine_reason_no_answer_in_time: It didn't answer in time.
+    engine_reason_not_reachable: It can't be reached on this computer.
     files_summary: 'Files: {count} · {size}'
     hide: Hide the agent
     history: History
     history_empty: No conversations yet
     history_no_match: No conversations match “{query}”.
+    lane_fixed_refused: This conversation continues with the provider it started on.
+      To use another one, choose it and continue in a new conversation.
     lane_no_catalog: Could not load models. Try again.
+    lane_no_installed_model: No model downloaded yet. Download one in settings.
     lane_not_admitted: Not available on this computer. Choose another.
     lane_not_configured: Set up this provider in settings.
+    lane_not_observed: Not checked yet. You can choose it once the agent is ready.
     lane_notice: Conversations in this version aren't encrypted.
     lane_signed_out: Sign in to this provider in settings.
     lane_unreachable: Can't connect. Check this provider in settings.
+    lane_unreadable_refused: The provider this conversation ran on can't be read.
+      Send your message again to continue in a new conversation that carries this
+      one.
     members_multiple: '{count} files'
     members_single: 1 file
     mention_empty: No stored document matches
@@ -105,13 +172,57 @@ desktop:
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
+    model_does_not_fit_memory: This model could not be loaded with {context} tokens
+      of context in the memory free on this computer right now. Choose a smaller model,
+      or close some programs and try again.
+    model_does_not_fit_refused: This model doesn't fit in what this computer can give
+      it right now. Choose a smaller model or change where models run in the local
+      AI settings.
+    model_does_not_fit_shortfall: This model needs about {needed} tokens of context
+      for this conversation, more than the {context} it can hold. Choose another model,
+      or another provider for this conversation.
+    model_matrix_availability: Availability
+    model_matrix_cell: '{model}, {effort}'
+    model_matrix_clear_search: Clear search
+    model_matrix_count: '{count} models shown'
+    model_matrix_count_one: 1 model shown
+    model_matrix_filter_all: All
+    model_matrix_filter_off: 'Off'
+    model_matrix_filter_on: 'On'
+    model_matrix_filter_ready: Ready
+    model_matrix_filter_setup: Needs setup
+    model_matrix_label: Models and efforts
+    model_matrix_lane_models: '{count} models'
+    model_matrix_lane_models_one: 1 model
+    model_matrix_none_on: No provider is on. Turn one on in AI providers.
+    model_matrix_off_hidden: '{count} providers are off'
+    model_matrix_off_hidden_one: 1 provider is off
+    model_matrix_search_empty: No model matches your search.
+    model_matrix_search_label: Search models
+    model_matrix_show: Show
+    model_matrix_state: Status
+    model_not_installed: '{name} (not downloaded)'
+    model_not_installed_refused: The chosen model isn't on this computer. Download
+      it, or choose another model.
+    model_not_offered_refused: Your account isn't offered this model. Choose another
+      one from the list.
+    model_with_effort: '{model} ({effort})'
     model_written: This provider doesn't list its models. Enter the model name exactly
       as the provider writes it.
     more_files: +{count} more
+    movement_dismiss: Dismiss
+    movement_shared: Sending it shares it with {provider}, which reads it off this
+      computer.
+    movement_staged: '{name} holds this movement as the Ledger records it: its dates,
+      amount, counterparty, description, classification and review state. Nothing
+      is sent until you press Send.'
+    movement_storing: Adding the movement to the conversation…
+    movement_unavailable: The agent can't take a movement here yet.
+    movement_unreadable: The movement couldn't be read from the Ledger.
     new_conversation: New conversation
-    no_models: No models to choose from
+    no_installed_model: No AI model is downloaded yet. Download one to start.
     no_provider: Set up an AI provider to start.
-    provider: Provider
+    platform_unsupported: The AI agent is not yet supported on this platform.
     questions_answer: Answer
     questions_clear: Clear this answer
     questions_control: Keep each answer on one line.
@@ -134,9 +245,14 @@ desktop:
     reference_refused: A document you named can't be shared with the agent.
     references_unavailable: This conversation's stored documents aren't available
       right now.
+    refresh_documents: Refresh
     refused: Not accepted
     remove_all: Remove all
     remove_document: Remove {name}
+    remove_document_confirm: Delete “{name}” from this conversation? Messages that
+      reference it will no longer be able to read it.
+    remove_documents_confirm: Delete all {count} stored documents from this conversation?
+      This cannot be undone.
     remove_file: Remove {name}
     rename: Rename
     rename_label: Conversation name
@@ -151,12 +267,20 @@ desktop:
     resize: Resize the agent
     restore: Restore
     retry: Try again
-    role_context: Context
-    role_information: Information
-    role_label: Use as
-    role_ledger: Ledger data
     row_documents: 'Documents: {count}'
     search_history: Search conversations
+    search_placeholder: Search
+    selection_change_asked: This message changes the model from {previous} to {requested}.
+    selection_change_confirm: Change and send
+    selection_change_keep: Keep the model
+    selection_change_omitted: '{omitted} older messages are left out.'
+    selection_change_omitted_one: '{omitted} older message is left out.'
+    selection_change_refused: Changing the model needs your confirmation. Send the
+      message again.
+    selection_change_retained: The new model gets {retained} messages of this conversation
+      (about {tokens} tokens).
+    selection_change_retained_one: The new model gets {retained} message of this conversation
+      (about {tokens} tokens).
     send: Send
     send_nothing: Write a message or add a file first
     send_too_long: This message has {count} characters; {max} is the most
@@ -174,6 +298,7 @@ desktop:
     service_signed_out: Sign in to talk to the agent.
     service_starting: Starting the agent…
     service_stopped: The agent isn't running.
+    service_timeout: The agent timed out and was stopped.
     set_up_providers: Set up AI providers
     settings: Agent settings
     settings_label: 'Model: {current}'
@@ -210,19 +335,96 @@ desktop:
     slash_label: Skills and commands
     slash_loading: Reading the agent's skills…
     slash_skills: Skills
-    status_extracting: Reading
-    status_failed: Failed
-    status_needs_review: Needs review
     status_ready: Ready
-    status_skipped: Skipped
-    status_uploading: Uploading
     stop: Stop
     stopped: Stopped
     thinking: Thinking
     thoughts: What the agent thought
+    tool:
+      cadrumo:
+        authority:
+          description: 'Reads published tax reference data: modelos, casillas, formulas
+            and portals.'
+          label: Read tax reference data
+        control:
+          description: Starts, resumes, cancels or detaches an operation.
+          label: Control an operation
+        corpus_search:
+          description: Searches the bundled BOE and AEAT legal texts and the tax terminology.
+          label: Search the legal corpus
+        describe:
+          description: Reads what one operation does and what it needs.
+          label: Describe an operation
+        execute:
+          description: Submits an operation in your profile. It can change your data.
+          label: Run an operation
+        observe:
+          description: Checks how a submitted operation is going.
+          label: Check an operation
+        respond:
+          description: Applies or rejects a review that is waiting for an answer.
+          label: Answer a review
+        result:
+          description: Reads the result of an operation that has finished.
+          label: Read a result
+        result_page:
+          description: Reads one page of a finished operation's result.
+          label: Read a result page
+        review:
+          description: Reads a review that is waiting for your answer.
+          label: Read a review
+        search:
+          description: Looks for the operations the agent may run in your profile.
+          label: Find operations
+        status:
+          description: Checks which profile you've authorized the agent to work in
+            and whether the app is available.
+          label: Check session
+        views:
+          description: Finds the views of this window that a link can open and checks
+            links.
+          label: Find views
+      cadrumo_agent_tools:
+        list_attachments:
+          description: Lists the documents attached to the conversation.
+          label: List attachments
+        load_skill:
+          description: Loads a skill's instructions so the agent can follow them.
+          label: Load a skill
+        read_attachment:
+          description: Reads a document you attached to the conversation.
+          label: Read an attachment
+        read_conversation_history:
+          description: Reads earlier parts of this conversation.
+          label: Read this conversation
+        read_file:
+          description: Reads a file in the agent's workspace.
+          label: Read a file
+        read_web_source:
+          description: Opens a web page and reads it.
+          label: Read a web page
+        resolve_output_path:
+          description: Works out where a file the agent produces will be saved.
+          label: Choose where to save
+        run_program:
+          description: Runs a program on this computer.
+          label: Run a program
+        run_subagent:
+          description: Hands part of the task to a helper agent.
+          label: Start a helper agent
+        search_previous_conversations:
+          description: Searches your earlier conversations with the agent.
+          label: Search earlier conversations
+        web_search:
+          description: Searches the internet.
+          label: Search the web
+        write_file:
+          description: Creates or changes a file in the agent's workspace.
+          label: Write a file
     tool_details: Call details
     tool_done: Done
     tool_failed: Failed
+    tool_generic: Tool {name}
     tool_kind_delete: Deletes
     tool_kind_edit: Edits
     tool_kind_execute: Runs
@@ -234,7 +436,12 @@ desktop:
     tool_kind_switch_mode: Switches mode
     tool_kind_think: Thinks
     tool_pending: Pending
+    tool_reach:
+      local_read: Reads data on this computer
+      local_write: Changes data on this computer
+      online: Uses the internet
     tool_running: Running
+    tool_unnamed: A tool
     transcript: Conversation
     transcript_empty: No messages yet
     unavailable: Not available yet
@@ -243,10 +450,12 @@ desktop:
     upload_name_refused: Its name can't be stored; rename it and try again
     upload_quota_exceeded: This conversation's storage is full
     upload_too_large: Too large for this conversation
+    upload_too_large_limit: 'Too large: the maximum is {limit}'
     upload_unreadable: Couldn't be read
     uploading: Uploading
     uploading_name: Uploading {name}
     usage: 'Tokens used: {input} sent, {output} received'
+    use_document: Use {name} in the next message
     waiting_on_you: Waiting for you
     welcome_lead: Something tax related? Ask about a modelo or a deadline, or add
       receipts, invoices and bank exports with +.
@@ -259,6 +468,8 @@ desktop:
   providers:
     add_key: Add API key
     address: 'Address: {url}'
+    agent_starting: The agent is starting. You can change these settings once it's
+      ready.
     base_url_default: Leave it empty to use {url}.
     base_url_label: Server address
     base_url_required: Enter the address provided by your provider.
@@ -266,49 +477,187 @@ desktop:
     change_failed: Could not save. Refresh and try again.
     connection_api: API key
     connection_app: Installed app
+    connection_local: On this computer
+    console_command_label: 'Run this command in a terminal:'
     detail_app_missing: Install the {provider} app, then sign in.
-    detail_off: 'Off: the agent doesn''t offer or use it.'
-    detail_off_kept: 'Off: the agent doesn''t offer or use it. Its API key is kept
-      for when you turn it on.'
     detail_sign_in: Sign in with your {provider} account.
-    group_intro: Choose a provider to set it up.
     icon_credits: Icon credits
     key_label: '{provider} API key'
     key_note: It's saved encrypted on this computer and never shown again.
+    lane_details: Details for {provider} ({connection})
     load_failed: Could not load providers. Try again.
+    local_engine_change_failed: Your change wasn't saved. Try again.
+    local_engine_changing: Saving…
+    local_engine_lead: The program that runs models on this computer. The model list
+      stays the same either way.
+    local_engine_llamacpp: llama.cpp
+    local_engine_llamacpp_detail: Built in. Nothing to install.
+    local_engine_ollama: Ollama
+    local_engine_ollama_detail: Downloaded and set up when you choose it.
+    local_engine_restarts: Changing the engine or where models run restarts the assistant.
+    local_engine_title: Local engine
+    local_engine_unavailable: llama.cpp isn't included in this installation. Choose
+      Ollama instead.
+    local_model_absent: Not downloaded
+    local_model_add: Add
+    local_model_add_label: Add a model by name
+    local_model_download: Download
+    local_model_installed: Downloaded
+    local_model_licence: 'Licence: {licence}'
+    local_model_licence_named: '{name} ({spdx})'
+    local_model_licence_unknown: 'Licence: not stated'
+    local_model_remove: Remove
+    local_model_remove_failed: Cadrumo couldn't remove the model. Try again.
+    local_model_size: 'Download size: {size}'
+    local_models_failed: Couldn't read your model list. Try again.
+    local_models_lead: The models the local AI can read your documents with. The agent
+      recommends the first ones; add any other model by the name the local AI knows
+      it by. Download a model to use it.
+    local_models_loading: Reading your model list…
+    local_models_none: The agent lists no models for this connection yet.
+    local_models_refused_catalog_unavailable: Couldn't read the agent's list of providers.
+      Try again.
+    local_models_refused_committed_readback_failed: Your change was saved but couldn't
+      be read back. Open this again to check it.
+    local_models_refused_full: The list is full. Take a model off it first.
+    local_models_refused_invalid_name: That isn't a model name the local AI can use.
+    local_models_refused_revision_conflict: Your list changed somewhere else. It's
+      been read again, so try once more.
+    local_models_refused_unknown: Couldn't change your list. Try again.
+    local_models_reset: Reset the list
+    local_models_title: Models on this computer
+    local_models_unreadable: Your saved model list can't be read. Reset it to start
+      again from the recommended models.
+    local_placement_auto: Automatic
+    local_placement_auto_detail: Uses the graphics card when the model fits.
+    local_placement_cpu_only: Processor only
+    local_placement_cpu_only_detail: Slower. Uses only this computer's memory.
+    local_placement_title: Where models run
+    next_step:
+      close_other_sign_in: Close the other sign-in, then try again.
+      console_sign_in: Sign in from a terminal instead.
+      install_cli: Install the provider's app, then try again.
+      move_profile_outside_git: Move the profile's folder out of the Git project,
+        then try again.
+      retry: Try again in a moment.
+      update_app: Update this app to the latest version, then try again.
+    reads_off_host: Your conversation leaves this computer for the provider.
+    reads_on_host: Your conversation stays on this computer.
+    reason_add_key: Add an API key from {provider} to use it.
     reason_check_settings: Check these settings and try again.
+    reason_key_saved: 'It''s checked when it''s first used: send a message or run
+      a task with it.'
+    reason_local_ready: Runs on this computer. Choose it in the agent to use it.
+    reason_not_checked: It hasn't been checked yet. It's checked when it's first used.
     reason_record_unreadable: The saved API key can't be read. Add it again.
+    reason_signed_in: Signed in through the {provider} app. Choose it in the agent
+      to use it.
+    reason_turned_off: The agent doesn't offer or use it. Turn it on with the switch
+      to use it again.
     refresh: Try again
+    refused_agent_starting: The agent is starting, so this wasn't saved yet. Try again
+      in a moment.
     refused_base_url_rejected: Check the server address and try again.
+    refused_busy: Another change to your providers is still running. Try again in
+      a moment.
     refused_invalid_key_format: That doesn't look like a key for this provider.
+    refused_model_list_full: The model list is full. Remove a model before adding
+      another.
     refused_not_signed_in: Sign in to change these settings.
     refused_person_act_required: Only you can change these settings, from this window.
     refused_profile_locked: Unlock your profile to change these settings.
     refused_revision_conflict: These settings changed in the meantime. The latest
       are shown; try again.
     refused_runtime_unavailable: Restart Cadrumo and try again.
+    refused_service_failed: The change could not be completed.
+    refused_timed_out: Cadrumo did not hear back in time. Refresh to see whether the
+      change went through.
     remove_key: Remove API key
     replace_key: Replace API key
     save: Save
+    save_retry: Try again
     saved_unread: Saved, but its status couldn't be read. Try again.
     saving: Saving…
-    search_empty: No matching providers. Try another search.
-    search_label: Search providers
-    search_placeholder: Search providers
     sign_in_action: Sign in
+    sign_in_agent_still_running: The agent has not stopped yet, so {provider} sign-in
+      could not start. Try again in a moment.
+    sign_in_agent_stopping: Cadrumo is stopping the agent to sign in to {provider}.
+      Sign-in continues on its own once it has stopped.
     sign_in_busy: Another {provider} sign-in is still finishing. Wait a moment, then
       try again.
     sign_in_cancel: Cancel sign-in
     sign_in_cancel_failed: Cadrumo couldn't cancel sign-in yet. Keep this dialog open
       while it checks.
     sign_in_cancelled: Sign-in was cancelled.
+    sign_in_cause:
+      agent_stop_failed: The agent couldn't be stopped to finish the sign-in.
+      agent_tree_running: The agent was still running, so the sign-in couldn't start.
+      browser_not_offered: Claude didn't offer a sign-in page in time.
+      browser_relay_unavailable: The sign-in page couldn't be passed on to your browser.
+      cleanup_unconfirmed: It couldn't be confirmed that the sign-in closed cleanly.
+      cli_exited_early: The provider's app stopped before the sign-in finished.
+      cli_not_found: The provider's app isn't installed or couldn't be found.
+      cli_protocol_mismatch: The provider's app answered in a way this version doesn't
+        understand.
+      cli_reported_error: The provider's app reported an error during sign-in.
+      cli_start_failed: The provider's app couldn't be started.
+      helper_ended_without_result: The sign-in ended without a result.
+      helper_exit_nonzero: The sign-in ended with an error.
+      helper_output_invalid: The sign-in gave an answer that couldn't be read.
+      helper_start_failed: The sign-in couldn't be started.
+      home_in_git_project: The profile's folder is inside a Git project, and the provider's
+        app won't sign in there.
+      home_unavailable: The folder kept for this provider's sign-in couldn't be used.
+      host_disconnected: Contact with the sign-in was lost while it was running.
+      host_input_invalid: The sign-in was given an input it couldn't use.
+      internal_error: The sign-in hit an internal error.
+      lane_not_signable: This provider can't be signed in to from here.
+      login_already_running: Another sign-in is already running for this profile.
+      login_not_completed: The sign-in wasn't completed.
+      logout_agent_unavailable: The agent that signs providers out could not be started.
+      logout_not_completed: The provider's app did not sign out, or the provider is
+        still signed in.
+      logout_timed_out: Signing out took too long and was stopped.
+      prepare_failed: The sign-in couldn't be prepared.
+      previous_cleanup_unconfirmed: It couldn't be confirmed that the previous sign-in
+        closed cleanly.
+      probe_cleanup_unconfirmed: It couldn't be confirmed that the check of the provider's
+        sign-in closed cleanly.
+      probe_output_unreadable: The check of the provider's sign-in gave an answer
+        that couldn't be read.
+      probe_start_failed: The check of the provider's sign-in couldn't be started.
+      probe_timed_out: The check of the provider's sign-in took too long.
+      profile_missing: The profile for this sign-in couldn't be found.
+      profile_signed_out: Your profile was signed out during the sign-in.
+      settings_change_failed: The provider settings couldn't be saved.
+      settings_refused: The provider settings refused the change.
+      sign_in_in_progress: Another sign-in to this provider was already running.
+      sign_in_owner_held: Another window was signing in to this provider.
+      status_context_unavailable: There was no open profile to check the sign-in against.
+      status_not_confirmed: The sign-in finished, but it couldn't be confirmed that
+        you're signed in.
+      status_read_failed: Whether you're signed in couldn't be read.
+      status_unreadable: The answer about whether you're signed in couldn't be read.
+      timed_out: The sign-in took too long.
+      unsupported_method: The provider's app doesn't support this way of signing in.
+    sign_in_checking: Checking sign-in…
     sign_in_cleanup_failed: Restart Cadrumo before signing in again.
     sign_in_close: Close sign-in
+    sign_in_code_checking: Checking the authorization code…
+    sign_in_code_label: Authorization code
+    sign_in_code_prompt: Enter the authorization code shown on the provider page.
+    sign_in_code_submit: Submit code
+    sign_in_code_time_limited: 'Enter the code as soon as you have it: {provider}
+      waits for it only a short time. If the time runs out, you can start again.'
+    sign_in_code_unfinished: '{provider} sign-in ended without completing while it
+      waited for the code; the time to enter it may have run out. Start again to get
+      a new code.'
     sign_in_done: Done
     sign_in_failure: Sign-in couldn't be completed. Try again later.
     sign_in_host_disconnected: Cadrumo lost contact with this sign-in and cancelled
       it. Start again to continue.
     sign_in_invalid_request: Close this window and try signing in again.
+    sign_in_log_ref: 'Diagnostic reference in cadrumo.log:'
     sign_in_open_failed: Cadrumo couldn't open the provider's sign-in page.
     sign_in_profile_required: Sign in to Cadrumo to continue signing in with {provider}.
     sign_in_provider_error: Could not sign in to {provider}. Try again.
@@ -330,13 +679,39 @@ desktop:
     sign_in_waiting: Finish signing in on the provider's page, then return here.
     sign_in_waiting_device: Enter this code on the provider's page to finish signing
       in.
+    sign_out_action: Sign out
+    sign_out_label: Sign out of {provider}
     status_not_checked: Not checked
     status_off: 'Off'
+    status_off_kept: Off · key kept
     status_ready: Ready
-    status_saved: Saved
+    status_saved: Key saved
     status_setup_needed: Not set up
     status_sign_in_needed: Not signed in
-    summary: '{connection}: {status}'
+    status_signed_in: Signed in
+    status_starting: Waiting for the agent
+    status_unconfirmed: Sign-in not confirmed
+    task_kind_classification: Classification
+    task_kind_classification_description: Assigning a label from a closed set to a
+      document or a record.
+    task_kind_extraction: Extraction
+    task_kind_extraction_description: Reading structured fields out of a document.
+    task_model_change: Change
+    task_model_change_label: Change what {task} runs with
+    task_model_model: Model for {task}
+    task_model_reading_chosen: 'Reading model: {model}'
+    task_model_reading_default: 'Reading model: {model}, the default until you choose
+      one'
+    task_model_reading_none: Reading model, once one is set up
+    task_model_refused: Couldn't change what this task runs with. Try again.
+    task_model_saved: Saved.
+    task_model_stored_unoffered: '{model} on {lane}, which is no longer offered'
+    task_model_use_reading: Use the reading model
+    task_models_intro: Choose the model each kind of task runs with. A task you leave
+      unset uses the model documents are read with.
+    task_models_runs_with: Runs with
+    task_models_task: Task
+    task_models_title: Models per task
     title: AI providers
     use_in_agent: Use {provider} ({connection}) in the agent
   rail:

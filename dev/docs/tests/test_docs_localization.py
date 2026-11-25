@@ -36,7 +36,7 @@ from babel.messages.pofile import read_po
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..i18n import TARGET_LANGUAGES, user_scope_source_pages
 
@@ -88,6 +88,31 @@ def _catalogue_counts(po_path: Path) -> tuple[int, int, str]:
         if message.fuzzy:
             fuzzy += 1
     return untranslated, fuzzy, str(dict(catalogue.mime_headers).get("Language", ""))
+
+
+@pytest.mark.parametrize(
+    ("page", "official_name"),
+    [
+        (
+            "how-to/modelo-036.md",
+            "Modelo 036. Censo de empresarios, profesionales y retenedores - "
+            "Declaración censal de alta, modificación y baja.",
+        ),
+        ("how-to/modelo-390.md", "Modelo 390. IVA. Declaración Resumen Anual."),
+    ],
+)
+def test_official_modelo_name_span_survives_every_translation(page: str, official_name: str) -> None:
+    """Official AEAT procedure names stay marked Spanish in every catalogue."""
+    source = " ".join((_DOCS / page).read_text(encoding="utf-8").split())
+    assert f'<span lang="es">{official_name}</span>' in source
+
+    for language in TARGET_LANGUAGES:
+        with _catalogue_path(language, page).open("rb") as handle:
+            catalogue = read_po(handle)
+        message = next(message for message in catalogue if "official procedure name" in message.id)
+        assert not message.fuzzy
+        assert isinstance(message.string, str)
+        assert f'<span lang="es">{official_name}</span>' in message.string
 
 
 @pytest.mark.parametrize("language", TARGET_LANGUAGES)
@@ -200,7 +225,7 @@ def _conf_language_config() -> dict[str, object]:
         env = {
             **os.environ,
             "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-            "CADRUMO_LOCAL_STORAGE_ROOT": storage_root,
+            "CADRUMO_STORAGE_ROOT": storage_root,
         }
         result = subprocess.run(
             [sys.executable, "-c", script],

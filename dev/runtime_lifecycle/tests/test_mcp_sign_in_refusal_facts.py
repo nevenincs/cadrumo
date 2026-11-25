@@ -15,10 +15,10 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_custody
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -167,7 +167,9 @@ def _in_a_logon_without_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     from keyring.errors import KeyringError, PasswordDeleteError
 
     store = _LogonWithoutCredentials()
-    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyringError, PasswordDeleteError)
+    )
 
 
 @pytest.mark.anyio

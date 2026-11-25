@@ -2,7 +2,7 @@
 
 One canonical home for the :data:`IBAN_SHAPE_RE` pattern and
 :func:`iban_mod_97` check residue, consumed by
-:data:`~domain.calculations.registry.schema_scalars.IbanString` for registry
+:func:`~domain.calculations.registry.schema_scalars.validate_iban_string` for registry
 casillas declaring ``data_type = "iban"`` and by the secure-storage
 :class:`~domain.deadlines.models.RefundAccount` model. Keeping the primitives in
 ``core`` lets each domain validate an IBAN without importing the other.
@@ -84,12 +84,15 @@ def normalise_iban(value: str) -> str:
     return value.replace(" ", "").replace("-", "").upper()
 
 
+_ISO_7064_MODULUS = 97
+
+
 def iban_mod_97(canonical: str) -> int:
     """Compute the ISO 13616 IBAN mod-97 check residue for an already-canonical IBAN.
 
     Existing callers normalize separators and case and independently re-check
     :data:`IBAN_SHAPE_RE` before calling this; see
-    :func:`domain.calculations.registry.schema_scalars._validate_iban_string` and
+    :func:`domain.calculations.registry.schema_scalars.validate_iban_string` and
     ``domain.deadlines.models._validate_iban``. Those call-site
     gates are harmless belt-and-braces now that the shape is enforced here
     too, but they must not be the ONLY thing standing between a malformed
@@ -118,4 +121,4 @@ def iban_mod_97(canonical: str) -> int:
         raise ValueError(f"iban_mod_97 requires an ISO 13616-shaped IBAN, got {canonical!r}")
     rearranged = canonical[4:] + canonical[:4]
     numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
-    return int(numeric) % 97
+    return int(numeric) % _ISO_7064_MODULUS

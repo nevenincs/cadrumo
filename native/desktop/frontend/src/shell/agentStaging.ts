@@ -13,6 +13,7 @@ import type {
   AgentUploadPick,
 } from "./agentSession";
 import type { AgentDocumentRecord } from "./agentViews";
+import { formatSize } from "../shared/numbers";
 import type { Translate } from "./strings";
 
 // What the next message of a conversation names of its stored documents: the
@@ -24,12 +25,24 @@ import type { Translate } from "./strings";
 /** The id a stored document is staged under; never an upload's. */
 const storedId = (name: string) => `stored:${name}`;
 
-/** Why a file was not stored, in words. */
-export function uploadRefusalWords(t: Translate, code: string): string {
+/** Why a file was not stored, in words. A file too large for the storage
+ * says the largest it takes (`maxFileBytes`, as the agent's attachment policy
+ * serves it) where that is known. */
+export function uploadRefusalWords(
+  t: Translate,
+  code: string,
+  maxFileBytes: number | null = null,
+): string {
   switch (code) {
     case "agent_attachment_too_large":
     case "agent_gateway_attachment_too_large":
-      return t("desktop.agent.upload_too_large");
+      // A size is written in a language: a translator that carries none
+      // cannot say it, so it says the plain words.
+      return maxFileBytes === null || t.locale === undefined
+        ? t("desktop.agent.upload_too_large")
+        : t("desktop.agent.upload_too_large_limit", {
+            limit: formatSize(t.locale, maxFileBytes),
+          });
     case "agent_attachment_format_refused":
     case "agent_gateway_attachment_format_refused":
       return t("desktop.agent.upload_format_refused");
@@ -86,6 +99,9 @@ export type StagedDocuments = {
   namedFor: (conversationId: string | null) => AgentDocumentRecord[];
   /** Names a stored document for the next message. */
   name: (document: AgentDocumentRecord) => void;
+  /** Names a stored document for the next message of `conversationId`,
+   * which may be one the column has only just started. */
+  nameIn: (conversationId: string, document: AgentDocumentRecord) => void;
   /** Takes a staged file away, or all of them. An upload taken away is not
    * named when it is stored. */
   remove: (id: string | null) => void;
@@ -93,7 +109,7 @@ export type StagedDocuments = {
   sent: (conversationId: string) => void;
   /** Picks files and stores them for `conversationId`, where the host can;
    * a refusal of the pick itself is given back as its code. */
-  attach?: (conversationId: string) => Promise<string | null>;
+  attach?: (conversationId: string, dropId?: string) => Promise<string | null>;
 };
 
 export function useStagedDocuments({
@@ -102,13 +118,20 @@ export function useStagedDocuments({
   session,
   filterLabel,
   t,
+  maxFileBytes = null,
+  onStored,
 }: {
   reader: string | null;
   conversationId: string | null;
   session: AgentSession | undefined;
   filterLabel: string;
   t: Translate;
+  /** The largest file the storage takes, once the agent has served it. */
+  maxFileBytes?: number | null;
+  onStored?: () => void;
 }): StagedDocuments {
+  const stored = useRef(onStored);
+  stored.current = onStored;
   const [staging, setStaging] = useState<Staging>({
     reader,
     conversation: conversationId,
@@ -140,6 +163,11 @@ export function useStagedDocuments({
       })),
     [conversationId],
   );
+  const nameIn = (id: string, document: AgentDocumentRecord) =>
+    update.current(id, (held) => ({
+      ...held,
+      documents: withNamed(held.documents, document),
+    }));
   const remove = (id: string | null) =>
     update.current(conversationId, (held) =>
       id === null
@@ -159,10 +187,12 @@ export function useStagedDocuments({
 
   const attachHost = session?.attach?.bind(session);
   const attach = attachHost
-    ? async (id: string) => {
+    ? async (id: string, dropId?: string) => {
         // An event for an upload no longer staged, or staged elsewhere, is
         // left alone; an upload stored is named for the next message.
-        const onEvent = (event: AgentUploadEvent) =>
+        let announced = false;
+        const early: AgentUploadEvent[] = [];
+        const apply = (event: AgentUploadEvent) =>
           setStaging((held) => {
             if (held.reader !== reader || held.conversation !== id) return held;
             const at = held.uploads.findIndex(
@@ -196,8 +226,13 @@ export function useStagedDocuments({
                 };
             }
           });
+        const onEvent = (event: AgentUploadEvent) => {
+          if (event.kind === "stored") stored.current?.();
+          if (announced) apply(event);
+          else early.push(event);
+        };
         try {
-          const picked = await attachHost(id, filterLabel, onEvent);
+          const picked = await attachHost(id, filterLabel, onEvent, dropId);
           if (picked.length > 0)
             update.current(id, (held) => ({
               ...held,
@@ -210,6 +245,8 @@ export function useStagedDocuments({
                   ),
               ],
             }));
+          announced = true;
+          early.forEach(apply);
           return null;
         } catch (error) {
           return failureCode(error);
@@ -223,7 +260,10 @@ export function useStagedDocuments({
     (): StagedAttachment[] => [
       ...(uploads ?? []).map(({ code, ...upload }) =>
         code
-          ? { ...upload, refusalReason: uploadRefusalWords(t, code) }
+          ? {
+              ...upload,
+              refusalReason: uploadRefusalWords(t, code, maxFileBytes),
+            }
           : upload,
       ),
       ...(documents ?? []).map((document) => ({
@@ -231,13 +271,14 @@ export function useStagedDocuments({
         id: storedId(document.name),
       })),
     ],
-    [documents, uploads, t],
+    [documents, uploads, t, maxFileBytes],
   );
 
   return {
     staged,
     namedFor: (id) => (own(staging, id) ? staging.documents : []),
     name,
+    nameIn,
     remove,
     sent,
     ...(attach ? { attach } : {}),

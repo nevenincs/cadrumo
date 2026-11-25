@@ -32,17 +32,14 @@ already-verified con/total definitive substrate.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from .....application.aggregation.iva_ledger import (
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_ledger_binding_values,
-)
+from .....application.aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
+from .....application.aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .....application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,
     settle_sector_definitive,
@@ -55,7 +52,7 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.ids import BindingId
 from .....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -64,18 +61,12 @@ from .....domain.prorrata_register.register import ProrrataRegister, ProrrataReg
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...profile.invoices import InvoiceCatalogueRepository
 from ...profile.prorrata_register import ProrrataRegisterRepository
 from ...profile.transactions import TransactionCatalogueRepository
 from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across differentiated-sector aggregation."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 _BUCKET_ID = "5c705c70-5c70-4c70-8c70-5c705c705c70"
@@ -256,6 +247,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_BUCKET_ID,

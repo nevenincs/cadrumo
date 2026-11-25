@@ -24,9 +24,9 @@ from .diagnostic_classification import (
     UnvalidatedRegistryClassification,
     derive_filing_revision_classifications,
 )
-from .filing_export_conformance import _CONFORMANCE_AUTHORITY_ID
+from .filing_export_conformance import CONFORMANCE_AUTHORITY_ID
 from .filing_export_conformance_vectors import FilingExportConformanceVector
-from .filing_export_generated_verification import _ConformanceGenerationEntry, _verify_generated_revision
+from .filing_export_generated_verification import ConformanceGenerationEntry, verify_generated_revision
 from .filing_export_proof_contracts import (
     FilingExportConformanceVectorEvidence,
     FilingExportGeneratedOutput,
@@ -49,6 +49,9 @@ _PRODUCER_RESIDUE_OWNER = "source-casilla-integration"
 _BUILDER_RESIDUE_OWNER = "filing-export-conformance"
 
 
+_AUTHORITY_GRADE_RESIDUE_OWNER = "registry-authority-grade"
+
+
 _ConformanceResidueReason = Literal[
     "law_selection_failed",
     "revision_validation_failed",
@@ -61,6 +64,7 @@ _ConformanceResidueReason = Literal[
     "canonical_builder_missing",
     "canonical_builder_conflict",
     "registry_validation_incomplete",
+    "filing_revision_unselected",
 ]
 
 
@@ -119,7 +123,7 @@ def derive_filing_export_conformance_enrollment(
     vectors: tuple[FilingExportConformanceVector, ...],
 ) -> FilingExportConformanceEnrollmentReport:
     """Classify validated filing revisions through the canonical static path."""
-    return _derive_static_filing_export_conformance_enrollment(
+    return derive_static_filing_export_conformance_enrollment(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
@@ -139,7 +143,7 @@ def derive_diagnostic_filing_export_conformance_enrollment(
     vectors: tuple[FilingExportConformanceVector, ...],
 ) -> FilingExportConformanceEnrollmentReport:
     """Classify static diagnostic facts into residue only after strict failure."""
-    return _derive_static_filing_export_conformance_enrollment(
+    return derive_static_filing_export_conformance_enrollment(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
@@ -150,7 +154,7 @@ def derive_diagnostic_filing_export_conformance_enrollment(
     )
 
 
-def _derive_static_filing_export_conformance_enrollment(
+def derive_static_filing_export_conformance_enrollment(
     *,
     workspace_root: Path,
     registry_root: Path,
@@ -190,12 +194,37 @@ def _derive_static_filing_export_conformance_enrollment(
             materializable_vectors=materializable_vectors,
             residues=residues,
         )
+    residues.extend(_unselected_vector_residues(vector_by_revision, revisions))
 
     return FilingExportConformanceEnrollmentReport(
         full_registry_validation_error=strict_validation_error,
         provenance_candidates=tuple(candidates),
         materializable_vectors=tuple(materializable_vectors),
         residues=tuple(residues),
+    )
+
+
+def _unselected_vector_residues(
+    vector_by_revision: Mapping[tuple[ModeloId, RevisionId], FilingExportConformanceVector],
+    revisions: tuple[RegistryDiagnosticFilingRevision, ...],
+) -> tuple[FilingExportConformanceResidue, ...]:
+    """Refuse each pinned vector whose coordinate names no filing-grade revision, so no pin is silently dropped."""
+    selected = {(revision.modelo, revision.revision) for revision in revisions}
+    return tuple(
+        _conformance_residue(
+            modelo=modelo,
+            revision=revision,
+            layout_ids=vector.evidence.coordinate.layout_ids,
+            reason="filing_revision_unselected",
+            owner=_AUTHORITY_GRADE_RESIDUE_OWNER,
+            reconsideration_condition=(
+                "Hold the pinned revision at filing grade on its own-year evidence, or repin the vector "
+                "to a filing-grade revision under review."
+            ),
+            detail="the pinned conformance coordinate names no filing-grade revision of the registry",
+        )
+        for (modelo, revision), vector in sorted(vector_by_revision.items())
+        if (modelo, revision) not in selected
     )
 
 
@@ -371,7 +400,7 @@ def _static_conformance_evidence(
     probes: tuple[FilingExportOfficialProbe, ...],
 ) -> FilingExportConformanceVectorEvidence:
     return FilingExportConformanceVectorEvidence(
-        authority_id=_CONFORMANCE_AUTHORITY_ID,
+        authority_id=CONFORMANCE_AUTHORITY_ID,
         coordinate=FilingExportProofCoordinate(
             modelo=selected.modelo,
             revision=selected.revision,
@@ -547,13 +576,13 @@ def _verify_static_generated_provenance(
     manifest = load_export_fragment_provenance_manifest(manifest_raw)
     if manifest.modelo != selected.modelo or manifest.revision_id != selected.revision:
         raise RegistryValidationError("generated provenance identity conflicts with the law-selected revision")
-    _verify_generated_revision(
+    verify_generated_revision(
         workspace_root=workspace_root,
         registry_root=registry_root,
         source_root=source_root,
         authority=authority,
         inspection=inspection,
-        entry=_ConformanceGenerationEntry(
+        entry=ConformanceGenerationEntry(
             modelo=selected.modelo,
             revision=selected.revision,
             design_epoch=manifest.design_epoch,

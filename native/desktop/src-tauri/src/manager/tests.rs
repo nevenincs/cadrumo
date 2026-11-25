@@ -1,50 +1,84 @@
 use super::*;
 
-#[cfg(windows)]
 #[tokio::test(start_paused = true)]
-async fn readiness_preserves_public_observation_after_former_startup_boundary() {
+async fn readiness_preserves_public_observation_after_former_startup_boundaries() {
     let started = tokio::time::Instant::now();
     let observed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let progress = observed.clone();
-    let ready = wait_for_readiness(async move {
-        tokio::time::sleep(Duration::from_millis(89_800)).await;
-        progress.store(1, Ordering::Release);
-        tokio::time::sleep(Duration::from_secs(5)).await;
-        progress.store(2, Ordering::Release);
-        Ok(())
-    });
+    let ready = wait_for_readiness(
+        async move {
+            tokio::time::sleep(Duration::from_millis(179_800)).await;
+            progress.store(1, Ordering::Release);
+            tokio::time::sleep(Duration::from_secs(15)).await;
+            progress.store(2, Ordering::Release);
+            Ok(())
+        },
+        STARTUP_TIMEOUT,
+    );
     tokio::pin!(ready);
     tokio::select! {
         result = &mut ready => panic!("admission finished before public observation: {result:?}"),
-        _ = tokio::time::sleep(Duration::from_secs(90)) => {}
+        _ = tokio::time::sleep(Duration::from_secs(180)) => {}
     }
     assert_eq!(observed.load(Ordering::Acquire), 1);
     ready.await.unwrap();
     assert_eq!(observed.load(Ordering::Acquire), 2);
-    assert_eq!(started.elapsed(), Duration::from_millis(94_800));
+    assert_eq!(started.elapsed(), Duration::from_millis(194_800));
 }
 
-#[cfg(windows)]
 #[tokio::test(start_paused = true)]
-async fn readiness_expiry_and_public_refusal_remain_failures() {
+async fn readiness_timeout_is_distinct_and_public_refusal_remains_prompt() {
     let started = tokio::time::Instant::now();
-    let error = wait_for_readiness(std::future::pending())
+    let injected_timeout = Duration::from_secs(7);
+    let error = wait_for_readiness(std::future::pending(), injected_timeout)
         .await
         .unwrap_err();
     assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.reason.as_deref(), Some("runtime_timeout"));
     assert_eq!(error.operation, Operation::Manager);
-    assert_eq!(
-        started.elapsed(),
-        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling
-    );
-    let error = wait_for_readiness(async {
-        tokio::time::sleep(Duration::from_secs(95)).await;
-        Err(failure(ErrorCode::ReadFailed))
-    })
+    assert_eq!(started.elapsed(), injected_timeout);
+    let refused_at = tokio::time::Instant::now();
+    let error = wait_for_readiness(
+        async { Err(failure(ErrorCode::ReadFailed)) },
+        STARTUP_TIMEOUT,
+    )
     .await
     .unwrap_err();
     assert_eq!(error.code, ErrorCode::ReadFailed);
     assert_eq!(error.operation, Operation::Manager);
+    assert_eq!(refused_at.elapsed(), Duration::ZERO);
+    #[cfg(windows)]
+    assert_eq!(
+        STARTUP_TIMEOUT,
+        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().startup_timeout
+    );
+}
+
+#[tokio::test(start_paused = true)]
+async fn requested_stop_during_startup_is_unavailable_not_a_timeout() {
+    let started = tokio::time::Instant::now();
+    let error = wait_for_readiness_or_stop(
+        std::future::pending(),
+        tokio::time::sleep(Duration::from_secs(3)),
+        STARTUP_TIMEOUT,
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::SessionUnavailable);
+    assert_eq!(error.reason, None);
+    assert_eq!(started.elapsed(), Duration::from_secs(3));
+    let error = wait_for_readiness_or_stop(
+        std::future::pending(),
+        std::future::pending(),
+        Duration::from_secs(7),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.reason.as_deref(), Some("runtime_timeout"));
+    wait_for_readiness_or_stop(async { Ok(()) }, std::future::pending(), STARTUP_TIMEOUT)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -170,8 +204,8 @@ fn fixture(target: Result<std::result::Result<PathBuf, &'static str>>) -> Arc<Ma
         spawn_fence: Arc::new(Mutex::new(())),
         closing: tokio::sync::Notify::new(),
         supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
-        observation: observation::Observer::new(cfg!(windows)),
-        #[cfg(windows)]
+        observation: observation::Observer::new(cfg!(any(windows, target_os = "macos"))),
+        #[cfg(any(windows, target_os = "macos"))]
         host: Mutex::new(None),
     })
 }
@@ -319,6 +353,7 @@ async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries()
 #[cfg(windows)]
 #[tokio::test]
 async fn close_waits_for_the_private_helper_and_fences_later_launches() {
+    use std::{future::Future, task::Poll};
     let manager = fixture(Ok(Err("image_not_installed")));
     let held = manager.attempt.lock().await;
     let running = async {
@@ -328,6 +363,18 @@ async fn close_waits_for_the_private_helper_and_fences_later_launches() {
         drop(held);
         result
     };
+    tokio::pin!(running);
+    // Process creation completes inside the first poll and can take seconds on
+    // a loaded host; the budget below measures only close interrupting the helper.
+    std::future::poll_fn(|context| {
+        assert!(running.as_mut().poll(context).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    assert_eq!(
+        manager.diagnostics.snapshot(0).processes[0].phase,
+        ProcessPhase::Running
+    );
     let (result, ()) = tokio::time::timeout(Duration::from_secs(3), async {
         tokio::join!(running, manager.close())
     })

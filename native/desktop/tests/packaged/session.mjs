@@ -35,6 +35,37 @@ export const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 // Poll quickly once a parser exists; sign-in and other idle periods need fewer
 // DevTools round trips. Queued batches always drain without this delay.
 export const OBSERVATION_POLL_MS = Object.freeze({ active: 100, idle: 250 });
+const OBSERVATION_WAKE_BINDING = "__s10TerminalObservationReady";
+
+/** A payload-free activity counter closes the drain-to-wait lost-wakeup race. */
+export class ObservationWake {
+  constructor() {
+    this.version = 0;
+    this.waiter = null;
+    this.closed = false;
+  }
+
+  notify() {
+    if (this.closed) return;
+    this.version += 1;
+    this.waiter?.();
+  }
+
+  wait(version) {
+    if (this.closed || version !== this.version) return Promise.resolve();
+    return new Promise((resolve) => {
+      this.waiter = () => {
+        this.waiter = null;
+        resolve();
+      };
+    });
+  }
+
+  close() {
+    this.closed = true;
+    this.waiter?.();
+  }
+}
 
 /** Polls `read` until it returns a truthy value or the deadline passes. */
 export async function waitFor(
@@ -93,10 +124,12 @@ export class Session {
       idleWaitMs: 0,
     };
     this.cancelObservationWait = null;
+    this.observationWake = null;
     page.on("framenavigated", (frame) => {
       if (frame === page.mainFrame()) {
         this.navigations += 1;
         this.observer.reset(null);
+        this.observationWake?.notify();
       }
     });
     page.on("close", () => this.stopObservation());
@@ -234,6 +267,7 @@ export class Session {
           ? null
           : performance.now() - metrics.lastDrainAt,
       stopped: this.observationStopped,
+      mode: this.observationWake ? "activity" : "poll",
       failure: this.observationFailure,
       parser: this.observer.stats(),
       console: {
@@ -250,7 +284,24 @@ export class Session {
     if (this.observationStopped) return;
     this.observationStopped = true;
     this.cancelObservationWait?.();
+    this.observationWake?.close();
     this.observer.dispose();
+  }
+
+  /** Only this shell's top frame may wake observation; the binding grants no IPC. */
+  async enableObservationWake() {
+    if (typeof this.page.exposeBinding !== "function") return false;
+    this.observationWake = new ObservationWake();
+    await this.page.exposeBinding(OBSERVATION_WAKE_BINDING, (source) => {
+      if (
+        source.page !== this.page ||
+        source.frame !== this.page.mainFrame() ||
+        !this.shellOrigins.includes(originOf(source.frame.url()))
+      )
+        return;
+      this.observationWake.notify();
+    });
+    return true;
   }
 
   /** Serial pump: ACK holds never wait here and never prevent parsing. */
@@ -259,6 +310,7 @@ export class Session {
     this.observationPump = (async () => {
       try {
         while (!this.observationStopped) {
+          const activity = this.observationWake?.version;
           const navigation = this.navigations;
           const started = performance.now();
           let batch;
@@ -281,10 +333,27 @@ export class Session {
                 10000,
               );
               this.cancelObservationWait = () => finish(resolve, null);
-              this.page.evaluate(drainTerminalObservation).then(
-                (value) => finish(resolve, value),
-                (error) => finish(reject, error),
-              );
+              this.page
+                .evaluate(drainTerminalObservation, {
+                  ...OBSERVATION_LIMITS,
+                  transport: "json",
+                })
+                .then(
+                  (value) => {
+                    try {
+                      finish(
+                        resolve,
+                        typeof value === "string" ? JSON.parse(value) : value,
+                      );
+                    } catch {
+                      finish(
+                        reject,
+                        new ObservationError("TerminalObservationBatchInvalid"),
+                      );
+                    }
+                  },
+                  (error) => finish(reject, error),
+                );
             });
           } catch (error) {
             if (this.observationStopped) break;
@@ -307,25 +376,32 @@ export class Session {
             this.observationMetrics.parseMs += performance.now() - parseStarted;
           }
           if (batch?.more) this.observationMetrics.immediateDrains += 1;
-          else if (!this.observationStopped)
-            await new Promise((resolve) => {
-              const waitStarted = performance.now();
+          else if (!this.observationStopped) {
+            if (this.observationWake) {
+              const started = performance.now();
               this.observationMetrics.idleWaits += 1;
-              const finish = () => {
-                clearTimeout(timer);
-                this.cancelObservationWait = null;
-                this.observationMetrics.idleWaitMs +=
-                  performance.now() - waitStarted;
-                resolve();
-              };
-              const timer = setTimeout(
-                finish,
-                this.observer.stats().cells
-                  ? OBSERVATION_POLL_MS.active
-                  : OBSERVATION_POLL_MS.idle,
-              );
-              this.cancelObservationWait = finish;
-            });
+              await this.observationWake.wait(activity);
+              this.observationMetrics.idleWaitMs += performance.now() - started;
+            } else
+              await new Promise((resolve) => {
+                const waitStarted = performance.now();
+                this.observationMetrics.idleWaits += 1;
+                const finish = () => {
+                  clearTimeout(timer);
+                  this.cancelObservationWait = null;
+                  this.observationMetrics.idleWaitMs +=
+                    performance.now() - waitStarted;
+                  resolve();
+                };
+                const timer = setTimeout(
+                  finish,
+                  this.observer.stats().cells
+                    ? OBSERVATION_POLL_MS.active
+                    : OBSERVATION_POLL_MS.idle,
+                );
+                this.cancelObservationWait = finish;
+              });
+          }
         }
       } catch (error) {
         this.observationFailure =
@@ -356,9 +432,26 @@ export class Session {
   }
 
   async showTab(kind) {
-    if (kind === "tui") return;
+    if (kind === "tui" || kind === "agent") {
+      const pane = this.page.locator(`.pane-${kind}`);
+      if (await pane.isVisible()) return;
+      const opener = this.page.locator(`.rail [data-rail="${kind}"]`);
+      if ((await opener.getAttribute("aria-pressed")) === "true")
+        await this.page.locator(`#tab-${kind}`).click();
+      else await opener.click();
+      await pane.waitFor({ state: "visible" });
+      return;
+    }
     const pane = this.page.locator(`#panel-${kind}`);
     if (await pane.isVisible()) return;
+    const panel = this.page.locator('.rail [data-rail="panel"]');
+    if (await panel.count()) {
+      const tab = this.page.locator(`#tab-${kind}`);
+      if (!(await tab.isVisible())) await panel.click();
+      await tab.click();
+      await pane.waitFor({ state: "visible" });
+      return;
+    }
     // The tab's title and rail button use the same localized catalogue key.
     // Reading the hidden tab names the visible opener without choosing a locale.
     const label = await this.page.locator(`#tab-${kind}`).getAttribute("title");
@@ -400,32 +493,44 @@ export async function connect({
   ipcPrefix,
   blockExternal = true,
   timeout = 60000,
+  documentObserver,
+  onFailure,
 }) {
   const browser = await (
     await chromium()
   ).connectOverCDP(endpoint, { timeout });
   let session;
   try {
-    const context = await waitFor(() => browser.contexts()[0], {
-      timeout,
-      what: "a browser context",
-    });
+    // The startup window shares the shell origin and lives until the window
+    // has brought its runtime to readiness; the shell document is the other
+    // one, in the workspace window's own data directory and so its own context.
+    let seen = [];
     const page = await waitFor(
-      () =>
-        context
-          .pages()
-          .find((candidate) =>
-            shellOrigins.includes(originOf(candidate.url())),
-          ),
+      () => {
+        const pages = browser.contexts().flatMap((context) => context.pages());
+        seen = pages.map((candidate) => candidate.url());
+        return pages.find(
+          (candidate) =>
+            shellOrigins.includes(originOf(candidate.url())) &&
+            !new URL(candidate.url()).pathname.endsWith("/startup.html"),
+        );
+      },
       { timeout, what: "the shell document" },
-    );
+    ).catch((error) => {
+      throw new Error(
+        `${error.message}; pages seen: ${seen.join(", ") || "none"}`,
+      );
+    });
     session = new Session({ browser, page, shellOrigins, docsOrigin });
+    const wake = await session.enableObservationWake();
+    if (documentObserver) await page.addInitScript(documentObserver);
     await page.addInitScript(instrument, {
       shellOrigins,
       docsOrigin,
       ipcPrefix,
       blockExternal,
       observationLimits: OBSERVATION_LIMITS,
+      observationWakeBinding: wake ? OBSERVATION_WAKE_BINDING : null,
     });
     await page.reload({ waitUntil: "load", timeout });
     await waitFor(() => page.evaluate(() => !!window.__s10?.call), {
@@ -440,6 +545,11 @@ export async function connect({
     return session;
   } catch (error) {
     session?.stopObservation();
+    try {
+      await onFailure?.(browser);
+    } catch {
+      // Optional evidence must not replace the connection failure or cleanup.
+    }
     await browser.close().catch(() => {});
     throw error;
   }

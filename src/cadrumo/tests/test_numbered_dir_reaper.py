@@ -31,9 +31,9 @@ from cadrumo.tests.audited_process import run_audited_process
 
 from ..core.directory_scan import scan_directory
 from .collection_storage_root import (
-    _ABANDONED_AFTER_SECONDS,
-    _LOCK_NAME,
-    _STALE_AFTER_SECONDS,
+    ABANDONED_AFTER_SECONDS,
+    LOCK_NAME,
+    STALE_AFTER_SECONDS,
     pytest_numbered_dir_root,
     reap_abandoned_numbered_dirs,
 )
@@ -75,7 +75,7 @@ def _numbered_dir(root: Path, number: int, *, owner: int | None, entries: int = 
     for index in range(entries):
         (directory / f"payload-{index}").write_text("x" * 512, encoding="utf-8")
     if owner is not None:
-        (directory / _LOCK_NAME).write_text(str(owner), encoding="utf-8")
+        (directory / LOCK_NAME).write_text(str(owner), encoding="utf-8")
     return directory
 
 
@@ -104,7 +104,7 @@ def test_the_lock_file_names_its_owner_and_never_refreshes_its_mtime(tmp_path: P
         lock_timeout=LOCK_TIMEOUT,
         register=lambda *_args, **_kwargs: None,
     )
-    lock = created / _LOCK_NAME
+    lock = created / LOCK_NAME
 
     assert lock.is_file(), "pytest no longer writes a lock file; the owner signal is gone"
     assert lock.read_text(encoding="utf-8").strip() == str(os.getpid())
@@ -132,7 +132,7 @@ def test_pytest_cannot_reclaim_a_crashed_sessions_directory_but_the_reaper_can(t
     """
     root = tmp_path / "pytest-of-probe"
     abandoned = _numbered_dir(root, 1, owner=_a_genuinely_dead_pid())
-    _age(abandoned, _ABANDONED_AFTER_SECONDS + 60)
+    _age(abandoned, ABANDONED_AFTER_SECONDS + 60)
     consider_lock_dead_if_created_before = time.time() - LOCK_TIMEOUT
 
     assert not ensure_deletable(abandoned, consider_lock_dead_if_created_before), (
@@ -161,7 +161,7 @@ def test_a_running_sessions_directory_is_spared(tmp_path: Path) -> None:
     """
     root = tmp_path / "pytest-of-probe"
     live = _numbered_dir(root, 1, owner=os.getpid())
-    _age(live, _ABANDONED_AFTER_SECONDS * 6)
+    _age(live, ABANDONED_AFTER_SECONDS * 6)
 
     removed, spared = reap_abandoned_numbered_dirs(root)
 
@@ -180,7 +180,7 @@ def test_a_directory_whose_lock_is_not_yet_written_is_spared(tmp_path: Path) -> 
     """
     root = tmp_path / "pytest-of-probe"
     mid_creation = _numbered_dir(root, 1, owner=None)
-    _age(mid_creation, _ABANDONED_AFTER_SECONDS * 6)
+    _age(mid_creation, ABANDONED_AFTER_SECONDS * 6)
 
     removed, spared = reap_abandoned_numbered_dirs(root)
 
@@ -197,8 +197,8 @@ def test_a_directory_with_an_unreadable_lock_is_spared(tmp_path: Path) -> None:
     """
     root = tmp_path / "pytest-of-probe"
     unreadable = _numbered_dir(root, 1, owner=None)
-    (unreadable / _LOCK_NAME).write_bytes(b"\xff\xfe not a pid at all")
-    _age(unreadable, _ABANDONED_AFTER_SECONDS * 6)
+    (unreadable / LOCK_NAME).write_bytes(b"\xff\xfe not a pid at all")
+    _age(unreadable, ABANDONED_AFTER_SECONDS * 6)
 
     removed, spared = reap_abandoned_numbered_dirs(root)
 
@@ -216,7 +216,7 @@ def test_a_lockless_directory_is_reclaimed_once_the_mtime_ceiling_passes(tmp_pat
     """
     root = tmp_path / "pytest-of-probe"
     finished = _numbered_dir(root, 1, owner=None)
-    _age(finished, _STALE_AFTER_SECONDS + 60)
+    _age(finished, STALE_AFTER_SECONDS + 60)
 
     removed, spared = reap_abandoned_numbered_dirs(root)
 
@@ -255,8 +255,8 @@ def test_the_interrupted_removal_leftovers_are_reclaimed_too(tmp_path: Path) -> 
     root.mkdir()
     leftover = root / "garbage-4b6081a2-a9d9-4441-bdc1-87c0b879bca1"
     leftover.mkdir()
-    (leftover / _LOCK_NAME).write_text(str(_a_genuinely_dead_pid()), encoding="utf-8")
-    _age(leftover, _ABANDONED_AFTER_SECONDS + 60)
+    (leftover / LOCK_NAME).write_text(str(_a_genuinely_dead_pid()), encoding="utf-8")
+    _age(leftover, ABANDONED_AFTER_SECONDS + 60)
 
     removed, spared = reap_abandoned_numbered_dirs(root)
 
@@ -280,7 +280,7 @@ def test_the_current_session_symlink_is_neither_removed_nor_followed(tmp_path: P
     (target / "held").write_text("a live session's tree", encoding="utf-8")
     link = root / "pytest-current"
     link.symlink_to(target, target_is_directory=True)
-    _age(target, _STALE_AFTER_SECONDS * 30)
+    _age(target, STALE_AFTER_SECONDS * 30)
 
     assert reap_abandoned_numbered_dirs(root) == (0, 0), "the link was judged rather than skipped"
     assert link.is_symlink(), "the reaper removed the current-session link"
@@ -293,7 +293,7 @@ def test_directories_the_reaper_does_not_own_are_left_alone(tmp_path: Path) -> N
     root.mkdir()
     foreign = root / "some-other-tools-workspace"
     foreign.mkdir()
-    _age(foreign, _STALE_AFTER_SECONDS * 30)
+    _age(foreign, STALE_AFTER_SECONDS * 30)
 
     removed, spared = reap_abandoned_numbered_dirs(root)
 
@@ -313,9 +313,9 @@ def test_the_reap_is_safe_to_run_concurrently(tmp_path: Path) -> None:
     dead_pid = _a_genuinely_dead_pid()
     for index in range(12):
         abandoned = _numbered_dir(root, index + 1, owner=dead_pid + index * 100000)
-        _age(abandoned, _ABANDONED_AFTER_SECONDS + 60)
+        _age(abandoned, ABANDONED_AFTER_SECONDS + 60)
     live = _numbered_dir(root, 99, owner=os.getpid())
-    _age(live, _ABANDONED_AFTER_SECONDS * 6)
+    _age(live, ABANDONED_AFTER_SECONDS * 6)
 
     failures: list[BaseException] = []
 

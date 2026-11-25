@@ -1,0 +1,19 @@
+# Casilla 0166 (TACT, tipo_OpcionesTact) states the tipo de actividad of the estimacion
+# directa block by the clave the 2021 design introduced: A01 to A05 for activities inside
+# the hecho imponible of the IAE, B01 to B05 for agrarian and fishing activities outside it.
+# The Manual de Renta gives the same table as the codification shared with the censal
+# declaration, where Modelo 036 casillas 403 and 404 declare it per activity. The clave is
+# therefore the taxpayer's declared censal tipo de actividad, read for a direct-estimation
+# filer; an undeclared one leaves the box empty and is reported, never guessed from an
+# IAE epigraph that does not record its seccion.
+[[revisions."2021".bindings]]
+id = "renta-modelo-100-estimacion-directa-actividad-tipo-clave"
+provider = { kind = "profile", profile_key = "irpf.estimation_directa_actividad_tipo_clave", xsd_path = "/DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/TACT", dictionary_field = "TACT", required_when_profile_key = "irpf.estimation_directa", required_when_value = "true" }
+value = { data_type = "text", channel = "text" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1"]
+
+[[revisions."2021".bindings.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = ["Clave Tipo de actividad", "A03 Resto de actividades empresariales no incluidas en otros apartados", "A05 Resto de actividades profesionales"]

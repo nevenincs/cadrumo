@@ -1,0 +1,5 @@
+{"sequence":1,"source":"desktop","timestampMs":1793841895344,"hostPid":36636,"kind":"host_started","process":null,"failure":null,"status":null}
+{"sequence":2,"source":"desktop","timestampMs":1793841895344,"hostPid":36636,"kind":"stage_started","process":null,"failure":null,"status":null,"stage":"admission"}
+{"sequence":3,"source":"desktop","timestampMs":1793841895346,"hostPid":36636,"kind":"stage_completed","process":null,"failure":null,"status":null,"stage":"admission","outcome":"ready"}
+{"sequence":4,"source":"desktop","timestampMs":1793841895349,"hostPid":36636,"kind":"failure","process":null,"failure":{"code":"environment_failed","operation":"webview","message":"The packaged environment could not be prepared","ioKind":"Other","causes":[{"kind":"io","ioKind":"Other"}]},"status":null}
+{"sequence":5,"source":"desktop","timestampMs":1793841895349,"hostPid":36636,"kind":"host_stopped","process":null,"failure":null,"status":null,"stage":"shutdown","hostExitCode":1}

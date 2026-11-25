@@ -7,7 +7,7 @@ revision_id = "2023"
 seed_source = "authored"
 review = { state = "generated", notes = "Summary visually checked against BOE Annex I PDF page 5; detail adapts the applicable AEAT record design. All 25 registered fields placed. Only summary boxes 01 and 02 are printed numbers. Contact and amendment fields remain composite registry values. Signatures, repeating declared records, automatic summary aggregation and complete field constraints remain pending." }
 generator_version = 1
-source_state_digest = "72f4d8d4bf7f3205520648a01577acf0349562697c5ed066a039e8e2488348da"
+source_state_digest = "63ff38aa96e5d7af90cfc04048269c1b62354a4e666ca966c5b42bef1a46c8cc"
 design_sources = [
     { source_ref = "boe-2008-19523-modelo-189-form-pdf", sha256 = "33383cb3eecc8d31d9e9d8596740ae7962d950ce805ab1900ce37f848ae29090" },
     { source_ref = "aeat-dr-189-2023", sha256 = "c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a" },

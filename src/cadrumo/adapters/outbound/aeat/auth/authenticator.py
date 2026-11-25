@@ -42,6 +42,7 @@ from pydantic import ValidationError
 
 from .....application.auth.protocols import (
     BrowserContextPort,
+    BrowserContextProvisioner,
     BrowserPagePort,
     BrowserSessionFactoryPort,
     BrowserSessionPort,
@@ -56,12 +57,12 @@ from .....application.auth.session_types import (
 from .....application.auth_credentials import ActiveCertificateCredentials
 from .....core.async_cleanup import close_async_resources
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
-from .....core.config import Settings as _Settings
+from .....core.config import Settings as ConfigSettings
 from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.time.clock import now
-from . import session_store as session_store
+from . import session_store
 from .authenticator_persistence import (
     AEAT_STORAGE_STATE_SCHEMA_VERSION,
     PersistedSessionMetadata,
@@ -94,6 +95,7 @@ from .errors import (
     AuthValidationError,
 )
 from .providers import CertificateContextProvisioner
+from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -117,15 +119,16 @@ env-var change — the operator surface stays narrow.
 
 
 AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = int(
-    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+    ConfigSettings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
 )
 """Playwright navigation timeout for post-auth verification probes."""
 
 
-def _require_exact_active_certificate_session(
+def require_exact_active_certificate_session(
     session: AeatSession,
     active_session: AeatSession | None,
 ) -> None:
+    """Refuse a session that is not the exact active certificate session with its identity."""
     if (
         not is_exact_active_provider_session(
             session,
@@ -291,6 +294,10 @@ class AeatAuthenticator:
         bundle = self._require_bundle()
         return load_certificate(bundle)
 
+    def view_context_provisioner(self) -> BrowserContextProvisioner:
+        """Return the provisioner that presents this certificate in a person-driven view context."""
+        return CertificateContextProvisioner(self.load_certificate())
+
     def health(self, *, now: datetime | None = None) -> CertificateHealth:
         """Return a :class:`CertificateHealth` for the configured bundle."""
         cert = self.load_certificate()
@@ -342,7 +349,7 @@ class AeatAuthenticator:
             resume_path = self._resolve_storage_state_path()
             if session_store.exists(resume_path):
                 try:
-                    return await self._resume_from_storage_state_locked(resume_path)
+                    session, _assertion = await self._resume_from_storage_state_locked(resume_path)
                 except PersistedSessionInvalidError as exc:
                     reason = persisted_session_reason_from_error(exc)
                     log.info(
@@ -352,8 +359,89 @@ class AeatAuthenticator:
                     )
                     if self._browser_session is not None or self._context is not None:
                         raise
+                else:
+                    return session
 
             return await self._fresh_login_locked()
+
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
+        """Resume the stored certificate session and prove it, with no fresh-login fallback.
+
+        The stored state passes the same schema, digest, idle-deadline,
+        thumbprint, subject and NIF/NIE gates as :meth:`authenticate`, then the
+        canonical protected-resource probe. A valid resume re-captures the
+        storage state. Any failure raises :class:`PersistedSessionInvalidError`
+        after invalidating the record, so a caller verifying a candidate state
+        stages the writes and discards them on refusal. The certificate probe
+        has one canonical target, so ``target_url`` is ignored.
+        """
+        del target_url
+        async with self._lifecycle.work(), self._lock:
+            if self.active_session is not None:
+                raise AeatLoginAssertionError(
+                    "AeatAuthenticator already has an active session; call close() before probing",
+                    translated_message="adapters.auth.authenticator.errors.already_active",
+                )
+            if self._browser_session is not None or self._context is not None:
+                raise AuthProviderCleanupError(
+                    "AeatAuthenticator still owns browser resources whose close did not complete; "
+                    "call close() again before probing",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
+            return await self._resume_from_storage_state_locked(self._resolve_storage_state_path())
+
+    async def adopt_view_capture(self, storage_state: Mapping[str, object]) -> AeatSession:
+        """Record a Sede view's captured state as this certificate's session and prove it.
+
+        The person's view presents this certificate, so the capture is written
+        with this certificate's thumbprint, subject and NIF/NIE, anchored at the
+        capture instant, and then resumed exactly as a stored session is: every
+        persisted-session gate and the canonical protected-resource probe run
+        in a browser of this provider's own. The person may have signed in with
+        another credential, so the taxpayer AEAT shows to the capture must then
+        be this certificate's NIF/NIE. The caller stages the writes and
+        publishes them only after this returns; a refusal raises
+        :class:`PersistedSessionInvalidError` after staging the record's
+        invalidation.
+        """
+        async with self._lifecycle.work(), self._lock:
+            if self.active_session is not None:
+                raise AeatLoginAssertionError(
+                    "AeatAuthenticator already has an active session; call close() before adopting a capture",
+                    translated_message="adapters.auth.authenticator.errors.already_active",
+                )
+            if self._browser_session is not None or self._context is not None:
+                raise AuthProviderCleanupError(
+                    "AeatAuthenticator still owns browser resources whose close did not complete; "
+                    "call close() again before adopting a capture",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
+            cert = self.load_certificate()
+            certificate_nif = extract_nif_from_subject(cert)
+            captured_at = now()
+            path = self._resolve_storage_state_path()
+            metadata = PersistedSessionMetadata(
+                certificate_thumbprint=cert.sha256_thumbprint,
+                certificate_subject=cert.subject,
+                certificate_nif=certificate_nif,
+                authenticated_at=captured_at,
+                idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
+                storage_state_sha256=session_store.storage_state_sha256(storage_state),
+            )
+            session_store.save(path, storage_state=storage_state, metadata=metadata.model_dump(mode="json"))
+            session, _assertion = await self._resume_from_storage_state_locked(path)
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError(
+                    "a resumed view capture left no context to read its taxpayer in",
+                    translated_message="adapters.auth.authenticator.errors.resume_failed",
+                )
+            await require_signed_in_taxpayer(context, expected_nif=certificate_nif)
+            return session
 
     async def _fresh_login_locked(self) -> AeatSession:
         """Run the fresh certificate-backed browser login under the held lock.
@@ -468,7 +556,7 @@ class AeatAuthenticator:
                     "no active browser context; call authenticate() first",
                     translated_message="adapters.auth.authenticator.errors.no_active_context",
                 )
-            _require_exact_active_certificate_session(session, self.active_session)
+            require_exact_active_certificate_session(session, self.active_session)
             self._inflight_pages += 1
             self._inflight_drained.clear()
 
@@ -724,13 +812,14 @@ class AeatAuthenticator:
     async def _resume_from_storage_state_locked(
         self,
         path: Path,
-    ) -> AeatSession:
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
         """Resume encrypted Playwright state under ``self._lock``.
 
         Rebuilds a certificate-backed :class:`AeatSession` from
         :class:`PersistedSessionMetadata`, verifies it with a live
         :class:`AeatLoginAssertion`, and re-captures storage state after the
-        successful probe so the persisted envelope stays current.
+        successful probe so the persisted envelope stays current. Returns the
+        refreshed session with the probe's assertion.
         """
         storage_state_path = path
         cert = self.load_certificate()
@@ -748,6 +837,7 @@ class AeatAuthenticator:
         self._browser_session = session_like
         context: BrowserContextPort | None = None
         session: AeatSession | None = None
+        assertion: AeatLoginAssertion | None = None
         resume_failed = False
         try:
             context = await session_like.create_context(
@@ -804,7 +894,7 @@ class AeatAuthenticator:
                 "persisted AEAT browser session could not be resumed",
             )
 
-        if context is None or session is None:
+        if context is None or session is None or assertion is None:
             raise AeatLoginAssertionError(
                 "persisted AEAT session resume did not produce a usable context",
                 translated_message="adapters.auth.authenticator.errors.resume_failed",
@@ -824,7 +914,7 @@ class AeatAuthenticator:
             "AeatAuthenticator: resumed persisted session thumbprint=%s",
             session.certificate_thumbprint,
         )
-        return session
+        return session, assertion
 
     def _validate_persisted_session_metadata(
         self,

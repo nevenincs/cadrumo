@@ -5,16 +5,20 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory, load_registry_tree, load_shared_catalogues
 from ..compiler.loader_cache import discover_modelo_sources
+
+_REV = str(filing_year_envelope().horizon)
+_PREV = str(int(_REV) - 1)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _write_fragment_modelo(root: Path, fragment_relative_path: str, fragment_text: str) -> Path:
     modelo = root / "999"
-    revision = modelo / "revisions" / "2025"
+    revision = modelo / "revisions" / _REV
     fragment = revision / fragment_relative_path
     fragment.parent.mkdir(parents=True)
     (modelo / "manifest.toml").write_text(
@@ -23,8 +27,8 @@ def _write_fragment_modelo(root: Path, fragment_relative_path: str, fragment_tex
         encoding="utf-8",
     )
     (revision / "revision.toml").write_text(
-        '[revisions."2025"]\nvalid_from = 2025-01-01\n'
-        'period_selector = { years = [2025], periods = ["0A"] }\n'
+        f'[revisions."{_REV}"]\nvalid_from = {_REV}-01-01\n'
+        f'period_selector = {{ years = [{_REV}], periods = ["0A"] }}\n'
         'legal_refs = ["law"]\nsource_refs = ["source"]\n',
         encoding="utf-8",
     )
@@ -54,7 +58,7 @@ def test_modelo_directory_rejects_unknown_child(tmp_path: Path) -> None:
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-valid.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
     (modelo / "generated").mkdir()
 
@@ -67,7 +71,7 @@ def test_modelo_directory_rejects_non_toml_or_nested_locale_entry(tmp_path: Path
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-valid.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
     locales_entry = modelo / "locales" / ("notes.txt" if entry_kind == "file" else "nested")
     if entry_kind == "file":
@@ -117,7 +121,7 @@ def test_fragment_folder_may_declare_only_its_owned_section(tmp_path: Path) -> N
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-wrong.toml",
-        '[[revisions."2025".formulas]]\nid = "wrong-owner"\n',
+        f'[[revisions."{_REV}".formulas]]\nid = "wrong-owner"\n',
     )
 
     with pytest.raises(RegistryLoadError, match=r"folder 'bindings'.*found 'formulas'"):
@@ -125,15 +129,15 @@ def test_fragment_folder_may_declare_only_its_owned_section(tmp_path: Path) -> N
 
 
 def test_revision_fragment_rejects_empty_revision_table(tmp_path: Path) -> None:
-    modelo = _write_fragment_modelo(tmp_path, "bindings/0001-empty.toml", '[revisions."2025"]\n')
+    modelo = _write_fragment_modelo(tmp_path, "bindings/0001-empty.toml", f'[revisions."{_REV}"]\n')
 
     with pytest.raises(RegistryLoadError, match="declares no section fields"):
         load_modelo_directory(modelo)
 
 
 def test_revision_fragment_rejects_wrong_suffix_file(tmp_path: Path) -> None:
-    modelo = _write_fragment_modelo(tmp_path, "bindings/0001-valid.toml", '[revisions."2025"]\nbindings = []\n')
-    (modelo / "revisions" / "2025" / "bindings" / "ignored.tom").write_text("", encoding="utf-8")
+    modelo = _write_fragment_modelo(tmp_path, "bindings/0001-valid.toml", f'[revisions."{_REV}"]\nbindings = []\n')
+    (modelo / "revisions" / _REV / "bindings" / "ignored.tom").write_text("", encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="unrecognized revision fragment file"):
         load_modelo_directory(modelo)
@@ -143,7 +147,7 @@ def test_revision_root_rejects_stray_wrong_suffix_file(tmp_path: Path) -> None:
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-valid.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
     (modelo / "revisions" / "notes.txt").write_text("ignored", encoding="utf-8")
 
@@ -155,7 +159,7 @@ def test_revision_root_rejects_special_entry(tmp_path: Path) -> None:
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-valid.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
     special = modelo / "revisions" / "dangling"
     special.symlink_to(modelo / "missing-revision")
@@ -168,10 +172,10 @@ def test_revision_tree_rejects_top_level_fragment_file(tmp_path: Path) -> None:
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-valid.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
-    (modelo / "revisions" / "2025" / "stray.toml").write_text(
-        '[revisions."2025"]\nbindings = []\n',
+    (modelo / "revisions" / _REV / "stray.toml").write_text(
+        f'[revisions."{_REV}"]\nbindings = []\n',
         encoding="utf-8",
     )
 
@@ -183,7 +187,7 @@ def test_revision_fragment_rejects_nested_section_directory(tmp_path: Path) -> N
     _write_fragment_modelo(
         tmp_path,
         "bindings/nested/0001-valid.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
 
     with pytest.raises(RegistryLoadError, match="nested revision section directories are not allowed"):
@@ -191,8 +195,8 @@ def test_revision_fragment_rejects_nested_section_directory(tmp_path: Path) -> N
 
 
 def test_revision_section_directory_rejects_no_toml_fragments(tmp_path: Path) -> None:
-    modelo = _write_fragment_modelo(tmp_path, "bindings/0001-valid.toml", '[revisions."2025"]\nbindings = []\n')
-    (modelo / "revisions" / "2025" / "formulas").mkdir()
+    modelo = _write_fragment_modelo(tmp_path, "bindings/0001-valid.toml", f'[revisions."{_REV}"]\nbindings = []\n')
+    (modelo / "revisions" / _REV / "formulas").mkdir()
 
     with pytest.raises(RegistryLoadError, match="contains no TOML fragments"):
         load_modelo_directory(modelo)
@@ -218,7 +222,7 @@ def test_revision_fragment_rejects_noncanonical_filename(
     relative_path: str,
     error_match: str,
 ) -> None:
-    _write_fragment_modelo(tmp_path, relative_path, '[revisions."2025"]\nbindings = []\n')
+    _write_fragment_modelo(tmp_path, relative_path, f'[revisions."{_REV}"]\nbindings = []\n')
 
     with pytest.raises(RegistryLoadError, match=error_match):
         discover_modelo_sources(tmp_path)
@@ -228,10 +232,10 @@ def test_administrative_fragment_rejects_duplicate_numeric_prefix(tmp_path: Path
     modelo = _write_fragment_modelo(
         tmp_path,
         "bindings/0001-first.toml",
-        '[revisions."2025"]\nbindings = []\n',
+        f'[revisions."{_REV}"]\nbindings = []\n',
     )
-    (modelo / "revisions" / "2025" / "bindings" / "0001-second.toml").write_text(
-        '[revisions."2025"]\nbindings = []\n',
+    (modelo / "revisions" / _REV / "bindings" / "0001-second.toml").write_text(
+        f'[revisions."{_REV}"]\nbindings = []\n',
         encoding="utf-8",
     )
 
@@ -243,14 +247,14 @@ def test_administrative_fragment_rejects_duplicate_numeric_prefix(tmp_path: Path
     "relative_path",
     [
         "casillas/cDP200011+00547__c00548.toml",
-        "casilla_continuidad_evolutions/0063-2024-2025-legal-refs-evolved.toml",
+        f"casilla_continuidad_evolutions/0063-{_PREV}-{_REV}-legal-refs-evolved.toml",
     ],
 )
 def test_source_native_fragment_filename_grammar_accepts_canonical_names(
     tmp_path: Path,
     relative_path: str,
 ) -> None:
-    _write_fragment_modelo(tmp_path, relative_path, '[revisions."2025"]\nbindings = []\n')
+    _write_fragment_modelo(tmp_path, relative_path, f'[revisions."{_REV}"]\nbindings = []\n')
 
     sources = discover_modelo_sources(tmp_path)
 

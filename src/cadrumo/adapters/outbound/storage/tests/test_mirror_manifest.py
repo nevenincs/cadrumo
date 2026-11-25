@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.storage.tests.namespace_registry_support impor
 
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import OutboundStorageIntegrityError
@@ -30,6 +31,8 @@ from ..mirror_manifest import (
     remote_mirror_object_key_hmac,
 )
 from ..records import RemoteMirrorIssueKind, RemoteMirrorNamespaceManifest
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -55,7 +58,7 @@ def test_remote_mirror_manifest_persists_ciphertext_hashes_and_revision_watermar
         repo = profile.repository
         namespace_definition = lookup_namespace_definition("google_oauth_metadata")
         namespace = namespace_definition.namespace
-        first_written_at = datetime(2026, 5, 28, 10, 0, tzinfo=UTC)
+        first_written_at = datetime(_FILING_YEAR, 5, 28, 10, 0, tzinfo=UTC)
         second_written_at = first_written_at + timedelta(minutes=1)
         repo.save(
             namespace=namespace,
@@ -147,7 +150,7 @@ def test_remote_mirror_inspections_accept_opaque_encrypted_payload_round_trip(
             object_key="opaque-object",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 6, 2, 8, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 6, 2, 8, 0, tzinfo=UTC),
             payload=plaintext,
         )
         # Select by namespace rather than taking the first raw row: the runtime
@@ -524,7 +527,7 @@ def _single_object_manifest_with_payload(tmp_path: Path) -> tuple[RemoteMirrorNa
             object_key="single-object",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 10, 0, tzinfo=UTC),
             payload=b"single-plaintext-payload",
         )
         # Select by namespace rather than taking the first raw row: the runtime
@@ -569,7 +572,7 @@ def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManif
             object_key="same-object",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 10, 0, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 10, 0, tzinfo=UTC),
             payload=b"first-payload",
         )
         remote_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
@@ -578,7 +581,7 @@ def _overwrite_manifest_pair(tmp_path: Path) -> tuple[RemoteMirrorNamespaceManif
             object_key="same-object",
             classification=namespace_definition.sensitivity,
             schema_version=1,
-            written_at=datetime(2026, 5, 28, 10, 1, tzinfo=UTC),
+            written_at=datetime(_FILING_YEAR, 5, 28, 10, 1, tzinfo=UTC),
             payload=b"second-payload",
         )
         local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
@@ -599,7 +602,7 @@ def _three_revision_manifest_pair(
                 object_key="same-object",
                 classification=namespace_definition.sensitivity,
                 schema_version=1,
-                written_at=datetime(2026, 5, 28, 10, offset, tzinfo=UTC),
+                written_at=datetime(_FILING_YEAR, 5, 28, 10, offset, tzinfo=UTC),
                 payload=payload,
             )
             if offset == 0:
@@ -631,7 +634,7 @@ def test_manifest_refuses_child_objects_from_another_namespace() -> None:
             schema_version=1,
             byte_length=10,
             ciphertext_hash="b" * 64,
-            row_written_at=datetime(2026, 1, 1, tzinfo=UTC),
+            row_written_at=datetime(_FILING_YEAR, 1, 1, tzinfo=UTC),
         )
 
     with pytest.raises(ValidationError, match="foreign namespaces"):
@@ -664,7 +667,7 @@ def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
             schema_version=1,
             byte_length=10,
             ciphertext_hash="b" * 64,
-            row_written_at=datetime(2026, 1, 1, tzinfo=UTC),
+            row_written_at=datetime(_FILING_YEAR, 1, 1, tzinfo=UTC),
         )
 
     with pytest.raises(ValidationError, match="smuggled"):

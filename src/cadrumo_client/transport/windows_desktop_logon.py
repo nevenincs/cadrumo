@@ -17,6 +17,18 @@ from typing import cast
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
+_LOGON_INTERACTIVE = 2
+_LOGON_REMOTE_INTERACTIVE = 10
+_LOGON_CACHED_INTERACTIVE = 11
+_LOGON_CACHED_REMOTE_INTERACTIVE = 12
+_DESKTOP_LOGON_KINDS = (
+    _LOGON_INTERACTIVE,
+    _LOGON_REMOTE_INTERACTIVE,
+    _LOGON_CACHED_INTERACTIVE,
+    _LOGON_CACHED_REMOTE_INTERACTIVE,
+)
+"""The ``SECURITY_LOGON_TYPE`` values of a logon with a person at a desktop."""
+
 _WINDOWS_DLL_LOADER = "WinDLL"
 _SID_MAX_BYTES = 68
 _TEXT_MAX_BYTES = 512
@@ -34,7 +46,9 @@ class WindowsDesktopLogon:
 
 
 @dataclass(frozen=True, slots=True, repr=False)
-class _TokenSnapshot:
+class TokenSnapshot:
+    """An immutable snapshot of the Windows token facts that identify a desktop logon."""
+
     os_owner_id: str
     authentication_id: int
     session_id: int
@@ -46,7 +60,9 @@ class _TokenSnapshot:
 
 
 @dataclass(frozen=True, slots=True, repr=False)
-class _StationSnapshot:
+class StationSnapshot:
+    """An immutable snapshot of the Windows window station facts bound to a desktop logon."""
+
     name: str
     kind: str
     flags: int
@@ -79,12 +95,13 @@ def _logon_sid_valid(value: str) -> bool:
     return _sid_text_valid(value) and len(value.split("-")) == 6 and value.startswith("S-1-5-5-")
 
 
-def _validated_witness(
-    before_token: _TokenSnapshot,
-    before_station: _StationSnapshot,
-    after_token: _TokenSnapshot,
-    after_station: _StationSnapshot,
+def validated_witness(
+    before_token: TokenSnapshot,
+    before_station: StationSnapshot,
+    after_token: TokenSnapshot,
+    after_station: StationSnapshot,
 ) -> WindowsDesktopLogon:
+    """Return the desktop logon witness once both snapshots agree and native checks pass."""
     if before_token != after_token or before_station != after_station:
         raise _unavailable()
     token, station = before_token, before_station
@@ -104,7 +121,8 @@ def _windows_library(name: str) -> ctypes.CDLL:
 
 
 @contextmanager
-def _owned_handle(handle: int, close: Callable[[int], bool]) -> Generator[int]:
+def owned_handle(handle: int, close: Callable[[int], bool]) -> Generator[int]:
+    """Yield a native handle and close it on exit, refusing if closing fails."""
     primary: BaseException | None = None
     try:
         yield handle
@@ -141,7 +159,7 @@ def _luid(value: object) -> int:
     return value
 
 
-def _token_snapshot(process: int) -> _TokenSnapshot:
+def _token_snapshot(process: int) -> TokenSnapshot:
     import win32api
     import win32con
     import win32security
@@ -154,7 +172,7 @@ def _token_snapshot(process: int) -> _TokenSnapshot:
         win32api.CloseHandle(token)
         return True
 
-    with _owned_handle(int(token), close_token):
+    with owned_handle(int(token), close_token):
         raw_user = information(token, win32security.TokenUser)
         statistics = information(token, win32security.TokenStatistics)
         session = information(token, win32security.TokenSessionId)
@@ -182,7 +200,7 @@ def _token_snapshot(process: int) -> _TokenSnapshot:
         read_logon = cast(Callable[[int], object], win32security.LsaGetLogonSessionData)
         logon = read_logon(authentication)
         kind = _validated_native_logon_kind(logon, authentication, owner, session)
-        return _TokenSnapshot(
+        return TokenSnapshot(
             owner, authentication, session, logon_sids[0], len(logon_sids), kind, token_id, modified_id
         )
 
@@ -203,7 +221,8 @@ def _object_bytes(user: ctypes.CDLL, station: int, index: int, maximum: int) -> 
     return buffer.raw[: needed.value]
 
 
-def _object_text(payload: bytes) -> str:
+def object_text(payload: bytes) -> str:
+    """Decode a NUL-terminated UTF-16 native object name or refuse when malformed."""
     if not 2 <= len(payload) <= _TEXT_MAX_BYTES or len(payload) % 2:
         raise _unavailable()
     try:
@@ -215,11 +234,11 @@ def _object_text(payload: bytes) -> str:
     return text[:-1]
 
 
-def _station_snapshot(user: ctypes.CDLL, handle: int) -> _StationSnapshot:
+def _station_snapshot(user: ctypes.CDLL, handle: int) -> StationSnapshot:
     import win32security
 
-    name = _object_text(_object_bytes(user, handle, 2, _TEXT_MAX_BYTES))
-    kind = _object_text(_object_bytes(user, handle, 3, _TEXT_MAX_BYTES))
+    name = object_text(_object_bytes(user, handle, 2, _TEXT_MAX_BYTES))
+    kind = object_text(_object_bytes(user, handle, 3, _TEXT_MAX_BYTES))
     payload = _object_bytes(user, handle, 1, ctypes.sizeof(_UserObjectFlags))
     if len(payload) != ctypes.sizeof(_UserObjectFlags):
         raise _unavailable()
@@ -239,7 +258,7 @@ def _station_snapshot(user: ctypes.CDLL, handle: int) -> _StationSnapshot:
         raise _unavailable()
     sid_from_bytes = cast(Callable[[bytes], object], win32security.SID)
     sid = _native_sid_text(sid_from_bytes(sid_bytes))
-    return _StationSnapshot(name, kind, int(flags.flags), sid, bool(flags.inherit), bool(flags.reserved))
+    return StationSnapshot(name, kind, int(flags.flags), sid, bool(flags.inherit), bool(flags.reserved))
 
 
 def current_windows_desktop_logon() -> WindowsDesktopLogon:
@@ -265,7 +284,7 @@ def current_windows_desktop_logon() -> WindowsDesktopLogon:
         process: object = open_process(0x00100000 | 0x1000, False, os.getpid())
         if type(process) is not int or process <= 0:
             raise _unavailable()
-        with _owned_handle(process, lambda handle: bool(close_process(handle))):
+        with owned_handle(process, lambda handle: bool(close_process(handle))):
             before_token = _token_snapshot(process)
             open_station = user.OpenWindowStationW
             open_station.argtypes = (ctypes.c_wchar_p, ctypes.c_int32, ctypes.c_uint32)
@@ -275,16 +294,16 @@ def current_windows_desktop_logon() -> WindowsDesktopLogon:
             station: object = open_station("WinSta0", False, 0x00020000 | 0x0002)
             if type(station) is not int or station <= 0:
                 raise _unavailable()
-            with _owned_handle(station, lambda handle: bool(close_station(handle))):
+            with owned_handle(station, lambda handle: bool(close_station(handle))):
                 before_station = _station_snapshot(user, station)
                 after_token = _token_snapshot(process)
                 after_station = _station_snapshot(user, station)
-                return _validated_witness(before_token, before_station, after_token, after_station)
+                return validated_witness(before_token, before_station, after_token, after_station)
     except (pywintypes.error, OSError, KeyError, TypeError, ValueError, OverflowError):
         raise _unavailable() from None
 
 
-def _native_token_origin_is_valid(token: _TokenSnapshot) -> bool:
+def _native_token_origin_is_valid(token: TokenSnapshot) -> bool:
     """Require canonical owner/logon SID and exact native authentication/session scalars."""
     return not (
         not _sid_text_valid(token.os_owner_id)
@@ -298,17 +317,17 @@ def _native_token_origin_is_valid(token: _TokenSnapshot) -> bool:
     )
 
 
-def _native_token_role_is_valid(token: _TokenSnapshot) -> bool:
+def _native_token_role_is_valid(token: TokenSnapshot) -> bool:
     """Require one logon SID and a supported interactive native logon kind."""
     return not (
         type(token.logon_sid_count) is not int
         or token.logon_sid_count != 1
         or type(token.logon_kind) is not int
-        or (token.logon_kind not in (2, 10, 11, 12))
+        or (token.logon_kind not in _DESKTOP_LOGON_KINDS)
     )
 
 
-def _native_token_generation_is_valid(token: _TokenSnapshot) -> bool:
+def _native_token_generation_is_valid(token: TokenSnapshot) -> bool:
     """Require exact nonzero native token and modification generation identities."""
     return not (
         type(token.token_id) is not int
@@ -320,7 +339,7 @@ def _native_token_generation_is_valid(token: _TokenSnapshot) -> bool:
     )
 
 
-def _native_station_association_is_valid(station: _StationSnapshot, token: _TokenSnapshot) -> bool:
+def _native_station_association_is_valid(station: StationSnapshot, token: TokenSnapshot) -> bool:
     """Require exact WinSta0 metadata associated with this token's logon SID."""
     return not (
         station.name.casefold() != "winsta0"
@@ -377,7 +396,7 @@ def _validated_native_logon_kind(logon: object, authentication: int, owner: str,
         or type(logon_session) is not int
         or logon_session != session
         or type(kind) is not int
-        or kind not in (2, 10, 11, 12)
+        or kind not in _DESKTOP_LOGON_KINDS
     ):
         raise _unavailable()
     return kind

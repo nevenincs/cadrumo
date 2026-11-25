@@ -7,7 +7,7 @@ import pytest
 
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 
-from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
+from ..modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -33,8 +33,8 @@ def test_modelo_core_value_and_schema_targets_are_public_and_resolvable() -> Non
     for spec in MODELO_CORE_COMMAND_SPECS:
         for parameter in spec.parameters:
             resolve_deferred_target(parameter.value.annotation)
-            if parameter.value.click_type is not None:
-                resolve_deferred_target(parameter.value.click_type)
+            if parameter.value.parser is not None:
+                resolve_deferred_target(parameter.value.parser)
         if spec.result_schema.target is not None:
             resolve_deferred_target(spec.result_schema.target)
 

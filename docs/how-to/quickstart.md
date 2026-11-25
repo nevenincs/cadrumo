@@ -144,14 +144,17 @@ Read the steps in order:
 
 - Create the draft. The command creates the declaration for that modelo if one
   does not exist yet; running it again returns the existing declaration.
-  `--period 1T` means the first quarter (primer trimestre). Other period codes
+  `--period 1T` means the first quarter. Other period codes
   are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
 - Calculate the values. Modelo 130 needs three prior-period figures; for a first
   filing they are all zero, supplied by you so the calculation has no missing
   inputs. The tool fills the boxes from your records: box `01` is the quarter's
   income (`1000`, the taxable base, since VAT is never part of your income),
-  box `03` the net yield (`500.00`), and box `04` the instalment (`100.00`,
-  twenty percent of the net).
+  box `02` the deductible expenses (`525.00`, including the simplified
+  modality's `25.00` provision for difficult-to-justify expenses), box `03` the
+  net yield (`475.00`), and box `04` the instalment (`95.00`, twenty percent
+  of the net). The provision is five percent of `1000.00 - 500.00`, within
+  the annual `2000.00` cap.
 - Check the draft. The check is local. It does not send anything to AEAT. When the draft is complete the report reads `completeness_status complete` and `granted_verificado_completo true`. The report also carries two advisories, which do not block filing. One notes that the earlier Modelo 100 is set aside because your activity started in 2026. The other notes that the income row has no supporting document.
 
 Review every saved box with:
@@ -185,9 +188,9 @@ A draft collects its supporting documents when you check it, so an invoice attac
 
 Use the local calendar to see what may be due for the active profile. On a fresh
 profile, first declare that your income comes from an economic activity, the
-fact that decides Modelo 130. Then pass `--allow-incomplete` so the agenda runs
-before every profile fact is filled in. The last command explains why Modelo 130
-applies:
+fact that decides Modelo 130. The agenda runs before every profile fact is
+filled in, and lists the facts still unanswered as warnings. The last command
+explains why Modelo 130 applies:
 
 ```{cli-sequence} quickstart-agenda
 :verify: Confirm the agenda and the Modelo 130 explanation read back.

@@ -9,16 +9,18 @@ fails here.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 from textual.widgets import Button, Checkbox, DataTable, Input, OptionList, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from ....application.user_profile.overview import build_profile_overview
+from ....application.user_profile.overview import ProfileOverview, build_profile_overview
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
-from ....application.user_profile.registration import register_profile_with_credentials
+from ....application.user_profile.section_rows import add_profile_repeatable_section_row
+from ....application.wizard.catalogue import build_setup_flow
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -26,11 +28,13 @@ from ....domain.user_profile.values import ProfileSetupState
 from ..components.host import ScreenHostApp
 from ..components.status import ProgressLine
 from ..components.widgets import DisclosureGroup
-from ..profile.edit_screens import FieldEditScreen, field_help_text
+from ..profile.edit_screens import FieldEditScreen, RepeatableRowAddScreen, field_help_text
 from ..profile.overview import ProfileManagerScreen
 from ..profile.setup_journey import ProfileSetupStage
 from .manager_pilot import wait_until_settled
-from .test_manager_screen import _CREDENTIAL_INPUT, _live_overview, _persist
+from .manager_subject_profile import registered_manager_subject
+from .settling import settle, settle_until
+from .test_manager_screen import CREDENTIAL_INPUT, live_overview, persist
 
 pytestmark = [
     pytest.mark.integration,
@@ -40,23 +44,14 @@ pytestmark = [
 _TERMINAL_SIZE = (160, 60)
 _SYNTHETIC_NIF = "12345678Z"
 """A checksum-valid NIF that belongs to no one."""
-
-
-def _register() -> None:
-    with bundled_indexed_authority().operation():
-        create_context, decode_context = _profile_contexts_for_test()
-        register_profile_with_credentials(
-            label="Manager Subject",
-            passphrase=_CREDENTIAL_INPUT,
-            profile_create_context=create_context,
-            profile_decode_context=decode_context,
-        )
+_SYNTHETIC_TEXT = "Synthetic answer"
+"""Free text for a required row field that is not an identifier."""
 
 
 def _complete_setup():
     """The repository completion door the installed session binds."""
-    with bundled_indexed_authority().operation():
-        _create_context, decode_context = _profile_contexts_for_test()
+    with bundled_indexed_authority().operation() as operation:
+        _create_context, decode_context = profile_authority_contexts()
         profile_id = require_active_bucket_id()
         profiles = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context)
         current = profiles.load(profile_id)
@@ -65,7 +60,38 @@ def _complete_setup():
             expected_revision=current.record_revision,
             expected_content_digest=current.content_digest,
         )
-        return build_profile_overview(promoted, label="Manager Subject", schema=decode_context.schema)
+        return build_profile_overview(
+            promoted, label="Manager Subject", schema=decode_context.schema, flow=build_setup_flow(operation)
+        )
+
+
+def _add_row(section_key: str, values: Mapping[str, str], revision: int, digest: str) -> ProfileOverview:
+    """The production door that publishes one repeatable row, which a walk reaching a row group needs."""
+    with bundled_indexed_authority().operation() as operation:
+        _create_context, decode_context = profile_authority_contexts()
+        outcome = add_profile_repeatable_section_row(
+            profile_id=require_active_bucket_id(),
+            section_key=section_key,
+            values=values,
+            expected_revision=revision,
+            expected_content_digest=digest,
+            schema=decode_context.schema,
+            profile_decode_context=decode_context,
+            authority=operation,
+        )
+        return build_profile_overview(
+            outcome.record, label="Manager Subject", schema=decode_context.schema, flow=build_setup_flow(operation)
+        )
+
+
+def _manager(overview: ProfileOverview, *, complete: bool = True) -> ProfileManagerScreen:
+    """The manager page wired with every door a setup walk reaches: field writes, row adds and completion."""
+    return ProfileManagerScreen(
+        overview,
+        persist=persist,
+        add_row=_add_row,
+        complete_setup=_complete_setup if complete else None,
+    )
 
 
 def _visible_rows(app: ProfileManagerScreen) -> set[str]:
@@ -87,8 +113,23 @@ def _shown_folds(app: ProfileManagerScreen) -> set[str]:
 
 
 async def _answer(app: ProfileManagerScreen, pilot) -> str:
-    """Answer the open question the way an operator does, and return its path."""
+    """Answer the open question the way an operator does, and return its path.
+
+    A required fact of a repeatable group is asked on the group's row form, so
+    its answer fills the form's required boxes and saves the row.
+    """
     dialog = app.app.screen
+    if isinstance(dialog, RepeatableRowAddScreen):
+        owed = [(index, field) for index, field in enumerate(dialog._fields) if field.required]
+        assert owed, "a row form opened for a walk must owe at least one answer"
+        for index, field in owed:
+            if field.choices:
+                dialog.query_one(f"#row-option-{index}", OptionList).highlighted = 0
+            else:
+                dialog.query_one(f"#row-input-{index}", Input).value = _SYNTHETIC_TEXT
+        await pilot.click("#btn-row-save")
+        await wait_until_settled(app, pilot)
+        return str(owed[0][1].path)
     assert isinstance(dialog, FieldEditScreen)
     field = dialog._field
     if field.choices:
@@ -101,84 +142,113 @@ async def _answer(app: ProfileManagerScreen, pilot) -> str:
     return field.path
 
 
+async def _until_filtered(app: ProfileManagerScreen, pilot, *, required_only: bool) -> None:
+    """Return once the page has taken the required-only switch and the rebuild it started has finished.
+
+    Setting the switch only posts its change; the page's handler, which starts
+    the rebuild worker, runs on a later turn. Joining the workers straight
+    after the assignment therefore joins nothing, and one pause is not a wait
+    for a rebuild that mounts every section's table in turn.
+    """
+    await settle_until(
+        pilot,
+        lambda: app._required_only is required_only,
+        f"the page to finish filtering to required_only={required_only}",
+    )
+
+
+async def _until_searched(app: ProfileManagerScreen, pilot, query: str) -> None:
+    """Return once the page has applied the typed search and redrawn its sections.
+
+    Typing only posts the change; the page's handler holds the search back
+    until typing pauses, on a timer, and the timer's callback rebuilds the
+    sections under the render lock. A fixed wait longer than the timer is a
+    guess about how fast that rebuild runs, so this waits until the page
+    holds the query, no search is pending and the rebuild has let go of the
+    lock.
+    """
+    await settle_until(
+        pilot,
+        lambda: app._query == query and app._search_timer is None and not app._render_lock.locked(),
+        f"the page to apply the search {query!r}",
+    )
+
+
 async def _reach_required(app: ProfileManagerScreen, pilot) -> None:
     """Start setup and explicitly skip optional import through its visible action."""
     await pilot.click("#onboarding-continue")
-    await pilot.pause()
+    await settle(pilot)
     assert app._setup_stage is ProfileSetupStage.GET_DATA
     await pilot.click("#onboarding-continue")
-    await pilot.pause()
+    await settle(pilot)
     assert app._setup_stage is ProfileSetupStage.REQUIRED
 
 
 @pytest.mark.asyncio
 async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_required(tmp_path) -> None:
     """Navigation never clears a saved fact or bypasses the required-answer gate."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = _manager(live_overview())
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
             path = await _answer(app, pilot)
             await pilot.press("escape")
-            await pilot.pause()
+            await settle(pilot)
             value = app._field_by_key[path].value
             assert value is not None and value
             await pilot.click("#onboarding-previous")
-            await pilot.pause()
+            await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.GET_DATA
             assert not app.query(DataTable)
             await pilot.click("#setup-stage-review")
-            await pilot.pause()
+            await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.REVIEW
             assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
             assert app.query_one("#setup-stage-ready", Button).disabled
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.REQUIRED
             assert app._field_by_key[path].value == value
-            assert _live_overview().missing_required == app.overview.missing_required
+            assert live_overview().missing_required == app.overview.missing_required
             pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
 async def test_a_blank_required_answer_can_be_corrected_without_losing_the_question(tmp_path) -> None:
     """A refused blank stays in the editor and a subsequent valid answer is saved."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = _manager(live_overview())
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
             dialog = app.app.screen
             assert isinstance(dialog, FieldEditScreen)
             path = dialog._field.path
             await pilot.click("#btn-edit-save")
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen is dialog
-            assert path in _live_overview().missing_required
+            assert path in live_overview().missing_required
             assert str(dialog.query_one("#edit-refusal", Static).content)
             assert str(dialog.query_one("#edit-requirement", Static).content) == tr("flows.progress.required")
             await _answer(app, pilot)
-            assert path not in _live_overview().missing_required
+            assert path not in live_overview().missing_required
             pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
 async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path) -> None:
     """The walk asks for what setup requires and folds every other section away."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        overview = _live_overview()
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
         assert overview.setup_state is ProfileSetupState.INCOMPLETE
         assert overview.missing_required, "the fixture must owe required answers, or this proves nothing"
 
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.OVERVIEW
             assert not _visible_rows(app)
             assert not app.query_one("#manager-tools").display
@@ -196,8 +266,7 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
             assert app.focused is app.query_one("#onboarding-continue", Button)
 
             app.query_one("#manager-required-only", Checkbox).value = False
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await _until_filtered(app, pilot, required_only=False)
             assert len(_visible_rows(app)) == overview.total_count
             pilot.app.exit(None)
 
@@ -206,15 +275,14 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
 @pytest.mark.parametrize("size", [(80, 24), (160, 60)])
 async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path, size) -> None:
     """Pressing Continue and answering each question is enough to finish setup."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=size) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
             dialog = app.app.screen
             assert isinstance(dialog, FieldEditScreen)
             context = str(dialog.query_one("#edit-context", Static).content)
@@ -234,38 +302,38 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             answered: list[str] = []
             # Each saved answer opens the next question without another press.
             for _ in range(len(overview.missing_required) * 3):
-                if not isinstance(app.app.screen, FieldEditScreen):
+                if not isinstance(app.app.screen, FieldEditScreen | RepeatableRowAddScreen):
                     break
                 answered.append(await _answer(app, pilot))
-                await pilot.pause()
-            assert set(answered) >= set(overview.missing_required)
+                await settle(pilot, workers=False)
+            # An answer can withdraw a later question (an income category without an
+            # economic activity owes no IVA regime), so the walk asks a subset of the
+            # opening list and still leaves nothing owed.
+            assert answered
+            assert set(answered) <= set(overview.missing_required)
             assert not app.overview.missing_required
             assert app._setup_stage is ProfileSetupStage.REVIEW
             assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
             assert any(not field.present for section in app.overview.sections for field in section.fields)
             button = app.query_one("#onboarding-continue", Button)
             assert str(button.label) == tr("flows.manager.onboarding.finish")
-            await pilot.pause()
+            await settle(pilot)
             assert button.size.width >= len(str(button.label)), "the new action label is clipped to the old width"
 
             # The completion shortcut follows the same Review boundary as
             # the visible Finish button, even when every answer is saved.
             await pilot.click("#setup-stage-overview")
-            await pilot.pause()
+            await settle(pilot)
             await pilot.press("f8")
-            await pilot.pause()
+            await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.OVERVIEW
             assert app.overview.setup_state is ProfileSetupState.INCOMPLETE
             await pilot.click("#setup-stage-review")
-            await pilot.pause()
+            await settle(pilot)
 
             await pilot.click("#onboarding-continue")
             await wait_until_settled(app, pilot)
-            for _ in range(20):
-                if app._pending_completion is None:
-                    break
-                await pilot.pause()
-            await pilot.pause()
+            await settle_until(pilot, lambda: app._pending_completion is None, "setup completion to settle")
             assert app.overview.setup_state is ProfileSetupState.COMPLETE
             assert app._setup_stage is ProfileSetupStage.READY
             assert "✓" in str(app.query_one("#onboarding-checklist", Static).content)
@@ -276,7 +344,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             pilot.app.exit(None)
 
         with bundled_indexed_authority().operation():
-            _create_context, decode_context = _profile_contexts_for_test()
+            _create_context, decode_context = profile_authority_contexts()
             profile_id = require_active_bucket_id()
             stored = ProfileRecordRepository.for_current_session(
                 profile_id, profile_decode_context=decode_context
@@ -287,18 +355,16 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
 @pytest.mark.asyncio
 async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
     """Escape leaves the walk; nothing reopens until Continue is pressed again."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = _manager(live_overview())
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
             assert isinstance(app.app.screen, FieldEditScreen)
             await pilot.press("escape")
-            await pilot.pause()
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen is app
             assert not app._walking
             pilot.app.exit(None)
@@ -307,20 +373,18 @@ async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -> None:
     """A search shows the sections it matches, open, and names an empty result."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _reach_required(app, pilot)
             app.query_one("#manager-required-only", Checkbox).value = False
-            await app.workers.wait_for_complete()
+            await _until_filtered(app, pilot, required_only=False)
 
             identity = next(section for section in overview.sections if section.key == "identity")
             app.query_one("#manager-search", Input).value = identity.title
-            await pilot.pause(0.4)
-            await pilot.pause()
+            await _until_searched(app, pilot, identity.title)
             assert "identity" in _shown_folds(app)
             assert not app.query_one("#fold-identity", DisclosureGroup).collapsed
             assert {field.path for field in identity.fields} <= _visible_rows(app)
@@ -328,8 +392,7 @@ async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -
             assert not app.query_one("#manager-search-empty", Static).display
 
             app.query_one("#manager-search", Input).value = "zzqx-no-such-setting"
-            await pilot.pause(0.4)
-            await pilot.pause()
+            await _until_searched(app, pilot, "zzqx-no-such-setting")
             assert _shown_folds(app) == set()
             assert app.query_one("#manager-search-empty", Static).display
             pilot.app.exit(None)
@@ -338,12 +401,11 @@ async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -
 @pytest.mark.asyncio
 async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
     """Setup that is already complete shows the plain profile page, every field in reach."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = _manager(overview, complete=False)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             assert not app.query("#manager-onboarding")
             assert not app.query_one("#manager-required-only", Checkbox).value
             assert len(_visible_rows(app)) == overview.total_count
@@ -353,15 +415,14 @@ async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path) -> None:
     """Choices read as labels, and Save with nothing picked asks for a pick instead of cancelling."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
             # The first required question is typed; answer it to reach a choice.
             for _ in range(len(overview.missing_required)):
                 dialog = app.app.screen
@@ -369,7 +430,7 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
                 if dialog._field.choices:
                     break
                 await _answer(app, pilot)
-                await pilot.pause()
+                await settle(pilot, workers=False)
             dialog = app.app.screen
             assert isinstance(dialog, FieldEditScreen)
             field = dialog._field
@@ -381,7 +442,7 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
 
             options.highlighted = None
             await pilot.click("#btn-edit-save")
-            await pilot.pause()
+            await settle(pilot)
             assert app.app.screen is dialog
             assert str(dialog.query_one("#edit-refusal", Static).content) == tr("flows.manager.edit.choose_one")
             assert app._walking
@@ -390,41 +451,49 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
 
 @pytest.mark.asyncio
 async def test_every_setup_question_explains_itself_and_the_page_explains_the_cursor_row(tmp_path) -> None:
-    """Each question says what it is, why it is asked and where to find it; so does the page."""
-    headings = [tr(f"flows.manager.help.{part}") for part in ("what", "why", "where")]
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _register()
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    """Each question shows the setup wizard's copy as its help; so does the page."""
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = _manager(overview)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _reach_required(app, pilot)
             table = app._table_by_section["identity"]
             table.focus()
             table.move_cursor(row=0)
-            await pilot.pause()
+            await settle(pilot)
             panel = app.query_one("#manager-field-help", Static)
             assert panel.display
-            assert all(heading in str(panel.content) for heading in headings)
+            tax_id = app._field_by_key["identity.tax_id"]
+            assert tax_id.help is not None
+            assert tax_id.help[0] == tr("wizard.setup.profile.tax-id.prompt")
             # The row under the cursor, not whichever section happened to be built last.
-            assert str(panel.content) == field_help_text(app._field_by_key["identity.tax_id"])
+            assert str(panel.content) == field_help_text(tax_id) == "\n".join(tax_id.help)
 
             await pilot.click("#onboarding-continue")
-            await pilot.pause()
+            await settle(pilot)
+            # A required fact of a repeatable group is asked on the group's row form, which has no help fold.
             asked = 0
             for _ in range(20):
                 dialog = app.app.screen
+                if isinstance(dialog, RepeatableRowAddScreen):
+                    await _answer(app, pilot)
+                    await settle(pilot, workers=False)
+                    continue
                 if not isinstance(dialog, FieldEditScreen):
                     break
                 help_fold = dialog.query_one("#edit-help-fold", DisclosureGroup)
                 assert help_fold.collapsed
                 assert await pilot.click("#edit-help-fold CollapsibleTitle")
-                await pilot.pause()
+                await settle(pilot)
                 assert not help_fold.collapsed
                 help_text = str(dialog.query_one("#edit-help", Static).content)
-                assert [line.split(":", 1)[0] + ":" for line in help_text.splitlines()] == headings, dialog._field.path
+                assert dialog._field.help, dialog._field.path
+                assert help_text == "\n".join(dialog._field.help), dialog._field.path
                 asked += 1
                 await _answer(app, pilot)
-                await pilot.pause()
-            assert asked >= len(overview.missing_required)
+                await settle(pilot, workers=False)
+            # Every question the walk asked carried its help, and the walk ended owing nothing.
+            assert asked
+            assert not app.overview.missing_required
             pilot.app.exit(None)

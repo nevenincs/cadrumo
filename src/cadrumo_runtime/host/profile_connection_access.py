@@ -29,7 +29,8 @@ from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import write_document
 
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -142,6 +143,7 @@ class ProfileConnectionAccessMixin:
                     connection.session_id = None
                     retired.append(session_id)
             host.approvals.retire_sessions(tuple(retired))
+        self._views.unbind_sessions(tuple(retired))
 
     def manage_access(
         self: RuntimeProfileConnections,
@@ -209,7 +211,7 @@ class ProfileConnectionAccessMixin:
                 )
                 remaining = min(5.0, (session.expires_at - self._wall_clock()).total_seconds())
                 if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 write_document(
                     channel,
                     EnrollmentRecorded(

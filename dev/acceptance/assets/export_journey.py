@@ -9,15 +9,18 @@ financial oracle remain specific to AS12.
 from __future__ import annotations
 
 import argparse
+import calendar
 import json
 import secrets
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
-from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
+from dev.acceptance.assets.acquisition_seed import seed_machine_acquisition
+from dev.acceptance.assets.oracles import accrued_through, first_year_machinery_constant_percentage
 from dev.acceptance.income_tax.cli_journey import (
     JourneyError,
     command_result,
@@ -27,18 +30,50 @@ from dev.acceptance.income_tax.scenario import IncomeTaxScenario, build_scenario
 from dev.acceptance.income_tax.tui_contracts import LocalXsdValidationEvidence
 from dev.acceptance.income_tax.tui_xsd_validation import validate_modelo_100_xsd
 from dev.acceptance.installed_cli import InstalledCli
+from dev.acceptance.iva.filing_year import IvaJourneyYear, newest_journey_year
 
-_YEAR = 2025
+_M130_PERIODS = ("1T", "2T", "3T", "4T")
+_JOURNEY_COORDINATES = (*(("130", period) for period in _M130_PERIODS), ("100", "0A"))
 _ASSET_AMOUNT = first_year_machinery_constant_percentage(Decimal("1000.00"))
+
+# Casilla 02 of each quarter carries the element's amortization accrued from 1 January
+# to the quarter's end, by days over the days of the year, rounded to cents. The annual
+# charge is 1,000.00 x 12% x 2.5 = 300.00 and the element is in service from 1 January,
+# so each quarter accrues 300.00 x (days from 1 January to the quarter's end) / (days in the year).
+_QUARTER_END = {"1T": (3, 31), "2T": (6, 30), "3T": (9, 30), "4T": (12, 31)}
+
+
+def asset_journey(authority_root: Path | None = None) -> IvaJourneyYear:
+    """Admit the newest supported filing year the authority authors for every coordinate the journey files.
+
+    The published authority at ``authority_root`` decides, or the process's
+    bundled authority when none is given.
+    """
+    return newest_journey_year(coordinates=_JOURNEY_COORDINATES, authority_root=authority_root)
+
+
+def _quarter_asset_accrual(year: int) -> dict[str, Decimal]:
+    """Hand-worked accrual by days elapsed to each quarter end, over the actual days of ``year``."""
+    days_in_year = 366 if calendar.isleap(year) else 365
+    return {
+        period: accrued_through(
+            annual_charge=_ASSET_AMOUNT,
+            days_elapsed=(date(year, month, day) - date(year, 1, 1)).days + 1,
+            days_in_year=days_in_year,
+        )
+        for period, (month, day) in _QUARTER_END.items()
+    }
 
 
 @dataclass(frozen=True, slots=True)
 class AssetOverlayOracle:
     """Independent control and exactly-one-claim overlay expectations."""
 
+    journey: IvaJourneyYear
     control: IncomeTaxScenario
     m130_q4_control_expenses: str
     m130_q4_asset_expenses: str
+    m130_asset_accrual_by_period: tuple[tuple[str, str], ...]
     m100_control_total_expenses: str
     m100_asset_total_expenses: str
     m100_control_material: str = "0.00"
@@ -46,14 +81,23 @@ class AssetOverlayOracle:
     m100_intangible: str = "0.00"
 
 
-def _asset_overlay_oracle() -> AssetOverlayOracle:
-    """Overlay one €300 claim on the established four-quarter income fixture."""
-    control = build_scenario(_YEAR)
+def asset_overlay_oracle(journey: IvaJourneyYear | None = None) -> AssetOverlayOracle:
+    """Overlay one €300 claim on the established four-quarter income fixture.
+
+    ``journey`` defaults to the newest year the process's bundled authority authors for the journey.
+    """
+    journey = journey if journey is not None else asset_journey()
+    control = build_scenario(journey.year)
+    accrual = _quarter_asset_accrual(journey.year)
     q4 = control.quarter_oracle[-1]
     return AssetOverlayOracle(
+        journey=journey,
         control=control,
         m130_q4_control_expenses=_money(q4.cumulative_expenses),
         m130_q4_asset_expenses=_money(q4.cumulative_expenses + _ASSET_AMOUNT),
+        m130_asset_accrual_by_period=tuple(
+            (quarter.period, _money(accrual[quarter.period])) for quarter in control.quarter_oracle
+        ),
         m100_control_total_expenses=_money(control.annual_oracle.deductible_expenses),
         m100_asset_total_expenses=_money(control.annual_oracle.deductible_expenses + _ASSET_AMOUNT),
     )
@@ -82,18 +126,18 @@ class AssetExportEvidence:
         return cast("dict[str, object]", asdict(self))
 
 
-def _asset_revision_json() -> str:
-    """Return a new machine under the normal-modality constant-percentage method.
+def _asset_revision_json(*, acquisition_transaction_id: str, year: int) -> str:
+    """Return a new machine, bought by the named ledger payment, under the constant-percentage method.
 
     Machinery's 12% maximum implies 8.33 years, weighted 2.5 (RIS art. 5.1.c) to
-    a 30% constant percentage, so the full 2025 year charges 1,000 x 30% = 300.00.
+    a 30% constant percentage, so a full year charges 1,000 x 30% = 300.00.
     """
     return json.dumps(
         {
-            "asset_id": "acceptance-constant-percentage-machine-2025",
+            "asset_id": f"acceptance-constant-percentage-machine-{year}",
             "revision_number": 1,
             "acquisition": {
-                "observed_transaction_id": "a" * 64,
+                "observed_transaction_id": acquisition_transaction_id,
                 "invoice_evidence_id": "synthetic-new-machine-invoice",
                 "evidence_fingerprint": "b" * 64,
             },
@@ -102,9 +146,10 @@ def _asset_revision_json() -> str:
             "basis": {
                 "stage": "business_allocated",
                 "basis_amount": "1000.00",
+                "non_deductible_iva": "0.00",
                 "prior_allocation_provenance": "synthetic acceptance allocation",
             },
-            "in_service_date": "2025-01-01",
+            "in_service_date": f"{year}-01-01",
             "opening_history": {"status": "known", "accumulated_amount": "0.00"},
             "acquired_condition": "new",
             "amortization": {
@@ -121,7 +166,7 @@ def _money(value: object) -> str:
     return f"{Decimal(str(value)):.2f}"
 
 
-def _m130_work(cli: InstalledCli, *, period: str) -> str:
+def _m130_work(cli: InstalledCli, *, oracle: AssetOverlayOracle, period: str) -> str:
     created = command_result(
         cli.run(
             (
@@ -132,11 +177,11 @@ def _m130_work(cli: InstalledCli, *, period: str) -> str:
                 "--modelo",
                 "130",
                 "--year",
-                str(_YEAR),
+                str(oracle.journey.year),
                 "--period",
                 period,
                 "--revision",
-                "2019-y-siguientes",
+                oracle.journey.revision("130", period),
                 "--by",
                 "assets-acceptance",
             )
@@ -148,12 +193,13 @@ def _m130_work(cli: InstalledCli, *, period: str) -> str:
 def _calculate_and_file_m130(
     cli: InstalledCli,
     *,
+    oracle: AssetOverlayOracle,
     control_income: str,
     control_expenses: str,
     period: str,
     asset_expense_delta: str = "0.00",
 ) -> tuple[str, str]:
-    work_id = _m130_work(cli, period=period)
+    work_id = _m130_work(cli, oracle=oracle, period=period)
     calculation = command_result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "assets-acceptance")))
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
@@ -235,11 +281,11 @@ def _calculate_export_m100(
                 "--modelo",
                 "100",
                 "--year",
-                str(_YEAR),
+                str(oracle.journey.year),
                 "--period",
                 "0A",
                 "--revision",
-                str(_YEAR),
+                oracle.journey.revision("100", "0A"),
                 "--by",
                 "assets-acceptance",
             )
@@ -261,10 +307,6 @@ def _calculate_export_m100(
                 "0165=declarante",
                 "--casilla",
                 "0166=A05",
-                "--binding",
-                "renta-modelo-100-estimacion-directa-es-normal=1",
-                "--binding",
-                "renta-certificado-trabajo-retenciones=0",
                 "--by",
                 "assets-acceptance",
             )
@@ -279,7 +321,7 @@ def _calculate_export_m100(
     verified = command_result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "assets-acceptance")))
     if verified.get("granted_verificado_completo") is not True:
         raise JourneyError("Modelo 100 did not verify complete")
-    target = output_dir / "modelo-100-2025-asset.xml"
+    target = output_dir / f"modelo-100-{oracle.journey.year}-asset.xml"
     report_stage("m100.export")
     cli.run(("app", "modelo", "export", work_id, "--output", str(target), "--by", "assets-acceptance"))
     if not target.is_file() or target.stat().st_size == 0:
@@ -322,12 +364,27 @@ def run_asset_export_journey(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )
     report_stage("profile.create")
-    cli.create_profile(year=_YEAR)
-    oracle = _asset_overlay_oracle()
+    oracle = asset_overlay_oracle(asset_journey(authority_root))
+    year = oracle.journey.year
+    cli.create_profile(year=year)
     report_stage("ledger.ingest_control")
-    ingest_income_fixture(cli, year=_YEAR)
+    ingest_income_fixture(cli, year=year)
+    report_stage("asset.acquisition")
+    acquisition_id = seed_machine_acquisition(cli, basis="1000.00", booked=f"{year}-01-01", label="export-machine")
     report_stage("asset.create")
-    created = command_result(cli.run(("app", "ledger", "actividad-asset", "create", _asset_revision_json())))
+    created = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "create",
+                _asset_revision_json(acquisition_transaction_id=acquisition_id, year=year),
+                "--name",
+                "Acceptance element",
+            )
+        )
+    )
     asset_id = str(created["revisions"][0]["asset_id"])
     report_stage("asset.forecast")
     forecast = command_result(
@@ -339,9 +396,9 @@ def run_asset_export_journey(
                 "forecast",
                 asset_id,
                 "--covered-from",
-                "2025-01-01",
+                f"{year}-01-01",
                 "--covered-until",
-                "2026-01-01",
+                f"{year + 1}-01-01",
             )
         )
     )
@@ -356,29 +413,31 @@ def run_asset_export_journey(
                 "actividad-asset",
                 "claim",
                 json.dumps(forecast, separators=(",", ":")),
-                "--creating-operation",
-                "assets-acceptance.record-claim",
             )
         )
     )
     claim_id = str(claim["claim"]["claim_id"])
     report_stage("asset.filing_handoff")
     handoff = command_result(
-        cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
+        cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", str(year), "--m130-period", "4T"))
     )
     _assert_asset_claim_handoff(handoff, claim_id)
+    accrual = dict(oracle.m130_asset_accrual_by_period)
     for control_quarter in oracle.control.quarter_oracle[:-1]:
         report_stage(f"m130.{control_quarter.period}")
         _calculate_and_file_m130(
             cli,
+            oracle=oracle,
             period=control_quarter.period,
             control_income=_money(control_quarter.cumulative_income),
             control_expenses=_money(control_quarter.cumulative_expenses),
+            asset_expense_delta=accrual[control_quarter.period],
         )
     control_q4 = oracle.control.quarter_oracle[-1]
     report_stage("m130.4T")
     q4_income, q4_expenses = _calculate_and_file_m130(
         cli,
+        oracle=oracle,
         period=control_q4.period,
         control_income=_money(control_q4.cumulative_income),
         control_expenses=oracle.m130_q4_control_expenses,

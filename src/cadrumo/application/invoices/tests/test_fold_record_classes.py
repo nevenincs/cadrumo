@@ -54,7 +54,7 @@ def _canonical_payload(**overrides: object) -> dict[str, object]:
         "invoice_number": "F-2026-FOLD-001",
         "issued_at": date(2026, 3, 10),
         "counterparty_name": "Cliente Valido SL",
-        "counterparty_tax_id": "B12345674",
+        "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
         "base_total": Decimal("100.00"),
         "iva_total": Decimal("21.00"),
@@ -178,7 +178,7 @@ def test_a_tax_id_that_does_not_match_its_country_refuses() -> None:
     """
     with pytest.raises(ValidationError):
         Invoice.model_validate(
-            _canonical_payload(counterparty_country="DE", counterparty_tax_id="B12345674"),
+            _canonical_payload(counterparty_country="DE", counterparty_tax_id="B00015016"),
         )
 
 

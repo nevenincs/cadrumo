@@ -4,15 +4,20 @@
 // summaries are tool text for developers, not product chrome, so they are not
 // in the locale catalogues.
 
+import type { LedgerShape } from "./ledgerFixture";
+import type { CensoMode } from "./censoFixture";
+import type { AeatSyncMode } from "./aeatSyncFixture";
+import type { AeatSyncPrepareMode } from "./aeatSyncPrepareFixture";
+import type { AeatSyncResultsMode } from "./aeatSyncResultsFixture";
+import type { AeatSyncRunMode } from "./aeatSyncRunFixture";
 import type { SetupShape } from "./setupFixture";
+import type { HostErrorCode, HostFailure } from "../ipc/contract";
 import type {
-  HostErrorCode,
-  HostFailure,
   ManagerSignal,
   ManagerStatus,
   SignInSignal,
   SignInStatus,
-} from "../ipc/contract";
+} from "../ipc/account";
 
 /** What a submitted password meets. */
 export type SubmitOutcome =
@@ -24,7 +29,21 @@ export type SubmitOutcome =
   | { kind: "fail"; code: HostErrorCode };
 
 export type Scenario = {
-  censo?: "ready" | "nie" | "uncertain";
+  censo?: CensoMode;
+  /** The AEAT data page: left out, some areas were brought and some were
+   * not. */
+  aeatSync?: AeatSyncMode;
+  /** What an update from the AEAT data page meets: the check before it
+   * (left out, nothing blocks), where its run ends (left out, everything is
+   * brought) and the results afterwards (left out, a mix). */
+  aeatUpdate?: {
+    before?: AeatSyncPrepareMode;
+    run?: AeatSyncRunMode;
+    results?: AeatSyncResultsMode;
+  };
+  /** The Sede browser: left out, it opens; `browser_missing`, the runtime
+   * refuses every view for want of the browser and names its setup. */
+  sedeView?: "browser_missing";
   id: string;
   title: string;
   summary: string;
@@ -119,6 +138,11 @@ export type Scenario = {
   /** The component setup of the made-up computer; left out, the host
    * offers no setup. The `setup` parameter chooses another shape. */
   setup?: SetupShape;
+  /** How the made-up ledger answers wherever the views are offered: the
+   * fixture, nothing recorded, writes refused, writes whose outcome is
+   * unknown, nothing readable, or every answer slow. Left out, the fixture.
+   * The `ledger` parameter chooses another shape. */
+  ledger?: LedgerShape;
 };
 
 const signedOut: Scenario["signIn"]["status"] = {
@@ -155,6 +179,71 @@ export const SCENARIOS: readonly Scenario[] = [
     summary:
       "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
     censo: "ready",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-running",
+    title: "Censo: A pull that keeps going",
+    summary:
+      "Start a Censo pull from any entry: it keeps reading across page changes until the scenario lets it reach its review. This is a simulation; no AEAT request is sent.",
+    censo: "running",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-initial-unknown",
+    title: "Censo: Initial status unavailable",
+    summary: "Simulates recovery of a known operation without contacting AEAT.",
+    censo: "initial_unknown",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-refused",
+    title: "Censo: Profile refused",
+    summary: "Simulates a profile mismatch without contacting AEAT.",
+    censo: "refused",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-browser-missing",
+    title: "Censo: Browser not set up",
+    summary:
+      "Open Your profile, then Sync from AEAT: each pull stops for want of the browser and offers its setup. No AEAT request is sent.",
+    censo: "browser_missing",
+    setup: "fresh",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "sede-browser-missing",
+    title: "Sede: Browser not set up",
+    summary:
+      "Open the Sede browser: the view stops for want of the browser and offers its setup. No AEAT page is opened.",
+    sedeView: "browser_missing",
+    setup: "fresh",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "Ana Soler",
@@ -202,9 +291,276 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "aeat-sync",
+    title: "AEAT data: what was brought and when",
+    summary:
+      "Open AEAT data from the palette: six areas, each with its state, its date and the counts it serves. Bringing data is recorded and changes nothing.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-running",
+    title: "AEAT data: an update that keeps going",
+    summary:
+      "Update from AEAT: the page follows the run, which keeps going until it is stopped.",
+    aeatUpdate: { run: "running" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-browser",
+    title: "AEAT data: the browser is not installed",
+    summary:
+      "Update from AEAT stops for the missing browser, installs it, and goes on by itself.",
+    aeatUpdate: { before: "browser_missing" },
+    setup: "fresh",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-browser-blocked",
+    title: "AEAT data: the browser cannot be downloaded",
+    summary:
+      "Update from AEAT stops for the missing browser; its install finds the download host unreachable, says why and offers another try.",
+    aeatUpdate: { before: "browser_missing" },
+    setup: "unreachable",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-phone",
+    title: "AEAT data: AEAT waits for approval on the phone",
+    summary:
+      "Update from AEAT waits for the Cl@ve approval on the phone; approving carries the update on, and cancelling leaves it.",
+    aeatUpdate: { before: "phone" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-access",
+    title: "AEAT data: AEAT access not set up",
+    summary:
+      "Update from AEAT stops for want of AEAT access and leads to the access editor in the profile.",
+    aeatUpdate: { before: "access_missing" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-timeout",
+    title: "AEAT data: the AEAT session times out",
+    summary:
+      "An update pauses when AEAT ends the session; signing in again carries it on.",
+    aeatUpdate: { run: "paused" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-partial",
+    title: "AEAT data: some parts could not be updated",
+    summary: "An update ends with a failed year and a failed area.",
+    aeatUpdate: { run: "partial_failure", results: "failed" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-unknown",
+    title: "AEAT data: an outcome that could not be confirmed",
+    summary:
+      "An update ends with parts whose outcome is unknown; reading them again is warned first.",
+    aeatUpdate: { run: "unknown", results: "unknown" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-failed-empty",
+    title: "AEAT data: unavailable empty results",
+    summary: "Failed reads provide no declaration or notification rows.",
+    aeatUpdate: { run: "partial_failure", results: "failed_empty" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-unknown-empty",
+    title: "AEAT data: unknown empty results",
+    summary: "Unconfirmed reads provide no declaration or notification rows.",
+    aeatUpdate: { run: "unknown", results: "unknown_empty" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-refresh-failed",
+    title: "AEAT data: a saved-results refresh fails",
+    summary:
+      "The second local read fails; reloading recovers the saved results.",
+    aeatUpdate: { run: "partial_failure", results: "refresh_failed" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-retry-unknown",
+    title: "AEAT data: retry outcome is unknown",
+    summary:
+      "The host requires retry acknowledgement and the saved-result read fails.",
+    aeatUpdate: { run: "partial_failure", results: "retry_unknown" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-retry-pending",
+    title: "AEAT data: a retry request is pending",
+    summary: "The host has not yet answered the retry request.",
+    aeatUpdate: { run: "partial_failure", results: "retry_pending" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-empty",
+    title: "AEAT data: confirmed empty results",
+    summary: "Completed reads found no declarations or notifications.",
+    aeatUpdate: { run: "nothing_found", results: "empty" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-quiet",
+    title: "AEAT data: nothing new",
+    summary: "An update ends and AEAT had nothing new.",
+    aeatUpdate: { run: "nothing_found", results: "quiet" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-inside-horizon",
+    title: "AEAT data: brought a day inside each horizon",
+    summary:
+      "Each area was last brought one day before it would count as possibly out of date, so each says it is up to date.",
+    aeatSync: "inside_horizon",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-past-horizon",
+    title: "AEAT data: brought a day past each horizon",
+    summary:
+      "Each area was last brought one day after it counts as possibly out of date, so each says it may be out of date.",
+    aeatSync: "past_horizon",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-census-running",
+    title: "AEAT data: a census pull is going on",
+    summary:
+      "The census pull keeps reading. Review it from the results: the profile page takes over the same pull.",
+    censo: "running",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-never",
+    title: "AEAT data: nothing brought yet",
+    summary: "Every area shows that it was never brought.",
+    aeatSync: "never",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-unavailable",
+    title: "AEAT data: cannot be read",
+    summary: "The page says it cannot be shown and offers to try again.",
+    aeatSync: "unavailable",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
     id: "aeat-setup",
     title: "AEAT setup handoff",
-    summary: "A conversation opens the protected editor for its exact profile.",
+    summary:
+      "A conversation's setup link opens the AEAT sign-in editor on the profile page, in the window.",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "5aa00000-0000-4000-8000-0000000000aa",
@@ -441,6 +797,55 @@ export const SCENARIOS: readonly Scenario[] = [
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "reconnecting",
+    title: "Reconnecting",
+    summary:
+      "The window's session was suspended after the profile's worker was lost and waits for the saved sign-in. The person is not signed out.",
+    signIn: {
+      status: {
+        ...signedOut,
+        state: "present",
+        reconnecting: { passwordRequired: false },
+      },
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "reconnecting-password",
+    title: "Reconnecting, password needed",
+    summary:
+      "The saved sign-in could not bring the session back: the password form opens, and any password brings it back on the same session.",
+    signIn: {
+      status: {
+        ...signedOut,
+        state: "present",
+        reconnecting: { passwordRequired: true },
+      },
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "reconnecting-wrong-password",
+    title: "Reconnecting, wrong password",
+    summary:
+      "The session waits for the password; every submission is refused with CREDENTIAL_REJECTED, and the session keeps waiting.",
+    signIn: {
+      status: {
+        ...signedOut,
+        state: "present",
+        reconnecting: { passwordRequired: true },
+      },
+      submit: {
+        kind: "refuse",
+        code: "CREDENTIAL_REJECTED",
+        retryAfterSeconds: null,
+      },
     },
   },
   {
@@ -685,6 +1090,20 @@ export const SCENARIOS: readonly Scenario[] = [
     profiles: "one",
     terminals: "silent",
     manager: { result: "dispatched", autoDispatched: true, readyAfterReads: 5 },
+    supervision: {
+      initial: { state: "starting", failure: null },
+      events: [
+        {
+          afterMs: 5_000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "ready", failure: null },
+          },
+          presence: "absent",
+        },
+      ],
+    },
   },
   {
     ...base,
@@ -976,7 +1395,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "setup-first-run",
     title: "Components not set up",
     summary:
-      "Signed in on a computer where nothing is set up yet: the setup dialog opens once with one summary and one action, the browser and the local AI run one after the other with one overall progress bar, and Settings shows one line that leads back into setup.",
+      "Signed in on a computer where nothing is set up yet: the provisioning panel opens once with one row per component, each with its own action and progress; the browser and the local AI can run at the same time, the local AI opens to its program and models, the rail's Settings button shows a spinner while a run is live, and Settings' one section opens the panel again.",
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },
@@ -1006,6 +1425,17 @@ export const SCENARIOS: readonly Scenario[] = [
       submit: { kind: "accept" },
     },
     setup: "google_signed_out",
+  },
+  {
+    ...base,
+    id: "ledger",
+    title: "Ledger",
+    summary:
+      "Signed in with a made-up 2026 ledger of a design studio: about 350 movements, 60 invoices, receipts, rules and two accounts, and a few movements in earlier years. The first quarter of 2026 is sealed by a filed Modelo 303. Add ?ledger=empty, refused, unknown, unavailable or slow for its other answers.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      submit: { kind: "accept" },
+    },
   },
   {
     ...base,

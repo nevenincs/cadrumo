@@ -11,10 +11,10 @@ from threading import Event
 
 import pytest
 
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 from cadrumo_client.contracts.contracts import ExitReason
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
-from ...adapters.tests.process_support import fixture_arguments, fixture_environment, native_python
-from ...adapters.windows_process import WindowsProcessScope
 from ..shutdown import RuntimeShutdownWatchdog
 
 pytestmark = [

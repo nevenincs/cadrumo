@@ -6,9 +6,9 @@ import ast
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -106,7 +106,7 @@ def _build_moved_into_the_worker_pool(source: str) -> str:
     # The driver builds the cohort only when no sealed cohort was adopted, so
     # the call sits one level inside ``main``; relocating it leaves ``pass``.
     block = (
-        "        _run_step(\n"
+        "        run_step(\n"
         '            [sys.executable, "-B", "-m", "dev.packaging.python_cohort", "build", "--output", COHORT_DIR],\n'
         "            repo_root,\n"
         '            "build-cohort",\n'
@@ -157,14 +157,6 @@ def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() ->
 
     assert "python -m dev.release rollback 1.2.3" in rendered
     assert "git push" not in rendered
-
-
-def test_doctor_invokes_the_aeat_human_cli() -> None:
-    """The rendered workstation doctor uses the sole human CLI executable."""
-    rendered = _render_recipe("doctor-product")
-
-    assert "aeat config check" in rendered
-    assert "cadrumo config check" not in rendered
 
 
 def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:

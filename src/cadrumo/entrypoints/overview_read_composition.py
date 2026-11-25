@@ -19,6 +19,12 @@ from ..application.overview.applicability_evidence import (
     bind_filing_year_applicability_evidence,
 )
 from ..application.overview.calendar_models import OverviewCalendar, OverviewCalendarRange
+from ..application.overview.modelo202_instalment import Modelo202InstalmentFactsReader
+from ..application.overview.modelo202_instalment_evidence import (
+    Modelo202InstalmentStores,
+    art_40_3_election_reader,
+    bind_modelo_202_instalment_facts,
+)
 from ..application.overview.read_calendar_projection import (
     OverviewAgendaSnapshot,
     OverviewBacklogSnapshot,
@@ -51,6 +57,7 @@ from ..application.workflow.profile_bucket_models import ProfileBucketPointer
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.json_contract import Notice
 from ..core.notificacion_estado_servicio import NotificacionEstadoServicio
+from ..core.parsing.dates import parse_iso8601_date
 from ..core.time.clock import today_madrid
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
@@ -59,10 +66,10 @@ from ..domain.calculations.registry.schema_base import DateAxis
 from ..domain.contribuyente.entity_type import entity_type_natural_person_token
 from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.user_profile.values import UserProfileRecord
-from .adapter_composition import (
+from .adapter_composition_ports import build_operator_probe_ports
+from .adapter_composition_work_ports import (
     build_expedientes_ports,
     build_ledger_evidence_ports,
-    build_operator_probe_ports,
     build_state_projection_read_ports,
 )
 from .overview_evidence_composition import (
@@ -71,6 +78,7 @@ from .overview_evidence_composition import (
     local_live_calendar_events,
     local_modelo_record_calendar_events,
     local_modelo_work_units,
+    overview_explain_deadline_windows_unavailable_notice,
     overview_no_aeat_history_notice,
 )
 
@@ -96,28 +104,31 @@ def _deemed_served_legal_ref(calendar: OverviewCalendar, *, operation: PinnedAut
     return str(resolved.legal_refs[0])
 
 
-def _refusal_requirements(
+def refusal_requirements(
     *,
     operation: PinnedAuthorityOperation,
     taxpayer: TaxpayerProfile,
     taxpayer_model_declared: bool,
-    warning_codes: tuple[str, ...],
 ) -> tuple[str, ...]:
-    """Render the existing selector guidance with the worker's retained authority."""
+    """Name the selectors an undeclared taxpayer model lacks, with the worker's retained authority.
+
+    A declared model refuses nothing: its unanswered facts reach the reader as
+    warnings and undetermined coverage, so it has no requirement to name.
+    ``taxpayer`` is a :class:`TaxpayerProfile`.
+    """
     from ..application.user_profile.preflight import (
         deferred_profile_grounding_index,
         format_profile_selector_requirements,
     )
 
-    if not taxpayer_model_declared:
-        if taxpayer.entity_type is None:
-            selectors = ("taxpayer.entity_type",)
-        elif taxpayer.entity_type == entity_type_natural_person_token() and not taxpayer.irpf_income_categories:
-            selectors = ("taxpayer.irpf_income_categories",)
-        else:
-            selectors = ()
+    if taxpayer_model_declared:
+        return ()
+    if taxpayer.entity_type is None:
+        selectors: tuple[str, ...] = ("taxpayer.entity_type",)
+    elif taxpayer.entity_type == entity_type_natural_person_token() and not taxpayer.irpf_income_categories:
+        selectors = ("taxpayer.irpf_income_categories",)
     else:
-        selectors = warning_codes
+        selectors = ()
     if not selectors:
         return ()
     return format_profile_selector_requirements(
@@ -137,10 +148,13 @@ def _filing_year_applicability_evidence(
 
     The invoice reader is the one the filing calculation composes for the same
     bucket, so the ledger signal reads exactly the catalogue the declaration
-    is built from.
+    is built from. The Modelo 232 statements are read from the bucket's own
+    secure-object repository.
     """
     from ..adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
     from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ..adapters.persistence.profile.m232_related_party_records import Modelo232RelatedPartyStoreAdapter
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 
     return bind_filing_year_applicability_evidence(
@@ -154,6 +168,45 @@ def _filing_year_applicability_evidence(
         ),
         operation=operation,
         today=today_madrid(),
+        modelo_202_instalment_facts=_modelo_202_instalment_facts(bucket_id, record, operation=operation),
+        related_party_records=Modelo232RelatedPartyStoreAdapter(objects=secure_object_repository_for_bucket(bucket_id)),
+    )
+
+
+def _modelo_202_instalment_facts(
+    bucket_id: str,
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Modelo202InstalmentFactsReader:
+    """Bind the Modelo 202 instalment reader to this worker's filing, work and calculation stores.
+
+    Every store is opened on the bucket's one secure-object repository and is
+    loaded only when a Modelo 202 instalment is actually decided.
+    """
+    from ..adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+    from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    objects = secure_object_repository_for_bucket(bucket_id)
+    return bind_modelo_202_instalment_facts(
+        Modelo202InstalmentStores(
+            bucket_id=bucket_id,
+            observations=CalculationObservationRepository(objects=objects),
+            work_units=WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects).load,
+            calculations=bind_calculation_revision_persistence_from_profile(
+                bucket_id=bucket_id,
+                objects=objects,
+                operation=operation,
+                profile_record=record,
+            ).calculation_repository(),
+            transactions=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects).load,
+            activity_start_date=parse_iso8601_date(fact_value(record, "censo.activity_start_date")),
+            election_for=art_40_3_election_reader(record, schema=operation.profile_decode_context().schema),
+        ),
+        operation=operation,
     )
 
 
@@ -173,7 +226,9 @@ class _OverviewReadPorts:
             if str(record.profile_id) != self.bucket_id:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             schema = operation.profile_decode_context().schema
-            taxpayer = projection_for_taxpayer(record, schema=schema)
+            # A read shows what the answered facts decide; an IVA block with an
+            # unanswered question is held back and named, not a failed read.
+            taxpayer = projection_for_taxpayer(record, schema=schema, withhold_unanswered_iva_block=True)
             raw_values = record_to_values(record, schema=schema)
             evidence = _filing_year_applicability_evidence(self.bucket_id, record, operation=operation)
             if request.kind is OverviewReadKind.STATUS:
@@ -326,7 +381,7 @@ class _OverviewReadPorts:
                 live_censo_verified_profile_keys=live_censo_verified_profile_keys(record),
                 applicability_evidence=evidence,
             )
-            active = OverviewCalendarSnapshot.from_calendar(calendar)
+            active = OverviewCalendarSnapshot.from_calendar(calendar, envelope=operation.supported_filing_years())
             legal_ref = _deemed_served_legal_ref(calendar, operation=operation)
             notices = _calendar_notice_snapshots(
                 (
@@ -345,11 +400,10 @@ class _OverviewReadPorts:
                 calendar=active,
                 notices=notices,
                 deemed_served_legal_ref=legal_ref,
-                refusal_requirements=_refusal_requirements(
+                refusal_requirements=refusal_requirements(
                     operation=operation,
                     taxpayer=taxpayer,
                     taxpayer_model_declared=calendar.taxpayer_model_declared,
-                    warning_codes=tuple(warning.code for warning in calendar.warnings),
                 ),
             )
         return _calendar_profile_survey(
@@ -377,11 +431,10 @@ class _OverviewReadPorts:
         )
         return OverviewAgendaRead(
             agenda=OverviewAgendaSnapshot.from_agenda(agenda),
-            refusal_requirements=_refusal_requirements(
+            refusal_requirements=refusal_requirements(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=agenda.taxpayer_model_declared,
-                warning_codes=tuple(warning.code for warning in agenda.warnings),
             ),
         )
 
@@ -409,11 +462,10 @@ class _OverviewReadPorts:
         return OverviewBacklogRead(
             backlog=OverviewBacklogSnapshot.from_backlog(report),
             notices=(OverviewNoticeSnapshot.from_notice(notice),) if notice is not None else (),
-            refusal_requirements=_refusal_requirements(
+            refusal_requirements=refusal_requirements(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=report.taxpayer_model_declared,
-                warning_codes=tuple(warning.code for warning in report.warnings),
             ),
         )
 
@@ -426,8 +478,8 @@ class _OverviewReadPorts:
         taxpayer: TaxpayerProfile,
         evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewExplainRead:
-        from ..application.overview.explain import build_overview_explain
-        from ..domain.calculations.registry.applicability import ApplicabilityVerdict
+        from ..application.overview.explain import build_overview_explain, deadline_windows_unavailable
+        from ..domain.calculations.registry.applicability_models import ApplicabilityVerdict
         from .payer_fact_migration_notices import pending_payer_fact_notices
 
         if request.modelo is None:
@@ -447,6 +499,13 @@ class _OverviewReadPorts:
             if report.verdict is ApplicabilityVerdict.INCOMPLETE
             else ()
         )
+        if deadline_windows_unavailable(report.year, operation=operation):
+            notices = (
+                *notices,
+                OverviewNoticeSnapshot.from_notice(
+                    overview_explain_deadline_windows_unavailable_notice(modelo=report.modelo, year=report.year)
+                ),
+            )
         return OverviewExplainRead(explanation=OverviewExplainSnapshot.from_explain(report), notices=notices)
 
     def _prepare(self, request: OverviewReadRequest, *, operation: PinnedAuthorityOperation) -> OverviewPrepareRead:
@@ -469,7 +528,8 @@ class _OverviewReadPorts:
             objects=secure_object_repository_for_bucket(self.bucket_id),
             bucket_id=self.bucket_id,
         )
-        invoices = InvoiceCatalogueRepository(bucket_id=self.bucket_id).load()
+        invoice_repository = InvoiceCatalogueRepository(bucket_id=self.bucket_id)
+        invoices = invoice_repository.load()
         evidence = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=self.bucket_id)).list_all(
             bucket_id=self.bucket_id
         )
@@ -478,6 +538,7 @@ class _OverviewReadPorts:
             period=period,
             transaction_repository=transactions,
             usage_ratio_profile_loader=read_ports.usage_ratio_profile_loader,
+            invoice_reader=invoice_repository,
             operation=operation,
         )
         units = WorkUnitCatalogueRepository(bucket_id=self.bucket_id).load()
@@ -506,7 +567,7 @@ def build_overview_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
 __all__ = ["build_overview_read_ports"]
 
 
-def _calendar_other_profiles(
+def calendar_other_profiles(
     active_bucket_id: str, pointers: Mapping[str, ProfileBucketPointer]
 ) -> tuple[OverviewLockedProfileSnapshot, ...]:
     """List every other public profile pointer in the established label order."""
@@ -535,7 +596,7 @@ def _calendar_profile_survey(
 
     pointers = list_profile_buckets()
     own_pointer = pointers.get(bucket_id)
-    other = _calendar_other_profiles(bucket_id, pointers)
+    other = calendar_other_profiles(bucket_id, pointers)
     incomplete = record.setup_state is not ProfileSetupState.COMPLETE
     return OverviewCalendarRead(
         survey=OverviewCalendarSurveySnapshot(
@@ -554,11 +615,10 @@ def _calendar_profile_survey(
         notices=notices,
         deemed_served_legal_ref=legal_ref,
         refusal_requirements=(
-            _refusal_requirements(
+            refusal_requirements(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=calendar.taxpayer_model_declared,
-                warning_codes=tuple(warning.code for warning in calendar.warnings),
             )
             if active is not None and calendar is not None
             else ()

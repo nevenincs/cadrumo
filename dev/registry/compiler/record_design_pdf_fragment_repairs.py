@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from .record_design_pdf_repairs import (
-    _BARE_COMPACT_PDF_ROW_RE,
-    _REVERSED_ROW_HEAD_RE,
-    _REVERSED_ROW_HEAD_WITH_TAIL_RE,
-    _STRANDED_CASILLA_TAG_RE,
-    _TRAILING_CASILLA_TAG_RE,
+    BARE_COMPACT_PDF_ROW_RE,
+    REVERSED_ROW_HEAD_RE,
+    REVERSED_ROW_HEAD_WITH_TAIL_RE,
     REVERSED_ROW_TAIL_RE,
-    _continues,
+    STRANDED_CASILLA_TAG_RE,
+    TRAILING_CASILLA_TAG_RE,
+    continues,
 )
 from .record_design_pdf_rows import (
     PdfRow,
@@ -26,13 +26,13 @@ def _field_shaped_pdf_line(line: str, row_number: int) -> bool:
     return (
         parse_pdf_row(line, row_number) is not None
         or REVERSED_ROW_TAIL_RE.match(line) is not None
-        or _REVERSED_ROW_HEAD_RE.match(line) is not None
+        or REVERSED_ROW_HEAD_RE.match(line) is not None
     )
 
 
 def _can_reattach_casilla_tag(previous: str, row_number: int) -> bool:
     """Guard a stranded tag from headings, prose, and already-closed rows."""
-    if not previous.strip() or _TRAILING_CASILLA_TAG_RE.search(previous) is not None:
+    if not previous.strip() or TRAILING_CASILLA_TAG_RE.search(previous) is not None:
         return False
     cleaned = clean_pdf_line(previous)
     if (
@@ -73,7 +73,7 @@ def reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     """
     folded: list[str] = []
     for line in lines:
-        if folded and _STRANDED_CASILLA_TAG_RE.match(line):
+        if folded and STRANDED_CASILLA_TAG_RE.match(line):
             previous = folded[-1]
             if _can_reattach_casilla_tag(previous, len(folded)):
                 folded[-1] = f"{previous.rstrip()} {line.strip()}"
@@ -92,8 +92,8 @@ def _tail_fragment_candidate(
         return None
     if REVERSED_ROW_TAIL_RE.match(line) is not None:
         return None
-    head = _REVERSED_ROW_HEAD_RE.match(following) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
-    if head is None or not _continues(previous, head.group("ordinal"), int(head.group("offset"))):
+    head = REVERSED_ROW_HEAD_RE.match(following) or REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
+    if head is None or not continues(previous, head.group("ordinal"), int(head.group("offset"))):
         return None
     tokens = line.split()
     for cut in range(1, len(tokens)):
@@ -186,7 +186,7 @@ def split_row_from_wrapped_content(lines: tuple[str, ...]) -> tuple[str, ...]:
                 candidate = parse_pdf_row(suffix, index + 1)
                 if candidate is None or candidate.ordinal is None:
                     continue
-                if _continues(previous, candidate.ordinal, candidate.offset):
+                if continues(previous, candidate.ordinal, candidate.offset):
                     split.append(" ".join(tokens[:cut]))
                     split.append(suffix)
                     previous = candidate
@@ -219,7 +219,7 @@ def join_wrapped_row_descriptions(lines: tuple[str, ...]) -> tuple[str, ...]:
         if absorbed:
             absorbed = False
             continue
-        if _BARE_COMPACT_PDF_ROW_RE.match(line) and index + 1 < len(lines):
+        if BARE_COMPACT_PDF_ROW_RE.match(line) and index + 1 < len(lines):
             candidate = lines[index + 1]
             cleaned = clean_pdf_line(candidate)
             if (

@@ -4,22 +4,34 @@ Every test uses this checkout's real published pair. The first measures the
 reader's peak Python allocation while it admits the database: hashing by
 reading the file whole allocates at least the database's size, streaming it
 allocates a few chunks. The second proves the streamed digest still refuses a
-database whose bytes differ from the descriptor by a single byte. The rest
-republish an edited copy under its own content address, so the digest admits
-it and only the manifest decides.
+database whose bytes differ from the descriptor by a single byte. Receipts let
+a later process skip the hash for the very file object an earlier one proved,
+and the receipt cases show a rewrite is hashed again, a storage root
+whose receipt directory is unprovisioned is left as found, and the cache
+provisioning every dispatched command performs on a fresh root is enough for
+the receipt to be kept. The rest republish an
+edited copy under its own content address, so the digest admits it and only
+the manifest decides.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sqlite3
 import tracemalloc
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from .....core.config import override_settings
 from .....core.hashing import sha256_hex
+from .....core.storage_materialization import ensure_storage_tree
+from .....core.storage_taxonomy import StorageCategory, StorageGrouping
+from .....core.storage_taxonomy_locations import storage_path
+from .. import authority_store
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import (
     AuthorityDescriptor,
@@ -27,8 +39,18 @@ from ..authority_store import (
     AuthorityStoreFormatError,
     SQLiteAuthorityReader,
 )
+from .snapshot_proof_support import readdress_edited_database
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _own_receipts(tmp_path: Path) -> Iterator[None]:
+    """Keep admission receipts to a provisioned root of this test's own, so every case starts unproved."""
+    with override_settings(cadrumo_storage_root=tmp_path / "storage"):
+        ensure_storage_tree()
+        yield
+
 
 _DESCRIPTOR_NAME = "authority.current.json"
 
@@ -83,17 +105,7 @@ def _republished_copy(directory: Path, statements: tuple[tuple[str, tuple[str, .
         connection.commit()
     finally:
         connection.close()
-    payload = staging.read_bytes()
-    digest = sha256_hex(payload)
-    staging.replace(directory / f"authority-{digest}.sqlite3")
-    descriptor = AuthorityDescriptor(
-        database=f"authority-{digest}.sqlite3",
-        database_size=len(payload),
-        database_sha256=digest,
-        logical_generation=source.logical_generation,
-    )
-    (directory / _DESCRIPTOR_NAME).write_bytes(descriptor.to_bytes())
-    return directory / _DESCRIPTOR_NAME
+    return readdress_edited_database(directory, staging, source)
 
 
 def test_admission_refuses_a_manifest_naming_another_generation_than_its_descriptor(tmp_path: Path) -> None:
@@ -115,4 +127,100 @@ def test_admission_refuses_the_previous_format_that_recorded_the_compiler_and_it
     )
 
     with pytest.raises(AuthorityStoreFormatError, match="cadrumo-authority-sqlite-v3"):
+        SQLiteAuthorityReader(descriptor, max_connections=1)
+
+
+def _counting_hashes(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
+    hashed: list[Path] = []
+    real = authority_store.hash_file
+
+    def counted(path: Path) -> tuple[str, int]:
+        hashed.append(path)
+        return real(path)
+
+    monkeypatch.setattr(authority_store, "hash_file", counted)
+    return hashed
+
+
+def _copied_pair(directory: Path) -> tuple[Path, Path]:
+    source_descriptor = bundled_authority_descriptor_path()
+    database_name = AuthorityDescriptor.read(source_descriptor).database
+    directory.mkdir()
+    shutil.copy2(source_descriptor, directory / _DESCRIPTOR_NAME)
+    shutil.copy2(source_descriptor.parent / database_name, directory / database_name)
+    return directory / _DESCRIPTOR_NAME, directory / database_name
+
+
+def test_a_later_reader_of_the_same_file_relies_on_the_proof_an_earlier_one_left(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    assert hashed == [database]
+
+
+@pytest.mark.parametrize(
+    "existing",
+    [(), ("operator-secrets",), ("cache",)],
+    ids=["empty", "caches-unprovisioned", "receipt-directory-unprovisioned"],
+)
+def test_a_storage_root_without_provisioned_caches_receives_no_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: tuple[str, ...]
+) -> None:
+    root = tmp_path / "unprovisioned"
+    root.mkdir()
+    for name in existing:
+        (root / name).mkdir()
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    with override_settings(cadrumo_storage_root=root):
+        SQLiteAuthorityReader(descriptor, max_connections=1).close()
+        SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    assert sorted(path.name for path in root.iterdir()) == list(existing)
+    assert hashed == [database, database]
+
+
+def test_a_fresh_root_whose_caches_a_read_only_command_provisioned_keeps_the_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "fresh"
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    with override_settings(cadrumo_storage_root=root):
+        ensure_storage_tree(derived_groupings=frozenset({StorageGrouping.CACHE}))
+        SQLiteAuthorityReader(descriptor, max_connections=1).close()
+        SQLiteAuthorityReader(descriptor, max_connections=1).close()
+        receipts = storage_path(StorageCategory.AUTHORITY_ADMISSION_RECEIPTS)
+    assert hashed == [database]
+    assert [path.name for path in receipts.iterdir()] == [
+        f"{AuthorityDescriptor.read(descriptor).database_sha256}.json"
+    ]
+
+
+def test_a_rewritten_database_is_hashed_again_although_its_bytes_are_unchanged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    database.write_bytes(database.read_bytes())
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    assert hashed == [database, database]
+
+
+def test_a_proved_database_edited_with_its_write_time_restored_is_still_refused(tmp_path: Path) -> None:
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    SQLiteAuthorityReader(descriptor, max_connections=1).close()
+    before = database.stat()
+    middle = before.st_size // 2
+    with database.open("r+b") as stream:
+        stream.seek(middle)
+        original = stream.read(1)
+        stream.seek(middle)
+        stream.write(bytes([original[0] ^ 0xFF]))
+    os.utime(database, ns=(before.st_atime_ns, before.st_mtime_ns))
+
+    with pytest.raises(AuthorityStoreCorruptionError, match="disagree with the published descriptor"):
         SQLiteAuthorityReader(descriptor, max_connections=1)

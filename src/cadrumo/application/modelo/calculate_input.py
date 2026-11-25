@@ -14,10 +14,10 @@ The application result pairs that persisted revision with its parent
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
 See Also:
-    :mod:`cadrumo.entrypoints.cli._modelo_work_calculate_cli`:
+    :mod:`cadrumo.entrypoints.cli.modelo_work_calculate_cli`:
         Parses the operator-facing ``modelo work calculate`` command and calls
         this module to build the input bundle.
-    :func:`cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+    :func:`cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Consumes the validated bundle and persists the draft calculation
         revision.
     :mod:`cadrumo.application.modelo.calculation_resolution`:
@@ -29,87 +29,98 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from contextlib import nullcontext
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Literal, NoReturn
+from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
-from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.modelo import Modelo
-from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.rescate_type import RescateType
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import (
-    casilla_noncanonical_reference_targets,
     casillas_by_id,
-    declared_casilla_ids,
     row_field_template_records_by_casilla,
 )
-from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
-)
-from ...domain.calculations.registry.irnr_tipo_renta import (
-    m210_fetch_gated_tipo_renta_codes,
-    m210_tipo_renta_code_projection,
 )
 from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
-from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
-    validate_registry_text_scalar,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
-from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
-from ...domain.contribuyente.descendant_maternity import relacion_is_ambiguous_for_maternidad
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+from ...domain.modelos.calculation_revision_operator_layer import RowCarryAttestation, ValueAttestation
 from ...domain.modelos.dt12_reduccion import (
     Dt12WindowEligibility,
     compute_dt12_reduccion_plan_pensiones,
     dt12_regime_window_eligibility,
 )
-from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.row_models import (
-    Modelo184MemberRow,
-    Modelo184ShareSumError,
-    Modelo349OperadorRow,
-    Modelo349RectificacionRow,
     ModeloDetailRow,
-    validate_m184_member_share_sum,
-    validate_m349_country_prefix_context,
-    validate_m349_nif_format,
 )
 from ...domain.modelos.sal_reserva_especial import compute_sal_reserva_especial_dotacion
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ._registry_helpers import validate_casilla_input_ids
-from .action_errors import ModeloPreconditionErrorMixin
+from .calculate_input_validation import (
+    ModeloCalculateBindingInputError,
+    ModeloCalculateCasillaInputError,
+    ModeloCalculateDecimalInputError,
+    ModeloCalculateDetailRowsError,
+    ModeloCalculateInputError,
+    ModeloCalculateRelationInputError,
+    ModeloCalculateSemanticRoleError,
+    ModeloCalculateShortcutInputError,
+    ModeloCalculateTextInputError,
+    decimal,
+    decimal_binding_value,
+    projected_m210_tipo_renta_code,
+    refuse_row_field_casilla_override,
+    refused_text_value_verdict,
+    text_value,
+    typed_text_value,
+    validate_detail_rows,
+    validated_binding_input_channel,
+    validated_canonical_casilla_id,
+    validated_m210_official_tipo_renta_code,
+    validated_relation_id,
+)
+from .calculate_maternidad_advisory import (
+    ambiguous_relacion_hijo_ids,
+    maternidad_ambiguous_relacion_advisory,
+    maternidad_ceilings_unresolved_advisory,
+    maternidad_cotizaciones_figure_advisory,
+    maternidad_meses_withheld_advisory,
+)
 from .calculation_action_ports import CalculationActionPorts
+from .calculation_input_refusal_doors import (
+    calculate_binding_not_overridable_verdict,
+    calculate_shortcut_group_verdict,
+    semantic_role_ambiguous_verdict,
+    semantic_role_missing_verdict,
+)
 
 # Intra-package reuse of a sibling module's cap, permitted by the architecture
 # rule; only cross-package private reaches are barred, and that gate is separate.
-from .minimo_descendientes_advisory import MAX_NAMED_DESCENDANTS
-from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
-from .profile_binding import MaternidadMesesResolution
+from .profile_maternidad_meses import MaternidadMesesResolution
+from .registry_helpers import validate_casilla_input_ids
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 from .work_plazo import M210PlazoResolution
 from .work_profile import ModeloWorkProfile
@@ -123,11 +134,10 @@ from .work_selection import (
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
-
-_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
-_MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
-_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
-_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
+    from .projection_unresolved import (
+        ModeloProjectionUnresolvedBinding,
+        ModeloProjectionUnresolvedCasilla,
+    )
 
 
 # Registry authority: selected calculate-input declarations are consumed through
@@ -163,42 +173,6 @@ def _registry_calculate_input_declaration(
     if len(values) != 1 or not values[0]:
         raise TypeError(f"calculate-input declarations must define exactly one nonblank {key!r}")
     return values[0]
-
-
-class ModeloCalculateInputError(ModeloError):
-    """Raised when operator-supplied modelo calculation inputs are invalid."""
-
-
-class ModeloCalculateDetailRowsError(ModeloCalculateInputError):
-    """Raised when detail rows violate modelo calculation preconditions."""
-
-
-class ModeloCalculateDecimalInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
-    """Raised when a calculation override value is not decimal-shaped."""
-
-
-class ModeloCalculateTextInputError(ModeloCalculateInputError):
-    """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses."""
-
-
-class ModeloCalculateCasillaInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
-    """Raised when a casilla override cannot be resolved for the active revision."""
-
-
-class ModeloCalculateBindingInputError(ModeloPreconditionErrorMixin, ModeloCalculateInputError):
-    """Raised when a ``--binding`` override cannot be resolved for the active revision."""
-
-
-class ModeloCalculateRelationInputError(ModeloCalculateInputError):
-    """Raised when a ``--relation`` override cannot be resolved for the active revision."""
-
-
-class ModeloCalculateShortcutInputError(ModeloCalculateInputError):
-    """Raised when grouped calculation shortcut inputs are incomplete."""
-
-
-class ModeloCalculateSemanticRoleError(ModeloCalculateInputError):
-    """Raised when a registry revision lacks a semantic-role target required by a shortcut."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,6 +225,14 @@ class WorkCalculateInputBundle:
     Only a replay of a head whose layer is known sets it, so explicit
     full-specification inputs are never mistaken for the operator's typed values.
     """
+    attested_binding_ids: tuple[BindingId, ...] = ()
+    """Binding overrides the operator stated hold nothing, replayed from the head's layer."""
+    value_attestations: Mapping[BindingId, ValueAttestation] = field(default_factory=dict[BindingId, ValueAttestation])
+    """Figures the operator stated for earlier filings outside the envelope, replayed from the head layer."""
+    income_family_entry_digests: Mapping[str, str] = field(default_factory=dict[str, str])
+    """Per uncomputed income family, its ledger-row digest at the operator's entry, replayed from the head layer."""
+    row_attestations: tuple[RowCarryAttestation, ...] = ()
+    """The operator's per-row statements of a carry no source holds, replayed from the head layer."""
 
     @classmethod
     def build(
@@ -269,6 +251,10 @@ class WorkCalculateInputBundle:
         shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
         cleared_casilla_ids: tuple[CasillaId, ...] = (),
         record_operator_layer: bool = False,
+        attested_binding_ids: tuple[BindingId, ...] = (),
+        value_attestations: Mapping[BindingId, ValueAttestation] | None = None,
+        income_family_entry_digests: Mapping[str, str] | None = None,
+        row_attestations: tuple[RowCarryAttestation, ...] = (),
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -295,6 +281,10 @@ class WorkCalculateInputBundle:
             shortcut_diagnostics=shortcut_diagnostics,
             cleared_casilla_ids=cleared_casilla_ids,
             record_operator_layer=record_operator_layer,
+            attested_binding_ids=attested_binding_ids,
+            value_attestations=dict(value_attestations or {}),
+            income_family_entry_digests=dict(income_family_entry_digests or {}),
+            row_attestations=row_attestations,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -347,6 +337,10 @@ class ModeloWorkCalculationServiceResult:
     these rows keeps omitted or degraded source evidence operator-visible
     (no-silent-under-declaration). Each diagnostic's ``message`` carries the
     evidence needed by the CLI renderer.
+
+    ``unresolved_bindings`` and ``unresolved_casillas`` name, as the Modelo 100
+    projection does, the source-owned bindings and computed boxes this run left
+    without a value; a box in either has no value in the revision.
     """
 
     revision: CalculationRevision
@@ -355,6 +349,8 @@ class ModeloWorkCalculationServiceResult:
     modality: Modelo202ModalitySummary | None = None
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
+    unresolved_bindings: tuple[ModeloProjectionUnresolvedBinding, ...] = ()
+    unresolved_casillas: tuple[ModeloProjectionUnresolvedCasilla, ...] = ()
 
 
 def calculate_modelo_work_revision(
@@ -376,12 +372,12 @@ def calculate_modelo_work_revision(
     uses the profile the calculation checked.
 
     See Also:
-        :func:`cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
+        :func:`cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Runs source aggregation and persists the calculation revision.
-        :func:`cadrumo.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
+        :func:`cadrumo.entrypoints.cli.modelo_work_calculate_cli.run_work_calculate`:
             Calls this service and serialises the result for the operator.
     """
-    from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+    from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 
     calculation = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
@@ -391,6 +387,10 @@ def calculate_modelo_work_revision(
         text_casilla_inputs=inputs.optional_text_casilla_inputs(),
         cleared_casilla_ids=inputs.cleared_casilla_ids,
         record_operator_layer=inputs.record_operator_layer,
+        attested_binding_ids=inputs.attested_binding_ids,
+        value_attestations=inputs.value_attestations,
+        income_family_entry_digests=inputs.income_family_entry_digests,
+        row_attestations=inputs.row_attestations,
         m210_official_tipo_renta_code=inputs.m210_official_tipo_renta_code,
         m210_gross_income_source_mode=inputs.m210_gross_income_source_mode,
         binding_values=inputs.optional_binding_values(),
@@ -404,7 +404,7 @@ def calculate_modelo_work_revision(
     revision = calculation.revision
     work_unit = calculation.publication.work_unit
     plazo_resolutions: tuple[M210PlazoResolution, ...] = ()
-    if work_unit.modelo == Modelo("210"):
+    if work_unit.modelo == form_for_role("irnr.income"):
         from .m303_regimen_simplificado_scope import taxpayer_profile_for_work
         from .work_plazo import calculated_m210_plazo_resolution
 
@@ -423,6 +423,8 @@ def calculate_modelo_work_revision(
         modality=modelo_202_modality_for_record(work_unit, calculation.profile.record, operation=ports.operation),
         source_diagnostics=(*inputs.shortcut_diagnostics, *calculation.source_diagnostics),
         plazo_resolutions=plazo_resolutions,
+        unresolved_bindings=calculation.unresolved_bindings,
+        unresolved_casillas=calculation.unresolved_casillas,
     )
 
 
@@ -435,15 +437,15 @@ def _validated_string_casilla_override(
 ) -> tuple[str, str | None]:
     """Validate one registry-declared string casilla and return its projection."""
     if casilla_def.semantic_role == "irnr_tipo_renta":
-        official_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
-        return _projected_m210_tipo_renta_code(official_code), official_code
+        official_code = validated_m210_official_tipo_renta_code(raw_value, key=key)
+        return projected_m210_tipo_renta_code(official_code), official_code
     declarante_selector_role = _registry_calculate_input_declaration(
         "modelo.role.declarante_selector",
         operation=operation,
     )
     if casilla_def.semantic_role == declarante_selector_role:
         return _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def), None
-    return _typed_text_value(raw_value, key=key, casilla_def=casilla_def), None
+    return typed_text_value(raw_value, key=key, casilla_def=casilla_def), None
 
 
 def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_def: CasillaDefinition) -> str:
@@ -453,36 +455,40 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     bare number is a mis-routed income figure: on the text channel it would be
     stored silently and ignored by the formula chain, understating the base.
     """
-    value = _text_value(raw_value, key=key)
+    value = text_value(raw_value, key=key)
     try:
         Decimal(value)
     except (InvalidOperation, ValueError):
-        return _typed_text_value(value, key=key, casilla_def=casilla_def)
+        return typed_text_value(value, key=key, casilla_def=casilla_def)
     raise ModeloCalculateTextInputError(
         context={"key": key, "label": casilla_def.label, "data_type": casilla_def.data_type},
         translated_message="application.modelo.errors.calculate_text_casilla_numeric_value",
+        precondition_verdict=refused_text_value_verdict(key),
     )
 
 
-def _resolve_casilla_overrides(
+def resolve_casilla_overrides(
     casilla_overrides: Mapping[str, str],
     revision: ModeloRevision,
     *,
     operation: PinnedAuthorityOperation,
     work_unit: WorkUnit,
 ) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str], str | None]:
-    """Resolve canonical casilla overrides onto their registry-declared channels."""
+    """Resolve canonical casilla overrides onto their registry-declared channels.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     revision_casillas_by_id = casillas_by_id(revision)
     row_field_records = row_field_template_records_by_casilla(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}
     text_casilla_inputs: dict[CasillaId, str] = {}
     m210_official_tipo_renta_code: str | None = None
     for raw_key, raw_value in casilla_overrides.items():
-        key = _validated_canonical_casilla_id(raw_key, revision, work_unit=work_unit)
+        key = validated_canonical_casilla_id(raw_key, revision, work_unit=work_unit)
         # Before any value parsing: a row field is refused for being one, not
         # for a value its scalar channel could not have held anyway.
         if key in row_field_records:
-            _refuse_row_field_casilla_override(key, records=row_field_records[key], work_unit=work_unit)
+            refuse_row_field_casilla_override(key, records=row_field_records[key], work_unit=work_unit)
         casilla_def = revision_casillas_by_id.get(key)
         if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
             text_value, official_code = _validated_string_casilla_override(
@@ -495,9 +501,9 @@ def _resolve_casilla_overrides(
             if official_code is not None:
                 m210_official_tipo_renta_code = official_code
             continue
-        casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
+        casilla_inputs[key] = decimal(raw_value, flag="--casilla", key=key)
     return (
-        validate_casilla_input_ids(revision, casilla_inputs),
+        validate_casilla_input_ids(revision, casilla_inputs, work_unit=work_unit),
         text_casilla_inputs,
         m210_official_tipo_renta_code,
     )
@@ -531,8 +537,9 @@ def resolve_binding_overrides(
             raise ModeloCalculateBindingInputError(
                 context={"key": raw_key},
                 translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+                precondition_verdict=calculate_binding_not_overridable_verdict(raw_key, reason="date_sourced"),
             )
-        key, channel = _validated_binding_input_channel(
+        key, channel = validated_binding_input_channel(
             raw_key,
             revision,
             known_binding_ids,
@@ -542,7 +549,7 @@ def resolve_binding_overrides(
         if channel == "enum":
             enum_binding_values[key] = raw_value
             continue
-        binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key], work_unit=work_unit)
+        binding_values[key] = decimal_binding_value(raw_value, bindings_by_id[key])
     return binding_values, enum_binding_values
 
 
@@ -554,8 +561,8 @@ def _resolve_relation_overrides(
     known_relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
     relation_values: dict[RelationId, Decimal] = {}
     for raw_key, raw_value in relation_overrides.items():
-        key = _validated_relation_id(raw_key, known_relation_ids)
-        relation_values[key] = _decimal(raw_value, flag="--relation", key=key)
+        key = validated_relation_id(raw_key, known_relation_ids)
+        relation_values[key] = decimal(raw_value, flag="--relation", key=key)
     return relation_values
 
 
@@ -614,9 +621,9 @@ def build_work_calculate_input_bundle(
     """
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id, repository=ports.work_unit_repository)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
-    _validate_detail_rows(detail_rows, work_unit=work_unit, operation=operation)
-    revision = _revision_for_work_unit(work_unit, operation=operation)
-    casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
+    validate_detail_rows(detail_rows, work_unit=work_unit, operation=operation)
+    revision = revision_for_work_unit(work_unit, operation=operation)
+    casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = resolve_casilla_overrides(
         casilla_overrides,
         revision,
         operation=operation,
@@ -667,251 +674,6 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_m349_detail_rows(
-    rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
-) -> None:
-    """Validate NIF and country context inside the original governed-facts scope."""
-    with validating_governed_facts(operation):
-        for row in rows:
-            if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)) and not validate_m349_nif_format(
-                row.nif_comunitario, row.codigo_pais
-            ):
-                raise ModeloCalculateDetailRowsError(
-                    context={"nif": row.nif_comunitario, "pais": row.codigo_pais},
-                    translated_message="application.modelo.errors.calculate_m349_invalid_nif",
-                )
-            if isinstance(row, Modelo349OperadorRow):
-                validate_m349_country_prefix_context(
-                    country_code=row.codigo_pais,
-                    clave_operacion=row.clave_operacion,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                )
-            elif isinstance(row, Modelo349RectificacionRow):
-                validate_m349_country_prefix_context(
-                    country_code=row.codigo_pais,
-                    clave_operacion=row.clave_operacion,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                    is_rectification=True,
-                    rectified_year=int(row.ejercicio),
-                    rectified_period=row.periodo,
-                )
-
-
-def _validate_detail_rows(
-    rows: tuple[ModeloDetailRow, ...], *, work_unit: WorkUnit, operation: PinnedAuthorityOperation
-) -> None:
-    member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
-    try:
-        validate_m184_member_share_sum(member_rows)
-    except Modelo184ShareSumError as exc:
-        raise ModeloCalculateDetailRowsError(
-            context={"total": str(exc.total), "count": str(exc.count)},
-            translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
-        ) from exc
-
-    if str(work_unit.modelo) != "349":
-        return
-    _validate_m349_detail_rows(rows, work_unit=work_unit, operation=operation)
-
-
-def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
-    """Validate an operator-supplied calculation input against the canonical grammar.
-
-    The fractional part is deliberately uncapped: a casilla, relation, or
-    binding value may legitimately carry sub-cent precision (the AEAT
-    fixed-width encoder rounds such a value to cents with ``ROUND_HALF_UP`` per
-    the AEAT Instrucciones), so a two-digit cap here would refuse a value the
-    export layer is built to accept. What the grammar does refuse is text whose
-    numeric meaning is not what it appears: scientific notation, a leading
-    ``+``, a comma decimal separator, embedded whitespace, and
-    ``NaN``/``Infinity`` — all of which a bare :class:`~decimal.Decimal` call
-    silently accepted.
-    """
-    parsed = try_parse_canonical_decimal(raw_value)
-    if parsed is None:
-        raise ModeloCalculateDecimalInputError(
-            context={"flag": flag, "key": key, "value": raw_value},
-            translated_message="application.modelo.errors.calculate_decimal_input_invalid",
-        )
-    return parsed
-
-
-def _decimal_binding_value(
-    raw_value: str,
-    binding: BindingDefinition,
-    *,
-    work_unit: WorkUnit | None = None,
-) -> Decimal:
-    """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
-
-    For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa
-    modality flag), a non-numeric value such as ``false`` otherwise produces the
-    opaque "is not a decimal" error. This raises an instructive refusal that names
-    the accepted ``0`` / ``1`` encoding and what each value means, derived from the
-    binding's boolean selector rather than a per-form hardcoded table.
-
-    Conformance is judged by the same canonical grammar :func:`_decimal` applies,
-    so a value whose numeric meaning is not what it appears (scientific
-    notation, a leading ``+``, a comma decimal) refuses here too instead of
-    being silently coerced.
-    """
-    encoded_options = boolean_binding_encoded_values(binding)
-    parsed = try_parse_canonical_decimal(raw_value)
-    if parsed is None:
-        if encoded_options:
-            mapping = ", ".join(
-                f"{option.encoded_value} ({'true' if option.boolean_meaning else 'false'} = "
-                f"registry value {option.registry_value!r})"
-                for option in encoded_options
-            )
-            accepted = ", ".join(option.encoded_value for option in encoded_options)
-            raise ModeloCalculateDecimalInputError(
-                context={
-                    "flag": "--binding",
-                    "key": binding.id,
-                    "value": raw_value,
-                    "accepted": accepted,
-                    "mapping": mapping,
-                },
-                translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
-                precondition_failure=_caller_override_failure(
-                    work_unit,
-                    scenario_id="modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
-                    evidence_id=_BINDING_OVERRIDE_EVIDENCE_ID,
-                    facts={"binding_id": binding.id, "accepted_encoded_values": accepted},
-                    with_registry_listing=True,
-                ),
-            )
-        raise ModeloCalculateDecimalInputError(
-            context={"flag": "--binding", "key": binding.id, "value": raw_value},
-            translated_message="application.modelo.errors.calculate_decimal_input_invalid",
-        )
-    return parsed
-
-
-def _typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinition) -> str:
-    """Canonicalise a ``--casilla`` value through its casilla's declared text-scalar validator.
-
-    The text channel carries the whole registry string family (``period_code``,
-    ``nif``, ``iban``, ``country_code``, ... — every ``data_type`` whose
-    :func:`cadrumo.domain.calculations.registry.schema_scalars.registry_scalar_value_type` is
-    ``"str"``), not only bare ``text``. Each family member declares its own
-    validator, so running it here keeps the CLI the operator's first
-    instructive surface: a malformed ``period_code`` is refused by name at the
-    boundary instead of surfacing as a generic registry error deeper in the
-    calculation pipeline. The canonical form the validator returns is what
-    reaches the engine, exactly as
-    :func:`cadrumo.domain.calculations.registry.schema_scalars.validate_registry_text_scalar`
-    would produce there.
-    """
-    value = _text_value(raw_value, key=key)
-    try:
-        return validate_registry_text_scalar(
-            casilla_def.data_type,
-            value,
-            tax_id_format=runtime_tax_id_format() if casilla_def.data_type == "nif" else None,
-        )
-    except RegistryValidationError as exc:
-        context = {"key": key, "data_type": casilla_def.data_type}
-        if casilla_def.data_type != "iban":
-            context["value"] = raw_value
-        raise ModeloCalculateTextInputError(
-            context=context,
-            translated_message="application.modelo.errors.calculate_typed_text_input_invalid",
-        ) from exc
-
-
-def _text_value(raw_value: str, *, key: str) -> str:
-    """Validate that a ``--casilla`` value routed to the text channel is a non-empty string.
-
-    Mirrors the registry engine's own
-    :func:`cadrumo.domain.calculations.registry.formula_text_inputs.validated_text_input_casilla_ids`
-    non-empty-string contract at the CLI boundary, so an empty text value
-    refuses loudly here instead of surfacing a generic registry error deeper in
-    the calculation pipeline. Callers routing a value to a declared text-scalar
-    family go through :func:`_typed_text_value`, which adds that family's own
-    validator on top of this contract.
-    """
-    value = raw_value.strip()
-    if not value:
-        raise ModeloCalculateTextInputError(
-            context={"key": key, "value": raw_value},
-            translated_message="application.modelo.errors.calculate_text_input_empty",
-        )
-    return value
-
-
-def _projected_m210_tipo_renta_code(official_code: str) -> str:
-    """Project a validated Modelo 210 official ``tipo_renta`` code to its rate concept.
-
-    The generic ``--casilla key=value`` surface cannot render a static Typer
-    ``Choice`` for one casilla's value, so this is the sanctioned
-    architecture-boundaries fallback: a registry-driven refusal that LISTS the
-    accepted declared codes and names a fetch-gated code as fetch-gated rather
-    than "invalid". The fetch-gated codes
-    (the registry-declared fetch-gated code set) are real AEAT
-    HOJA-INFORMATIVA-210 codes whose rate is not yet grounded, so an operator
-    entering code ``08`` is told it is not yet fileable, never that it is
-    invalid. The accepted set is the declared code axis
-    (the registry-projected code map), kept in parity with the selected
-    detail catalogue by the governed-fact resolver.
-
-    On acceptance the operator-entered official code is PROJECTED to its
-    :class:`~cadrumo.core.irnr.TipoRentaIrnr` rate-concept token — the value the engine
-    already keys the baseline rate table and treaty overrides on — so the
-    operator declares the code the form asks for while the rate machinery keeps
-    its conceptual key. (Codes that share a concept, e.g. arrendamiento ``01``
-    and empresariales ``03`` both ``general``, collapse to that concept here;
-    per-code form-fidelity display belongs to the fetch-gated full-casilla
-    schema.)
-    """
-    return m210_tipo_renta_code_projection()[official_code].value
-
-
-def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str:
-    """Return the validated raw M210 code without collapsing its identity.
-
-    The formula engine receives the conceptual rate token, while the ledger
-    source resolver and persisted calculation revision retain this official
-    code. Keeping both values prevents the many-to-one rate projection from
-    turning distinct declarations such as codes ``01`` and ``03`` into the
-    same ledger-selection key.
-    """
-    value = _text_value(raw_value, key=key)
-    projection = m210_tipo_renta_code_projection()
-    fetch_gated_codes = m210_fetch_gated_tipo_renta_codes()
-    if value in projection:
-        return value
-    accepted = ", ".join(sorted(projection))
-    if value in fetch_gated_codes:
-        raise ModeloCalculateTextInputError(
-            context={"key": key, "value": value, "accepted": accepted},
-            translated_message="application.modelo.errors.calculate_m210_tipo_renta_fetch_gated",
-        )
-    fetch_gated = ", ".join(sorted(fetch_gated_codes))
-    raise ModeloCalculateTextInputError(
-        context={"key": key, "value": value, "accepted": accepted, "fetch_gated": fetch_gated},
-        translated_message="application.modelo.errors.calculate_m210_tipo_renta_unknown",
-    )
-
-
-def _refuse_row_field_casilla_override(key: CasillaId, *, records: tuple[str, ...], work_unit: WorkUnit) -> NoReturn:
-    """Refuse a casilla an export record fills once per detail row, naming those records."""
-    raise ModeloCalculateCasillaInputError(
-        context={"casilla_ids": key, "record_ids": ",".join(records)},
-        translated_message="errors.calc.row_field_template_supplied_as_input",
-        precondition_failure=_caller_override_failure(
-            work_unit,
-            scenario_id="modelo.work.calculate.caller_overrides.row_field_casilla_refused",
-            evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
-            facts={"casilla_key": key},
-            with_registry_listing=False,
-        ),
-    )
-
-
 def _capture_work_catalogue(
     work_unit_id: str,
     *,
@@ -932,8 +694,9 @@ def _selected_work_unit(*, work_unit_id: str, catalogue: WorkUnitCatalogue, buck
     return resolution.work_unit
 
 
-def _revision_for_work_unit(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+def revision_for_work_unit(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
+    """Return the registry revision of a work unit at calculation grade."""
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     # The calculate path needs the rung that computes amounts, not the
     # filing rung: a revision that honestly declares calculation must not be
@@ -952,8 +715,8 @@ def _resolved_maternidad_meses(
     profile: ModeloWorkProfile,
 ) -> MaternidadMesesResolution:
     """Resolve the Art. 81.1 maternidad months the work profile contributes."""
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
-    from .profile_binding import resolve_maternidad_meses
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from .profile_maternidad_meses import resolve_maternidad_meses
 
     snapshot = resolve_registry_snapshot_for_work_unit(
         work_unit,
@@ -979,345 +742,13 @@ def _maternidad_casilla_id(
     from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
     return casilla_id_for_unambiguous_revision_semantic_role(
-        _revision_for_work_unit(work_unit, operation=operation),
+        revision_for_work_unit(work_unit, operation=operation),
         _registry_calculate_input_declaration(
             "modelo.role.deduccion_maternidad",
             work_unit=work_unit,
             operation=operation,
         ),
         modelo_id=str(work_unit.modelo),
-    )
-
-
-def _maternidad_ceilings_unresolved_advisory(
-    declares_meses: bool,
-    casilla_id: CasillaId,
-) -> CalculationSourceDiagnostic | None:
-    """Advise when declared months cannot be evaluated for want of the Art. 58.1 ceilings.
-
-    A revision that declares casilla 0611 but not the eligibility parameters
-    cannot answer whether a descendant holds the mínimo, so the deducción is
-    withheld rather than granted against a fabricated ceiling. That is the safe
-    direction and the same refusal the mínimo aggregate makes — but silence here
-    is indistinguishable from a taxpayer who declared nothing, which is the state
-    this whole Step exists to remove.
-
-    Fires only when months were actually declared, so a filer with no maternidad
-    facts is not told about a parameter gap that costs them nothing.
-    """
-    if not declares_meses:
-        return None
-    return CalculationSourceDiagnostic(
-        reason="source_issue",
-        source_kind=_MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND,
-        message=(
-            "the active profile declares meses_madre_trabajo but this revision does not declare the "
-            "Art. 58.1 rentas ceiling and the Art. 61 norma 2ª own-return ceiling, so entitlement to "
-            "the mínimo por descendientes cannot be evaluated and the Art. 81.1 deducción por "
-            "maternidad is withheld rather than granted against an unverified ceiling"
-        ),
-        casilla_id=casilla_id,
-    )
-
-
-def _maternidad_cotizaciones_ceiling_advisory(
-    withheld_for_ceiling: bool,
-    casilla_id: CasillaId,
-) -> CalculationSourceDiagnostic | None:
-    """Advise when a pre-2023 deducción is withheld because its ceiling is unreachable.
-
-    Until 2022 Art. 81.1 capped the deducción at the mother's "cotizaciones y
-    cuotas totales a la Seguridad Social y mutualidades devengadas en cada
-    período impositivo"; the Manual Práctico de Renta 2024 records the removal
-    "desde el 1 de enero de 2023". The engine cannot apply that cap for the
-    affected years, because the cotizaciones binding exists only in the 2024
-    revision and the profile fact is 2024-pinned, so no figure is reachable.
-
-    Granting an un-ceilinged deducción for those years would over-grant and
-    therefore under-declare. Withholding is the safe direction; withholding
-    SILENTLY is not, because the operator declared months and would otherwise
-    see them vanish with no reason given. The remedy is theirs rather than the
-    engine's: the figure is computable by hand from the certificate they hold.
-    """
-    if not withheld_for_ceiling:
-        return None
-    return CalculationSourceDiagnostic(
-        reason="source_issue",
-        source_kind=_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND,
-        message=(
-            "the active profile declares meses_madre_trabajo but this filing year predates 2023, when "
-            "Art. 81.1 was still capped at the mother's Social Security cotizaciones devengadas in the "
-            "period. This application holds no cotizaciones figure for years before 2024, so the cap "
-            "cannot be applied and the deducción is withheld rather than granted un-capped. Compute it "
-            "by hand as min(months x 100, 1200, cotizaciones devengadas) and enter the result with "
-            "`--casilla` if filing this year."
-        ),
-        casilla_id=casilla_id,
-    )
-
-
-def _ambiguous_relacion_hijo_ids(
-    contributing_hijo_ids: frozenset[str],
-    *,
-    profile: ModeloWorkProfile,
-) -> frozenset[str]:
-    """*contributing_hijo_ids* whose stored ``relacion`` is the unstated default.
-
-    Reads the active profile's descendiente records directly through the same
-    canonical reconstruction (:func:`~domain.contribuyente.descendant_facts.descendant_list_from_facts`)
-    every other consumer of this fact set uses, rather than adding a field to
-    :class:`~application.modelo.profile_binding.MaternidadMesesResolution`: this
-    module already owns loading the profile record for
-    :func:`_resolved_maternidad_meses`, and the question this asks — which
-    contributing descendant's relación is unstated — is orthogonal to the
-    months resolution that function answers.
-
-    Which relación is ambiguous is stated once, with the manual's reasoning, by
-    :func:`~domain.contribuyente.descendant_maternity.relacion_is_ambiguous_for_maternidad`. The
-    reasoning used to be written out here AND at the declaration-time surface
-    that asks the same question, so a member added to the axis for either
-    population would have had to reach two places that only agreed by hand.
-
-    Returns the empty set when *contributing_hijo_ids* is empty.
-    """
-    if not contributing_hijo_ids:
-        return frozenset[str]()
-    facts = {fact.path: str(fact.value) for fact in profile.record.facts if fact.value is not None}
-    descendientes = descendant_list_from_facts(facts)
-    return frozenset(
-        hijo_id
-        for hijo_id in contributing_hijo_ids
-        if hijo_id.isdigit()
-        and int(hijo_id) < len(descendientes)
-        and relacion_is_ambiguous_for_maternidad(descendientes[int(hijo_id)].relacion)
-    )
-
-
-def _bounded_descendant_ids(ids: Sequence[str]) -> str:
-    """Render a descendant-id list for a diagnostic, bounded regardless of household size.
-
-    The diagnostic message is length-capped by contract, and an interpolated
-    per-descendant list is the only unbounded term in the messages below. Left
-    unbounded it makes household size decide whether the advisory can be raised
-    at all: past a threshold the message overruns the cap, the model refuses,
-    and a NON-blocking advisory becomes a hard validation error that stops the
-    filing -- at exactly the moment it had something to say.
-
-    Shares :data:`MAX_NAMED_DESCENDANTS` with the sibling advisory module that
-    first hit this rather than restating the number, so the two bounds cannot
-    drift apart. The rendering differs (bare ids here, fact paths there) but the
-    judgement being made is one judgement.
-    """
-    shown = ", ".join(ids[:MAX_NAMED_DESCENDANTS])
-    remainder = len(ids) - MAX_NAMED_DESCENDANTS
-    return f"{shown} and {remainder} more" if remainder > 0 else shown
-
-
-def _maternidad_ambiguous_relacion_advisory(
-    ambiguous_hijo_ids: frozenset[str],
-    casilla_id: CasillaId,
-) -> CalculationSourceDiagnostic | None:
-    """Advise when a contributing descendant's relación cannot rule out an Art. 81.1 exclusion.
-
-    Non-blocking rather than a refusal that withholds the figure or demands an
-    explicit override flag before calculating. The overwhelming majority of
-    descendientes recorded under the default relación genuinely are a hijo, and
-    calculate is a draft step an operator iterates on repeatedly before verify
-    and export — a repeated refusal on every recalculation of the ordinary case
-    would obstruct the majority for the sake of a minority this application
-    cannot itself distinguish. The Notice channel this advisory rides is the
-    structured operator surface, where it remains available for filer review,
-    matching the established shape of every other unmodelled-eligibility-condition advisory
-    on this same casilla (the cotizaciones ceiling above, and the DT 12ª
-    antiquity condition elsewhere): disclose rather than silently grant, and
-    disclose rather than silently block a filer this application cannot prove
-    is wrong.
-    """
-    if not ambiguous_hijo_ids:
-        return None
-    return CalculationSourceDiagnostic(
-        reason="source_issue",
-        source_kind=_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND,
-        message=(
-            f"descendiente {_bounded_descendant_ids(sorted(ambiguous_hijo_ids))} contributes to the Art. 81.1 "
-            "deducción por maternidad under the unstated relación. The manual grants the mínimo but "
-            "excludes the deducción for a grandchild/other consanguinidad descendant, or a minor "
-            "under judicial guarda y custodia -- the stored fact cannot distinguish either from a "
-            "true hijo. Confirm this descendant is a hijo, or restate its relación on the "
-            "descendiente record."
-        ),
-        casilla_id=casilla_id,
-    )
-
-
-def _maternidad_meses_withheld_advisory(
-    withheld: tuple[str, ...],
-    casilla_id: CasillaId,
-) -> CalculationSourceDiagnostic | None:
-    """Advise when declared maternidad months contribute nothing on eligibility grounds.
-
-    The one state where a taxpayer declared real months, sees them stored, and
-    receives nothing — and nothing about the computed value says why. Art. 81.1
-    reaches a child under three "con derecho a la aplicación del mínimo por
-    descendientes" OR one inside the age-independent adopción/acogimiento
-    entry-date window
-    (:meth:`~domain.contribuyente.descendant_maternity.DescendantMaternityMixin.art_81_1_entry_window_meses`),
-    so months declared against a descendant BOTH limbs exclude are correctly
-    withheld; withholding them SILENTLY is what this reports.
-
-    The remedy must not name the birth date as the fix for every withheld
-    case. The entry-date limb reaches an over-three adopción or acogimiento by
-    a recorded ``INSCRIPCION``/``ACOGIMIENTO`` date, not by age — so the real
-    gap for that population is a missing entry date, and a message that only
-    ever suggests the birth date steers that filer toward altering a fact
-    that was already correct.
-
-    Nor may the remedy name ``descendiente add`` as the way to CHANGE a
-    declared row. That verb only appends, and the paged editing door
-    (``aeat config profile descendiente`` with no subcommand) refuses on a
-    piped host, which the non-interactive CLI contract
-    always is. The actionable route is ``descendiente remove <index>`` then
-    ``add`` to restate the row.
-    """
-    if not withheld:
-        return None
-    return CalculationSourceDiagnostic(
-        reason="source_issue",
-        source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
-        message=(
-            f"descendiente {_bounded_descendant_ids(withheld)} declares meses_madre_trabajo but contributes no "
-            "Art. 81.1 deducción por maternidad, which reaches a child under three OR one inside the "
-            "adopción/acogimiento entry-date window. An over-three adopción/acogimiento with no entry "
-            "date is withheld for a missing INSCRIPCION or ACOGIMIENTO, not a birth date. Restate the "
-            "row on the descendiente record, or correct cohabitation or rentas."
-        ),
-        casilla_id=casilla_id,
-    )
-
-
-_CALCULATE_SUBJECT_LEAF = "modelo.work.calculate"
-_BINDING_OVERRIDE_EVIDENCE_ID = "modelo.work.calculate.binding_override"
-_CASILLA_OVERRIDE_EVIDENCE_ID = "modelo.work.calculate.casilla_override"
-
-
-def _caller_override_failure(
-    work_unit: WorkUnit | None,
-    *,
-    scenario_id: str,
-    evidence_id: str,
-    facts: Mapping[str, str | int],
-    with_registry_listing: bool,
-) -> ModeloPreconditionFailure | None:
-    """Build the declared calculate refusal for one caller override, when the target is known.
-
-    Only the calculate verb supplies its work unit; the preview projection and
-    the edit path share the binding validators without being that verb, so
-    they get no ``modelo.work.calculate`` verdict. Every actionable
-    caller-override scenario recovers through a registry listing addressed by
-    the work unit's modelo, year and period.
-    """
-    if work_unit is None:
-        return None
-    listing_arguments: Mapping[str, str | int] = {
-        "modelo": str(work_unit.modelo),
-        "year": work_unit.filing_year,
-        "period": work_unit.period.registry_token,
-    }
-    return build_modelo_precondition_failure_for_scenario(
-        subject_leaf_key=_CALCULATE_SUBJECT_LEAF,
-        scenario_id=scenario_id,
-        evidence_id=evidence_id,
-        evidence_values={"work_unit_id": work_unit.work_unit_id, **listing_arguments, **facts},
-        provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-        action_argument_values=listing_arguments if with_registry_listing else None,
-    )
-
-
-def _validated_binding_input_channel(
-    key: str,
-    revision: ModeloRevision,
-    known_binding_ids: set[BindingId],
-    enum_channel_ids: frozenset[BindingId],
-    *,
-    work_unit: WorkUnit | None = None,
-) -> tuple[BindingId, Literal["decimal", "enum"]]:
-    """Return the registry-declared engine channel for a ``--binding`` override.
-
-    Routes the override by the binding's *declared* input channel, not by
-    parse success: a binding the revision's formulas consume as a string
-    enum key (``enum_consumed_binding_ids``) is an ``"enum"`` channel and
-    its override is carried verbatim; every other declared binding is a
-    ``"decimal"`` channel whose override the caller coerces with
-    :func:`_decimal` (so a malformed numeric value REFUSES instead of
-    silently reclassifying as an enum string). An unknown binding id
-    refuses with the accepted set, per ``no-silent-under-declaration``
-    and the CLI-Choice-hint mandate.
-    """
-    if key not in known_binding_ids:
-        accepted = ", ".join(sorted(known_binding_ids))
-        raise ModeloCalculateBindingInputError(
-            context={"key": key, "accepted": accepted},
-            translated_message="application.modelo.errors.calculate_binding_unknown",
-            precondition_failure=_caller_override_failure(
-                work_unit,
-                scenario_id="modelo.work.calculate.caller_overrides.binding_unknown",
-                evidence_id=_BINDING_OVERRIDE_EVIDENCE_ID,
-                facts={
-                    "binding_id": key,
-                    "revision_id": revision.id,
-                    "declared_binding_count": len(known_binding_ids),
-                },
-                with_registry_listing=True,
-            ),
-        )
-    return key, "enum" if key in enum_channel_ids else "decimal"
-
-
-def _validated_relation_id(key: str, known_relation_ids: set[RelationId]) -> RelationId:
-    if key in known_relation_ids:
-        return key
-    accepted = ", ".join(sorted(known_relation_ids))
-    raise ModeloCalculateRelationInputError(
-        context={"key": key, "accepted": accepted},
-        translated_message="application.modelo.errors.calculate_relation_unknown",
-    )
-
-
-def _validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_unit: WorkUnit) -> CasillaId:
-    known_ids = declared_casilla_ids(revision)
-    if key in known_ids:
-        return key
-
-    noncanonical_targets = casilla_noncanonical_reference_targets(revision, key)
-    if noncanonical_targets:
-        accepted = ", ".join(noncanonical_targets)
-        if len(noncanonical_targets) > 1:
-            raise ModeloCalculateCasillaInputError(
-                context={"key": key, "accepted": accepted},
-                translated_message="application.modelo.errors.calculate_casilla_noncanonical_ambiguous",
-            )
-        raise ModeloCalculateCasillaInputError(
-            context={"key": key, "accepted": accepted},
-            translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
-        )
-
-    accepted_hint = ", ".join(sorted(known_ids)[:20])
-    if len(known_ids) > 20:
-        accepted_hint += ", ..."
-    raise ModeloCalculateCasillaInputError(
-        context={"key": key, "accepted": accepted_hint},
-        translated_message="application.modelo.errors.calculate_casilla_unknown",
-        precondition_failure=_caller_override_failure(
-            work_unit,
-            scenario_id="modelo.work.calculate.caller_overrides.casilla_unknown",
-            evidence_id=_CASILLA_OVERRIDE_EVIDENCE_ID,
-            facts={
-                "casilla_key": key,
-                "revision_id": revision.id,
-                "declared_casilla_count": len(known_ids),
-            },
-            with_registry_listing=True,
-        ),
     )
 
 
@@ -1332,7 +763,7 @@ def modelo_202_modality_for_record(
     Core types:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
-    if str(work_unit.modelo) != Modelo("202"):
+    if str(work_unit.modelo) != form_for_role("sociedades.instalment"):
         return None
 
     from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
@@ -1366,7 +797,11 @@ def _supplied_option_group(
     if not supplied:
         return None
     if len(supplied) != len(values):
-        raise ModeloCalculateShortcutInputError(message, translated_message=translated_message)
+        raise ModeloCalculateShortcutInputError(
+            message,
+            translated_message=translated_message,
+            precondition_verdict=calculate_shortcut_group_verdict(),
+        )
     return supplied
 
 
@@ -1402,17 +837,17 @@ def _maternidad_advisories(
     # more, and both advisories below always evaluate against the one
     # source rather than being gated on a second channel's absence.
     candidates = (
-        _maternidad_ceilings_unresolved_advisory(
+        maternidad_ceilings_unresolved_advisory(
             maternidad.declares_meses and not maternidad.ceilings_resolved,
             maternidad_casilla_id,
         ),
-        _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
-        _maternidad_cotizaciones_ceiling_advisory(
-            maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
+        maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+        maternidad_cotizaciones_figure_advisory(
+            maternidad.cotizaciones_figure_missing,
             maternidad_casilla_id,
         ),
-        _maternidad_ambiguous_relacion_advisory(
-            _ambiguous_relacion_hijo_ids(
+        maternidad_ambiguous_relacion_advisory(
+            ambiguous_relacion_hijo_ids(
                 frozenset(hijo_id for hijo_id, _ in maternidad.pairs),
                 profile=profile,
             ),
@@ -1755,6 +1190,7 @@ def _semantic_role_casilla_id(
             str(exc),
             context=exc.ambiguity.context(),
             translated_message="application.modelo.errors.calculate_semantic_role_ambiguous",
+            precondition_verdict=semantic_role_ambiguous_verdict(semantic_role),
         ) from exc
     if casilla_id is not None:
         return casilla_id
@@ -1765,11 +1201,9 @@ def _semantic_role_casilla_id(
             "semantic_role": semantic_role,
         },
         translated_message="application.modelo.errors.calculate_semantic_role_missing",
+        precondition_verdict=semantic_role_missing_verdict(semantic_role, work_unit),
     )
 
-
-decimal_binding_value = _decimal_binding_value
-validated_binding_input_channel = _validated_binding_input_channel
 
 __all__ = [
     "Modelo202ModalitySummary",

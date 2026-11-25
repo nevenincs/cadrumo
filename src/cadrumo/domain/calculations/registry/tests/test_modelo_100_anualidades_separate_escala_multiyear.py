@@ -1,4 +1,4 @@
-"""M100 anualidades por alimentos separate-escala for 2022-2023, and the 2020-2021 input surface.
+"""M100 anualidades por alimentos separate-escala in every filing-grade edition with the per-child block, and the below-floor input surface.
 
 The 2020 and 2021 revisions remain authored but lie below the published
 filing-year floor, so their casilla 0527 input surface is inspected on the
@@ -52,9 +52,15 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import PinnedAuthorityOperation
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
+from ..runtime_graph import expression_casilla_refs
 from ..schema import RegistrySnapshot
-from .authored_editions import authored_revisions_where
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .authored_editions import (
+    authored_revisions_where,
+    filing_grade_exercises,
+    filing_year_envelope,
+    single_exercise_editions,
+)
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -64,8 +70,28 @@ from .published_authority import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-_SEPARATE_ESCALA_YEARS = (2022, 2023)
-_MANUAL_ANUALIDADES_YEARS = (2020, 2021)
+#: The per-child "Hijo/Hija 1: Importe de las anualidades" box the per-child block opens with.
+_FIRST_CHILD_ANUALIDADES = validated_casilla_id("1741", surface="test_m100_anualidades_multiyear")
+
+
+def _computes_0527_from_child_block(year: int) -> bool:
+    revision = published_authored_revision("100", year=year)
+    return any(
+        str(formula.target_casilla_id) == "0527"
+        and _FIRST_CHILD_ANUALIDADES in expression_casilla_refs(formula.expression)
+        for formula in revision.formulas
+    )
+
+
+# The filing-grade exercises whose edition sums 0527 from the per-child block, which
+# the escala table below is grounded for; the authored exercises below the support
+# floor keep 0527 as a manual scalar.
+_SEPARATE_ESCALA_YEARS = tuple(year for year in filing_grade_exercises("100") if _computes_0527_from_child_block(year))
+_MANUAL_ANUALIDADES_YEARS = tuple(
+    year for year in single_exercise_editions("100") if year < filing_year_envelope().floor
+)
+assert _SEPARATE_ESCALA_YEARS
+assert _MANUAL_ANUALIDADES_YEARS
 # The authored revisions below the support floor that declare 1741-1759 as Anexo C
 # pension fields; the retired sum formula wrongly read those fields into 0527.
 _ANEXO_C_PENSION_FIELD_IDS = ("1741", "1744", "1749", "1754", "1759")
@@ -110,6 +136,20 @@ def _c(value: str) -> CasillaId:
     return validated_casilla_id(value, surface="test_m100_anualidades_multiyear")
 
 
+_LATER_NEUTRAL_BINDINGS: dict[str, Decimal] = {
+    "renta-profile-incremento-guarderia": Decimal("0"),
+    # The edition-specific Art. 81 maternidad cotizaciones fact; this filer has no descendants.
+    "renta-profile-deduccion-maternidad-cotizaciones": Decimal("0"),
+    "renta-maritime-gross-navigation-income": Decimal("0"),
+    "renta-maritime-annual-salary": Decimal("0"),
+    "renta-maritime-qualifying-days": Decimal("0"),
+    "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+    "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+    # Madrid cuidado de ascendientes arrives with a later edition; no ascendant rows, so its count is zero.
+    "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+}
+_LATER_NEUTRAL_BOOLEAN_BINDINGS: dict[str, bool] = {"renta-maritime-path-rebeca": False}
+
 _TRABAJO_INGRESOS = Decimal("16896")
 _ANUALIDADES = Decimal("3000")
 _ANUALIDADES_ABOVE_BASE = Decimal("25000")
@@ -135,15 +175,36 @@ def _run(
     if anualidades is not None:
         inputs[_anualidades_casilla(year)] = anualidades
     binding_values = {
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-anualidades-sin-minimo-descendientes": flag,
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # No ascendant rows: the mínimo por ascendientes aggregates are zero.
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         # An individual filer without minor children in the unit, and no
         # negative general base carried in from earlier ejercicios.
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+        "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+        "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         # Casillas 0245-0247 are computed from the marriage facts in every edition
         # from 2022; an unmarried filer supplies them as neutral zeros.
         "renta-profile-marriage-full-year": Decimal("0"),
@@ -152,8 +213,17 @@ def _run(
     }
     # An edition that computes the maternity deducción (casilla 0611) needs its
     # binding; neutral zero for a filer with no descendants.
-    if set(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS) <= {binding.id for binding in snapshot.revision.bindings}:
+    declared = {binding.id for binding in snapshot.revision.bindings}
+    if set(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS) <= declared:
         binding_values.update(M100_NO_DESCENDANT_MATERNIDAD_BINDINGS)
+    # Later editions add the Art. 81.2 guardería increment, the maritime-worker
+    # exemption and a births count; this filer has none, so each is neutral where declared.
+    binding_values.update(
+        {binding_id: value for binding_id, value in _LATER_NEUTRAL_BINDINGS.items() if binding_id in declared}
+    )
+    boolean_binding_values = {
+        binding_id: value for binding_id, value in _LATER_NEUTRAL_BOOLEAN_BINDINGS.items() if binding_id in declared
+    }
     relation_values = {
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
         "renta-modelo-131-pagos-fraccionados": Decimal("0"),
@@ -164,6 +234,7 @@ def _run(
         date_context={"filing_period": date(year, 12, 31)},
         enum_binding_values={"renta-profile-tax-residence-ccaa": "cataluna"},
         binding_values=binding_values,
+        boolean_binding_values=boolean_binding_values,
         relation_values=relation_values,
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1975, 6, 15)},
     )

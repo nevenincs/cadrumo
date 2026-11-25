@@ -25,7 +25,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
-from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import _persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
+    cross_period_clean_state_persist_justificante_metadata,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_external_evidence import filing_external_evidence_blockers
 from cadrumo.application.calculations.cross_period_models import CrossPeriodCleanStateBlocker
@@ -45,7 +47,7 @@ from cadrumo.domain.modelos.filing_record import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "39039039-0390-4390-8390-390390390391"
-_OWNER_NIF = "X1234567L"
+_OWNER_NIF = "X0001500M"
 _OTHER_NIF = "B12345678"
 _CSV = "JUSTIDENTITY1T"
 _YEAR = 2025
@@ -55,7 +57,9 @@ _CLOCK = datetime(2025, 4, 15, 9, 0, tzinfo=UTC)
 
 def _persist_justificante() -> None:
     """Persist the owner's real receipt through the package's existing seeder."""
-    _persist_justificante_metadata(_CSV, modelo="303", period=_PERIOD, filing_year=_YEAR, tax_id=_OWNER_NIF)
+    cross_period_clean_state_persist_justificante_metadata(
+        _CSV, modelo="303", period=_PERIOD, filing_year=_YEAR, tax_id=_OWNER_NIF
+    )
 
 
 def _filing() -> ModeloRecord:

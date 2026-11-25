@@ -14,6 +14,7 @@ deliberate and cheap to update.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from itertools import pairwise
 from pathlib import Path
 
@@ -27,7 +28,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
-from dev._paths import REPO_ROOT as _REPO_ROOT
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
+from dev.paths import REPO_ROOT
 
 from ..adjudications import (
     AdjudicationSet,
@@ -43,7 +45,7 @@ from ..identity import chain_id_for, derive_slug
 from ..inventory import build_inventory, extract_occurrences
 from ..planning import plan_chains, render_evolution_record
 from ..stale_adjudications import detect_stale_adjudications
-from ..types import AeipOccurrence, EvolutionPair
+from ..types import AeipOccurrence, ChainPlan, EvolutionPair
 
 # The family is read from the shipped registry authoring tree on disk.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -58,7 +60,15 @@ _CHAIN_ID_ADAPTER = TypeAdapter(ContinuidadId)
 _LANDED_CHAIN_ID = "irpf-aeip-centenario-del-hockey-1923-2023-aplicado"
 
 
-_MODELOS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+# Revisions of the family are the authored modelo 100 revisions; the newest pair is
+# the transition the legal-reference drift assertions look at.
+_REVISIONS = tuple(revision.id for revision in authored_revisions("100"))
+_PRIOR, _LATEST = _REVISIONS[-2:]
+
+# A catalogue ref the family's rows do not carry, added to exercise legal-refs drift.
+_ADDED_REF = "ley-35-2006:art-68.1"
+
+_MODELOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 _SHIPPED_ADJUDICATIONS = Path(__file__).resolve().parents[1] / "adjudications.toml"
 
 
@@ -108,7 +118,7 @@ def adjudicated(corpus):
 
 def test_extraction_reads_every_revision_of_the_family(inventory) -> None:
     """Every M100 revision carrying the family is read."""
-    assert inventory.revisions == ("2020", "2021", "2022", "2023", "2024", "2025")
+    assert inventory.revisions == _REVISIONS
     assert inventory.occurrences, "the anexo-A AEIP family must not be empty"
     assert len(inventory.events) > 1
     # Category rows are counted but never enrolled as programmes.
@@ -283,7 +293,7 @@ def test_a_stale_split_is_detected(inventory, corpus) -> None:
     ghost_slug_adjudications = AdjudicationSet(
         splits=(
             Split(
-                slug="ghost-programme", from_revision="2023", chain_id="irpf-aeip-ghost-aplicado", reason="synthetic"
+                slug="ghost-programme", from_revision=_PRIOR, chain_id="irpf-aeip-ghost-aplicado", reason="synthetic"
             ),
         ),
     )
@@ -550,27 +560,56 @@ def test_a_misplaced_split_is_refused_rather_than_emitting_a_gapped_chain(invent
     _assert_all_contiguous(inventory, resolved)
 
 
-def test_legal_refs_drift_is_classified_not_called_unchanged(inventory) -> None:
+def _continuing_pairs(plan: ChainPlan) -> list[tuple[EvolutionPair, AeipOccurrence, AeipOccurrence]]:
+    """Every non-retired pair with the two occurrences it joins."""
+    found: list[tuple[EvolutionPair, AeipOccurrence, AeipOccurrence]] = []
+    for entry in plan.entries:
+        by_revision = {occurrence.revision_id: occurrence for occurrence in entry.occurrences}
+        for pair in entry.pairs:
+            if pair.evolution_kind == "retired":
+                continue
+            found.append((pair, by_revision[pair.from_revision], by_revision[pair.to_revision]))
+    return found
+
+
+def _with_added_ref_at_latest(occurrences: tuple[AeipOccurrence, ...]) -> tuple[AeipOccurrence, ...]:
+    """The real corpus with one more legal ref on every newest-edition row.
+
+    No edition of the shipped family moves its refs today, so the drift branch
+    is exercised by adding one through the same occurrence type the extractor
+    produces and planning it with the real planner.
+    """
+    return tuple(
+        replace(occurrence, legal_refs=(*occurrence.legal_refs, _ADDED_REF))
+        if occurrence.revision_id == _LATEST
+        else occurrence
+        for occurrence in occurrences
+    )
+
+
+def test_legal_refs_drift_is_classified_not_called_unchanged(corpus, inventory) -> None:
     """A pair whose legal refs moved must not be recorded as ``unchanged``.
 
-    The 2025 revision adds an ordinal reference to every row in the family, so
-    every chain crossing 2024 -> 2025 really has evolved its legal refs.
-    Recording those as ``unchanged`` would be a drift the strict cross-revision
-    validator refuses, which is exactly the failure this pins.
+    Recording a moved pair as ``unchanged`` would be a drift the strict
+    cross-revision validator refuses, which is exactly the failure this pins.
+    On the shipped family every continuing pair's kind must match whether its
+    two rows' refs actually differ; on the same family with a ref added to the
+    newest edition, every pair crossing into it must say its refs evolved.
     """
-    plan = plan_chains(inventory)
-    # A retirement also spans 2024 -> 2025 but describes a box the target
-    # revision no longer declares, so only continuing pairs are in scope here.
+    shipped = _continuing_pairs(plan_chains(inventory))
+    assert shipped, "expected continuing chains in the shipped family"
+    for pair, earlier, later in shipped:
+        refs_moved = tuple(earlier.legal_refs) != tuple(later.legal_refs)
+        assert ("legal_refs_evolved" in pair.evolution_kind) is refs_moved, pair
+
+    occurrences, category_counts = corpus
+    drifted = build_inventory(_with_added_ref_at_latest(occurrences), category_row_counts=category_counts)
     crossing = [
         pair
-        for entry in plan.entries
-        for pair in entry.pairs
-        if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
+        for pair, _earlier, _later in _continuing_pairs(plan_chains(drifted))
+        if (pair.from_revision, pair.to_revision) == (_PRIOR, _LATEST)
     ]
-    assert crossing, "expected continuing chains spanning the 2024 -> 2025 boundary"
-    assert all(pair.evolution_kind != "unchanged" for pair in crossing), (
-        "the 2025 legal-refs addition must be reflected in the evolution kind"
-    )
+    assert crossing, f"expected continuing chains spanning the {_PRIOR} -> {_LATEST} boundary"
     assert all("legal_refs_evolved" in pair.evolution_kind for pair in crossing)
 
     # Every planned kind stays inside the registry's closed set.
@@ -582,25 +621,26 @@ def test_legal_refs_drift_is_classified_not_called_unchanged(inventory) -> None:
         "repurposed",
         "retired",
     }
-    assert {pair.evolution_kind for entry in plan.entries for pair in entry.pairs} <= allowed
+    assert {pair.evolution_kind for entry in plan_chains(inventory).entries for pair in entry.pairs} <= allowed
 
 
-def test_rendered_record_carries_the_target_revision_legal_refs(inventory) -> None:
+def test_rendered_record_carries_the_target_revision_legal_refs(corpus, inventory) -> None:
     """A record renders the refs its pair actually carries, not a fixed default."""
     from cadrumo.core.toml import parse_toml
 
-    plan = plan_chains(inventory)
-    pair = next(
-        pair
-        for entry in plan.entries
-        for pair in entry.pairs
-        if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
+    occurrences, category_counts = corpus
+    drifted = build_inventory(_with_added_ref_at_latest(occurrences), category_row_counts=category_counts)
+    pair, _earlier, later = next(
+        found
+        for found in _continuing_pairs(plan_chains(drifted))
+        if (found[0].from_revision, found[0].to_revision) == (_PRIOR, _LATEST)
     )
     rendered = parse_toml(render_evolution_record(pair, casilla_id="0000"))
-    record = rendered["revisions"]["2025"]["casilla_continuidad_evolutions"][0]
-    assert record["legal_refs"] == list(pair.legal_refs)
-    assert len(record["legal_refs"]) > 1, "the 2025 rows carry more than the framework article"
+    record = rendered["revisions"][_LATEST]["casilla_continuidad_evolutions"][0]
+    assert record["legal_refs"] == list(pair.legal_refs) == list(later.legal_refs)
+    assert record["legal_refs"][-1] == _ADDED_REF, f"the {_LATEST} record carries the ref its row added"
 
+    plan = plan_chains(inventory)
     # A retirement instead keeps the refs of the revision that last declared
     # the box, since the target revision declares nothing to cite.
     retirement = next(pair for entry in plan.entries for pair in entry.pairs if pair.evolution_kind == "retired")
@@ -627,15 +667,15 @@ def test_rendered_evolution_record_parses_as_toml() -> None:
     plan_pair = render_evolution_record(
         EvolutionPair(
             chain_id="irpf-aeip-example-aplicado",
-            from_revision="2023",
-            to_revision="2024",
+            from_revision=_PRIOR,
+            to_revision=_LATEST,
             evolution_kind="unchanged",
         ),
         casilla_id="1945",
         source_refs=("aeat-dr-100-2024-dictionary",),
     )
     parsed = parse_toml(plan_pair)
-    record = parsed["revisions"]["2024"]["casilla_continuidad_evolutions"][0]
+    record = parsed["revisions"][_LATEST]["casilla_continuidad_evolutions"][0]
     assert record["continuidad_id"] == "irpf-aeip-example-aplicado"
     assert record["from_revision"] != record["to_revision"]
     assert record["source_refs"] == ["aeat-dr-100-2024-dictionary"]
@@ -655,7 +695,7 @@ def test_ungrounded_adjudication_is_refused(tmp_path: Path) -> None:
     """An entry with no stated reason has no audit trail, so it is rejected."""
     path = tmp_path / "adjudications.toml"
     path.write_text(
-        '[[exclusions]]\nrevision = "2020"\ncasilla = "0757"\n',
+        f'[[exclusions]]\nrevision = "{_REVISIONS[0]}"\ncasilla = "0757"\n',
         encoding="utf-8",
     )
     with pytest.raises(RegistryError, match="reason"):

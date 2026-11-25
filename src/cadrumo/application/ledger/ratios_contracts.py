@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_va
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.unit_proportion import is_unit_proportion
 from ..operations.models import CredentialFreeOperationRequest
@@ -21,9 +23,11 @@ LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID = "ledger.ratios.validate"
 LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE = "REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH"
 LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 
-_Year = Annotated[int, Field(ge=1900, le=9999)]
-_CategoryToken = Annotated[str, Field(min_length=1, max_length=96)]
+_Year = FourDigitYear
+_CategoryToken = Annotated[str, Field(min_length=1, max_length=128)]
 _RatioText = Annotated[str, Field(min_length=1, max_length=128)]
+#: The registry's wording for one category: its label and its notes.
+_CategoryWording = Annotated[str, Field(min_length=1, max_length=1024)]
 
 
 def _validate_ratio_text(value: str, *, require_unit: bool) -> str:
@@ -71,12 +75,18 @@ class LedgerRatiosUnsetRequest(BaseModel):
 
 
 class LedgerRatiosEligibleRequest(CredentialFreeOperationRequest):
-    """Read eligible ratio categories and defaults for one filing year."""
+    """Read the eligible ratio categories for one filing year.
+
+    ``output_language`` is the language the registry's category label and notes
+    are said in; the worker renders them for this invocation rather than in its
+    own startup language.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     year: _Year
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerRatiosValidateRequest(CredentialFreeOperationRequest):
@@ -133,20 +143,19 @@ class LedgerRatiosListProjection(_LedgerRatiosListFacts):
 
 
 class LedgerRatiosEligibleRow(BaseModel):
-    """Bounded statutory category details shown by ``ratios eligible``."""
+    """Bounded category details shown by ``ratios eligible``.
+
+    ``label`` and ``notes`` are the registry's wording for the category in the
+    requested language; ``proportionality_kind`` is its registry kind token.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     category: _CategoryToken
+    label: _CategoryWording
+    notes: _CategoryWording
     proportionality_kind: _CategoryToken
-    default_ratio: _RatioText | None = None
     override_present: bool
-
-    @field_validator("default_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _default_is_unit_ratio(cls, value: str | None) -> str | None:
-        return None if value is None else _validate_ratio_text(value, require_unit=True)
 
 
 class _LedgerRatiosEligibleFacts(BaseModel):
@@ -181,8 +190,8 @@ class LedgerRatiosValidationFinding(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     category: _CategoryToken
-    kind: Annotated[str, Field(min_length=1, max_length=96)]
-    detail: Annotated[str, Field(max_length=300)] = ""
+    kind: Annotated[str, Field(min_length=1, max_length=128)]
+    detail: Annotated[str, Field(max_length=512)] = ""
 
 
 class _LedgerRatiosValidateFacts(BaseModel):

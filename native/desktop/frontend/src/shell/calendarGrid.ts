@@ -1,6 +1,6 @@
 import { DAY_MS, dayOrdinal, isoDate } from "../shared/dates";
-import { compareCalendarEntries, entryKey, entrySpan } from "./calendarEntries";
-import type { CalendarEntry, CalendarEvent } from "./views";
+import { closeUnknown, entryKey, entrySpan } from "./calendarEntries";
+import type { FilingCalendarServed } from "./calendarContract";
 
 // The filing calendar laid out as months of weeks. This is arithmetic on the
 // dates the product gave and nothing else: which day falls in which column,
@@ -10,14 +10,19 @@ import type { CalendarEntry, CalendarEvent } from "./views";
 
 /** One obligation's window as it crosses one week of one month. */
 export type GridBar = {
-  entry: CalendarEntry;
+  entry: FilingCalendarServed["entries"][number];
   /** First and last column it covers in this week, 0 to 6. */
   from: number;
   to: number;
   /** The row it takes among the week's windows, from 0. */
   lane: number;
+  /** Its obligation's place in the order the product serves them as
+   * needing the person, from 0. */
+  attention: number;
   /** Whether the window opens, and closes, inside this segment. A segment
-   * that does neither is the middle of a longer window. */
+   * that does neither is the middle of a longer window. A window whose
+   * close is not known is never drawn closing: it runs on at its earliest
+   * close. */
   opens: boolean;
   closes: boolean;
 };
@@ -28,7 +33,7 @@ export type GridDay = {
   day: number;
   today: boolean;
   /** What was observed on this day. */
-  events: CalendarEvent[];
+  events: FilingCalendarServed["events"][number][];
 };
 
 export type GridWeek = {
@@ -53,46 +58,47 @@ export type GridMonth = {
  * last window open in it closes, each as weeks that
  * begin on `weekStart` (0 Sunday to 6 Saturday), with the windows that cross
  * each week placed in rows and the day's observed events on their days.
+ * `attention` is the entries' indices in the order the product serves them
+ * as needing the person, the calendar's `attention_order`; left out, the
+ * entries are taken to come in that order.
  */
 export function calendarMonths(
   range: { from_date: string; to_date: string },
-  entries: readonly CalendarEntry[],
-  events: readonly CalendarEvent[],
+  entries: readonly FilingCalendarServed["entries"][number][],
+  events: readonly FilingCalendarServed["events"][number][],
   today: string | null,
   weekStart: number,
+  attention: readonly number[] = entries.map((_, index) => index),
 ): GridMonth[] {
+  const rank = new Map(attention.map((index, place) => [index, place]));
   const spans = entries
-    .map((entry) => {
+    .map((entry, index) => {
       const span = entrySpan(entry);
-      return { entry, from: dayOrdinal(span.from), to: dayOrdinal(span.to) };
+      return {
+        entry,
+        from: dayOrdinal(span.from),
+        to: dayOrdinal(span.to),
+        attention: rank.get(index) ?? attention.length + index,
+      };
     })
-    // Earlier first, and of two that open together the one that needs the
-    // person first: what is late, then the nearest deadline, takes the
-    // first row.
-    .sort(
-      (a, b) => a.from - b.from || compareCalendarEntries(a.entry, b.entry),
-    );
-  const observed = new Map<string, CalendarEvent[]>();
+    // Earlier first, and of two that open together the one the product
+    // serves as needing the person first takes the first row.
+    .sort((a, b) => a.from - b.from || a.attention - b.attention);
+  const observed = new Map<string, FilingCalendarServed["events"][number][]>();
   for (const event of events) {
     const day = event.event_date.slice(0, 10);
     observed.set(day, [...(observed.get(day) ?? []), event]);
   }
 
-  const [firstYear = 1970, firstMonth = 1] = range.from_date
-    .split("-")
-    .map(Number);
+  const firstYear = Number(range.from_date.slice(0, 4));
+  const firstMonth = Number(range.from_date.slice(5, 7));
   // The months run to the range's last, and on to the month in which the
   // last window open in the range closes: its closing day is what the
   // calendar is for, and the list names that month. Never more than a year
   // past the range, whatever a date says.
   const rangeEnd = dayOrdinal(range.to_date);
-  // A window whose opening is not known was returned for the range too:
-  // its closing day is all there is of it to draw.
   const latest = spans.reduce(
-    (far, span) =>
-      (span.from <= rangeEnd || span.entry.opens_on === null) && span.to > far
-        ? span.to
-        : far,
+    (far, span) => (span.from <= rangeEnd && span.to > far ? span.to : far),
     rangeEnd,
   );
   const until = new Date(Math.min(latest, rangeEnd + 366) * DAY_MS);
@@ -142,8 +148,9 @@ export function calendarMonths(
           from: begin - start,
           to: end - start,
           lane,
+          attention: span.attention,
           opens: span.from >= begin,
-          closes: span.to <= end,
+          closes: span.to <= end && !closeUnknown(span.entry),
         });
       }
       weeks.push({ days, bars, lanes: taken.length });
@@ -205,8 +212,7 @@ function kept(
   const ranked = [...week.bars].sort(
     (a, b) =>
       Number(entryKey(b.entry) === chosen) -
-        Number(entryKey(a.entry) === chosen) ||
-      compareCalendarEntries(a.entry, b.entry),
+        Number(entryKey(a.entry) === chosen) || a.attention - b.attention,
   );
   const order = new Map(week.bars.map((bar, index) => [bar, index]));
   const byOrder = (a: GridBar, b: GridBar) =>
@@ -253,7 +259,7 @@ export function drawnWeeks(
       for (const week of month.weeks)
         for (const { bar } of take(month, week, null).shown)
           if (entryKey(bar.entry) === chosen) anyway.add(bar);
-  const reached = new Set<CalendarEntry>();
+  const reached = new Set<FilingCalendarServed["entries"][number]>();
   const drawn = new Map<GridWeek, DrawnWeek>();
   for (const month of months)
     for (const week of month.weeks) {

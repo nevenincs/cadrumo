@@ -28,7 +28,7 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -39,14 +39,14 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 from ..renta_ledger import aggregate_renta_ledger_expenses
-from .renta_income_aggregation_support import _period
+from .renta_income_aggregation_support import renta_income_aggregation_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 _FILING_YEAR = 2025
-_ANNUAL = _period(_FILING_YEAR, "0A")
+_ANNUAL = renta_income_aggregation_period(_FILING_YEAR, "0A")
 
 #: Well above any limb the article grants, so the deducted amount is always the
 #: cap rather than the premium. A premium under the cap would pass whatever the

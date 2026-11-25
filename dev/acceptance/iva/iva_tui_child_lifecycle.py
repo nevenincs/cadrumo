@@ -20,32 +20,32 @@ from dev.acceptance.income_tax.installed_tui_child import (
 )
 
 from .iva_tui_contracts import (
-    _CLASSIFICATION_FIELDS,
-    _SCHEMA_VERSION,
-    _UNEXERCISED,
+    CLASSIFICATION_FIELDS,
+    SCHEMA_VERSION,
+    UNEXERCISED,
     AuthorityIdentity,
+    CaptureChildReceipt,
     IvaInstalledTuiError,
-    _CaptureChildReceipt,
-    _ReopenChildReceipt,
+    ReopenChildReceipt,
 )
-from .iva_tui_controls import _open_ledger
-from .iva_tui_identity import _assert_bundled_authority, _assert_installed_source_modules, _authority_identity
-from .iva_tui_import import _classify_transaction, _import_statement, _resolve_imported_transaction_ids
-from .iva_tui_scenario import _synthetic_rows, _write_synthetic_statement
+from .iva_tui_controls import open_ledger
+from .iva_tui_identity import assert_bundled_authority, assert_installed_source_modules, authority_identity
+from .iva_tui_import import classify_transaction, import_statement, resolve_imported_transaction_ids
+from .iva_tui_scenario import iva_tui_scenario_synthetic_rows, write_synthetic_statement
 
 
-def _child_authority() -> AuthorityIdentity:
+def child_authority() -> AuthorityIdentity:
     """Read the isolated authority root installed by the shared child runner."""
     raw = os.environ.get("CADRUMO_AUTHORITY_ROOT")
     if not (raw is not None and raw):
         raise InstalledTuiChildError("installed TUI child has no isolated authority root")
     try:
-        return _authority_identity(Path(raw))
+        return authority_identity(Path(raw))
     except IvaInstalledTuiError as exc:
         raise InstalledTuiChildError(str(exc)) from exc
 
 
-def _capture_child(
+def capture_child(
     *,
     workspace_root: Path,
     profile_label: str,
@@ -54,19 +54,24 @@ def _capture_child(
     year: int,
     expected_manifest_sha256: str,
     expected_modules: tuple[tuple[str, str], ...],
-) -> _CaptureChildReceipt:
+) -> CaptureChildReceipt:
     """Run all product writes through the installed TUI and no CLI command."""
     product = installed_product_evidence(workspace_root=workspace_root)
-    _assert_installed_source_modules(
+    assert_installed_source_modules(
         expected_manifest_sha256=expected_manifest_sha256,
         expected_modules=expected_modules,
     )
-    authority = _child_authority()
-    _assert_bundled_authority(authority)
-    synthetic_rows = _synthetic_rows(year)
-    statement = _write_synthetic_statement(scratch, synthetic_rows)
+    authority = child_authority()
+    assert_bundled_authority(authority)
+    synthetic_rows = iva_tui_scenario_synthetic_rows(year)
+    statement = write_synthetic_statement(scratch, synthetic_rows)
     transaction_ids: tuple[str, str] | None = None
     classifications = 0
+    capture_error: InstalledTuiChildError | None = None
+    capture_stage = "launcher_not_entered"
+
+    from textual.css.query import NoMatches
+    from textual.worker import WorkerCancelled, WorkerFailed
 
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
@@ -76,22 +81,44 @@ def _capture_child(
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
-        nonlocal classifications, transaction_ids
-        await _import_statement(pilot, statement=statement)
-        transaction_ids = await _resolve_imported_transaction_ids(pilot, synthetic_rows)
-        for transaction_id, scenario_row in zip(transaction_ids, synthetic_rows, strict=True):
-            await _classify_transaction(pilot, transaction_id=transaction_id, scenario_row=scenario_row)
-            classifications += 1
-        pilot.app.exit()
+        nonlocal classifications, transaction_ids, capture_error, capture_stage
+        try:
+            capture_stage = "importing_statement"
+            await import_statement(pilot, statement=statement)
+            capture_stage = "resolving_imported_entries"
+            transaction_ids = await resolve_imported_transaction_ids(pilot, synthetic_rows)
+            for index, (transaction_id, scenario_row) in enumerate(zip(transaction_ids, synthetic_rows, strict=True)):
+                capture_stage = f"classifying_entry_{index + 1}"
+                await classify_transaction(pilot, transaction_id=transaction_id, scenario_row=scenario_row)
+                classifications += 1
+            capture_stage = "entries_classified"
+        except NoMatches as error:
+            capture_error = InstalledTuiChildError(
+                f"installed IVA TUI public control was absent (stage={capture_stage})",
+                diagnostic=public_surface_diagnostic(pilot),
+            )
+            capture_error.__cause__ = error
+        except (WorkerCancelled, WorkerFailed) as error:
+            capture_error = InstalledTuiChildError(
+                f"installed IVA TUI public worker did not settle (stage={capture_stage})",
+                diagnostic=public_surface_diagnostic(pilot),
+            )
+            capture_error.__cause__ = error
+        except InstalledTuiChildError as error:
+            capture_error = error
+        finally:
+            pilot.app.exit()
 
     exit_code = main(
         headless=True,
         auto_pilot=admitted_session_autopilot(passphrase=passphrase, drive_after_home=drive),
     )
+    if capture_error is not None:
+        raise capture_error
     if exit_code != 0 or transaction_ids is None or classifications != 2:
         raise InstalledTuiChildError("installed IVA TUI capture did not complete both public classifications")
-    return _CaptureChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+    return CaptureChildReceipt(
+        schema_version=SCHEMA_VERSION,
         status="proven",
         mode="capture",
         product_origin=product.product_origin,
@@ -103,32 +130,32 @@ def _capture_child(
         authority_descriptor_sha256=authority.descriptor_sha256,
         authority_database_sha256=authority.database_sha256,
         transaction_ids=transaction_ids,
-        classification_fields_submitted=_CLASSIFICATION_FIELDS,
+        classification_fields_submitted=CLASSIFICATION_FIELDS,
         public_control_handles=(
             "#ledger-import-preview-button",
             "#ledger-import-confirm",
             "#ledger-classification-confirm",
         ),
-        unexercised=_UNEXERCISED,
+        unexercised=UNEXERCISED,
     )
 
 
-def _reopen_child(
+def reopen_child(
     *,
     workspace_root: Path,
     passphrase: str,
     expected_transaction_ids: tuple[str, str],
     expected_manifest_sha256: str,
     expected_modules: tuple[tuple[str, str], ...],
-) -> _ReopenChildReceipt:
+) -> ReopenChildReceipt:
     """Use a separate installed launcher process to reopen the persisted entries."""
     product = installed_product_evidence(workspace_root=workspace_root)
-    _assert_installed_source_modules(
+    assert_installed_source_modules(
         expected_manifest_sha256=expected_manifest_sha256,
         expected_modules=expected_modules,
     )
-    authority = _child_authority()
-    _assert_bundled_authority(authority)
+    authority = child_authority()
+    assert_bundled_authority(authority)
     observed: tuple[str, str] | None = None
     reopen_error: InstalledTuiChildError | None = None
     reopen_stage = "launcher_not_entered"
@@ -141,7 +168,7 @@ def _reopen_child(
         nonlocal observed, reopen_error, reopen_stage
         try:
             reopen_stage = "opening_ledger"
-            await _open_ledger(pilot)
+            await open_ledger(pilot)
             reopen_stage = "selecting_entries"
             await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="entries")
             reopen_stage = "waiting_for_entries"
@@ -175,8 +202,8 @@ def _reopen_child(
         raise reopen_error
     if exit_code != 0 or observed != expected_transaction_ids:
         raise InstalledTuiChildError(f"fresh installed TUI reopen ended before completion (stage={reopen_stage})")
-    return _ReopenChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+    return ReopenChildReceipt(
+        schema_version=SCHEMA_VERSION,
         status="proven",
         mode="reopen",
         product_origin=product.product_origin,

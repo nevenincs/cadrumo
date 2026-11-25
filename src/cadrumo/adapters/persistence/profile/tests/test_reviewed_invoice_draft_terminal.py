@@ -224,8 +224,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
 # ── The structural hazard ────────────────────────────────────────────────────
 
 
-def test_the_draft_split_is_owned_by_the_reject_dispatch() -> None:
-    """The reject branch returns through its helper, which splits draft and transaction subjects."""
+def _assert_only_the_reject_branch_dispatches_the_rejection_helper() -> None:
     tree = ast.parse(textwrap.dedent(inspect.getsource(execute_reviewed_decision)))
     function = tree.body[0]
     assert isinstance(function, ast.FunctionDef)
@@ -243,6 +242,8 @@ def test_the_draft_split_is_owned_by_the_reject_dispatch() -> None:
     assert len(terminal) == 1 and isinstance(terminal[0], ast.Return)
     assert terminal[0].value is rejection_calls[0], "only the reject branch may dispatch the rejection helper"
 
+
+def _assert_the_rejection_helper_splits_draft_from_transaction_subjects() -> None:
     module = inspect.getmodule(execute_reviewed_decision)
     assert module is not None
     helpers = [
@@ -265,3 +266,9 @@ def test_the_draft_split_is_owned_by_the_reject_dispatch() -> None:
     assert isinstance(helper.body[-1].value, ast.Call)
     assert isinstance(helper.body[-1].value.func, ast.Name)
     assert helper.body[-1].value.func.id == "reject_llm_suggestion"
+
+
+def test_the_draft_split_is_owned_by_the_reject_dispatch() -> None:
+    """The reject branch returns through its helper, which splits draft and transaction subjects."""
+    _assert_only_the_reject_branch_dispatches_the_rejection_helper()
+    _assert_the_rejection_helper_splits_draft_from_transaction_subjects()

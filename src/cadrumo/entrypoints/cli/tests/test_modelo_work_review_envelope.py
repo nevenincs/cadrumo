@@ -18,10 +18,10 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
 )
 
-from .._modelo_rendering import verification_report_notices
-from .._modelo_work_review_cli import _review_lines
 from ..command_schema import command_schema_types
+from ..modelo_rendering import verification_report_notices
 from ..modelo_results import WorkReviewPayload, WorkReviewResult
+from ..modelo_work_review_cli import review_lines
 from .review_envelope_support import RAW_ROW_IDENTITY, ROW_FINGERPRINT, persist_blocked_review
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -62,7 +62,7 @@ def test_review_record_round_trips_through_registered_schema_envelope(
         assert notice.context["kind"] == blocker.native_code
         assert notice.context["casilla_id"] == blocker.facts["casilla_id"]
         assert document["result"]["review"]["row_source_fingerprint_count"] == 1
-        rendered = f"{document!r} {envelope.model_dump_json()} {_review_lines(result)!r} {result!r}"
+        rendered = f"{document!r} {envelope.model_dump_json()} {review_lines(result)!r} {result!r}"
         assert RAW_ROW_IDENTITY not in rendered
         assert ROW_FINGERPRINT not in rendered
         secure_context_dump = result.model_dump(

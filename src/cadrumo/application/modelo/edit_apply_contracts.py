@@ -25,6 +25,9 @@ from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditDetailRowAddressV1,
     ModeloEditDetailRowIntentKind,
+    ModeloEditHeldChangeV1,
+    ModeloEditParseRequestV1,
+    ModeloEditReusedSealedRevisionV1,
     ModeloEditSubmissionV1,
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
@@ -80,8 +83,8 @@ class ModeloEditApplyDetailRowAddressV1(BaseModel):
     kind: Literal["detail_row"] = "detail_row"
     detail_row_kind: DetailRowKindToken
     identity_components: Annotated[
-        tuple[Annotated[str, Field(min_length=1, max_length=200)], ...],
-        Field(min_length=1, max_length=8),
+        tuple[Annotated[str, Field(min_length=1, max_length=256)], ...],
+        Field(min_length=1, max_length=16),
     ]
 
     def to_address(self) -> ModeloEditDetailRowAddressV1:
@@ -145,10 +148,14 @@ class ModeloEditApplySubmissionV1(BaseModel):
     edit_contract_version: Literal[1] = 1
     baseline: ModeloEditApplyBaselineV1
     mutation_family: ModeloEditMutationFamily
-    scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=500)] = ()
-    binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=500)] = ()
-    row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=500)] = ()
-    detail_row_intents: Annotated[tuple[ModeloEditApplyDetailRowIntentV1, ...], Field(max_length=500)] = ()
+    scalar_intents: Annotated[tuple[ModeloEditApplyScalarIntentV1, ...], Field(max_length=512)] = ()
+    binding_intents: Annotated[tuple[ModeloEditApplyBindingIntentV1, ...], Field(max_length=512)] = ()
+    row_intents: Annotated[tuple[ModeloEditApplyRowIntentV1, ...], Field(max_length=512)] = ()
+    detail_row_intents: Annotated[tuple[ModeloEditApplyDetailRowIntentV1, ...], Field(max_length=512)] = ()
+    #: Entries as the filer typed them, for a preflight to read; never applied.
+    lexemes: Annotated[tuple[ModeloEditParseRequestV1, ...], Field(max_length=512)] = ()
+    #: Changes the frontend holds, for a preflight to judge again; never applied.
+    held: Annotated[tuple[ModeloEditHeldChangeV1, ...], Field(max_length=512)] = ()
 
     @model_validator(mode="after")
     def _require_scalar_amounts_within_declared_operand_bounds(self) -> ModeloEditApplySubmissionV1:
@@ -182,6 +189,8 @@ class ModeloEditApplySubmissionV1(BaseModel):
             binding_intents=tuple(intent.to_intent() for intent in self.binding_intents),
             row_intents=tuple(intent.to_intent() for intent in self.row_intents),
             detail_row_intents=tuple(intent.to_intent() for intent in self.detail_row_intents),
+            lexemes=self.lexemes,
+            held=self.held,
         )
 
     @classmethod
@@ -223,6 +232,8 @@ class ModeloEditApplySubmissionV1(BaseModel):
                 ModeloEditApplyBindingIntentV1.from_intent(intent) for intent in submission.binding_intents
             ),
             row_intents=tuple(ModeloEditApplyRowIntentV1.from_intent(intent) for intent in submission.row_intents),
+            lexemes=submission.lexemes,
+            held=submission.held,
         )
 
 
@@ -231,11 +242,16 @@ class ModeloEditApplyPublicResultV1(BaseModel):
 
     Only the id: the full receipt is the domain record of truth, addressable
     through the ModeloEditReceiptRepositoryPort capability, and this result exists to confirm
-    which one a submission produced.
+    which one a submission produced. ``calculation_revision_id`` is ``None``
+    when the edit withdrew the work unit's calculation.
+    ``reused_sealed_revision`` names the checked or filed calculation the edit
+    reproduced exactly, which it left as it stands, and the calculation that
+    stays current.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     result_version: int = 1
     receipt_id: Annotated[str, Field(min_length=1, max_length=128)]
-    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)] | None
+    reused_sealed_revision: ModeloEditReusedSealedRevisionV1 | None = None

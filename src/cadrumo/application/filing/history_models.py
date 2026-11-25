@@ -30,7 +30,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.identifiers import ModeloIdentifier
 
@@ -38,7 +38,7 @@ from ...domain.identifiers import ModeloIdentifier
 class ModeloHistoryEntry(BaseModel):
     """One local filing-history row for a :class:`ModeloIdentifier` and :class:`Period`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloIdentifier
     period: Period
@@ -49,7 +49,7 @@ class ModeloHistoryEntry(BaseModel):
 class ModeloHistory(BaseModel):
     """Per-modelo tuple of :class:`ModeloHistoryEntry` rows for one :class:`ModeloIdentifier`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloIdentifier
     entries: tuple[ModeloHistoryEntry, ...]

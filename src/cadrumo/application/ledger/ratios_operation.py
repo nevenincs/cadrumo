@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
-from typing import Any, Protocol, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -78,19 +77,24 @@ from .ratios_contracts import (
     LedgerRatiosValidateResult,
     LedgerRatiosValidationFinding,
 )
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_commit_access, resolve_ledger_request_read_access
 from .usage_ratio_repository import load_usage_ratio_profile, usage_ratio_profile_with_censo_guard
 
 _PERSON_ACTOR = "operator"
 """The label the ratio audit events carry for a person's session."""
 
 
-class _ProfileScopedRequest(Protocol):
-    profile_id: UUID
+type _ProfileScopedRequest = (
+    LedgerRatiosListRequest
+    | LedgerRatiosSetRequest
+    | LedgerRatiosUnsetRequest
+    | LedgerRatiosEligibleRequest
+    | LedgerRatiosValidateRequest
+)
 
 
-def _require_worker_profile(
-    request: OperationRequest[Any],
+def _require_worker_profile[T: BaseModel](
+    request: OperationRequest[T],
     context: OperationExecutorContext,
     *,
     definition_id: str,
@@ -118,7 +122,7 @@ class LedgerRatiosListExecutor:
     ) -> str | OperationRefusalEvidence:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -187,7 +191,7 @@ class LedgerRatiosSetExecutor:
     ) -> str:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -265,7 +269,7 @@ class LedgerRatiosUnsetExecutor:
     ) -> str | OperationRefusalEvidence:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -330,7 +334,7 @@ class LedgerRatiosEligibleExecutor:
     ) -> str:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -344,12 +348,14 @@ class LedgerRatiosEligibleExecutor:
                 bucket_id=bucket_id,
                 year=payload.year,
                 operation=context.authority_operation,
+                language=payload.output_language,
             )
             projected = tuple(
                 LedgerRatiosEligibleRow(
                     category=row.category.value,
+                    label=row.label,
+                    notes=row.notes,
                     proportionality_kind=row.proportionality_kind.value,
-                    default_ratio=None if row.default_ratio is None else str(row.default_ratio),
                     override_present=row.override_present,
                 )
                 for row in rows
@@ -372,7 +378,7 @@ class LedgerRatiosValidateExecutor:
     ) -> str:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -417,11 +423,7 @@ def _definition(
     effects = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     if mutation:
         effects = effects | {OperationEffect.UPDATED}
-    storage = (
-        OperationRequestStoragePolicy.SECURE_REFERENCE
-        if sensitive_input
-        else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
-    )
+    storage = OperationRequestStoragePolicy.for_private_request(sensitive_input)
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,
@@ -470,17 +472,14 @@ def _whole_profile_access(
     context: OperationAccessContext,
     *,
     definition_id: str,
-    request_type: type[BaseModel],
+    request_type: type[_ProfileScopedRequest],
 ) -> ResolvedOperationAccess:
-    if request.definition_id != definition_id or not isinstance(request.payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = cast(_ProfileScopedRequest, request.payload)
     committing = definition_id in {
         LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
         LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
     }
-    resolve = resolve_ledger_commit_access if committing else resolve_ledger_read_access
-    return resolve(request, context, profile_id=payload.profile_id, periods=frozenset())
+    resolve = resolve_ledger_request_commit_access if committing else resolve_ledger_request_read_access
+    return resolve(request, context, definition_id=definition_id, request_type=request_type)
 
 
 def _receipt_matches(
@@ -505,14 +504,15 @@ def _receipt_matches(
         raise ValueError("ratio projection differs from its terminal receipt")
 
 
-def _copy_result(result: BaseModel, expected_type: type[BaseModel]) -> BaseModel:
+def _copy_result[T: BaseModel](result: BaseModel, expected_type: type[T]) -> T:
     if type(result) is not expected_type:
         raise ValueError("invalid ratio operation result")
     return expected_type.model_validate(result.model_dump(mode="python"), strict=True)
 
 
-def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosListProjection:
-    private = cast(LedgerRatiosListResult, _copy_result(result, LedgerRatiosListResult))
+def project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosListProjection:
+    """Project a ratios list result after matching it to its terminal receipt."""
+    private = _copy_result(result, LedgerRatiosListResult)
     refused = private.outcome == "censo_mismatch"
     _receipt_matches(
         receipt,
@@ -525,8 +525,9 @@ def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /
     return LedgerRatiosListProjection.model_validate(private.model_dump(mode="python"), strict=True)
 
 
-def _project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosSetProjection:
-    private = cast(LedgerRatiosSetResult, _copy_result(result, LedgerRatiosSetResult))
+def project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosSetProjection:
+    """Project a ratios set result after matching it to its terminal receipt."""
+    private = _copy_result(result, LedgerRatiosSetResult)
     _receipt_matches(
         receipt,
         definition_id=LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
@@ -536,8 +537,9 @@ def _project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /)
     return LedgerRatiosSetProjection.model_validate(private.model_dump(mode="python"), strict=True)
 
 
-def _project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosUnsetProjection:
-    private = cast(LedgerRatiosUnsetResult, _copy_result(result, LedgerRatiosUnsetResult))
+def project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosUnsetProjection:
+    """Project a ratios unset result after matching it to its terminal receipt."""
+    private = _copy_result(result, LedgerRatiosUnsetResult)
     refused = private.outcome == "no_override"
     expected = OperationEffect.NONE if refused else OperationEffect.UPDATED
     _receipt_matches(
@@ -552,7 +554,7 @@ def _project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, 
 
 
 def _project_eligible_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosEligibleProjection:
-    private = cast(LedgerRatiosEligibleResult, _copy_result(result, LedgerRatiosEligibleResult))
+    private = _copy_result(result, LedgerRatiosEligibleResult)
     _receipt_matches(
         receipt,
         definition_id=LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
@@ -563,7 +565,7 @@ def _project_eligible_result(result: BaseModel, receipt: OperationTerminalReceip
 
 
 def _project_validate_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosValidateProjection:
-    private = cast(LedgerRatiosValidateResult, _copy_result(result, LedgerRatiosValidateResult))
+    private = _copy_result(result, LedgerRatiosValidateResult)
     _receipt_matches(
         receipt,
         definition_id=LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
@@ -623,7 +625,7 @@ def build_ledger_ratios_list_registration(definition: OperationDefinition) -> Op
         definition,
         projection_type=LedgerRatiosListProjection,
         access_resolver=_read_access,
-        result_projector=_project_list_result,
+        result_projector=project_list_result,
     )
 
 
@@ -648,7 +650,7 @@ def build_ledger_ratios_set_registration(definition: OperationDefinition) -> Ope
         definition,
         projection_type=LedgerRatiosSetProjection,
         access_resolver=_set_access,
-        result_projector=_project_set_result,
+        result_projector=project_set_result,
     )
 
 
@@ -676,7 +678,7 @@ def build_ledger_ratios_unset_registration(
         definition,
         projection_type=LedgerRatiosUnsetProjection,
         access_resolver=_unset_access,
-        result_projector=_project_unset_result,
+        result_projector=project_unset_result,
     )
 
 

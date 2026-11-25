@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
@@ -20,10 +21,10 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import get_manual_transaction, ledger_transaction_payload, ledger_transaction_tracking_payload
-from .id_resolution import resolve_lineage_transaction_id
+from .id_resolution import resolve_lineage_transaction
+from .manual_read import get_manual_transaction, ledger_transaction_payload, ledger_transaction_tracking_payload
 from .participation_read import TransactionParticipationIndexRepositoryFactory, get_transaction_participation
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .tracking_projection import (
     LedgerImportedProvenanceProjection,
     LedgerParticipationProjection,
@@ -35,10 +36,14 @@ LEDGER_TRACK_OPERATION_DEFINITION_ID = "ledger.track"
 
 
 class LedgerTrackRequest(CredentialFreeOperationRequest):
-    """An exact profile and a current or superseded transaction handle."""
+    """An exact profile and a current or superseded transaction handle.
+
+    ``output_language`` is the language the transaction's link fields are named in.
+    """
 
     profile_id: UUID
     transaction_prefix: str = Field(min_length=1, max_length=64, pattern=r"^[0-9a-f]+$")
+    output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
 
 class LedgerTrackProjection(BaseModel):
@@ -87,8 +92,10 @@ class LedgerTrackExecutor:
             ports = self._ports(bucket_id=bucket_id, operation=operation)
             if ports.transaction_repository.bucket_id != bucket_id or ports.operation is not operation:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            selected = resolve_lineage_transaction_id(payload.transaction_prefix, ports.transaction_repository.load())
-            result = get_manual_transaction(bucket_id=bucket_id, transaction_id=selected, ports=ports)
+            selected, catalogue = resolve_lineage_transaction(payload.transaction_prefix, ports.transaction_repository)
+            result = get_manual_transaction(
+                bucket_id=bucket_id, transaction_id=selected, ports=ports, catalogue=catalogue
+            )
             if result.ref.bucket_id != bucket_id or result.ref.transaction_id != selected:
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
             participation_repository = self._participation(bucket_id=bucket_id)
@@ -104,7 +111,9 @@ class LedgerTrackExecutor:
             return LedgerTrackProjection(
                 profile_id=payload.profile_id,
                 transaction_prefix=payload.transaction_prefix,
-                transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(result.transaction)),
+                transaction=LedgerTransactionProjection.from_payload(
+                    ledger_transaction_payload(result.transaction), language=payload.output_language
+                ),
                 tracking=LedgerTrackingProjection.from_payload(ledger_transaction_tracking_payload(result.transaction)),
                 imported_provenance=LedgerImportedProvenanceProjection.from_transaction(result.transaction),
                 participated_in=LedgerParticipationProjection.from_index(index),
@@ -141,8 +150,6 @@ def resolve_ledger_track_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Protect the complete transaction, cross-period lineage and declaration history."""
-    if request.definition_id != LEDGER_TRACK_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerTrackRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_TRACK_OPERATION_DEFINITION_ID, request_type=LedgerTrackRequest
+    )

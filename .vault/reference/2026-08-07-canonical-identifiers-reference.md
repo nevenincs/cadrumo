@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-10-25'
 body_schema: 'body-v1'
-body_hash: 'sha256:45dc431f90ee2bf1297deb02237003d0530dce127f699a0894e8a983b9505f2f'
+body_hash: 'sha256:4e6c34305c81507e19c9ace57a7e2ce3e424fe121c026e5e19f5045585c6f167'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -1014,13 +1014,15 @@ from pathlib import Path
 ROOT, NAMES = Path(sys.argv[1]), sys.argv[2].split(",")
 CONSTRAINT_KW = {"min_length", "max_length", "pattern", "gt", "ge", "lt", "le", "max_digits"}
 R = {n: collections.Counter() for n in NAMES}
-E = {n: set() for n in NAMES}   # files carrying an enrollment site
+E = {n: set() for n in NAMES}  # files carrying an enrollment site
+
 
 def constrained(stmt):
     v = stmt.value
     if isinstance(v, ast.Call) and CONSTRAINT_KW & {k.arg for k in v.keywords if k.arg}:
         return True
     return ast.unparse(stmt.annotation).startswith("Annotated[")
+
 
 for path in ROOT.rglob("*.py"):
     if "tests" in path.parts:
@@ -1040,9 +1042,11 @@ for path in ROOT.rglob("*.py"):
                     continue
                 ann = ast.unparse(stmt.annotation)
                 if ann == "str" and not constrained(stmt):
-                    R[n]["bare"] += 1; E[n].add(rel)
+                    R[n]["bare"] += 1
+                    E[n].add(rel)
                 elif ann in {"str | None", "Optional[str]"} and not constrained(stmt):
-                    R[n]["opt"] += 1; E[n].add(rel)
+                    R[n]["opt"] += 1
+                    E[n].add(rel)
                 else:
                     R[n]["typed"] += 1
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -1050,10 +1054,22 @@ for path in ROOT.rglob("*.py"):
                 if a.arg in R and a.annotation is not None:
                     R[a.arg]["param"] += 1
 
-print(json.dumps({n: {"fields": R[n]["bare"] + R[n]["opt"] + R[n]["typed"],
-                      "bare": R[n]["bare"], "opt": R[n]["opt"], "typed": R[n]["typed"],
-                      "enrol": R[n]["bare"] + R[n]["opt"], "params": R[n]["param"],
-                      "files": len(E[n])} for n in NAMES}))
+print(
+    json.dumps(
+        {
+            n: {
+                "fields": R[n]["bare"] + R[n]["opt"] + R[n]["typed"],
+                "bare": R[n]["bare"],
+                "opt": R[n]["opt"],
+                "typed": R[n]["typed"],
+                "enrol": R[n]["bare"] + R[n]["opt"],
+                "params": R[n]["param"],
+                "files": len(E[n]),
+            }
+            for n in NAMES
+        }
+    )
+)
 ```
 
 Whole tree, both revisions, 32 families: about four seconds. **Re-deriving a

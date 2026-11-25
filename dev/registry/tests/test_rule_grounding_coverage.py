@@ -15,6 +15,7 @@ import dataclasses
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.quality.unread_inputs import report_unread
 
 from ..analysis.corpus import bundled_modelo_ids
@@ -23,6 +24,12 @@ from ..analysis.type_convention_notes import revision_findings as type_conventio
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# Three consecutive exercises of the support envelope name the revisions of the findings below.
+assert len(filing_year_envelope().years) >= 3, (
+    "the support envelope must span at least 3 exercises for these synthetic editions"
+)
+_I1, _I2, _I3 = (str(year) for year in filing_year_envelope().years[-3:])
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -417,7 +424,7 @@ def test_two_revisions_sharing_one_design_are_one_reading() -> None:
             detail="",
         )
 
-    assert len(grounding_worklist((_found("2024"), _found("2025")))) == 1
+    assert len(grounding_worklist((_found(_I2), _found(_I3)))) == 1
 
 
 def test_one_label_in_two_designs_is_two_readings() -> None:
@@ -447,9 +454,9 @@ def test_one_label_in_two_designs_is_two_readings() -> None:
             detail="",
         )
 
-    work = grounding_worklist((_found("2023.extracted.md"), _found("2024.extracted.md")))
+    work = grounding_worklist((_found(f"{_I1}.extracted.md"), _found(f"{_I2}.extracted.md")))
     assert len(work) == 2
-    assert {item.design for item in work} == {"2023.extracted.md", "2024.extracted.md"}
+    assert {item.design for item in work} == {f"{_I1}.extracted.md", f"{_I2}.extracted.md"}
 
 
 def test_a_work_item_is_flagged_when_its_note_drifts() -> None:
@@ -458,7 +465,7 @@ def test_a_work_item_is_flagged_when_its_note_drifts() -> None:
 
     finding = GroundingFinding(
         modelo="303",
-        revision="2023",
+        revision=_I1,
         cell="DP30302!A1",
         design="d.extracted.md",
         aeat_type="Num",
@@ -485,7 +492,7 @@ def test_an_unmeasured_caller_gets_no_claim_about_drift() -> None:
 
     finding = GroundingFinding(
         modelo="303",
-        revision="2023",
+        revision=_I1,
         cell="DP30302!A1",
         design="d.extracted.md",
         aeat_type="Num",
@@ -529,9 +536,9 @@ def test_a_field_that_anchors_a_reviewed_rule_and_needs_one_is_reported() -> Non
     """
     from ..analysis.rule_grounding_coverage import reviewed_rule_contradictions
 
-    already_ruled = _grounding_finding(modelo="200", revision="2025", cell="Pag. 1!A10")
-    still_owed = _grounding_finding(modelo="200", revision="2025", cell="Pag. 1!A11")
-    anchored = frozenset({("200", "2025", "Pag. 1!A10")})
+    already_ruled = _grounding_finding(modelo="200", revision=_I3, cell="Pag. 1!A10")
+    still_owed = _grounding_finding(modelo="200", revision=_I3, cell="Pag. 1!A11")
+    anchored = frozenset({("200", _I3, "Pag. 1!A10")})
 
     contradictions = reviewed_rule_contradictions((already_ruled, still_owed), anchored=anchored)
 
@@ -541,13 +548,13 @@ def test_a_field_that_anchors_a_reviewed_rule_and_needs_one_is_reported() -> Non
     # a different field, and crediting it would silence a real row.
     assert (
         reviewed_rule_contradictions(
-            (_grounding_finding(modelo="200", revision="2024", cell="Pag. 1!A10"),), anchored=anchored
+            (_grounding_finding(modelo="200", revision=_I2, cell="Pag. 1!A10"),), anchored=anchored
         )
         == ()
     )
     assert (
         reviewed_rule_contradictions(
-            (_grounding_finding(modelo="202", revision="2025", cell="Pag. 1!A10"),), anchored=anchored
+            (_grounding_finding(modelo="202", revision=_I3, cell="Pag. 1!A10"),), anchored=anchored
         )
         == ()
     )

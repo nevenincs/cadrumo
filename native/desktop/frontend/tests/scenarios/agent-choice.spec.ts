@@ -3,6 +3,7 @@ import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
 import {
   agentColumn as column,
   openConversation,
+  pickWay,
   scenarioOnly,
 } from "../support/agent";
 import { label } from "../support/strings";
@@ -25,9 +26,9 @@ const laneOf = (way: string) => {
 };
 // The lane the column starts on, another it lists models for, and one it
 // holds back.
-const START = "alpha/api";
-const OTHER = "beta/cli";
-const HELD = "alpha/cli";
+const START = "kimi/api";
+const OTHER = "qwen/cli";
+const HELD = "kimi/cli";
 
 const escaped = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -49,31 +50,26 @@ async function openSettings(target: Page) {
   return settings;
 }
 
-const providerBox = (settings: Locator) =>
-  settings.getByRole("button", { name: label("desktop.agent.provider") });
+/** The one model row of the matrix whose cell is the one chosen. */
+const chosenRow = (settings: Locator) =>
+  settings.locator(
+    "tr[data-slot=model-matrix-row]:has([role=radio][aria-checked=true])",
+  );
 
 /** The settings say the lane `way` is the one chosen. */
 async function expectChosen(target: Page, way: string) {
   const settings = await openSettings(target);
-  const served = laneOf(way);
-  await expect(providerBox(settings)).toHaveAccessibleName(
-    `${label("desktop.agent.provider")}: ${served.display_name}, ${label(
-      served.transport === "api"
-        ? "desktop.providers.connection_api"
-        : "desktop.providers.connection_app",
-    )}`,
-  );
+  await expect(chosenRow(settings)).toHaveCount(1);
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", way);
   await target.keyboard.press("Escape");
   await expect(settings).toBeHidden();
 }
 
 async function choose(target: Page, way: string) {
   const settings = await openSettings(target);
-  await providerBox(settings).click();
-  await target.locator(`[role=option][data-way="${way}"]`).click();
-  await expect(target.getByRole("listbox")).toBeHidden();
-  // The settings close from where the keyboard is in them.
-  await providerBox(settings).focus();
+  await pickWay(target, settings, way);
+  await expect(chosenRow(settings)).toHaveAttribute("data-way", way);
+  // The settings close from where the keyboard is in them: the cell chosen.
   await target.keyboard.press("Escape");
   await expect(settings).toBeHidden();
 }

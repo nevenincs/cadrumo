@@ -31,6 +31,12 @@ pub enum Request {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         report: Option<crate::cutover::Report>,
     },
+    /// The agent service demands the local AI server before it reads a document, and
+    /// renews the demand while the read lasts. Only the agent service started by the
+    /// admitted desktop is admitted to send it; the request carries no identity.
+    DemandLocalAi {
+        schema: u32,
+    },
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -46,6 +52,14 @@ pub enum Outcome {
     SuccessorObserved,
     SuccessorReady,
     ReEvaluated,
+    /// The demand was taken: the local AI server runs, or starts at once.
+    LocalAiDemanded,
+    /// The selected engine's program is not set up, so no server can run.
+    LocalAiNotSetUp,
+    /// An engine changes the program; the server starts once it is done.
+    LocalAiHeld,
+    /// The server's supervision is not running, or no server can run in this package.
+    LocalAiNotRunning,
     SurfaceUnavailable,
     DesignationRequired,
     Unavailable,
@@ -67,7 +81,8 @@ pub fn decode(bytes: &[u8]) -> io::Result<Request> {
         Request::Status { schema }
         | Request::Reveal { schema }
         | Request::Retry { schema }
-        | Request::SuccessorReady { schema, .. } => schema,
+        | Request::SuccessorReady { schema, .. }
+        | Request::DemandLocalAi { schema } => schema,
     };
     if schema != 1
         || matches!(&request, Request::SuccessorReady { runtime_pid, report, .. } if report.as_ref().map_or(*runtime_pid == 0, |report| !report.valid(*runtime_pid)))
@@ -77,7 +92,8 @@ pub fn decode(bytes: &[u8]) -> io::Result<Request> {
     Ok(request)
 }
 
-/// Resolve only supported effects. PIDs do not admit successor readiness.
+/// Resolve only supported effects. PIDs do not admit successor readiness. A demand for
+/// the local AI server is answered only by [`demanded`], where an owner hosts the server.
 pub fn respond(request: Request, retry: impl FnOnce() -> io::Result<()>) -> Response {
     Response {
         schema: 1,
@@ -89,6 +105,22 @@ pub fn respond(request: Request, retry: impl FnOnce() -> io::Result<()>) -> Resp
                 Err(_) => Outcome::Unavailable,
             },
             Request::SuccessorReady { .. } => Outcome::DesignationRequired,
+            Request::DemandLocalAi { .. } => Outcome::LocalAiNotRunning,
+        },
+    }
+}
+
+/// The answer to a demand for the local AI server; `None` while no server can run in
+/// this package.
+pub fn demanded(answer: Option<crate::supervision::local_ai::DemandAnswer>) -> Response {
+    use crate::supervision::local_ai::DemandAnswer;
+    Response {
+        schema: 1,
+        outcome: match answer {
+            Some(DemandAnswer::Taken) => Outcome::LocalAiDemanded,
+            Some(DemandAnswer::NotSetUp) => Outcome::LocalAiNotSetUp,
+            Some(DemandAnswer::Held) => Outcome::LocalAiHeld,
+            Some(DemandAnswer::NotRunning) | None => Outcome::LocalAiNotRunning,
         },
     }
 }
@@ -181,5 +213,37 @@ mod tests {
         assert_ne!(status("adopted").outcome, Outcome::Running);
         assert_eq!(status("running").outcome, Outcome::Running);
         assert_eq!(status("unknown").outcome, Outcome::Unavailable);
+    }
+
+    #[test]
+    fn a_demand_carries_no_identity_and_has_effect_only_where_a_server_is_hosted() {
+        use crate::supervision::local_ai::DemandAnswer;
+        assert_eq!(
+            decode(br#"{"schema":1,"request":"demand_local_ai"}"#).unwrap(),
+            Request::DemandLocalAi { schema: 1 }
+        );
+        for bytes in [
+            br#"{"schema":1,"request":"demand_local_ai","pid":1}"#.as_slice(),
+            br#"{"schema":1,"request":"demand_local_ai","client":"agent"}"#,
+            br#"{"schema":2,"request":"demand_local_ai"}"#,
+        ] {
+            assert!(decode(bytes).is_err());
+        }
+        assert_eq!(
+            respond(Request::DemandLocalAi { schema: 1 }, || panic!(
+                "a demand cannot retry"
+            ))
+            .outcome,
+            Outcome::LocalAiNotRunning
+        );
+        for (answer, outcome) in [
+            (Some(DemandAnswer::Taken), Outcome::LocalAiDemanded),
+            (Some(DemandAnswer::NotSetUp), Outcome::LocalAiNotSetUp),
+            (Some(DemandAnswer::Held), Outcome::LocalAiHeld),
+            (Some(DemandAnswer::NotRunning), Outcome::LocalAiNotRunning),
+            (None, Outcome::LocalAiNotRunning),
+        ] {
+            assert_eq!(demanded(answer).outcome, outcome);
+        }
     }
 }

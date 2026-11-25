@@ -15,7 +15,6 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
 from cadrumo.application.filing.retention import FilingRetentionAuthority
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
     unlock_profile_custody_password,
@@ -24,6 +23,8 @@ from cadrumo.application.user_profile.registration import ProfileRegistrationErr
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,
     InstallationRefused,
@@ -97,7 +98,7 @@ def test_creation_selects_the_profile_signed_out_under_the_confirmed_passphrase(
     # Nothing was signed in: no process holds the new profile's key.
     assert not has_active_bucket_session()
     profile_id = UUID(created.profile_id)
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         # The deletion preflight's facts are recorded as for any created profile.
         assert FilingRetentionAuthority().path(profile_id).is_file()
         assert LegalHoldCaseAuthority().path(profile_id).is_file()
@@ -122,7 +123,7 @@ def test_a_confirmation_that_differs_is_refused_before_anything_is_written(
     assert listed.profiles == ()
     for secret in (PROFILE_INPUT, other):
         assert secret not in refused.model_dump_json()
-        assert secret not in caplog.text
+        assert secret not in delivered_text(caplog)
 
 
 def test_a_short_passphrase_and_a_taken_label_are_refused_as_the_command_refuses_them(tmp_path: Path) -> None:

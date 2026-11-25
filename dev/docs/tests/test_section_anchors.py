@@ -24,6 +24,7 @@ from docutils.parsers.rst import directives
 from docutils.readers import standalone
 from docutils.transforms import Transform
 from docutils.utils import SystemMessage
+from sphinx.transforms import SortIds
 
 from ..section_anchors import (
     SECTION_ANCHOR_DIRECTIVE,
@@ -114,6 +115,52 @@ def test_an_explicit_target_before_the_heading_keeps_resolving() -> None:
     assert section["ids"][0] == "exit-codes"
     assert "cli-reference-exit-codes" in section["ids"]
     assert document.nameids["cli-reference-exit-codes"] == "cli-reference-exit-codes"
+
+
+#: A generated heading as the one compile writes it: its mark, digits between
+#: private-use characters, which slugs to nothing.
+_SLOT_HEADING = "\ue002126\ue003"
+
+
+class _SphinxOrderedReader(_Reader):
+    """The reader above with Sphinx's own section-id ordering before the anchor transform.
+
+    Sphinx names an automatic id ``idN`` and its ``SortIds`` transform (261)
+    moves every such id behind the ids an explicit target propagated onto a
+    section, before :class:`AdoptSectionAnchors` (300) runs.
+    """
+
+    @override
+    def get_transforms(self) -> list[type[Transform]]:
+        """Return the standard transforms, Sphinx's id ordering, and the one under test."""
+        return [*super().get_transforms(), SortIds]
+
+
+def test_a_label_on_a_heading_that_slugs_to_nothing_keeps_its_own_id() -> None:
+    """A propagated label's id survives on a composed slot heading; the automatic id does not.
+
+    The one compile writes a generated heading as its mark: digits between
+    private-use characters, which slug to nothing, so the section's own id is
+    an automatic ``id1`` that Sphinx sorts behind the label's id. The anchor
+    replaces that automatic id, and the label keeps the id the language's own
+    build publishes for it, so the composed page and that build agree.
+    """
+    directives.register_directive(SECTION_ANCHOR_DIRECTIVE, SectionAnchorDirective)
+    document = publish_doctree(
+        f"{section_anchor_directive('tty-and-json-output-contract')}"
+        ".. _cli-reference-output-contract:\n\n"
+        f"{_SLOT_HEADING}\n"
+        "=====\n\n"
+        "Text.\n",
+        reader=_SphinxOrderedReader(),
+        settings_overrides={"doctitle_xform": False, "auto_id_prefix": "id", "report_level": 5, "halt_level": 5},
+    )
+    assert isinstance(document, nodes.document)
+    (section,) = _sections(document)
+    assert section["ids"] == ["tty-and-json-output-contract", "cli-reference-output-contract"]
+    assert "id1" not in document.ids
+    assert document.nameids["cli-reference-output-contract"] == "cli-reference-output-contract"
+    assert document.nameids[_SLOT_HEADING] == "tty-and-json-output-contract"
 
 
 def test_a_heading_written_in_the_source_language_is_unchanged() -> None:

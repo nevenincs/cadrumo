@@ -30,21 +30,20 @@ rates are exercised on dates where they were actually in force.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
@@ -54,17 +53,10 @@ from ....domain.iva.schema import IvaLedgerObservationRole
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..iva_ledger import resolve_iva_ledger_binding_values
+from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one generation across the transitional-rate binding checks."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # Each rung: its two binding ids, the rate a row must carry to reach it, a date
@@ -297,7 +289,7 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
     casilla at all. Derived from the registry rather than restated, so adding a
     rate to the table without giving it a rung reds this.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         revision = _revision()
         # ``None`` is the rate-blind marker -- that tier's rung covers everything it
         # admits, which is not the same as covering nothing. Declared in the type so

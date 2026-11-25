@@ -20,8 +20,11 @@ from pydantic import ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..query_reports import CasillaGroundingReport, ModeloCasillaDetailReport, ModeloCasillaRow
 from ..schema_input_kind import InputKind
+from .authored_editions import filing_year_envelope, revision_covering
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_FILING_YEAR = filing_year_envelope().horizon
 
 _CASILLA: CasillaId = validated_casilla_id("01", surface="_CASILLA")
 
@@ -77,8 +80,8 @@ def _detail(
 ) -> ModeloCasillaDetailReport:
     return ModeloCasillaDetailReport(
         code="130",
-        revision="2019-y-siguientes",
-        filing_year=2024,
+        revision=str(revision_covering("130", _FILING_YEAR).id),
+        filing_year=_FILING_YEAR,
         period="1T",
         casilla_id=_CASILLA,
         number="01",

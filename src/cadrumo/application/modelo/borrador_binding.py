@@ -27,21 +27,20 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, ClassVar
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import prefixed_digest
 from ...core.identity.bucket import BucketId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     BindingDefinition,
@@ -56,10 +55,11 @@ from ..aggregation.source_mesh import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from ..live.borrador_100_keys import borrador_admitted_bindings
 from ..persistence_errors import PersistenceDegradationError
-from ._decimal_parsing import decimal_from_string
 from .action_errors import ModeloPreconditionErrorMixin
-from .preconditions import build_modelo_precondition_failure
+from .decimal_parsing import decimal_from_string
+from .preconditions import build_modelo_calculate_refusal_failure, build_modelo_precondition_failure
 
 if TYPE_CHECKING:
     from ..live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
@@ -77,26 +77,13 @@ class Modelo100BorradorBindingCommand(BaseModel):
     before any binding values are emitted.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: Period
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
-    caller_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
-    caller_enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _enforce_binding_key_shape(self) -> Modelo100BorradorBindingCommand:
-        blank_decimal_keys = sorted(key for key in self.caller_binding_values if not key.strip())
-        blank_enum_keys = sorted(key for key in self.caller_enum_binding_values if not key.strip())
-        if blank_decimal_keys or blank_enum_keys:
-            raise Modelo100BorradorBindingError(
-                translated_message="application.modelo.borrador_binding.errors.caller_binding_keys_blank",
-            )
-        return self
 
 
 def _borrador_snapshot_load_failure(
@@ -186,12 +173,19 @@ def _assert_borrador_bindings_allowed(
     snapshot: Borrador100Snapshot,
     eligible_bindings: dict[BindingId, BindingDefinition],
 ) -> None:
-    """Refuse snapshot values not marked ``aeat_prefilled`` by the registry."""
+    """Refuse stored keys the revision does not admit, free casilla keys included."""
     unknown_or_forbidden = sorted(set(snapshot.binding_values) - set(eligible_bindings))
     if unknown_or_forbidden:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.forbidden_bindings",
             context={"bindings": unknown_or_forbidden},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.bindings_forbidden",
+                evidence_values={
+                    "forbidden_binding_count": len(unknown_or_forbidden),
+                    "forbidden_binding_ids": "|".join(unknown_or_forbidden),
+                },
+            ),
         )
 
 
@@ -199,19 +193,25 @@ def _resolve_borrador_binding_values(
     snapshot: Borrador100Snapshot,
     *,
     eligible_bindings: dict[BindingId, BindingDefinition],
-    caller_owned: set[BindingId],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Project eligible snapshot values, leaving explicit caller values in control."""
+    """Project every eligible snapshot value; the precedence overlay decides which tier's value is used.
+
+    A ``cross_check_only`` binding is held by the snapshot for comparison and
+    never enters this tier, so the borrador cannot fill a value that the
+    binding's own evidence leaves missing.
+    """
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     for binding_id, raw_value in snapshot.binding_values.items():
-        if binding_id in caller_owned:
-            continue
         binding = eligible_bindings[binding_id]
         if binding.value.typed_enum is not None:
-            enum_values[binding_id] = str(raw_value).strip()
+            if binding.borrador_supplies_value:
+                enum_values[binding_id] = str(raw_value).strip()
             continue
-        decimal_values[binding_id] = _decimal_value(binding_id, raw_value)
+        # Parsed even when only compared, so a malformed stored value is refused rather than ignored.
+        value = decimal_value(binding_id, raw_value)
+        if binding.borrador_supplies_value:
+            decimal_values[binding_id] = value
     return decimal_values, enum_values
 
 
@@ -242,11 +242,7 @@ def _borrador_resolution(
                 lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
                 parent_source_ref=None,
-                # No terminal origin: ``borrador`` is a mesh-only source with no
-                # provider registration, so no declared expectation exists for a
-                # resolved class to be audited against. The snapshot is AEAT's
-                # own prefill, not a terminal fact this product holds.
-                terminal_origin=None,
+                terminal_origin=TerminalOriginClass.AEAT_THIRD_PARTY_DATA,
                 fingerprint=snapshot_fingerprint,
             )
             for binding_id in sourced
@@ -273,9 +269,11 @@ def resolve_modelo_100_borrador_bindings(
 
     The function is deliberately inert when no snapshot is supplied:
     borrador values are never consumed implicitly. When a snapshot is
-    supplied, caller values take precedence and the snapshot may only
-    contribute bindings explicitly marked ``aeat_prefilled`` by the
-    registry revision passed to the service.
+    supplied, the snapshot may only contribute bindings explicitly marked
+    ``aeat_prefilled`` by the registry revision passed to the service and not
+    declared ``cross_check_only``; a snapshot may still hold those, for
+    comparison. Caller values take precedence in the overlay, which still sees
+    every value the snapshot states.
 
     Returns:
         A :class:`CalculationSourceResolution` with ``owned_sources`` set to
@@ -295,6 +293,10 @@ def resolve_modelo_100_borrador_bindings(
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.unsupported_modelo",
             context={"modelo": target_modelo},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.modelo_unsupported",
+                evidence_values={"modelo": target_modelo, "borrador_capability": False},
+            ),
         )
     _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
     snapshot = _load_active_borrador_snapshot(
@@ -303,15 +305,45 @@ def resolve_modelo_100_borrador_bindings(
         snapshot_repository=snapshot_repository,
         operation=operation,
     )
-    eligible_bindings = _borrador_capable_bindings(registry_snapshot)
+    eligible_bindings = borrador_admitted_bindings(registry_snapshot.revision)
     _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
-    caller_owned = set(command.caller_binding_values) | set(command.caller_enum_binding_values)
-    decimal_values, enum_values = _resolve_borrador_binding_values(
-        snapshot,
-        eligible_bindings=eligible_bindings,
-        caller_owned=caller_owned,
-    )
+    decimal_values, enum_values = _resolve_borrador_binding_values(snapshot, eligible_bindings=eligible_bindings)
     return _borrador_resolution(snapshot, decimal_values=decimal_values, enum_values=enum_values)
+
+
+def borrador_cross_check_values(
+    command: Modelo100BorradorBindingCommand,
+    *,
+    registry_snapshot: RegistrySnapshot,
+    snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
+) -> dict[BindingId, Decimal]:
+    """Return the amounts a selected borrador snapshot holds for its ``cross_check_only`` bindings.
+
+    These are the values the borrador states for credits it may only compare:
+    they never enter a calculation. Empty when no snapshot is selected, which a
+    credit reconciliation reads as a cross-check with nothing to compare.
+
+    ``registry_snapshot`` is the :class:`RegistrySnapshot`, the pinned registry snapshot.
+    """
+    snapshot_id = command.borrador_snapshot_id
+    if snapshot_id is None:
+        return {}
+    _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
+    snapshot = _load_active_borrador_snapshot(
+        command,
+        snapshot_id=snapshot_id,
+        snapshot_repository=snapshot_repository,
+        operation=operation,
+    )
+    eligible_bindings = borrador_admitted_bindings(registry_snapshot.revision)
+    _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
+    return {
+        binding_id: decimal_value(binding_id, raw_value)
+        for binding_id, raw_value in snapshot.binding_values.items()
+        if eligible_bindings[binding_id].value.typed_enum is None
+        and not eligible_bindings[binding_id].borrador_supplies_value
+    }
 
 
 _BORRADOR_RESOLVER_ID = "modelo_100_borrador"
@@ -333,16 +365,12 @@ class Modelo100BorradorSourceResolver:
         self,
         *,
         borrador_snapshot_id: str | None,
-        caller_binding_values: Mapping[BindingId, Decimal],
-        caller_enum_binding_values: Mapping[BindingId, str],
         registry_snapshot: RegistrySnapshot | None = None,
         snapshot_repository: Borrador100SnapshotRepository | None = None,
         operation: PinnedAuthorityOperation,
     ) -> None:
-        """Bind the borrador snapshot and the caller-supplied binding values."""
+        """Bind the borrador snapshot this tier reads."""
         self._borrador_snapshot_id = borrador_snapshot_id
-        self._caller_binding_values = caller_binding_values
-        self._caller_enum_binding_values = caller_enum_binding_values
         self._registry_snapshot = registry_snapshot
         self._snapshot_repository = snapshot_repository
         self._operation = operation
@@ -356,7 +384,7 @@ class Modelo100BorradorSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            snapshot = self._operation.snapshot(
+            snapshot = self._operation.reading_snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
@@ -369,8 +397,6 @@ class Modelo100BorradorSourceResolver:
                     filing_year=context.filing_year,
                     period=context.period,
                     borrador_snapshot_id=self._borrador_snapshot_id,
-                    caller_binding_values=self._caller_binding_values,
-                    caller_enum_binding_values=self._caller_enum_binding_values,
                 ),
                 registry_snapshot=snapshot,
                 snapshot_repository=self._snapshot_repository,
@@ -396,6 +422,10 @@ def _assert_same_axis(
     if snapshot.bucket_id != expected_bucket:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_bucket_mismatch",
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.bucket_mismatch",
+                evidence_values={"snapshot_in_active_bucket": False},
+            ),
         )
     if snapshot.filing_year != filing_year or snapshot.period != period:
         raise Modelo100BorradorBindingError(
@@ -406,6 +436,15 @@ def _assert_same_axis(
                 "filing_year": filing_year,
                 "period": period.registry_token,
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.axis_mismatch",
+                evidence_values={
+                    "snapshot_year": snapshot.filing_year,
+                    "snapshot_period": snapshot.period.registry_token,
+                    "year": filing_year,
+                    "period": period.registry_token,
+                },
+            ),
         )
 
 
@@ -421,6 +460,13 @@ def _assert_registry_snapshot_axis(
                 "snapshot_modelo": registry_snapshot.modelo.id,
                 "command_modelo": command.modelo.strip(),
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.registry_modelo_mismatch",
+                evidence_values={
+                    "registry_modelo": registry_snapshot.modelo.id,
+                    "requested_modelo": command.modelo.strip(),
+                },
+            ),
         )
     if (
         registry_snapshot.filing_year != command.filing_year
@@ -434,20 +480,30 @@ def _assert_registry_snapshot_axis(
                 "filing_year": command.filing_year,
                 "period": command.period.registry_token,
             },
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.registry_axis_mismatch",
+                evidence_values={
+                    "registry_year": registry_snapshot.filing_year,
+                    "registry_period": registry_snapshot.period,
+                    "year": command.filing_year,
+                    "period": command.period.registry_token,
+                },
+            ),
         )
 
 
-def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[BindingId, BindingDefinition]:
-    return {binding.id: binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True}
-
-
-def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
+def decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
+    """Parse a decimal string for a borrador binding or refuse with a binding error."""
     return decimal_from_string(
         binding_id,
         value,
         error_factory=lambda _message: Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.decimal_value_invalid",
             context={"binding_id": binding_id},
+            precondition_failure=build_modelo_calculate_refusal_failure(
+                scenario="borrador_snapshot.value_invalid",
+                evidence_values={"binding_id": binding_id},
+            ),
         ),
         pipeline_label="borrador value",
     )
@@ -457,5 +513,6 @@ __all__ = [
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
     "Modelo100BorradorSourceResolver",
+    "borrador_cross_check_values",
     "resolve_modelo_100_borrador_bindings",
 ]

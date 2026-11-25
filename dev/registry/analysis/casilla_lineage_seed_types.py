@@ -80,7 +80,7 @@ EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
     ),
 }
 
-_EVIDENCE_ADVISORY = 512
+EVIDENCE_ADVISORY = 512
 
 
 def _schema_evidence_limit() -> int:
@@ -140,7 +140,7 @@ class LineagePlan:
     def record_evidence(self, revision: str, casilla_id: str, evidence: str) -> str:
         """Bound one evidence string by the schema's cap, recording it when it is unusually long."""
         text = _bounded(evidence)
-        if len(text) > _EVIDENCE_ADVISORY:
+        if len(text) > EVIDENCE_ADVISORY:
             self.long_evidence.append(LongEvidence(self.modelo, revision, casilla_id, len(text)))
         return text
 
@@ -247,7 +247,7 @@ class PartialStamping:
         )
 
 
-def _partial_stamping_error(modelo_id: str, records: tuple[PartialStamping, ...]) -> RegistryError:
+def partial_stamping_error(modelo_id: str, records: tuple[PartialStamping, ...]) -> RegistryError:
     """Build the registered registry refusal carrying the structured records."""
     return RegistryError(
         f"modelo {modelo_id}: identifiers stay partly stamped: {[record.casilla for record in records][:5]}",

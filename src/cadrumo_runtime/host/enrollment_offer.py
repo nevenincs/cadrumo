@@ -14,7 +14,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentRequester,
     ProtectedEnrollmentRecipient,
 )
-from cadrumo.core.time.clock import now
+from cadrumo.core.time.clock import wall_now
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepared
@@ -24,7 +24,8 @@ from ..application.enrollment_recipient import VolatileEnrollmentRecipient
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.automation_enrollment import ProtectedEnrollmentRecipient
 
-    from .profile_host import ProfileConnection, RuntimeProfileHost
+    from .profile_connection import ProfileConnection
+    from .profile_host import RuntimeProfileHost
 
 
 @dataclass(slots=True)
@@ -52,7 +53,7 @@ class RuntimeEnrollmentOffer:
 
     def lapses_at(self) -> float:
         """Return the monotonic instant this offer's window closes, whichever of its two bounds is first."""
-        return min(self.deadline, time.monotonic() + (self.prepared.expires_at - now()).total_seconds())
+        return min(self.deadline, time.monotonic() + (self.prepared.expires_at - wall_now()).total_seconds())
 
     def require_live(self) -> None:
         """Reobserve originating login, current root generation and offer lifetime."""
@@ -66,7 +67,7 @@ class RuntimeEnrollmentOffer:
         if (
             self.closed
             or not self.admitting()
-            or now() >= self.prepared.expires_at
+            or wall_now() >= self.prepared.expires_at
             or time.monotonic() >= self.deadline
         ):
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)

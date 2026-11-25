@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_snapshot,
@@ -51,9 +51,9 @@ from ..foreign_assets import (
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     ForeignAssetsAggregationSourceResolver,
-    _registry_observation_from_foreign_asset,
     aggregate_foreign_assets_720,
     declarable_asset_classes_720,
+    registry_observation_from_foreign_asset,
 )
 from ..source_mesh import CalculationSourceContext
 
@@ -388,7 +388,7 @@ class TestAggregateBasic:
 class TestThreshold720:
     @pytest.mark.parametrize("filing_year", _SUPPORT.years)
     def test_threshold_is_resolved_from_the_registry_revision(self, filing_year: int) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             thresholds = foreign_asset_declaration_thresholds(
                 modelo="720", filing_year=filing_year, operation=_authority_operation_for_test
             )
@@ -727,7 +727,7 @@ def test_valid_acquisition_date_aggregates_and_reaches_the_registry_row() -> Non
     )
     assert aggregation.total_assets == 1
 
-    row = _registry_observation_from_foreign_asset(observation)
+    row = registry_observation_from_foreign_asset(observation)
     assert row.acquisition_date == date(2026, 3, 1)
 
 

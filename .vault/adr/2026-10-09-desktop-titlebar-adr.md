@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-titlebar'
 date: '2026-10-09'
-modified: '2026-10-15'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:98931caea895bcec499275ae50bd4374ccc18317c250cddaac754ecb45201d8d'
+body_hash: 'sha256:616dbeb7b035242d36b117fb5865f70ea7fbecd21322dc7c8300543e54a42d00'
 related:
   - "[[2026-10-09-desktop-titlebar-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -43,6 +43,25 @@ Accepted under the user's explicit shared-language implementation request. The e
 
 Promote the approved header to product composition, retire the separate visual-study implementation, publish typed window commands and Host window access, and adapt scenario and packaged checks to the authorized account location change. Keep generated localization in its canonical workflow and use existing shared controls and tokens.
 
+### Amendment 2026-10-24: the page answers a close the system raised
+
+Accepted under the owner's standing authorization for the desktop Ledger editor (`2026-10-23-desktop-ledger-editor-adr`): staged ledger changes live only in the window's memory, so a close must not drop them unasked.
+
+The closed window-command set gains:
+
+- two subscription commands, `shell_close_guard_subscribe` and `shell_close_guard_unsubscribe`;
+- two actions, `close_now` and `keep_open`.
+
+While the main window's page listens, a close raised by the system (the window's own close button or Alt+F4) is held once and the page is asked. The page answers with `close_now` or `keep_open`.
+
+The guard can never keep the window open against the person:
+
+- a second close while the first is unanswered closes the window;
+- a page that cannot be reached is not asked;
+- `close_now` closes without asking again.
+
+The commands, like the others, apply only to the invoking main window and carry no profile or runtime authority.
+
 ## Rationale
 
 Supported Tauri methods provide native window behavior without custom window-manager patches. One account controller and one header account menu avoid conflicting profile and sign-out surfaces while preserving runtime authentication semantics.
@@ -50,3 +69,7 @@ Supported Tauri methods provide native window behavior without custom window-man
 ## Consequences
 
 The desktop IPC gains a bounded window-control interface. Browser controls remain unavailable outside a native host. Native acceptance needs platform execution; shared rendering does not prove Linux window-manager behavior. Reconsider if native macOS application admission is implemented or native snapping requirements exceed Tauri's supported behavior.
+
+## Amendment 2026-11-02: fullscreen actions
+
+Accepted under the user's true F11 fullscreen request. The closed main-window action set adds explicit toggle-fullscreen and leave-fullscreen operations through supported Tauri Rust calls. The frontend shares the existing single presentation subscription. Fullscreen does not overwrite docking or normal-window bounds. Invoking-main-window and per-launch token restrictions remain binding. Evidence: `2026-11-02-cadrumo-windowmanager-reference`.

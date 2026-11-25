@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from threading import RLock
 from typing import Protocol
@@ -34,7 +33,7 @@ class TransportCleanup:
         if deadline is None:
             self._close_guard.acquire()
         elif not self._close_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         try:
             if not self._released:
                 self.resource.close()
@@ -49,6 +48,8 @@ class TransportCleanup:
 
     async def close(self) -> None:
         """Keep blocking native release off the event loop, including retries."""
+        import asyncio
+
         await asyncio.to_thread(self.close_now)
 
 

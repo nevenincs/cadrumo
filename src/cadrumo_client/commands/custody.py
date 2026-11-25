@@ -10,14 +10,17 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import OutputFormat, render_command_output
+from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
+from cadrumo_client.commands.output import activate_subcommand_output_language
+from cadrumo_client.commands.profile_selection import LoginTarget
 from cadrumo_client.commands.secure_input import (
     MachineSecretPayload,
     MachineSecretSelection,
@@ -26,6 +29,7 @@ from cadrumo_client.commands.secure_input import (
     select_machine_secret_channel,
     terminal_can_prompt_for_secrets,
 )
+from cadrumo_client.commands.sign_in_refusal_projection import session_refusal_translation_key
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, ProfileReceiptRefusedError
@@ -49,7 +53,7 @@ class LoginSecrets(MachineSecretPayload):
     passphrase: SecretStr
 
 
-def _config_logout_result(
+def config_logout_result(
     outcome: HumanSignedOut | None,
     *,
     logged_out_profile: str | None,
@@ -147,7 +151,7 @@ def _previous_profile_label(outcome: ProfileLoginOutcome) -> str | None:
     return None if target is None else target.label
 
 
-def _login_notices(outcome: ProfileLoginOutcome, *, previous_profile: str | None = None) -> tuple[Notice, ...]:
+def login_notices(outcome: ProfileLoginOutcome, *, previous_profile: str | None = None) -> tuple[Notice, ...]:
     """Project one login outcome's non-blocking diagnostics onto the Notice channel.
 
     Three distinct operator-visible conditions ride here rather than as
@@ -213,7 +217,28 @@ def _session_not_persisted_notice(outcome: ProfileLoginOutcome) -> Notice:
     )
 
 
-def _login_through_the_prompt(
+def _login_password_proof(
+    machine_secret: MachineSecretSelection | None, interactive: bool, profile_label: str
+) -> bytearray:
+    """Read the selected password channel or retain its exact missing-channel policy verdict."""
+    if machine_secret is not None:
+        payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
+        try:
+            return bytearray(payload.passphrase.get_secret_value(), "utf-8")
+        finally:
+            del payload
+    elif interactive:
+        return bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")), "utf-8")
+    else:
+        from cadrumo.application.profile_preconditions import profile_password_channel_failure_verdict
+
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent"),
+            verdict=profile_password_channel_failure_verdict(profile_name=profile_label),
+        )
+
+
+def login_through_the_prompt(
     ctx: typer.Context,
     *,
     name: str | None,
@@ -249,21 +274,7 @@ def _login_through_the_prompt(
             with suppress(ProfileReceiptRefusedError):
                 admitted = client.resume_receipt(hand_over=True)
         if admitted is None:
-            if machine_secret is not None:
-                payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
-                try:
-                    proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
-                finally:
-                    del payload
-            elif interactive:
-                proof = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")), "utf-8")
-            else:
-                from cadrumo.application.profile_preconditions import profile_password_channel_failure_verdict
-
-                raise attach_cli_policy_verdict(
-                    CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent"),
-                    verdict=profile_password_channel_failure_verdict(profile_name=target.label),
-                )
+            proof = _login_password_proof(machine_secret, interactive, target.label)
             try:
                 admitted = client.login_password(proof, persist_receipt=True)
             finally:
@@ -299,13 +310,13 @@ def config_login(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Authenticate one profile and mint its resumable session."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(
         secrets_stdin=secrets_stdin,
         secrets_fd=secrets_fd,
     )
-    outcome = _login_through_the_prompt(
+    outcome = login_through_the_prompt(
         ctx,
         name=name,
         machine_secret=machine_secret,
@@ -324,11 +335,12 @@ def config_login(
         already_authenticated=outcome.already_authenticated,
         closed_previous_profile=previous_profile,
     )
-    notices = _login_notices(outcome, previous_profile=previous_profile)
+    notices = login_notices(outcome, previous_profile=previous_profile)
     _emit_envelope(
         ctx,
         command="config.login",
         result=result,
+        active_profile=_active_profile_label(),
         lines=(
             f"active_profile\t{outcome.label}",
             f"profile_id\t{outcome.bucket_id}",
@@ -340,8 +352,69 @@ def config_login(
     )
 
 
+def _prove_logout_person(
+    client: FrontendClient, machine_secret: MachineSecretSelection, *, require_password: bool = False
+) -> None:
+    """Resume the person or prove the supplied password, wiping it on every outcome."""
+    payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
+    try:
+        proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
+    finally:
+        del payload
+    try:
+        if require_password:
+            client.login_password(proof, persist_receipt=False)
+            return
+        try:
+            # A stored sign-in that resumes proves the person; the password is the fallback
+            # whenever it does not, whatever the reason the runtime gives.
+            client.resume_receipt()
+        except (ProfileReceiptRefusedError, FrontendRefusedError):
+            client.login_password(proof, persist_receipt=False)
+    finally:
+        proof[:] = bytes(len(proof))
+
+
+def _logout_target(name: str | None) -> tuple[str | None, LoginTarget | None]:
+    """Resolve the profile a sign-out addresses: the named one, else the runtime's selection."""
+    if name is None:
+        selected = profile_selection.runtime_selected_profile_id()
+        return selected, (None if selected is None else profile_selection.runtime_login_target(selected))
+    target = profile_selection.require_runtime_login_target(name)
+    return target.bucket_id, target
+
+
+def _sign_out_profile(
+    ctx: typer.Context,
+    selected: str,
+    machine_secret: MachineSecretSelection | None,
+    *,
+    require_password: bool,
+) -> HumanSignedOut:
+    """Revoke one profile's human sign-in over its own runtime connection, proving the person first when asked."""
+    client = asyncio.run(open_installed_client(profile_id=UUID(selected), frontend=OperationFrontendProjection.CLI))
+    try:
+        from cadrumo_client.commands.profile_binding import subscribe_profile_notices
+
+        subscribe_profile_notices(ctx, client)
+        if machine_secret is not None:
+            _prove_logout_person(client, machine_secret, require_password=require_password)
+        return client.human_sign_out()
+    except FrontendRefusedError as error:
+        _raise_frontend_refusal(error)
+    except ProfileReceiptRefusedError as error:
+        raise CliRefusedBoundaryError(
+            str(error.reason),
+            context={"reason": str(error.reason)},
+            translated_message="cli.config.errors.profile_session_logout_unproven",
+        ) from None
+    finally:
+        client.close()
+
+
 def config_logout(
     ctx: typer.Context,
+    name: str | None = None,
     secrets_stdin: bool = False,
     secrets_fd: int | None = None,
     output_language: OutputLanguage | None = None,
@@ -352,52 +425,24 @@ def config_logout(
     channel proves the person for this sign-out. That is how a sign-in that
     was never persisted, such as a held one, is ended from another process.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
-    selected = profile_selection.runtime_selected_profile_id()
-    target = None if selected is None else profile_selection.runtime_login_target(selected)
-    outcome = None
-    if selected is not None:
-        client = asyncio.run(open_installed_client(profile_id=UUID(selected), frontend=OperationFrontendProjection.CLI))
-        try:
-            from cadrumo_client.commands.profile_binding import subscribe_profile_notices
-
-            subscribe_profile_notices(ctx, client)
-            if machine_secret is None:
-                outcome = client.human_sign_out()
-            else:
-                payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
-                try:
-                    proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
-                finally:
-                    del payload
-                try:
-                    try:
-                        # A stored sign-in that resumes proves the person; the password is the fallback
-                        # whenever it does not, whatever the reason the runtime gives.
-                        client.resume_receipt()
-                    except (ProfileReceiptRefusedError, FrontendRefusedError):
-                        client.login_password(proof, persist_receipt=False)
-                finally:
-                    proof[:] = bytes(len(proof))
-                outcome = client.human_sign_out()
-        except FrontendRefusedError as error:
-            _raise_frontend_refusal(error)
-        except ProfileReceiptRefusedError as error:
-            raise CliRefusedBoundaryError(
-                str(error.reason),
-                context={"reason": str(error.reason)},
-                translated_message="cli.config.errors.profile_session_logout_unproven",
-            ) from None
-        finally:
-            client.close()
+    selected, target = _logout_target(name)
+    # A sign-out leaves the selection as it is, so the label the envelope names is read
+    # before it: nothing asked of the runtime after a committed sign-out can report it refused.
+    active_profile = _active_profile_label(known=target if name is None else None)
+    outcome = (
+        None
+        if selected is None
+        else _sign_out_profile(ctx, selected, machine_secret, require_password=name is not None)
+    )
     # Selection is a non-authoritative login target, not human access: the
     # runtime keeps it for the next login, and a sign-out writes none.
     signed_out = selected
     logged_out_profile = target.label if target is not None else signed_out
 
-    result = _config_logout_result(
+    result = config_logout_result(
         outcome,
         logged_out_profile=logged_out_profile,
         already_logged_out=signed_out is None,
@@ -415,6 +460,7 @@ def config_logout(
         ctx,
         command="config.logout",
         result=result,
+        active_profile=active_profile,
         lines=(
             f"logged_out_profile\t{logged_out_profile or '<none>'}",
             f"human_receipt_revoked\t{result.human_receipt_revoked}",
@@ -449,20 +495,8 @@ def _require_current_profile_login(client: FrontendClient) -> None:
         )
 
 
-def _activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
-    """Apply an explicit leaf language choice to this invocation's output."""
-    if language is None:
-        return
-    from cadrumo.core.config import override_settings
-    from cadrumo.core.i18n.render import clear_output_language_cache
-
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()
-
-
 def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     """Translate the runtime's typed session refusal at the command boundary."""
-    from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
     from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
     sign_in = error.sign_in
@@ -472,30 +506,21 @@ def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     elif sign_in is not None and sign_in.reason == "credential_rejected":
         key = "application.user_profile.errors.profile_authentication_refused"
     elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
-        if sign_in.binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
-            key = "cli.config.errors.profile_session_login_mismatch"
-        elif sign_in.binding is ReceiptBindingRefusal.GENERATION_CHANGED:
-            key = "cli.config.errors.profile_session_signed_out"
-        elif sign_in.binding is not None:
-            key = "cli.config.errors.profile_session_unreadable"
-        elif sign_in.reason is ProfileSessionRefusalReason.CUSTODY_CHANGED:
-            key = "cli.config.errors.profile_session_custody_changed"
-        elif sign_in.reason is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
-            key = "cli.config.errors.profile_session_outdated"
-        elif sign_in.reason in {ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED}:
-            key = "cli.config.errors.profile_session_unreadable"
-        elif sign_in.reason is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-            key = "errors.auth.auth_storage_keyring_unavailable"
-        elif sign_in.reason in {
-            ProfileSessionRefusalReason.ABSENT,
-            ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING,
-        }:
-            key = "cli.config.errors.profile_session_absent"
-        else:
-            key = "cli.config.errors.profile_session_expired"
+        key = session_refusal_translation_key(sign_in.reason, sign_in.binding)
     elif error.reason == AccessDenialCode.PROFILE_LOCKED.value:
         key = "errors.refused.profile_locked"
     raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None
+
+
+def _active_profile_label(*, known: LoginTarget | None = None) -> str | None:
+    """Return the label of the profile this command means, asking the runtime only for what ``known`` does not name."""
+    active_id = profile_selection.command_profile_id()
+    if active_id is None:
+        return None
+    if known is not None and known.bucket_id == active_id:
+        return known.label
+    target = profile_selection.runtime_login_target(active_id)
+    return None if target is None else target.label
 
 
 def _emit_envelope(
@@ -504,9 +529,10 @@ def _emit_envelope(
     command: str,
     result: object,
     lines: tuple[str, ...],
+    active_profile: str | None,
     notices: tuple[Notice, ...] = (),
 ) -> None:
-    """Render a typed direct-auth result through the shared success boundary."""
+    """Render a typed direct-auth result through the shared success boundary, naming ``active_profile``."""
     from cadrumo.application.operator_output.emit import emit_operator_json_success
     from cadrumo.application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
@@ -514,9 +540,6 @@ def _emit_envelope(
     root_state = root.obj if isinstance(root.obj, dict) else {}
     raw_format = root_state.get("format", root.params.get("format", root.params.get("format_", "text")))
     output_format = raw_format if isinstance(raw_format, OutputFormat) else OutputFormat(raw_format)
-    active_id = profile_selection.command_profile_id()
-    target = None if active_id is None else profile_selection.runtime_login_target(active_id)
-    active_profile = None if target is None else target.label
     if output_format is OutputFormat.JSON:
         emit_operator_json_success(command, result, notices=notices, active_profile=active_profile)
         return

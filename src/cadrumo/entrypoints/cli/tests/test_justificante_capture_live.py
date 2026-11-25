@@ -21,7 +21,7 @@ from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_sessi
 from cadrumo.adapters.persistence.profile.tests.profile_registration import live_clave_movil_profile
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_expedientes_ports
 from cadrumo.entrypoints.justificante_composition import (
     build_justificante_authenticity_verifier,
     build_justificante_capture_service,
@@ -35,7 +35,7 @@ from ....application.live.justificante import (
     capture_justificante_snapshot_outcome,
 )
 from ....application.live.snapshot_base import SnapshotLifecycleState
-from ....application.live.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ....application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.period import Period
 from ....tests.live_gate import requires_live_enabled

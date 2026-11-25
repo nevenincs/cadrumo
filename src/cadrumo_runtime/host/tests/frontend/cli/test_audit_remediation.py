@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import json
+from datetime import date
 from pathlib import Path
 
 import click
@@ -12,8 +13,11 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.inventory import REPO_ROOT, leaf_name
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command, invoke_cached_cli
+
+from ...native_profile_facts import native_general_iva_facts
 
 __all__ = ["isolated_profile_storage"]
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
@@ -75,7 +79,7 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
         assert "alta" in flat and "modificacion" in flat and "baja" in flat, surface
         # The composed YYYY-prefixed forms are no longer advertised on
         # surfaces that compose --year and --period separately.
-        assert "2026Q1" not in flat, surface
+        assert f"{filing_year_envelope().horizon}Q1" not in flat, surface
 
 
 @pytest.mark.usefixtures("isolated_profile_storage")
@@ -91,18 +95,11 @@ class TestOverviewCalendarRequiresProfileCreate:
         register_cli_profile(
             label="operator",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.name": "Operator",
                 "identity.surnames": "Operator",
                 "identity.tax_id": "12345678Z",
                 "activities.description": "software development",
-                "iva.regime": "GENERAL",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
             log_in=False,
         )
@@ -133,10 +130,9 @@ class TestOverviewCalendarRequiresProfileCreate:
                 "overview",
                 "calendar",
                 "--from",
-                "2026-01-01",
+                date(filing_year_envelope().horizon, 1, 1).isoformat(),
                 "--to",
-                "2026-12-31",
-                "--allow-incomplete",
+                date(filing_year_envelope().horizon, 12, 31).isoformat(),
             ],
         )
 
@@ -245,7 +241,7 @@ def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
     # while retaining the direct-literal rule for every other module.
     return bool(
         module is not None
-        and module.name == "commands.py"
+        and module.name == "command_parameters.py"
         and module.parent.name == "wizard"
         and isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
@@ -253,7 +249,7 @@ def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
         and len(node.args) == 1
         and isinstance(node.args[0], ast.Call)
         and isinstance(node.args[0].func, ast.Name)
-        and node.args[0].func.id == "_help_key"
+        and node.args[0].func.id == "help_key"
         and len(node.args[0].args) == 2
         and all(isinstance(argument, ast.Name) for argument in node.args[0].args)
     )

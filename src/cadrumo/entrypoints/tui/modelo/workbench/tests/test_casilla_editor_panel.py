@@ -20,17 +20,17 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.color import Color
 from textual.geometry import Region
-from textual.pilot import Pilot
 from textual.widgets import Button, Input, Static
 
 from ......application.modelo.source_policy import SourceFamily, SourceSurface
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormField,
     ModeloFormOrigin,
     ModeloFormValueSource,
 )
+from ......application.modelo.work_form_models import ModeloFormField
+from ......application.modelo.work_form_wording import period_words
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
@@ -38,13 +38,13 @@ from ......core.i18n.render import tr
 from ......core.period import Period
 from ....components.host import ScreenHostApp
 from ....tests.frame import screen_text
+from ....tests.settling import settle
 from ..casilla_list import CasillaList
 from ..casilla_list_models import CasillaListEntry
 from ..editor import (
     CasillaEditorPanel,
     CasillaEditorScreen,
     EditorDecision,
-    EditorOutcome,
     can_change_text,
     open_area_target,
     read_only_reason,
@@ -52,7 +52,6 @@ from ..editor import (
 from ..editor_explanations import where_from_text
 from ..ports import WorkbenchChangeKind
 from ..sources import OpenSourceSurface
-from ..wording import period_words
 from .workbench_fixture import FakeActions, fed_by, form_field, status_line_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -61,11 +60,6 @@ _LANGUAGES = ("es", "en", "ca", "hu")
 _SIZES = [(80, 24), (140, 40)]
 _LONG_HELP = "Casilla 06: " + " ".join(["Retenciones e ingresos a cuenta soportados en el trimestre."] * 8)
 _STATUS = "Resultado: 1.300,00 € a ingresar"
-
-
-async def _settle(pilot: Pilot[EditorOutcome | None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _assumed() -> ModeloFormField:
@@ -156,7 +150,7 @@ async def test_the_panel_answers_what_it_asks_what_it_holds_whether_it_changes_a
         editor = _editor(_assumed(), "en", affects="[07], [19]")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             asks = _text(editor, "#editor-asks-text")
             now = _text(editor, "#editor-now-text")
             can_change = _text(editor, "#editor-can-change-text")
@@ -183,13 +177,13 @@ async def test_the_boxes_it_affects_come_between_can_you_change_it_and_the_new_v
         editor = _editor(_assumed(), language, affects="[07]")
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             can_change = editor.query_one("#editor-can-change").region
             entry = editor.query_one("#editor-entry").region
             field_input = editor.query_one("#editor-input", Input).region
             hint = editor.query_one("#editor-hint").region
             hint_text = _text(editor, "#editor-hint")
-            money_format = tr("tui.modelo.workbench.editor.format.money")
+            money_format = tr("workspace.modelo.editor.format.money")
             affects = editor.query_one("#editor-affects").region
 
     assert affects.y == can_change.bottom, "'Affects' comes straight after 'Can you change it?'"
@@ -214,7 +208,7 @@ async def test_the_panel_is_as_tall_as_what_it_says_with_no_empty_band(
         )
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             panel_widget = editor.query_one("#editor-panel")
             panel = panel_widget.region
             gutter = panel_widget.gutter.bottom
@@ -240,7 +234,7 @@ async def test_the_header_result_line_is_the_panels_first_line(language: str, si
         editor = _editor(_assumed(), language, status_line=_STATUS)
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             panel = editor.query_one("#editor-panel")
             status_widget = editor.query_one("#editor-status", Static)
             status = status_widget.region
@@ -260,7 +254,7 @@ async def test_the_title_carries_the_strongest_weight(case: str) -> None:
         editor = _editor(_assumed(), "en") if case == "editable" else _read_only(_sourced(), "en")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             title = editor.query_one("#editor-title")
             label = editor.query(".editor-block-label").first()
             foreground = Color.parse(app.theme_variables["foreground"])
@@ -280,13 +274,13 @@ async def test_the_highlighted_button_keeps_and_goes_to_the_next_box(language: s
         editor = _editor(_assumed(), language)
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             primary = [str(button.label) for button in editor.query(Button) if button.variant == "primary"]
             keep = editor.query_one("#editor-save", Button)
             keep_variant = keep.variant
-            save_next = tr("tui.modelo.workbench.editor.save_next")
+            save_next = tr("workspace.modelo.editor.save_next")
             await pilot.click("#editor-save-next")
-            await _settle(pilot)
+            await settle(pilot)
 
     decision = app.return_value
     assert primary == [save_next]
@@ -302,10 +296,10 @@ async def test_the_secondary_button_keeps_the_value_and_stays_on_the_box() -> No
         editor = _editor(_assumed(), "en")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             label = str(editor.query_one("#editor-save", Button).label)
             await pilot.click("#editor-save")
-            await _settle(pilot)
+            await settle(pilot)
 
     decision = app.return_value
     assert label == "Keep for review"
@@ -323,7 +317,7 @@ async def test_a_sourced_box_says_where_it_comes_from_what_it_affects_and_where_
         editor = _read_only(_sourced(), "es", affects="[03]")
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             now = _text(editor, "#editor-now-text")
             where = _text(editor, "#editor-where-text")
             can_change = _text(editor, "#editor-can-change-text")
@@ -332,7 +326,7 @@ async def test_a_sourced_box_says_where_it_comes_from_what_it_affects_and_where_
             inputs = editor.query(Input)
             buttons = _labels(editor)
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
         area = tr("tui.destination.ledger")
 
     assert "De tus registros" in now
@@ -356,12 +350,12 @@ async def test_a_read_only_box_asks_to_open_the_area_that_owns_its_source(
         editor = _read_only(_sourced(), language)
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             if how == "key":
                 await pilot.press("a")
             else:
                 await pilot.click("#editor-open")
-            await _settle(pilot)
+            await settle(pilot)
 
     assert app.return_value == OpenSourceSurface(SourceSurface.LEDGER)
 
@@ -373,11 +367,11 @@ async def test_a_box_no_area_owns_offers_nothing_to_open() -> None:
         editor = _read_only(field, "en")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             buttons = _labels(editor)
             keys = editor.query("#editor-keys")
             await pilot.press("a")
-            await _settle(pilot)
+            await settle(pilot)
             still_open = app.screen is editor
 
     assert open_area_target(field) is None
@@ -400,9 +394,9 @@ async def test_a_box_that_takes_a_value_offers_no_area_and_a_types_into_it() -> 
         editor = _editor(carried, "en")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("a")
-            await _settle(pilot)
+            await settle(pilot)
             typed = editor.query_one("#editor-input", Input).value
             still_open = app.screen is editor
 
@@ -462,9 +456,7 @@ def test_where_it_comes_from_names_the_earlier_declarations_a_value_is_carried_f
     period = Period.from_year_and_code(2025, "4T")
     with override_settings(cadrumo_output_language="es"):
         where = where_from_text(carried)
-        filing = tr(
-            "tui.modelo.workbench.origin_source.imported.named_filing", modelo="130", period=period_words(period)
-        )
+        filing = tr("workspace.modelo.origin_source.imported.named_filing", modelo="130", period=period_words(period))
 
     assert where == f"Declaración anterior\n{filing}"
     assert "130" in filing
@@ -489,7 +481,7 @@ def test_a_recorded_declaration_makes_even_a_typed_box_read_only() -> None:
     with override_settings(cadrumo_output_language="en"):
         typed = read_only_reason(_assumed(), OutputLanguage.EN)
         recorded = read_only_reason(_assumed(), OutputLanguage.EN, recorded=True)
-        correction = tr("tui.modelo.workbench.editor.can_change.recorded")
+        correction = tr("workspace.modelo.editor.can_change.recorded")
 
     assert typed is None
     # A filed declaration's answer says how to change it: by starting a correction.
@@ -523,11 +515,11 @@ async def test_enter_on_an_assumed_value_confirms_it_as_it_is_and_asks_to_move_o
         editor = _editor(field, "es")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             prefilled = editor.query_one("#editor-input", Input).value
             hint = _text(editor, "#editor-readback")
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
 
     decision = app.return_value
     assert prefilled == "0,00"
@@ -544,12 +536,12 @@ async def test_typing_over_an_assumed_value_replaces_it_and_ctrl_enter_stays_on_
         editor = _editor(_assumed(), "es")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*"125,5")
-            await _settle(pilot)
+            await settle(pilot)
             readback = _text(editor, "#editor-readback")
             await pilot.press("ctrl+enter")
-            await _settle(pilot)
+            await settle(pilot)
 
     decision = app.return_value
     assert readback.startswith("✓ Se leerá como 125,50")
@@ -566,12 +558,12 @@ async def test_a_box_with_nothing_assumed_opens_empty_and_keeps_nothing_until_a_
         editor = _editor(empty, "en")
         app = ScreenHostApp(editor)
         async with app.run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             value = editor.query_one("#editor-input", Input).value
             disabled = [editor.query_one(button, Button).disabled for button in ("#editor-save", "#editor-save-next")]
             readback_shown = editor.query_one("#editor-readback").display
             await pilot.press("enter")
-            await _settle(pilot)
+            await settle(pilot)
             still_open = app.screen is editor
 
     assert value == ""
@@ -606,7 +598,7 @@ async def test_the_input_and_every_button_stay_in_view_however_long_the_answers(
         )
         app = ScreenHostApp(editor)
         async with app.run_test(size=size) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             panel = editor.query_one("#editor-panel").region
             widgets = [editor.query_one("#editor-input", Input), *editor.query(Button)]
             regions = [widget.region for widget in widgets]
@@ -665,17 +657,17 @@ async def test_on_a_filed_declaration_the_panel_and_the_row_say_what_a_box_holds
             )
         )
         async with ScreenHostApp(filed).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             filed_now = _text(filed, "#editor-now-text")
         still_open = _editor(field, "en")
         async with ScreenHostApp(still_open).run_test(size=(140, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             open_now = _text(still_open, "#editor-now-text")
         rows: dict[bool, str] = {}
         for recorded in (False, True):
             app = _RowHarness(CasillaListEntry(field, recorded=recorded))
             async with app.run_test(size=(140, 10)) as pilot:
-                await pilot.pause()
+                await settle(pilot)
                 widget = app.query_one(CasillaList)
                 rows[recorded] = next(
                     text for y in range(widget.size.height) if "[06]" in (text := widget.render_line(y).text)

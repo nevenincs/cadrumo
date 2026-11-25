@@ -25,6 +25,7 @@ from ....application.reference_catalogue_contracts import (
     PortalsViewResult,
 )
 from ....core.i18n.render import tr
+from ....core.presentation_marks import flag_mark
 from ....domain.calculations.registry.query_reports import ModeloBindingsReport
 from .reads import ReferenceQuery, ReferenceRead
 
@@ -59,10 +60,6 @@ class ReferenceView:
     def row_count(self) -> int:
         """How many rows the result's tables hold between them."""
         return sum(len(table.rows) for table in self.tables)
-
-
-def _mark(value: bool) -> str:
-    return "Y" if value else "-"
 
 
 def _flag(value: bool) -> str:
@@ -117,11 +114,11 @@ def _support_matrix(result: ModeloSupportMatrixResult) -> ReferenceView:
                         entry.modelo_id,
                         str(entry.revision_count),
                         entry.latest_revision_id,
-                        _mark(entry.calc_grade),
-                        _mark(entry.has_completeness_manifest),
-                        _mark(entry.has_fixed_width_export),
-                        _mark(entry.has_xml_dictionary_export),
-                        _mark(entry.has_extractor),
+                        flag_mark(entry.calc_grade),
+                        flag_mark(entry.has_completeness_manifest),
+                        flag_mark(entry.has_fixed_width_export),
+                        flag_mark(entry.has_xml_dictionary_export),
+                        flag_mark(entry.has_extractor),
                         str(len(entry.renames)),
                         entry.title,
                     )
@@ -338,12 +335,7 @@ def _apoderado_scopes(result: ApoderadoScopesListResult) -> ReferenceView:
     )
 
 
-def view_of(query: ReferenceQuery, result: BaseModel) -> ReferenceView:
-    """Lay out the result of one read.
-
-    Raises:
-        TypeError: The result is not one a reference read returns.
-    """
+def _modelo_view(query: ReferenceQuery, result: BaseModel) -> ReferenceView | None:
     if isinstance(result, ModeloListResult):
         return _modelos(result)
     if isinstance(result, ModeloSupportMatrixResult):
@@ -356,6 +348,18 @@ def view_of(query: ReferenceQuery, result: BaseModel) -> ReferenceView:
         return _casilla(result)
     if isinstance(result, FormulasResult):
         return _formulas(replace(query, modelo=result.code), result)
+    return None
+
+
+def view_of(query: ReferenceQuery, result: BaseModel) -> ReferenceView:
+    """Lay out the result of one read.
+
+    Raises:
+        TypeError: The result is not one a reference read returns.
+    """
+    model_view = _modelo_view(query, result)
+    if model_view is not None:
+        return model_view
     if isinstance(result, ModeloBindingsReport):
         return _bindings(result)
     if isinstance(result, LedgerCategoriesResult):

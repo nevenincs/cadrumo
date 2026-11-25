@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -129,3 +132,60 @@ def test_describe_period_error_locale_key_interpolates_message() -> None:
     assert sentinel in rendered, (
         f"locale key cli.app.modelo.describe.period_error did not interpolate 'message' kwarg; got: {rendered!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# contract -- a valid period token on an uncovered date is not a bad token
+# ---------------------------------------------------------------------------
+
+_HORIZON_YEAR = filing_year_envelope().horizon
+# The first quarter's validity and filing window end well before the year does,
+# so no 1T edition governs the last day of the year.
+_UNCOVERED_DATE = date(_HORIZON_YEAR, 12, 31)
+
+
+def test_describe_refuses_a_valid_token_on_a_date_no_edition_covers_by_naming_date_and_period() -> None:
+    result = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "describe",
+            "303",
+            "--year",
+            str(_HORIZON_YEAR),
+            "--period",
+            "1T",
+            "--as-of",
+            _UNCOVERED_DATE.isoformat(),
+        ]
+    )
+    assert result.exit_code != 0
+    expected = tr(
+        "cli.app.modelo.describe.no_edition_covers_date",
+        locale="en",
+        modelo="303",
+        year=_HORIZON_YEAR,
+        period="1T",
+        date=_UNCOVERED_DATE.isoformat(),
+    )
+    flattened = " ".join(result.output.split())
+    assert " ".join(expected.split()) in flattened, flattened
+    assert "not a valid period token" not in flattened
+
+
+def test_describe_still_names_an_unknown_period_token_as_a_bad_token() -> None:
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "describe", "303", "--period", "9Z"])
+    assert result.exit_code != 0
+    flattened = " ".join(result.output.split())
+    assert "'9Z' is not a valid period token for modelo 303" in flattened
+    assert "1T" in flattened
+
+
+def test_describe_no_edition_covers_date_key_renders_every_slot_in_every_locale() -> None:
+    slots = {"modelo": "303", "year": "YEARSLOT", "period": "1T", "date": "DATESLOT"}
+    for locale in SUPPORTED_OUTPUT_LANGUAGES:
+        rendered = tr("cli.app.modelo.describe.no_edition_covers_date", locale=locale, **slots)
+        assert rendered != "cli.app.modelo.describe.no_edition_covers_date"
+        assert all(str(value) in rendered for value in slots.values()), (locale, rendered)

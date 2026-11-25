@@ -1,6 +1,7 @@
 // Builds the host for the packaged end-to-end test: the shipped sources with
-// the `webview2-remote-debugging` feature, which admits exactly one
-// `--remote-debugging-port=<port>` in WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.
+// the `webview2-remote-debugging` and `native-automation` features. The former
+// admits exactly one `--remote-debugging-port=<port>` in
+// WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.
 // It has its own source snapshot and Cargo directory under the desktop testing
 // directory, so it never replaces the image desktop-host-build declares for
 // packaging, and it is never staged, packaged or distributed.
@@ -33,8 +34,11 @@ import {
   tauriConfig,
 } from "../../scripts/configuration.mjs";
 import { developmentServer } from "../../scripts/development-server.mjs";
+import { frozenHostSelection } from "./frozen-host.mjs";
 
 export const FEATURE = "webview2-remote-debugging";
+export const AUTOMATION_FEATURE = "native-automation";
+export const FEATURES = Object.freeze([FEATURE, AUTOMATION_FEATURE]);
 const BINARY = "cadrumo";
 
 /** The two test hosts: the shell embedded, or served by the development server. */
@@ -67,7 +71,8 @@ export function packagedHost(variant = VARIANTS.embedded) {
     typeof value.executable !== "string" ||
     !isAbsolute(value.executable) ||
     !resolve(value.executable).startsWith(cargo) ||
-    !value.features?.includes(FEATURE)
+    !Array.isArray(value.features) ||
+    !FEATURES.every((feature) => value.features.includes(feature))
   )
     throw new Error(`The packaged test host record is invalid: ${record}`);
   if (sha256(value.executable) !== value.sha256)
@@ -82,6 +87,8 @@ export function packagedHost(variant = VARIANTS.embedded) {
  * Cargo directory is not. The lane's own stager builds the mirror.
  */
 export function installedHost(variant = VARIANTS.embedded) {
+  const frozen = frozenHostSelection(variant);
+  if (frozen) return frozen;
   const host = packagedHost(variant);
   const repository = fileURLToPath(new URL("../../../../", import.meta.url));
   const args = [
@@ -163,6 +170,11 @@ function build(variant) {
   );
   // Test windows must not activate or close an operator's running desktop.
   config.identifier += ".desktop-tests";
+  config.app.security.capabilities.push({
+    identifier: "native-automation",
+    windows: ["main", "startup"],
+    permissions: ["wdio-webdriver:default"],
+  });
   // Tauri reads a URL frontend as a remote shell; the host then admits that
   // origin as its shell and loads nothing embedded.
   if (variant === VARIANTS.served) config.build.frontendDist = servedShell();
@@ -177,6 +189,7 @@ function build(variant) {
     ...selected.environment,
     CARGO_TARGET_DIR: paths.cargo,
     CADRUMO_NATIVE_CONTRACT: contract,
+    CADRUMO_DESKTOP_ICON: resolve(paths.icons, "icon.icns"),
     CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
     CADRUMO_PROCESS_MANIFEST: resolve(
       contract,
@@ -189,6 +202,8 @@ function build(variant) {
     CADRUMO_ID_MANAGER_NAME: identity.manager_name,
     ...stamp.environment,
   };
+  environment.CARGO_BUILD_BUILD_DIR = environment.CARGO_TARGET_DIR;
+  environment.CARGO_BUILD_TARGET_DIR = environment.CARGO_TARGET_DIR;
   if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     const key =
       Object.keys(environment).find((name) => name.toUpperCase() === "PATH") ??
@@ -230,6 +245,7 @@ function build(variant) {
         paths.icons,
         resolve(paths.icons, "icon.ico"),
         resolve(paths.icons, "icon.png"),
+        resolve(paths.icons, "icon.icns"),
       ],
       record: resolve(paths.root, "icons-build.json"),
       identity: {
@@ -248,7 +264,7 @@ function build(variant) {
     "--no-bundle",
     ...(selected.debug ? ["--debug"] : []),
     "--features",
-    FEATURE,
+    FEATURES.join(","),
     "--",
     "--locked",
   ]);
@@ -257,10 +273,13 @@ function build(variant) {
     selected.directory,
     BINARY + (process.platform === "win32" ? ".exe" : ""),
   );
-  const compiled = compiledFeatures(paths.cargo, selected.directory);
-  if (compiled.length !== 1 || !compiled[0].includes(FEATURE))
+  // Cargo retains fingerprints for earlier feature combinations in this directory.
+  const compiled = compiledFeatures(paths.cargo, selected.directory).filter(
+    (features) => FEATURES.every((feature) => features.includes(feature)),
+  );
+  if (compiled.length !== 1)
     throw new Error(
-      `The test host was not compiled with ${FEATURE}: ${JSON.stringify(compiled)}`,
+      `The test host was not compiled unambiguously with ${FEATURES.join(", ")}: ${JSON.stringify(compiled)}`,
     );
   const record = {
     executable,

@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingGroupBlock,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.loader import load_registry_tree
 from ...record_design_labels import DATA_ROOT
@@ -187,20 +188,38 @@ def _generate(modelo: str, revision_id: str, *quotes: QuotedHeading) -> FormLayo
 _RENTA_PAGE = "datoseconomicos-tomadatosampliada"
 
 
-_RENTA_QUOTE = QuotedHeading(
-    modelo="100",
-    revision="2025",
-    page=_RENTA_PAGE,
-    section="gpacciones",
-    column=None,
-    text="Transmisión de acciones negociadas",
-    source_ref="aeat-dr-100-2025-input-dictionary",
-    line=951,
-)
+_RENTA_SOURCE = "aeat-dr-100-2025-input-dictionary"
+
+
+@cache
+def _renta_revision() -> str:
+    """The id of the one Modelo 100 revision that cites the dictionary the quote below stands in."""
+    (revision_id,) = (
+        revision_id for revision_id, revision in _revisions("100") if _RENTA_SOURCE in revision.source_refs
+    )
+    return revision_id
+
+
+def _renta_quote() -> QuotedHeading:
+    return QuotedHeading(
+        modelo="100",
+        revision=_renta_revision(),
+        page=_RENTA_PAGE,
+        section="gpacciones",
+        column=None,
+        text="Transmisión de acciones negociadas",
+        source_ref=_RENTA_SOURCE,
+        line=951,
+    )
+
+
+def _open_ended(modelo: str) -> str:
+    """The id of the authored revision of ``modelo`` that has no end date."""
+    return str(open_ended_revision(modelo).id)
 
 
 def test_a_grounded_quote_heads_its_section_and_pins_its_source() -> None:
-    layout = _generate("100", "2025", _RENTA_QUOTE)
+    layout = _generate("100", _renta_revision(), _renta_quote())
     assert layout is not None
     section = next(
         section
@@ -230,11 +249,11 @@ def test_a_grounded_quote_heads_its_section_and_pins_its_source() -> None:
 )
 def test_an_ungrounded_or_misplaced_quote_is_refused(changes: dict[str, object], reason: str) -> None:
     with pytest.raises(OfficialHeadingRefusedError, match=reason):
-        _generate("100", "2025", replace(_RENTA_QUOTE, **changes))
+        _generate("100", _renta_revision(), replace(_renta_quote(), **changes))
 
 
 def test_a_quote_for_a_part_the_design_already_names_is_refused() -> None:
-    layout = _generate("130", "2019-y-siguientes")
+    layout = _generate("130", _open_ended("130"))
     assert layout is not None
     page = layout.pages[0]
     section = page.sections[0]
@@ -246,15 +265,15 @@ def test_a_quote_for_a_part_the_design_already_names_is_refused() -> None:
         for number, text in enumerate(_corpus_lines(_registry()[1][source]), start=1)
         if words in " ".join(text.casefold().split())
     )
-    quote = QuotedHeading("130", "2019-y-siguientes", page.id, section.id, None, section.official_heading, source, line)
+    quote = QuotedHeading("130", _open_ended("130"), page.id, section.id, None, section.official_heading, source, line)
     with pytest.raises(OfficialHeadingRefusedError, match="already names"):
-        _generate("130", "2019-y-siguientes", quote)
+        _generate("130", _open_ended("130"), quote)
 
 
 def test_a_quote_for_a_column_the_block_does_not_have_is_refused() -> None:
     quote = QuotedHeading(
         "349",
-        "2020-y-siguientes",
+        _open_ended("349"),
         "modelo-349-operador",
         "general",
         "no-such-column",
@@ -263,11 +282,11 @@ def test_a_quote_for_a_column_the_block_does_not_have_is_refused() -> None:
         317,
     )
     with pytest.raises(OfficialHeadingRefusedError, match="no column"):
-        _generate("349", "2020-y-siguientes", quote)
+        _generate("349", _open_ended("349"), quote)
 
 
 def test_349_columns_carry_the_designs_field_names() -> None:
-    layout = _layout("349", "2020-y-siguientes")
+    layout = _layout("349", _open_ended("349"))
     columns = {
         column.key: column.official_heading
         for page in layout.pages

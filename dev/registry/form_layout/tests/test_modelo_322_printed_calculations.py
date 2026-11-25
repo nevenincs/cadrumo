@@ -6,28 +6,27 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
-from cadrumo.domain.calculations.registry.schema import FormulaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.loader import load_modelo_directory
+from .formula_evaluation_support import evaluate_formula
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-
-def _evaluate(formula: FormulaDefinition, values: dict[str, Decimal]) -> Decimal:
-    return evaluate_expression(
-        formula.expression,
-        values=values,
-        binding_values={},
-        parameters={},
-        date_context={},
-        relation_values={},
-        unresolved_relation_ids=frozenset(),
-        unresolved_casilla_ids=set(),
-        operand_refs=[],
-        operand_casilla_refs=[],
-        operand_values=[],
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("322"))
+# One printed-form source per authored edition, oldest first; a new edition fails the zip.
+_PRINTED_FORM_SOURCES = dict(
+    zip(
+        _EDITIONS,
+        (
+            "boe-modelo-322-2021-form-pdf",
+            "boe-modelo-322-2023-form-pdf",
+            "boe-modelo-322-2024-form-pdf",
+            "boe-modelo-390-2026-form",
+        ),
+        strict=True,
     )
+)
 
 
 @pytest.mark.parametrize(
@@ -121,35 +120,31 @@ def _evaluate(formula: FormulaDefinition, values: dict[str, Decimal]) -> Decimal
         ),
     ],
 )
-@pytest.mark.parametrize("revision_id", ["2008-2022", "2023", "2024-2025", "2026-y-siguientes"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_printed_total_uses_every_operand_and_refuses_missing_values(
     target: str, inputs: dict[str, int], expected: int, revision_id: str
 ) -> None:
     modelo = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322"))
     revision = modelo.revisions[revision_id]
     inputs = dict(inputs)
-    if target == "38" and revision_id in {"2008-2022", "2023"}:
+    edition = _EDITIONS.index(revision_id)
+    if target == "38" and edition < 2:
         # The three later rate rows are absent from the January2023 paper form.
         for later_box in ("173", "167", "170"):
             expected -= inputs.pop(later_box)
-        if revision_id == "2008-2022":
+        if edition == 0:
             for later_box in ("161", "164", "152", "155", "158"):
                 expected -= inputs.pop(later_box)
-    if target == "70" and revision_id != "2026-y-siguientes":
+    if target == "70" and revision_id != _EDITIONS[-1]:
         # The advance-payment deduction first appears in the February2026 form.
         expected += inputs.pop("112")
     formula = next(f for f in revision.formulas if f.target_casilla_id == target)
     values = {key: Decimal(value) for key, value in inputs.items()}
-    assert _evaluate(formula, values) == Decimal(expected)
+    assert evaluate_formula(formula, values) == Decimal(expected)
     owner = next(c for c in revision.casillas if c.id == target)
     assert owner.input_kind == "computed"
     assert owner.formula == formula.id
-    assert {
-        "2008-2022": "boe-modelo-322-2021-form-pdf",
-        "2023": "boe-modelo-322-2023-form-pdf",
-        "2024-2025": "boe-modelo-322-2024-form-pdf",
-        "2026-y-siguientes": "boe-modelo-390-2026-form",
-    }[revision_id] in formula.source_refs
+    assert _PRINTED_FORM_SOURCES[revision_id] in formula.source_refs
     for missing in inputs:
         with pytest.raises(RegistryValidationError, match="referenced before evaluation"):
-            _evaluate(formula, {key: value for key, value in values.items() if key != missing})
+            evaluate_formula(formula, {key: value for key, value in values.items() if key != missing})

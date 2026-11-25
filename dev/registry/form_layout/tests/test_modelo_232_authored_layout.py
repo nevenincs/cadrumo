@@ -6,6 +6,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormGridBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -13,7 +14,7 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize("revision_id", ["2016-2017", "2018-y-siguientes"])
+@pytest.mark.parametrize("revision_id", [str(revision.id) for revision in authored_revisions("232")])
 def test_232_official_groups_preserve_every_record_and_binding(revision_id: str) -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/232")).revisions[revision_id]
     layout = revision.form_layouts[0]

@@ -13,16 +13,17 @@ import asyncio
 import json
 import sys
 import time
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
 from textual.pilot import Pilot
+from textual.screen import Screen
 from textual.widgets import Button, OptionList, Select, Static
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
@@ -33,12 +34,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext, SessionKind
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.account import AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
@@ -49,16 +51,14 @@ from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
 from cadrumo.entrypoints.tui.reference.destination import ReferenceScreen
 from cadrumo.entrypoints.tui.reference.read_screen import ReferenceReadScreen
 from cadrumo.entrypoints.tui.reference.reads import ReferenceQuery, ReferenceRead, read_reference
+from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.installation_requests import InstallationAct, StorageCheckRequest
-from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -69,6 +69,7 @@ from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.installation_runtime import serve_check
 
 from .......frontend.tui.runtime_session import RuntimeRestrictedSessionApp
+from ......served_runtime import SyntheticLogin, connect_installed
 
 pytestmark = [
     pytest.mark.integration,
@@ -84,28 +85,6 @@ _SETTLE_SECONDS = 180
 _SIZE = (140, 60)
 
 type _Pilot = Pilot[AccountRecomposeRequiredV1 | None]
-
-
-class _LoginObservation:
-    login_id = "tui-restricted-destinations-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version=version("cadrumo"), storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
 
 
 def _scope(destination_id: UUID, registry: OperationRegistry) -> AccessScope:
@@ -156,12 +135,6 @@ def _issue_scoped_key(subject: AdministrationSubject, registry: OperationRegistr
     return credential.get_secret_value()
 
 
-async def _until(pilot: _Pilot, predicate: Callable[[], bool], *, seconds: float = 40) -> None:
-    async with asyncio.timeout(seconds):
-        while not predicate():
-            await pilot.pause(0.05)
-
-
 def _text(widget: Static) -> str:
     return str(widget.content)
 
@@ -170,9 +143,11 @@ async def _open_operation(pilot: _Pilot, listing: OperationsCatalogueScreen, def
     listed = listing.query_one("#operations-list", OptionList)
     listed.highlighted = listed.get_option_index(definition_id)
     listed.action_select()
-    await _until(
+    await settle_until(
         pilot,
         lambda: isinstance(pilot.app.screen, OperationRunScreen) and bool(pilot.app.screen.query("#operation-run")),
+        "isinstance(pilot.app.screen, OperationRunScreen) and bool(pilot.app...",
+        workers=False,
     )
     run = pilot.app.screen
     assert isinstance(run, OperationRunScreen)
@@ -180,107 +155,163 @@ async def _open_operation(pilot: _Pilot, listing: OperationsCatalogueScreen, def
     return run
 
 
+async def _list_every_registered_operation(
+    pilot: _Pilot, app: RuntimeRestrictedSessionApp, registered: list[str]
+) -> OperationsCatalogueScreen:
+    """Operations: every registered operation is listed, whatever the key's scope says."""
+    app.query_one("#restricted-open-operations", Button).press()
+    await settle_until(
+        pilot,
+        lambda: isinstance(app.screen, OperationsCatalogueScreen) and app.screen._catalogue is not None,
+        "isinstance(app.screen, OperationsCatalogueScreen) and app.screen._c...",
+        workers=False,
+    )
+    listing = app.screen
+    assert isinstance(listing, OperationsCatalogueScreen)
+    offered = sorted(
+        option.id
+        for option in listing.query_one("#operations-list", OptionList).options
+        if option.id is not None and not option.id.startswith("family:")
+    )
+    assert offered == registered and _OUT_OF_SCOPE in offered
+    return listing
+
+
+async def _run_the_admitted_read(
+    pilot: _Pilot, app: RuntimeRestrictedSessionApp, listing: OperationsCatalogueScreen, client: FrontendClient
+) -> None:
+    """The read the scope admits runs, and its typed result is shown."""
+    run = await _open_operation(pilot, listing, _ADMITTED)
+    page_kind = f"#operation-field-{[field.name for field in run._fields].index('page_kind')}"
+    run.query_one(page_kind, Select).value = "status"
+    await settle(pilot, workers=False)
+    run.query_one("#operation-run", Button).press()
+    receipt = run.query_one("#operation-result-receipt", Static)
+    await settle_until(
+        pilot,
+        lambda: app.screen is run and bool(_text(receipt)) and all(worker.is_finished for worker in run.workers),
+        "app.screen is run and bool(_text(receipt)) and all(worker.is_finish...",
+        workers=False,
+    )
+    assert tr("operation.modal.terminal.succeeded") in _text(receipt)
+    assert run._pages, _text(run.query_one("#operation-run-notice", Static))
+    viewed = json.loads("\n".join(run._pages))
+    assert viewed["profile_id"] == str(client.profile_id) and viewed["page_kind"] == "status"
+    run.action_close()
+    await settle_until(pilot, lambda: app.screen is listing, "app.screen is listing", workers=False)
+
+
+async def _see_the_out_of_scope_refusal(
+    pilot: _Pilot,
+    app: RuntimeRestrictedSessionApp,
+    listing: OperationsCatalogueScreen,
+    shell: Screen[Any],
+    client: FrontendClient,
+) -> None:
+    """An operation outside the scope is offered all the same, and the runtime refuses it in its own words."""
+    with pytest.raises(CadrumoError) as refused_directly:
+        await asyncio.to_thread(client.contract, _OUT_OF_SCOPE, deadline=time.monotonic() + 30)
+    runtime_words = resolve_error_message(refused_directly.value)
+    assert runtime_words.strip()
+    denied = await _open_operation(pilot, listing, _OUT_OF_SCOPE)
+    notice = denied.query_one("#operation-run-notice", Static)
+    denied.query_one("#operation-run", Button).press()
+    await settle_until(
+        pilot,
+        lambda: bool(_text(notice)) and all(worker.is_finished for worker in denied.workers),
+        "bool(_text(notice)) and all(worker.is_finished for worker in denied...",
+        workers=False,
+    )
+    assert _text(notice) == runtime_words
+    assert not _text(denied.query_one("#operation-result-receipt", Static))
+    denied.action_close()
+    await settle_until(pilot, lambda: app.screen is listing, "app.screen is listing", workers=False)
+    listing.action_back()
+    await settle_until(pilot, lambda: app.screen is shell, "app.screen is shell", workers=False)
+
+
+async def _run_the_installation_check(
+    pilot: _Pilot, app: RuntimeRestrictedSessionApp, shell: Screen[Any], storage_root: Path
+) -> None:
+    """Installation: a read act answers on its own sessionless connection."""
+    app.query_one("#restricted-open-installation", Button).press()
+    await settle_until(
+        pilot,
+        lambda: isinstance(app.screen, InstallationScreen) and bool(app.screen.query("#installation-hint")),
+        "isinstance(app.screen, InstallationScreen) and bool(app.screen.quer...",
+        workers=False,
+    )
+    installation = app.screen
+    assert isinstance(installation, InstallationScreen)
+    installation.open_act(InstallationAct.STORAGE_CHECK)
+    await settle_until(
+        pilot,
+        lambda: isinstance(app.screen, InstallationActScreen) and bool(app.screen.query("#installation-act-result")),
+        "( isinstance(app.screen, InstallationActScreen) and bool(app.screen...",
+        workers=False,
+    )
+    check = app.screen
+    assert isinstance(check, InstallationActScreen)
+    status = check.query_one("#installation-act-status", PinnedStatusBar)
+    await settle_until(
+        pilot, lambda: status.tone in {"success", "error"}, "status.tone in {'success', 'error'}", workers=False
+    )
+    assert status.tone == "success", status.message
+    assert str(storage_root) in _text(check.query_one("#installation-act-result", Static))
+    check.action_close()
+    await settle_until(pilot, lambda: app.screen is installation, "app.screen is installation", workers=False)
+    installation.action_close()
+    await settle_until(pilot, lambda: app.screen is shell, "app.screen is shell", workers=False)
+
+
+async def _read_the_reference(pilot: _Pilot, app: RuntimeRestrictedSessionApp, shell: Screen[Any]) -> None:
+    """Reference: a read answers from the published authority, with no session involved."""
+    app.query_one("#restricted-open-reference", Button).press()
+    await settle_until(
+        pilot,
+        lambda: isinstance(app.screen, ReferenceScreen) and bool(app.screen.query("#reference-hint")),
+        "isinstance(app.screen, ReferenceScreen) and bool(app.screen.query('...",
+        workers=False,
+    )
+    reference = app.screen
+    assert isinstance(reference, ReferenceScreen)
+    reference.open_read(ReferenceRead.AUTH_PROVIDERS)
+    await settle_until(
+        pilot,
+        lambda: isinstance(app.screen, ReferenceReadScreen) and app.screen.result is not None,
+        "isinstance(app.screen, ReferenceReadScreen) and app.screen.result i...",
+        workers=False,
+    )
+    providers = app.screen
+    assert isinstance(providers, ReferenceReadScreen) and providers.result is not None
+    assert providers.result.model_dump(mode="json") == read_reference(
+        ReferenceQuery(ReferenceRead.AUTH_PROVIDERS)
+    ).model_dump(mode="json")
+    providers.action_close()
+    await settle_until(pilot, lambda: app.screen is reference, "app.screen is reference", workers=False)
+    reference.action_close()
+    await settle_until(pilot, lambda: app.screen is shell, "app.screen is shell", workers=False)
+
+
 async def _journey(client: FrontendClient, registry: OperationRegistry, storage_root: Path) -> None:
     registered = sorted(contract.definition_id for contract in registry.public_contract_set.definitions)
     app = RuntimeRestrictedSessionApp(client, profile_label="Enrollment tests", operation_registry=lambda: registry)
     async with app.run_test(size=_SIZE) as pilot:
-        await _until(pilot, lambda: str(client.profile_id) in _text(app.query_one("#restricted-profile", Static)))
+        await settle_until(
+            pilot,
+            lambda: str(client.profile_id) in _text(app.query_one("#restricted-profile", Static)),
+            "str(client.profile_id) in _text(app.query_one('#restricted-profile'...",
+            workers=False,
+        )
         shell = app.screen
         assert _ADMITTED in _text(app.query_one("#restricted-operations", Static))
         assert _OUT_OF_SCOPE not in _text(app.query_one("#restricted-operations", Static))
 
-        # Operations: every registered operation is listed, whatever the key's scope says.
-        app.query_one("#restricted-open-operations", Button).press()
-        await _until(
-            pilot, lambda: isinstance(app.screen, OperationsCatalogueScreen) and app.screen._catalogue is not None
-        )
-        listing = app.screen
-        assert isinstance(listing, OperationsCatalogueScreen)
-        offered = sorted(
-            option.id
-            for option in listing.query_one("#operations-list", OptionList).options
-            if option.id is not None and not option.id.startswith("family:")
-        )
-        assert offered == registered and _OUT_OF_SCOPE in offered
-
-        # The read the scope admits runs, and its typed result is shown.
-        run = await _open_operation(pilot, listing, _ADMITTED)
-        page_kind = f"#operation-field-{[field.name for field in run._fields].index('page_kind')}"
-        run.query_one(page_kind, Select).value = "status"
-        await pilot.pause()
-        run.query_one("#operation-run", Button).press()
-        receipt = run.query_one("#operation-result-receipt", Static)
-        await _until(
-            pilot,
-            lambda: app.screen is run and bool(_text(receipt)) and all(worker.is_finished for worker in run.workers),
-            seconds=_SETTLE_SECONDS,
-        )
-        assert tr("operation.modal.terminal.succeeded") in _text(receipt)
-        assert run._pages, _text(run.query_one("#operation-run-notice", Static))
-        viewed = json.loads("\n".join(run._pages))
-        assert viewed["profile_id"] == str(client.profile_id) and viewed["page_kind"] == "status"
-        run.action_close()
-        await _until(pilot, lambda: app.screen is listing)
-
-        # An operation outside the scope is offered all the same, and the runtime refuses it in its own words.
-        with pytest.raises(CadrumoError) as refused_directly:
-            await asyncio.to_thread(client.contract, _OUT_OF_SCOPE, deadline=time.monotonic() + 30)
-        runtime_words = resolve_error_message(refused_directly.value)
-        assert runtime_words.strip()
-        denied = await _open_operation(pilot, listing, _OUT_OF_SCOPE)
-        notice = denied.query_one("#operation-run-notice", Static)
-        denied.query_one("#operation-run", Button).press()
-        await _until(pilot, lambda: bool(_text(notice)) and all(worker.is_finished for worker in denied.workers))
-        assert _text(notice) == runtime_words
-        assert not _text(denied.query_one("#operation-result-receipt", Static))
-        denied.action_close()
-        await _until(pilot, lambda: app.screen is listing)
-        listing.action_back()
-        await _until(pilot, lambda: app.screen is shell)
-
-        # Installation: a read act answers on its own sessionless connection.
-        app.query_one("#restricted-open-installation", Button).press()
-        await _until(
-            pilot, lambda: isinstance(app.screen, InstallationScreen) and bool(app.screen.query("#installation-hint"))
-        )
-        installation = app.screen
-        assert isinstance(installation, InstallationScreen)
-        installation.open_act(InstallationAct.STORAGE_CHECK)
-        await _until(
-            pilot,
-            lambda: (
-                isinstance(app.screen, InstallationActScreen) and bool(app.screen.query("#installation-act-result"))
-            ),
-        )
-        check = app.screen
-        assert isinstance(check, InstallationActScreen)
-        status = check.query_one("#installation-act-status", PinnedStatusBar)
-        await _until(pilot, lambda: status.tone in {"success", "error"})
-        assert status.tone == "success", status.message
-        assert str(storage_root) in _text(check.query_one("#installation-act-result", Static))
-        check.action_close()
-        await _until(pilot, lambda: app.screen is installation)
-        installation.action_close()
-        await _until(pilot, lambda: app.screen is shell)
-
-        # Reference: a read answers from the published authority, with no session involved.
-        app.query_one("#restricted-open-reference", Button).press()
-        await _until(
-            pilot, lambda: isinstance(app.screen, ReferenceScreen) and bool(app.screen.query("#reference-hint"))
-        )
-        reference = app.screen
-        assert isinstance(reference, ReferenceScreen)
-        reference.open_read(ReferenceRead.AUTH_PROVIDERS)
-        await _until(pilot, lambda: isinstance(app.screen, ReferenceReadScreen) and app.screen.result is not None)
-        providers = app.screen
-        assert isinstance(providers, ReferenceReadScreen) and providers.result is not None
-        assert providers.result.model_dump(mode="json") == read_reference(
-            ReferenceQuery(ReferenceRead.AUTH_PROVIDERS)
-        ).model_dump(mode="json")
-        providers.action_close()
-        await _until(pilot, lambda: app.screen is reference)
-        reference.action_close()
-        await _until(pilot, lambda: app.screen is shell)
+        listing = await _list_every_registered_operation(pilot, app, registered)
+        await _run_the_admitted_read(pilot, app, listing, client)
+        await _see_the_out_of_scope_refusal(pilot, app, listing, shell, client)
+        await _run_the_installation_check(pilot, app, shell, storage_root)
+        await _read_the_reference(pilot, app, shell)
 
         # The shell is still the admitted API session it was.
         assert not app._cleared and app.return_value is None
@@ -312,7 +343,7 @@ def test_an_api_key_session_runs_an_admitted_read_is_refused_another_and_reaches
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("tui-restricted-destinations-native-login"),
             secret_store=lambda: subject.native,
             installation_acts=acts,
         )
@@ -320,13 +351,13 @@ def test_an_api_key_session_runs_an_admitted_read_is_refused_another_and_reaches
         server = RetainedRuntimeTransportServer(
             endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
         )
-        with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
+        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=1) as pool:
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
                 with ExitStack() as cleanup:
                     client = FrontendClient(
-                        _connect(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
+                        connect_installed(endpoint), profile_id=profile_id, frontend=OperationFrontendProjection.TUI
                     )
                     cleanup.callback(client.close)
                     proof = bytearray(api_key)

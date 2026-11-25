@@ -16,13 +16,14 @@ from ..revision_contracts import RevisionWindow, validate_revision_predecessors
 from ..schema_base import RegistryModel
 from ..schema_references import DateSupportEnvelope, RegistryValidityWindow
 from .payloads import GovernedFactFamilyField
-from .variants import GovernedFactVariant
+from .variants import FactSelector, GovernedFactVariant
 
 __all__ = [
     "FactId",
     "FactProviderId",
     "GovernedFact",
     "GovernedFactCatalogue",
+    "StandingRateDeclaration",
 ]
 
 
@@ -34,12 +35,25 @@ FactProviderId = Annotated[
 ]
 
 
+class StandingRateDeclaration(RegistryModel):
+    """Declare a fact's tracks standing rates: a date always has one, published or not.
+
+    A date no edition of such a track covers reads the nearest edition, marked as a
+    projection, where any other fact stays not applicable. ``track_selector`` narrows
+    the claim to the tracks carrying it, leaving a fact's temporary measures and
+    vocabulary tracks bounded by their own windows; absent, every track stands.
+    """
+
+    track_selector: FactSelector | None = None
+
+
 class GovernedFact(RegistryModel):
     """A stable semantic fact and all legally distinct variants of that fact."""
 
     fact_id: FactId
     family: GovernedFactFamilyField
     provider_id: FactProviderId | None = Field(default=None, exclude_if=lambda value: value is None)
+    standing_rate: StandingRateDeclaration | None = Field(default=None, exclude_if=lambda value: value is None)
     variants: tuple[GovernedFactVariant, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -51,10 +65,18 @@ class GovernedFact(RegistryModel):
         precedence = _validate_fact_precedence(self, variant_ids)
         _validate_fact_precedence_cycles(self.fact_id, variant_ids, precedence)
         _validate_fact_support_floor(self)
+        _validate_standing_rate_selector(self)
         materialized = self.materialized_windows()
         _validate_fact_track_pairs(self, precedence, materialized)
         _validate_fact_predecessor_chains(self, materialized)
         return self
+
+    def stands_for(self, selectors: tuple[FactSelector, ...]) -> bool:
+        """Return whether a track with ``selectors`` is declared a standing rate."""
+        if self.standing_rate is None:
+            return False
+        required = self.standing_rate.track_selector
+        return required is None or any(selector == required for selector in selectors)
 
     def validity_window(
         self,
@@ -159,6 +181,15 @@ def _validate_fact_support_floor(fact: GovernedFact) -> None:
                 f"governed fact {fact.fact_id!r} track {track!r} has more than one variant omitting "
                 "valid_from; only the first declaration can reach the support floor"
             )
+
+
+def _validate_standing_rate_selector(fact: GovernedFact) -> None:
+    if fact.standing_rate is None or fact.standing_rate.track_selector is None:
+        return
+    if not any(fact.stands_for(variant.selectors) for variant in fact.variants):
+        raise RegistryValidationError(
+            f"governed fact {fact.fact_id!r} declares a standing-rate selector no variant carries",
+        )
 
 
 def _validate_fact_track_pairs(

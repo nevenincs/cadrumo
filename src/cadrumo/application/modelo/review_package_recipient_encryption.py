@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 if TYPE_CHECKING:
     from .recipient_encryption import (
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     )
 
 
-class RecipientEncryptionError(CadrumoError):
+class RecipientEncryptionError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error for review-package recipient-encryption failures."""
 
 

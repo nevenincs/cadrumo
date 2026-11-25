@@ -37,7 +37,6 @@ from .evidence_followup_contracts import (
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
     LedgerEvidenceReviewSummaryExecutionResult,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
@@ -50,6 +49,7 @@ from .evidence_followup_operation import (
     LedgerEvidenceReviewSummaryExecutor,
     LedgerEvidenceReviewViewExecutor,
 )
+from .evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from .read_access import resolve_ledger_request_read_access
 
 

@@ -8,13 +8,14 @@ They live in a module of their own now.
 from __future__ import annotations
 
 from datetime import date
+from enum import StrEnum
 from typing import cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
-from ...core.text_fold import fold_diacritics as _fold_diacritics
+from ...core.parsing.dates import parse_iso8601_date
+from ...core.text_fold import fold_diacritics
 from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 from ..calculations.registry.errors import RegistryValidationError
 from .ccaa import CCAA
@@ -45,7 +46,7 @@ class ResidenceChange(BaseModel, frozen=True, strict=True):
     @pydantic_validation_boundary
     def _parse_effective_from(cls, value: object) -> object:
         if isinstance(value, str):
-            return _parse_iso8601_date(value)
+            return parse_iso8601_date(value)
         return value
 
 
@@ -84,7 +85,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     @pydantic_validation_boundary
     def _parse_since(cls, value: object) -> object:
         if isinstance(value, str):
-            return _parse_iso8601_date(value)
+            return parse_iso8601_date(value)
         return value
 
 
@@ -104,6 +105,34 @@ def parse_tax_region(raw: str) -> CCAA:
         ) from exc
 
 
+class ResidenceTerritory(StrEnum):
+    """What a recorded tax-residence reading establishes about the taxpayer's territory."""
+
+    COMMON = "common"
+    FORAL = "foral"
+    UNRESOLVED = "unresolved"
+    PERIOD_UNKNOWN = "period_unknown"
+    """A residence is recorded, but no recorded fact is in force on the date asked about."""
+
+
+def classify_tax_region(raw: str | None) -> ResidenceTerritory:
+    """Classify a recorded tax-region token as common, foral or unresolved.
+
+    An absent reading is common: nothing was recorded that could place the
+    taxpayer elsewhere. A reading the catalogue cannot parse is unresolved,
+    never common, because it was recorded and still established nothing.
+    """
+    if raw is None:
+        return ResidenceTerritory.COMMON
+    try:
+        parse_tax_region(raw)
+    except ForalRegimeError:
+        return ResidenceTerritory.FORAL
+    except TaxResidenceProfileError:
+        return ResidenceTerritory.UNRESOLVED
+    return ResidenceTerritory.COMMON
+
+
 def _normalize_region_token(raw: str) -> str:
     stripped = raw.strip().casefold().replace(" ", "_").replace("-", "_")
-    return _fold_diacritics(stripped)
+    return fold_diacritics(stripped)

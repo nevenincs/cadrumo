@@ -8,11 +8,11 @@ from uuid import uuid4
 import pytest
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import profile_pointer
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import OutputSchema
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import OutputFormat
 from cadrumo_client.commands import custody, profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigSignInStatusResult
@@ -132,7 +132,7 @@ def test_refused_global_sign_out_closes_connection_without_clearing_pointer(monk
     pointer = BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
     monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: pointer.bucket_id)
     monkeypatch.setattr(profile_selection, "runtime_login_target", lambda _: None)
-    monkeypatch.setattr(custody, "_activate_subcommand_output_language", lambda *_: None)
+    monkeypatch.setattr(custody, "activate_subcommand_output_language", lambda *_: None)
     monkeypatch.setattr(
         profile_pointer, "active_profile_pointer_transaction", lambda *_: pytest.fail("premature clear")
     )

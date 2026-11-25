@@ -3,15 +3,38 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
 
 from ..build_timing import measure_build
-from ..cmake_build import run_configured_command
+from ..cached_command import configure_temporary
+from ..cargo_command import run_configured_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
+
+
+def test_cached_command_pins_temporary_environment_to_its_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"temporary": "temporary"}}), encoding="utf-8")
+    monkeypatch.setattr(tempfile, "tempdir", None)
+    for name in ("TEMP", "TMP", "TMPDIR"):
+        monkeypatch.setenv(name, str(tmp_path / "external"))
+    configure_temporary(tmp_path)
+    expected = str(tmp_path / "temporary")
+    assert (tmp_path / "temporary").is_dir()
+    assert all(os.environ[name] == expected for name in ("TEMP", "TMP", "TMPDIR"))
+    assert tempfile.gettempdir() == expected
 
 
 def test_failed_nested_phase_and_total_are_retained_without_environment(
@@ -43,3 +66,21 @@ def test_command_failure_marks_enclosing_intervals_without_changing_exit_code(tm
         ("configured-command", "fail"),
         ("total", "fail"),
     ]
+
+
+def test_timing_records_follow_the_declared_output_instead_of_a_parallel_default(tmp_path: Path) -> None:
+    (tmp_path / "build-paths.json").write_text(
+        json.dumps({"paths": {"timings": "diagnostics/phases"}}), encoding="utf-8"
+    )
+    with measure_build(tmp_path, "fixture") as timings:
+        pass
+    assert timings.path.parent == tmp_path / "diagnostics" / "phases"
+    assert timings.path.is_file()
+    assert not (tmp_path / "timings").exists()
+
+
+def test_older_output_maps_require_reconfigure_without_creating_an_unmapped_directory(tmp_path: Path) -> None:
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="reconfigure"), measure_build(tmp_path, "fixture"):
+        pass
+    assert not (tmp_path / "timings").exists()

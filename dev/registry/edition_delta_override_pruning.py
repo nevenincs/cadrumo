@@ -10,9 +10,7 @@ import tomlkit
 
 from cadrumo.domain.calculations.registry.keyed_families import CASILLAS_FAMILY
 
-from . import edition_delta_assessment as _edition_delta_assessment
-from . import edition_delta_fields as _edition_delta_fields
-from . import edition_delta_payload as _edition_delta_payload
+from . import edition_delta_assessment, edition_delta_fields, edition_delta_payload
 
 __all__ = ("prune_redundant_override_leaves",)
 
@@ -51,7 +49,7 @@ def _field_paths(fields: list[object]) -> set[tuple[str, ...]]:
     return {
         tuple(field.split("."))
         for field in fields
-        if isinstance(field, str) and field.split(".")[-1] not in _edition_delta_fields._EDITION_DEFAULTED_FIELDS
+        if isinstance(field, str) and field.split(".")[-1] not in edition_delta_fields.EDITION_DEFAULTED_FIELDS
     }
 
 
@@ -110,7 +108,7 @@ def _prune_operation(
     targets: Mapping[tuple[str, str], set[tuple[str, ...]]],
 ) -> tuple[bool, int]:
     fields, paths = _operation_paths(operation, family, targets)
-    removed = sum(int(_edition_delta_payload._remove_toml_leaf(fields, path)) for path in paths)
+    removed = sum(int(edition_delta_payload.remove_toml_leaf(fields, path)) for path in paths)
     keep = bool(fields) or _has_non_field_effect(operation)
     return keep, removed
 
@@ -151,7 +149,7 @@ def _prune_revision(document: object, revision_id: str, findings: Sequence[Mappi
 
 def prune_redundant_override_leaves(modelo_dir: Path) -> int:
     """Delete override leaves the assessor reports equal to their hydrated baseline; return how many were removed."""
-    assessment = _edition_delta_assessment.assess_migration_state(modelo_dir)
+    assessment = edition_delta_assessment.assess_migration_state(modelo_dir)
     redundant = [
         item
         for item in assessment.unresolved_duplication
@@ -159,7 +157,7 @@ def prune_redundant_override_leaves(modelo_dir: Path) -> int:
     ]
     removed = 0
     for revision_id, findings in _redundant_by_revision(redundant).items():
-        manifest_path = modelo_dir / "revisions" / revision_id / _edition_delta_fields._MANIFEST
+        manifest_path = modelo_dir / "revisions" / revision_id / edition_delta_fields.MANIFEST
         document = tomlkit.parse(manifest_path.read_text(encoding="utf-8"))
         removed += _prune_revision(document, revision_id, findings)
         manifest_path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")

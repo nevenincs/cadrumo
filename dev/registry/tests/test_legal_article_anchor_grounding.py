@@ -23,11 +23,15 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.corpus.text import resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import extract_html
 
 from ..compiler.legal_grounding import verify_legal_reference_grounding
 from .catalogue_verification_support import authored_catalogues
+
+_FLOOR = filing_year_envelope().floor
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,10 +72,10 @@ def _reference(anchor: str, *, required_text: tuple[str, ...]) -> LegalReference
         corpus_ref=f"{_PROBE_RELATIVE}#{anchor}",
         document_id="BOE-A-2099-99999",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2099-99999",
-        published_at=date(2099, 1, 2),
-        effective_from=date(2099, 1, 3),
+        published_at=date(_FLOOR, 1, 2),
+        effective_from=date(_FLOOR, 1, 3),
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 9, 24),
+        reviewed_at=date(_YEAR, 9, 24),
         reviewed_by="operator",
         notes="Probe reference driving article-anchor grounding.",
         required_text=required_text,

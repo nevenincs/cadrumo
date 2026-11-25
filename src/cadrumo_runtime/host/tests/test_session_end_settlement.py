@@ -19,7 +19,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import RuntimeProfileHost
 from ..shutdown import RuntimeStop
-from .test_runtime_drain_refusal import _EmptyApprovals, _FailedWorker, _Owner
+from .test_runtime_drain_refusal import EmptyApprovals, FailedWorker, Owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -37,7 +37,7 @@ def test_session_end_settles_only_after_native_confirmation(tmp_path: Path, conf
     profiles.prepare_registry()
     phases: list[str] = []
 
-    class Worker(_FailedWorker):
+    class Worker(FailedWorker):
         identity = ProfileWorkerIdentity(
             worker_id=uuid4(),
             runtime_boot_id=profiles.boot,
@@ -73,8 +73,8 @@ def test_session_end_settles_only_after_native_confirmation(tmp_path: Path, conf
     profiles._profiles[profile_id] = cast(
         RuntimeProfileHost,
         SimpleNamespace(
-            owner=_Owner(worker),
-            approvals=_EmptyApprovals(),
+            owner=Owner(worker),
+            approvals=EmptyApprovals(),
         ),
     )
     stop.request(ExitReason.SESSION_END_SETTLE)
@@ -105,12 +105,12 @@ def test_missing_registry_retains_contained_worker_for_settlement_retry(tmp_path
         runtime_boot_id=uuid4(),
         stop=stop,
     )
-    worker = _FailedWorker()
+    worker = FailedWorker()
     profiles._profiles[profile_id] = cast(
         RuntimeProfileHost,
         SimpleNamespace(
-            owner=_Owner(worker),
-            approvals=_EmptyApprovals(),
+            owner=Owner(worker),
+            approvals=EmptyApprovals(),
         ),
     )
     stop.request(ExitReason.SESSION_END_SETTLE)
@@ -134,7 +134,7 @@ def test_pending_parent_settlement_retains_original_attempt(tmp_path: Path, monk
         stop=stop,
     )
     profiles.prepare_registry()
-    worker = _FailedWorker()
+    worker = FailedWorker()
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),
         runtime_boot_id=profiles.boot,
@@ -151,8 +151,8 @@ def test_pending_parent_settlement_retains_original_attempt(tmp_path: Path, monk
     profiles._profiles[profile_id] = cast(
         RuntimeProfileHost,
         SimpleNamespace(
-            owner=_Owner(cast(_FailedWorker, owned_worker)),
-            approvals=_EmptyApprovals(),
+            owner=Owner(cast(FailedWorker, owned_worker)),
+            approvals=EmptyApprovals(),
         ),
     )
 

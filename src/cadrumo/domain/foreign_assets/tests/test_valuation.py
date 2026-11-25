@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from ....core.foreign_asset_obligation import M720AssetClassCode
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...currency.models import CurrencyNormalizationStatus, EurRateLookup, EurRateLookupStatus, MonetaryAmount
 from ...currency.service import CurrencyNormalizationService
 from ...currency.tests.fx_lookup import eur_rate_lookup
@@ -21,12 +22,14 @@ from ..valuation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_YEAR = filing_year_envelope().horizon
 _ASSET = "m720a_" + "a" * 32
 _SOURCE = "test-reference"
-# 2025-12-31 is a Wednesday; 2025-06-14 a Saturday whose last publication is Friday the 13th.
-_YEAR_END = date(2025, 12, 31)
-_CESSATION = date(2025, 6, 13)
-_SATURDAY = date(2025, 6, 14)
+# The cessation is a Friday; the Saturday after it has no publication of its own, so its last one is that Friday.
+_YEAR_END = date(_YEAR, 12, 31)
+_JUNE_13 = date(_YEAR, 6, 13)
+_CESSATION = _JUNE_13 + timedelta(days=(4 - _JUNE_13.weekday()) % 7)
+_SATURDAY = _CESSATION + timedelta(days=1)
 _USD_RATE = Decimal("0.85")
 
 
@@ -63,7 +66,7 @@ def _value(
         amount=MonetaryAmount(amount=Decimal("1000.00"), currency=currency),
         event=event,
         event_date=event_date,
-        filing_year=2025,
+        filing_year=_YEAR,
         service=CurrencyNormalizationService(rate_provider=rates or _Rates()),
     )
 
@@ -113,7 +116,7 @@ def test_a_currency_without_a_series_is_refused_and_named() -> None:
 
 
 def test_a_rate_missing_at_the_rate_date_is_refused_and_named() -> None:
-    # The stub never published 31 December 2024.
+    # The stub never published 31 December of the previous year.
     with pytest.raises(ForeignAssetValuationRefusedError) as refused:
         normalize_m720_valuation(
             asset_ref=_ASSET,
@@ -121,12 +124,12 @@ def test_a_rate_missing_at_the_rate_date_is_refused_and_named() -> None:
             amount=MonetaryAmount(amount=Decimal("1000.00"), currency="USD"),
             event=M720ValuationEvent.YEAR_END,
             event_date=None,
-            filing_year=2024,
+            filing_year=_YEAR - 1,
             service=CurrencyNormalizationService(rate_provider=_Rates()),
         )
 
     assert refused.value.reason is M720ValuationRefusalReason.MISSING_RATE
-    assert refused.value.rate_date == date(2024, 12, 31)
+    assert refused.value.rate_date == date(_YEAR - 1, 12, 31)
 
 
 def test_no_provider_refuses_a_foreign_amount_rather_than_reading_zero() -> None:
@@ -137,7 +140,7 @@ def test_no_provider_refuses_a_foreign_amount_rather_than_reading_zero() -> None
             amount=MonetaryAmount(amount=Decimal("1000.00"), currency="USD"),
             event=M720ValuationEvent.YEAR_END,
             event_date=None,
-            filing_year=2025,
+            filing_year=_YEAR,
             service=CurrencyNormalizationService(rate_provider=None),
         )
 
@@ -176,11 +179,11 @@ def test_an_extinction_on_a_non_publication_day_is_refused_rather_than_falling_b
     [
         (M720ValuationEvent.YEAR_END, _CESSATION, "carries no event date"),
         (M720ValuationEvent.EXTINCTION, None, "requires its extinction date"),
-        (M720ValuationEvent.EXTINCTION, date(2024, 12, 1), "outside the declared year"),
+        (M720ValuationEvent.EXTINCTION, date(_YEAR - 1, 12, 1), "outside the declared year"),
     ],
 )
 def test_an_incoherent_valuation_event_is_refused(
     event: M720ValuationEvent, event_date: date | None, message: str
 ) -> None:
     with pytest.raises(ValueError, match=message):
-        m720_valuation_rate_date(event=event, event_date=event_date, filing_year=2025)
+        m720_valuation_rate_date(event=event, event_date=event_date, filing_year=_YEAR)

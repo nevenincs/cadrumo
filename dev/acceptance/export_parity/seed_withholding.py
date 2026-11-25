@@ -10,9 +10,9 @@ from .scenario import (
     build_year,
 )
 from .seed_inputs import (
-    _modelo_180_property,
-    _modelo_190_detail,
-    _money,
+    modelo_180_property,
+    modelo_190_detail,
+    money,
 )
 from .seed_state import SeedState
 
@@ -45,15 +45,15 @@ class WithholdingSeedStage(SeedState):
             "payment_event_id": f"payment-{item.key}",
             "payment_occurred_on": item.payment_date.isoformat(),
             "allocation_id": f"allocation-{item.key}",
-            "allocated_base": _money(item.base),
-            "allocated_withholding": _money(item.withholding),
-            "allocated_settlement": _money(item.payment),
+            "allocated_base": money(item.base),
+            "allocated_withholding": money(item.withholding),
+            "allocated_settlement": money(item.payment),
             "idempotency_key": f"withholding-{item.key}",
         }
         if modelo == "111":
-            request["modelo_190_detail"] = _modelo_190_detail(item, request)
+            request["modelo_190_detail"] = modelo_190_detail(item, request)
         else:
-            request["modelo_180_property"] = _modelo_180_property(year)
+            request["modelo_180_property"] = modelo_180_property(year)
         self._result(
             (
                 "app",

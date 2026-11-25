@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .schema import ExtractionStatus, PreprocessOutput
 
@@ -65,16 +65,16 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
     and the unsupported-suffix refusal never pay for pdfplumber/openpyxl
     imports.
     """
-    from ._pdf import build_outputs as build_pdf
-    from ._terminology import build_outputs as build_terminology
     from .modelo_100_properties import build_outputs as build_modelo_100_properties
     from .normatives_html import build_outputs as build_html
     from .normatives_html import build_xml_outputs as build_xml
+    from .pdf import build_outputs
+    from .terminology import build_outputs as build_terminology
     from .workbook import build_outputs as build_workbook
 
     return {
         ".html": build_html,
-        ".pdf": build_pdf,
+        ".pdf": build_outputs,
         ".properties": build_modelo_100_properties,
         ".xls": build_workbook,
         ".xlsm": build_workbook,

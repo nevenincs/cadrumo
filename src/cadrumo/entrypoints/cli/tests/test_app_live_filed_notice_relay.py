@@ -36,7 +36,7 @@ from ....application.live.remote_state_models import (
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.json_contract import Notice, NoticeSeverity, emit_json_success
 from ....core.period import Period
-from ..app_live_commands import _filed_capture_notices, _filed_pull_all_notices, _filed_pull_all_result_and_lines
+from ..app_live_commands import filed_capture_notices, filed_pull_all_notices, filed_pull_all_result_and_lines
 from ..app_live_filed_results import FiledCaptureResult, FiledCaptureSourcesResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -104,7 +104,7 @@ def test_the_transport_forwards_every_unreached_reason_as_its_own_notice() -> No
     reasons = tuple(FiledJustificanteUnreachedReason)
     assert reasons, "the reason taxonomy is empty, so this test would pass vacuously"
 
-    notices = _filed_pull_all_notices(_run(*(_unreached_notice(reason) for reason in reasons)))
+    notices = filed_pull_all_notices(_run(*(_unreached_notice(reason) for reason in reasons)))
 
     relayed = [notice for notice in notices if notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE]
     assert {notice.context["reason"] for notice in relayed if (notice.context is not None and notice.context)} == {
@@ -125,7 +125,7 @@ def test_the_transport_preserves_each_forwarded_notice_verbatim() -> None:
     """
     original = _unreached_notice(FiledJustificanteUnreachedReason.CSV_MISMATCH)
 
-    notices = _filed_pull_all_notices(_run(original))
+    notices = filed_pull_all_notices(_run(original))
 
     assert original in notices
 
@@ -152,12 +152,12 @@ def test_the_transport_keeps_run_advisories_and_evidence_advisories_distinct() -
         pairs=(_answered_pair(), refused),
     )
 
-    codes = [notice.code for notice in _filed_pull_all_notices(run)]
+    codes = [notice.code for notice in filed_pull_all_notices(run)]
 
     assert FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE in codes
     assert "live.filed.pull_all.pairs_refused" in codes
     refused_notice = next(
-        notice for notice in _filed_pull_all_notices(run) if notice.code == "live.filed.pull_all.pairs_refused"
+        notice for notice in filed_pull_all_notices(run) if notice.code == "live.filed.pull_all.pairs_refused"
     )
     assert refused_notice.action is not None
     assert refused_notice.action.model_dump(mode="json") == {
@@ -177,7 +177,7 @@ def test_a_run_that_reached_all_its_evidence_forwards_no_unreached_notice() -> N
     every assertion above while telling an operator that a wholly successful pull
     reached no evidence.
     """
-    codes = [notice.code for notice in _filed_pull_all_notices(_run())]
+    codes = [notice.code for notice in filed_pull_all_notices(_run())]
 
     assert FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE not in codes
 
@@ -264,9 +264,9 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
         **_capture_report_fields(notice),
     )
 
-    assert _filed_capture_notices(single_report) == (notice,)
-    assert _filed_capture_notices(source_report) == (notice,)
-    assert _filed_capture_notices(bulk_report) == (notice,)
+    assert filed_capture_notices(single_report) == (notice,)
+    assert filed_capture_notices(source_report) == (notice,)
+    assert filed_capture_notices(bulk_report) == (notice,)
 
     single_payload = FiledCaptureResult(
         output_root=single_report.output_root,
@@ -294,22 +294,22 @@ def test_the_submitted_file_advisory_reaches_every_filed_pull_envelope() -> None
         calculation_observation_keys=list(source_report.calculation_observation_keys),
     )
     run = _run(notice)
-    all_payload, _lines = _filed_pull_all_result_and_lines(run)
+    all_payload, _lines = filed_pull_all_result_and_lines(run)
 
     assert notice.code in _emitted_notice_codes(
         command="app.live.filed.pull",
         result=single_payload,
-        notices=_filed_capture_notices(single_report),
+        notices=filed_capture_notices(single_report),
     )
     assert notice.code in _emitted_notice_codes(
         command="app.live.filed.pull_sources",
         result=source_payload,
-        notices=_filed_capture_notices(source_report),
+        notices=filed_capture_notices(source_report),
     )
     assert notice.code in _emitted_notice_codes(
         command="app.live.filed.pull_all",
         result=all_payload,
-        notices=tuple(_filed_pull_all_notices(run)),
+        notices=tuple(filed_pull_all_notices(run)),
     )
     assert "evidence_notices" not in FiledCaptureResult.model_fields
     assert "evidence_notices" not in FiledCaptureSourcesResult.model_fields
@@ -343,7 +343,7 @@ def test_a_sweep_that_hit_its_limit_warns_that_the_rest_was_not_walked() -> None
     reached is indistinguishable from one AEAT holds nothing for -- which is the
     reading that turns an interrupted sweep into "nothing was filed".
     """
-    notices = _filed_pull_all_notices(_sweep(reached=5, captured=5), limit=5)
+    notices = filed_pull_all_notices(_sweep(reached=5, captured=5), limit=5)
 
     truncation = [notice for notice in notices if notice.code == _TRUNCATION_CODE]
     assert len(truncation) == 1
@@ -372,7 +372,7 @@ def test_the_truncation_warning_leads_the_channel() -> None:
         reached_count=2,
     )
 
-    codes = [notice.code for notice in _filed_pull_all_notices(run, limit=2)]
+    codes = [notice.code for notice in filed_pull_all_notices(run, limit=2)]
 
     assert codes.index(_TRUNCATION_CODE) == 0
     # A positive control: the notice it precedes really is on this channel, so
@@ -382,14 +382,14 @@ def test_the_truncation_warning_leads_the_channel() -> None:
 
 def test_a_sweep_that_finished_inside_its_limit_stays_silent() -> None:
     """The success path keeps the channel clean."""
-    notices = _filed_pull_all_notices(_sweep(reached=3, captured=3), limit=10)
+    notices = filed_pull_all_notices(_sweep(reached=3, captured=3), limit=10)
 
     assert _TRUNCATION_CODE not in [notice.code for notice in notices]
 
 
 def test_an_unlimited_sweep_cannot_be_truncated_and_says_nothing() -> None:
     """No ``--limit`` means no early stop to report, whatever the tally reached."""
-    notices = _filed_pull_all_notices(_sweep(reached=9999, captured=9999), limit=None)
+    notices = filed_pull_all_notices(_sweep(reached=9999, captured=9999), limit=None)
 
     assert _TRUNCATION_CODE not in [notice.code for notice in notices]
 
@@ -408,7 +408,7 @@ def test_the_preview_that_captured_nothing_still_reports_its_truncation() -> Non
     # nothing about previews.
     assert run.captured_count == 0 < run.reached_count, "this is no longer the preview shape"
 
-    codes = [notice.code for notice in _filed_pull_all_notices(run, limit=4)]
+    codes = [notice.code for notice in filed_pull_all_notices(run, limit=4)]
 
     assert _TRUNCATION_CODE in codes
     # The discarded predicate, evaluated so its silence is on record rather than
@@ -452,7 +452,7 @@ def test_every_limit_bearing_filed_read_reports_its_own_truncation() -> None:
     # The preview shape, guarded before it is asserted on.
     assert bulk.captured_count == 0 < bulk.reached_count
 
-    codes = [notice.code for notice in _filed_capture_notices(bulk, limit=6)]
+    codes = [notice.code for notice in filed_capture_notices(bulk, limit=6)]
 
     assert codes[0] == _TRUNCATION_CODE
     # The capture's own advisory still rides behind it, unmerged.
@@ -486,4 +486,4 @@ def test_a_capture_given_no_limit_keeps_its_notices_untouched() -> None:
         **_capture_report_fields(notice, reached_count=9999),
     )
 
-    assert _filed_capture_notices(report) == (notice,)
+    assert filed_capture_notices(report) == (notice,)

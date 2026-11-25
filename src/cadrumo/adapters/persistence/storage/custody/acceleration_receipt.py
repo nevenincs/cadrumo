@@ -39,65 +39,26 @@ mismatch only once the supplied proof has unwrapped it. The frontend's
 proof borrow reads only the keychain proof and the receipt locator, so no DEK
 reaches a frontend and no frontend deletes either half.
 
-A disk-only attacker sees ciphertext no more revealing than the
-already-persisted wrapped ``bucket.dek.json``; a keychain-only attacker
-holds a random key with nothing to decrypt; altering any persisted
-deadline breaks the GCM tag. Resume evaluation is FAIL-CLOSED: an
-expired, tampered, version-mismatched, or keychain-orphaned record is
-deleted and refused with a typed
-:class:`~cadrumo.core.profile_session.ProfileSessionRefusalReason`, never silently
-tolerated. No plaintext KEK, DEK, or session-key byte ever lands on disk.
-
-Zeroisation honesty: the session key and DEK are held in ``bytearray``
-buffers wiped through :func:`~adapters.persistence.storage.custody.zeroise.zeroise`
-on every exit path, but the AEAD primitives and the pydantic boundary
-require transient immutable ``bytes`` views whose lifetime the garbage
-collector owns — the same best-effort contract
-:class:`BucketSession` documents for the live in-process buffers.
-
-Keychain failures are normalised to :class:`KeyringUnavailableError` on every
-path, including failures raised OUTSIDE the ``keyring`` library's own
-exception hierarchy. A backend can pass the class-level usability probe and
-still fail at call time: the Windows credential store raises
-``win32ctypes.pywin32.pywintypes.error`` (for example ``WinError 1312``, "a
-specified logon session does not exist") from a process whose logon session
-the credential manager cannot reach, and that type derives directly from
-``Exception`` -- it is neither a ``KeyringError`` nor an ``OSError``, so a
-guard naming either lets it escape as a raw traceback. Normalising here is
-what makes the documented degradation reachable: no persisted artefact, a
-process-scoped login, and a warning to the operator. The error type is caught
-structurally rather than imported by name so this module carries no
-platform-specific import.
-
-See Also:
-    :class:`~adapters.persistence.storage.master_key.bucket_session.BucketSession`
-        The in-process materialisation this persisted record re-opens.
+The record and secret are both required; resume fails closed on invalid bindings.
 """
 
 from __future__ import annotations
 
-import binascii
-import json
 import secrets
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Protocol, cast
+from typing import Final, cast
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .....core.base64_codec import b64_decode, b64_encode
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.hashing import (
-    canonical_json_bytes,
-    reject_duplicate_json_members,
-    reject_json_constant,
-)
+from .....core.diagnostic_log import diagnostic_phase
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.profile_session import KeychainUnavailability, ProfileSessionRefusalReason, ReceiptBindingRefusal
 from .....core.time.utc import validate_utc_aware
 from ..crypto.aes_gcm import KEY_SIZE
@@ -108,8 +69,25 @@ from ..errors import (
     StorageValidationError,
 )
 from ..storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
-from . import acceleration_receipt_crypto as _crypto
+from . import acceleration_receipt_crypto
+from .acceleration_keychain import (
+    delete_acceleration_secret,
+    probe_profile_session_keychain,
+    read_acceleration_secret,
+    store_acceleration_secret,
+)
+from .acceleration_minted_sessions import record_minted_session
 from .acceleration_receipt_crypto import encryption_error
+from .acceleration_receipt_document import (
+    AccelerationReceiptDocument,
+    DecodedReceipt,
+    PendingReceiptRetirementDocument,
+    canonical_document_bytes,
+    document_from_record,
+    parse_canonical_document,
+    parse_receipt_header,
+    record_from_document,
+)
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
     compare_and_clear_profile_custody_local_record,
@@ -125,26 +103,12 @@ from .sign_in_generation import (
     SignInGenerationObservation,
     SignInGenerationState,
 )
-from .zeroise import zeroise as _zeroise
+from .zeroise import zeroise
 
 _log = get_logger(__name__)
 
-PROFILE_SESSION_KEYCHAIN_SERVICE: Final[str] = "cadrumo:profile-session:v2"
-"""OS-keychain service name for current profile acceleration-receipt keys.
-
-The token deliberately lags the concept name. It addresses entries in the OS
-credential store, OUTSIDE the storage root, so a rename orphans every existing
-entry: deleting the storage root cannot reap them, and code that deleted under
-the old token first would be exactly the migration path this project forbids.
-Permanent credential residue on real machines is the worse outcome, so the
-wire identifier stays fixed while the code name says what the artefact is.
-"""
-
-_KEYCHAIN_PROBE_ACCOUNT: Final[str] = "availability-probe"
-"""An account no receipt names: never a ``<profile UUID>:<session UUID>`` pair, so a probe reads nothing real."""
-
-_ERROR_NO_SUCH_LOGON_SESSION: Final[int] = 1312
-"""Win32 ``ERROR_NO_SUCH_LOGON_SESSION``: the credential store has no credentials for this logon."""
+_MINT_PHASE_EVENT: Final = "profile_session_mint_phase"
+"""One record per receipt-mint sub-step; closed phase labels and durations only."""
 
 PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 """Strict ceiling for one canonical ``session.v2.json`` receipt."""
@@ -153,70 +117,14 @@ _PROFILE_SESSION_RETIREMENT_MAX_BYTES: Final[int] = 24 * 1024
 _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION: Final[int] = 1
 
 
-class _AccelerationReceiptDocument(BaseModel):
-    """On-disk JSON envelope for one persisted profile session."""
-
-    model_config = _STRICT_FROZEN
-
-    schema_version: int = Field(ge=1)
-    profile_id: UUID
-    session_id: UUID
-    custody_generation: int = Field(ge=1)
-    dek_epoch: str = Field(min_length=1, max_length=128)
-    login_binding: _crypto.LoginBindingDigest
-    sign_in_lineage: UUID
-    sign_in_generation: int = Field(ge=1)
-    issued_at: str = Field(min_length=1)
-    idle_deadline: str = Field(min_length=1)
-    absolute_deadline: str = Field(min_length=1)
-    nonce_b64: str = Field(min_length=1)
-    ciphertext_b64: str = Field(min_length=1)
-    tag_b64: str = Field(min_length=1)
-
-
-class _ReceiptHeader(BaseModel):
-    """The identity every receipt schema shares, read before the strict parse.
-
-    It ignores the remaining fields on purpose: a record from another build
-    must still yield the profile and session that name its keychain half, so
-    the delete-only path can retire both halves.
-    """
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
-
-    schema_version: int = Field(ge=1)
-    profile_id: UUID
-    session_id: UUID
-
-
-type _DecodedReceipt = _crypto.PersistedProfileSession | _ReceiptHeader
-"""A current record, or only the header of a record from another schema."""
-
-
-class _PendingReceiptRetirementDocument(BaseModel):
-    """Bounded exact-byte receipt for an interrupted session-key rotation.
-
-    ``predecessor_b64`` is absent only for the first mint.  Keeping both
-    canonical receipt byte strings makes recovery an equality decision, not a
-    reconstruction from mutable metadata: if the current receipt is the
-    predecessor the staged successor is retired; if it is the successor the
-    predecessor is retired.  Any third receipt is a concurrent substitution
-    and is preserved/refused.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    schema_version: int = Field(ge=1)
-    profile_id: UUID
-    predecessor_b64: str | None = None
-    successor_b64: str = Field(min_length=1)
-
-
 class ReceiptDeletion(StrEnum):
     """What a refused receipt's deletion achieved; never silently assumed."""
 
     NOT_REQUIRED = "not_required"
-    """The receipt was bound, or there was nothing to delete."""
+    """No deletion was attempted: a reader left the receipt alone, or revocation found none.
+
+    Only the second case says anything about the keychain.
+    """
 
     DELETED = "deleted"
     """Both the keychain key and the on-disk receipt are gone."""
@@ -229,6 +137,22 @@ class ReceiptDeletion(StrEnum):
 
     RECEIPT_RETAINED = "receipt_retained"
     """The on-disk receipt survived its compare-and-clear."""
+
+    @property
+    def receipt_removed(self) -> bool:
+        """Whether the on-disk receipt is gone (or was never there to remove)."""
+        return self is not ReceiptDeletion.RECEIPT_RETAINED
+
+    @property
+    def keychain_removed(self) -> bool:
+        """Whether a revocation left no keychain key that any record could name.
+
+        Read this only on :func:`revoke_profile_sign_in`'s outcome. There
+        ``NOT_REQUIRED`` means no receipt remained and any pending retirement was
+        recovered, so no key has a locator left; on a reader's refusal it would
+        claim a removal nobody attempted.
+        """
+        return self in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED}
 
 
 class ProfileSessionResumeOutcome(BaseModel):
@@ -245,256 +169,14 @@ class ProfileSessionResumeOutcome(BaseModel):
     sign-in could have been kept or presented from this process at all.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     resumed: bool
     refusal: ProfileSessionRefusalReason | None = None
-    record: _crypto.PersistedProfileSession | None = None
+    record: acceleration_receipt_crypto.PersistedProfileSession | None = None
     deletion: ReceiptDeletion = ReceiptDeletion.NOT_REQUIRED
     binding: ReceiptBindingRefusal | None = None
     keychain: KeychainUnavailability | None = None
-
-
-class _ProfileSessionKeyring(Protocol):
-    """Direct subset of the OS keychain used by session acceleration."""
-
-    def set_password(self, service_name: str, username: str, password: str) -> None:
-        """Persist one secret under the immutable account."""
-        ...
-
-    def get_password(self, service_name: str, username: str) -> str | None:
-        """Load one exact secret, or return no entry."""
-        ...
-
-    def delete_password(self, service_name: str, username: str) -> None:
-        """Remove one exact secret."""
-        ...
-
-
-def _keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseException]]:
-    """Return the direct OS-keychain capability without master/provider reuse."""
-    try:
-        import keyring
-        from keyring.errors import KeyringError, PasswordDeleteError
-    except ImportError as exc:
-        raise KeyringUnavailableError(
-            f"keyring package not importable: {exc}", unavailability=KeychainUnavailability.NO_BACKEND
-        ) from exc
-    try:
-        priority = float(getattr(keyring.get_keyring(), "priority", 0))
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain cannot be inspected: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    if priority <= 0:
-        raise KeyringUnavailableError(
-            "no usable OS keychain is configured for profile-session acceleration",
-            unavailability=KeychainUnavailability.NO_BACKEND,
-        )
-    return cast(_ProfileSessionKeyring, keyring), KeyringError, PasswordDeleteError
-
-
-def keychain_unavailability(error: BaseException) -> KeychainUnavailability:
-    """Name the prerequisite a keychain failure shows to be missing.
-
-    The Windows credential store raises its own error type carrying the Win32
-    code first, so the code is read structurally along the cause chain rather
-    than by importing a platform type. A typed error that already names its
-    reason keeps it.
-    """
-    seen: set[int] = set()
-    current: BaseException | None = error
-    while current is not None and id(current) not in seen:
-        seen.add(id(current))
-        if isinstance(current, KeyringUnavailableError):
-            return current.unavailability
-        if type(current).__name__ == "NoKeyringError":
-            return KeychainUnavailability.NO_BACKEND
-        code = getattr(current, "winerror", None)
-        if code is None and current.args and isinstance(current.args[0], int):
-            code = current.args[0]
-        if code == _ERROR_NO_SUCH_LOGON_SESSION:
-            return KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
-        current = current.__cause__ or current.__context__
-    return KeychainUnavailability.REFUSED
-
-
-def probe_profile_session_keychain() -> KeychainUnavailability | None:
-    """Return why this process cannot use the keychain, or ``None`` when it can.
-
-    The probe only reads an account no receipt ever names, so it creates,
-    changes and deletes nothing. A process that cannot read the keychain can
-    neither keep a sign-in nor present one, which makes this the deciding
-    fact behind a sign-in that was not persisted or cannot be followed.
-    """
-    try:
-        keyring, _keyring_error, _password_delete_error = _keyring()
-        keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, _KEYCHAIN_PROBE_ACCOUNT)
-    except Exception as exc:
-        return keychain_unavailability(exc)
-    return None
-
-
-def _keychain_account(*, profile_id: UUID, session_id: UUID) -> str:
-    """Return the immutable UUID-pair account for one acceleration receipt."""
-    return f"{profile_id}:{session_id}"
-
-
-def _store_acceleration_secret(*, profile_id: UUID, session_id: UUID, session_key: bytes) -> None:
-    """Store and round-trip verify one fresh session key under its UUID pair."""
-    if len(session_key) != _crypto.PROFILE_SESSION_KEY_BYTES:
-        raise StorageValidationError(f"session_key must be exactly {_crypto.PROFILE_SESSION_KEY_BYTES} bytes")
-    keyring, keyring_error, _password_delete_error = _keyring()
-    account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    encoded = b64_encode(session_key)
-    try:
-        keyring.set_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account, encoded)
-        roundtrip = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key write: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly on the profile-session key write: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    if roundtrip != encoded:
-        _delete_acceleration_secret(profile_id=profile_id, session_id=session_id, suppress_unavailable=True)
-        raise KeyringUnavailableError("OS keychain accepted the session key but its round-trip read disagreed")
-
-
-def _read_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | None:
-    """Read one receipt's session key without changing the keychain.
-
-    Raises:
-        KeyringUnavailableError: When the keychain cannot answer.
-        ValueError: When the stored entry is not one encoded session key.
-    """
-    keyring, keyring_error, _password_delete_error = _keyring()
-    account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    try:
-        stored = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key read: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly on the profile-session key read: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    if stored is None:
-        return None
-    try:
-        key = b64_decode(stored)
-    except (ValueError, binascii.Error) as exc:
-        raise ValueError("profile-session keychain entry is not base64") from exc
-    if len(key) != _crypto.PROFILE_SESSION_KEY_BYTES:
-        raise ValueError("profile-session keychain entry has the wrong length")
-    return key
-
-
-def _read_keychain_entry_for_deletion(
-    keyring: _ProfileSessionKeyring,
-    keyring_error: type[BaseException],
-    account: str,
-    *,
-    refusal_detail: str,
-    unexpected_detail: str,
-) -> str | None:
-    """Read one account while preserving the deletion-phase error wording."""
-    try:
-        return keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the {refusal_detail}: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly {unexpected_detail}: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-
-
-def _delete_keychain_entry(
-    *,
-    profile_id: UUID,
-    session_id: UUID,
-) -> None:
-    """Delete and independently confirm one exact UUID-pair account."""
-    keyring, keyring_error, password_delete_error = _keyring()
-    account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    present = _read_keychain_entry_for_deletion(
-        keyring,
-        keyring_error,
-        account,
-        refusal_detail="profile-session key read before deletion",
-        unexpected_detail="before profile-session key deletion",
-    )
-    if present is None:
-        return
-    try:
-        keyring.delete_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except password_delete_error:
-        # A concurrent owner may have deleted it after ``present``.  Do
-        # not turn that idempotent absence into a false unavailable
-        # outcome; only a second exact read decides it.
-        confirmed = _read_keychain_entry_for_deletion(
-            keyring,
-            keyring_error,
-            account,
-            refusal_detail="profile-session key deletion confirmation",
-            unexpected_detail="during profile-session key deletion confirmation",
-        )
-        if confirmed is None:
-            return
-        raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion") from None
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key deletion: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly during profile-session key deletion: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    confirmed = _read_keychain_entry_for_deletion(
-        keyring,
-        keyring_error,
-        account,
-        refusal_detail="profile-session key deletion confirmation",
-        unexpected_detail="during profile-session key deletion confirmation",
-    )
-    if confirmed is not None:
-        raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion")
-
-
-def _delete_acceleration_secret(
-    *,
-    profile_id: UUID,
-    session_id: UUID,
-    suppress_unavailable: bool,
-) -> None:
-    """Prove one known UUID-pair acceleration entry is absent.
-
-    A missing account is an idempotent success.  A ``PasswordDeleteError``
-    alone is not evidence that the backend is unavailable: a sibling may have
-    retired this exact account after our first read.  Read once more and
-    accept only an observed absence; otherwise preserve the calling journal
-    under the typed unavailable path.
-    """
-    try:
-        _delete_keychain_entry(profile_id=profile_id, session_id=session_id)
-    except Exception as exc:
-        if suppress_unavailable:
-            _log.debug("profile-session key cleanup deferred error_type=%s", type(exc).__name__)
-            return
-        if isinstance(exc, KeyringUnavailableError):
-            raise
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key deletion: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
 
 
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
@@ -508,19 +190,22 @@ def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
     )
 
 
-def _profile_session_retirement_path(*, storage_root: Path, profile_id: UUID) -> Path:
+def profile_session_retirement_path(*, storage_root: Path, profile_id: UUID) -> Path:
     """Return the bounded local receipt for one interrupted session-key swap."""
-    return profile_session_path(storage_root=storage_root, profile_id=profile_id).with_name(
-        PROFILE_SESSION_RETIREMENT_FILENAME,
-    )
+    return _retirement_path_beside(profile_session_path(storage_root=storage_root, profile_id=profile_id))
 
 
-def _profile_session_lock_path(receipt_path: Path) -> Path:
+def _retirement_path_beside(receipt_path: Path) -> Path:
+    """Return the retirement journal beside an already validated receipt path."""
+    return receipt_path.with_name(PROFILE_SESSION_RETIREMENT_FILENAME)
+
+
+def profile_session_lock_path(receipt_path: Path) -> Path:
     """Return the separate anchored lock leaf; never lock the receipt itself."""
     return receipt_path.with_name(f".{receipt_path.name}.lock")
 
 
-def _ensure_profile_session_directory(path: Path) -> None:
+def ensure_profile_session_directory(path: Path) -> None:
     """Provision only the two custody-owned keystore children, anchored.
 
     The configured storage root itself is an existing product boundary.  The
@@ -531,119 +216,41 @@ def _ensure_profile_session_directory(path: Path) -> None:
     ensure_profile_custody_local_directory(path.parent)
 
 
-def _document_from_record(record: _crypto.PersistedProfileSession) -> _AccelerationReceiptDocument:
-    return _AccelerationReceiptDocument(
-        schema_version=record.schema_version,
-        profile_id=record.profile_id,
-        session_id=record.session_id,
-        custody_generation=record.custody_generation,
-        dek_epoch=record.dek_epoch,
-        login_binding=record.login_binding,
-        sign_in_lineage=record.sign_in.lineage,
-        sign_in_generation=record.sign_in.generation,
-        issued_at=record.issued_at.isoformat(),
-        idle_deadline=record.idle_deadline.isoformat(),
-        absolute_deadline=record.absolute_deadline.isoformat(),
-        nonce_b64=b64_encode(record.nonce),
-        ciphertext_b64=b64_encode(record.ciphertext),
-        tag_b64=b64_encode(record.tag),
-    )
+def receipt_bytes(record: acceleration_receipt_crypto.PersistedProfileSession) -> bytes:
+    """Return the canonical bytes of a persisted profile session receipt."""
+    return canonical_document_bytes(document_from_record(record))
 
 
-def _record_from_document(document: _AccelerationReceiptDocument) -> _crypto.PersistedProfileSession:
-    """Hydrate the strict record from an on-disk document.
-
-    Raises:
-        ValueError: On any malformed field (base64, datetime, enum, or
-            length); the resume evaluation maps this to the ``MALFORMED``
-            refusal.
-    """
-    return _crypto.PersistedProfileSession(
-        schema_version=document.schema_version,
-        profile_id=document.profile_id,
-        session_id=document.session_id,
-        custody_generation=document.custody_generation,
-        dek_epoch=document.dek_epoch,
-        login_binding=document.login_binding,
-        sign_in=SignInGeneration(lineage=document.sign_in_lineage, generation=document.sign_in_generation),
-        issued_at=validate_utc_aware(datetime.fromisoformat(document.issued_at)),
-        idle_deadline=validate_utc_aware(datetime.fromisoformat(document.idle_deadline)),
-        absolute_deadline=validate_utc_aware(datetime.fromisoformat(document.absolute_deadline)),
-        nonce=b64_decode(document.nonce_b64),
-        ciphertext=b64_decode(document.ciphertext_b64),
-        tag=b64_decode(document.tag_b64),
-    )
-
-
-def _canonical_document_bytes(document: BaseModel) -> bytes:
-    """Encode one strict receipt with the sole accepted JSON byte spelling."""
-    return canonical_json_bytes(document.model_dump(mode="json"))
-
-
-def _parse_json_object(payload: bytes) -> dict[str, object]:
-    """Decode one JSON object, refusing duplicate keys and non-finite constants."""
-    decoded = payload.decode(_UTF_8_ENCODING)
-    parsed = json.loads(
-        decoded,
-        object_pairs_hook=reject_duplicate_json_members,
-        parse_constant=reject_json_constant,
-    )
-    if not isinstance(parsed, dict):
-        raise ValueError("session receipt must be a JSON object")
-    return cast(dict[str, object], parsed)
-
-
-def _parse_canonical_document(payload: bytes, model: type[BaseModel]) -> BaseModel:
-    """Decode exact canonical JSON without accepting duplicate-key aliases."""
-    _parse_json_object(payload)
-    # ``strict`` models deliberately accept their wire UUID/datetime strings
-    # only through Pydantic's JSON boundary.  The independent ``json.loads``
-    # above owns duplicate/non-finite refusal before this typed decode.
-    document = model.model_validate_json(payload)
-    if _canonical_document_bytes(document) != payload:
-        raise ValueError("session receipt bytes are not canonical")
-    return document
-
-
-def _parse_receipt_header(payload: bytes) -> _ReceiptHeader:
-    """Read the schema-independent identity of one canonical receipt."""
-    parsed = _parse_json_object(payload)
-    if canonical_json_bytes(parsed) != payload:
-        raise ValueError("session receipt bytes are not canonical")
-    return _ReceiptHeader.model_validate_json(payload)
-
-
-def _receipt_bytes(record: _crypto.PersistedProfileSession) -> bytes:
-    return _canonical_document_bytes(_document_from_record(record))
-
-
-def _decode_receipt(payload: bytes) -> _DecodedReceipt:
+def decode_receipt(payload: bytes) -> DecodedReceipt:
     """Dispatch on the schema version before any strict parse.
 
     Raises:
         ValueError: When even the header is malformed or non-canonical.
         ValidationError: When a current-schema record fails strict validation.
     """
-    header = _parse_receipt_header(payload)
-    if header.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
+    header = parse_receipt_header(payload)
+    if header.schema_version != acceleration_receipt_crypto.PROFILE_SESSION_SCHEMA_VERSION:
         return header
-    document = cast(_AccelerationReceiptDocument, _parse_canonical_document(payload, _AccelerationReceiptDocument))
-    return _record_from_document(document)
+    document = cast(AccelerationReceiptDocument, parse_canonical_document(payload, AccelerationReceiptDocument))
+    return record_from_document(document)
 
 
-def _current_record(decoded: _DecodedReceipt) -> _crypto.PersistedProfileSession | None:
-    return decoded if isinstance(decoded, _crypto.PersistedProfileSession) else None
+def current_record(decoded: DecodedReceipt) -> acceleration_receipt_crypto.PersistedProfileSession | None:
+    """Return the decoded receipt when it is a current-schema record, else None."""
+    return decoded if isinstance(decoded, acceleration_receipt_crypto.PersistedProfileSession) else None
 
 
-def _read_receipt(path: Path) -> tuple[bytes, _DecodedReceipt] | None:
+def _read_receipt(path: Path) -> tuple[bytes, DecodedReceipt] | None:
     """Read and decode one receipt through the canonical anchored authority."""
     payload = read_optional_profile_custody_local_record(path, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
     if payload is None:
         return None
-    return payload, _decode_receipt(payload)
+    return payload, decode_receipt(payload)
 
 
-def inspect_profile_session(*, storage_root: Path, profile_id: UUID) -> _crypto.PersistedProfileSession | None:
+def inspect_profile_session(
+    *, storage_root: Path, profile_id: UUID
+) -> acceleration_receipt_crypto.PersistedProfileSession | None:
     """Read current receipt metadata without keychain access, mutation or DEK unwrapping.
 
     Missing parents and superseded schemas have no current receipt. Malformed,
@@ -657,10 +264,10 @@ def inspect_profile_session(*, storage_root: Path, profile_id: UUID) -> _crypto.
         except FileNotFoundError:
             return None
     captured = _read_receipt(path)
-    return None if captured is None else _current_record(captured[1])
+    return None if captured is None else current_record(captured[1])
 
 
-def _clear_captured_receipt(path: Path, *, payload: bytes, maximum_bytes: int) -> bool:
+def clear_captured_receipt(path: Path, *, payload: bytes, maximum_bytes: int) -> bool:
     """Clear only the exact anchored bytes already evaluated by this caller."""
     try:
         compare_and_clear_profile_custody_local_record(
@@ -673,21 +280,36 @@ def _clear_captured_receipt(path: Path, *, payload: bytes, maximum_bytes: int) -
     return True
 
 
-def _write_acceleration_receipt(
+def write_acceleration_receipt(
     *,
     storage_root: Path,
     profile_id: UUID,
-    record: _crypto.PersistedProfileSession,
+    record: acceleration_receipt_crypto.PersistedProfileSession,
     predecessor: bytes | None,
 ) -> bytes:
     """CAS-publish a canonical receipt through the custody local-record owner."""
+    return _publish_receipt(
+        profile_session_path(storage_root=storage_root, profile_id=profile_id),
+        profile_id=profile_id,
+        record=record,
+        predecessor=predecessor,
+    )
+
+
+def _publish_receipt(
+    path: Path,
+    *,
+    profile_id: UUID,
+    record: acceleration_receipt_crypto.PersistedProfileSession,
+    predecessor: bytes | None,
+) -> bytes:
+    """CAS-publish ``record`` at ``path``, the profile's already validated receipt path."""
     if record.profile_id != profile_id:
         raise StorageValidationError(
             f"session record profile {record.profile_id!s} does not match target profile {profile_id!s}",
         )
-    path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
-    payload = _receipt_bytes(record)
-    _ensure_profile_session_directory(path)
+    payload = receipt_bytes(record)
+    ensure_profile_session_directory(path)
     compare_and_replace_profile_custody_local_record(
         path,
         expected=predecessor,
@@ -697,10 +319,10 @@ def _write_acceleration_receipt(
     return payload
 
 
-def _pending_retirement_bytes(*, profile_id: UUID, predecessor: bytes | None, successor: bytes) -> bytes:
+def pending_retirement_bytes(*, profile_id: UUID, predecessor: bytes | None, successor: bytes) -> bytes:
     """Encode the bounded exact-byte retirement decision before publication."""
-    return _canonical_document_bytes(
-        _PendingReceiptRetirementDocument(
+    return canonical_document_bytes(
+        PendingReceiptRetirementDocument(
             schema_version=_PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION,
             profile_id=profile_id,
             predecessor_b64=None if predecessor is None else b64_encode(predecessor),
@@ -715,8 +337,8 @@ def _read_pending_retirement(path: Path, *, profile_id: UUID) -> tuple[bytes, by
     if payload is None:
         return None
     document = cast(
-        _PendingReceiptRetirementDocument,
-        _parse_canonical_document(payload, _PendingReceiptRetirementDocument),
+        PendingReceiptRetirementDocument,
+        parse_canonical_document(payload, PendingReceiptRetirementDocument),
     )
     if document.schema_version != _PROFILE_SESSION_RETIREMENT_SCHEMA_VERSION:
         raise StorageValidationError("profile-session retirement receipt schema is not current")
@@ -725,16 +347,16 @@ def _read_pending_retirement(path: Path, *, profile_id: UUID) -> tuple[bytes, by
     predecessor = None if document.predecessor_b64 is None else b64_decode(document.predecessor_b64)
     successor = b64_decode(document.successor_b64)
     if predecessor is not None:
-        prior_record = _decode_receipt(predecessor)
+        prior_record = decode_receipt(predecessor)
         if prior_record.profile_id != profile_id:
             raise StorageValidationError("profile-session retirement predecessor profile differs")
-    successor_record = _decode_receipt(successor)
+    successor_record = decode_receipt(successor)
     if successor_record.profile_id != profile_id:
         raise StorageValidationError("profile-session retirement successor profile differs")
     return payload, predecessor, successor
 
 
-def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool:
+def recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool:
     """Finish exactly one interrupted ordered session-key swap.
 
     Returns ``True`` only when there was no journal or the exact journal was
@@ -742,7 +364,7 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
     predecessor/successor pair.
     """
     receipt_path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
-    journal_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    journal_path = profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
     pending = _read_pending_retirement(journal_path, profile_id=profile_id)
     if pending is None:
         return True
@@ -753,13 +375,13 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
     )
     if current == successor:
         if predecessor is not None:
-            prior = _decode_receipt(predecessor)
-            _delete_acceleration_secret(
+            prior = decode_receipt(predecessor)
+            delete_acceleration_secret(
                 profile_id=prior.profile_id,
                 session_id=prior.session_id,
                 suppress_unavailable=False,
             )
-        if not _clear_captured_receipt(
+        if not clear_captured_receipt(
             journal_path,
             payload=journal_payload,
             maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
@@ -767,13 +389,13 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
             raise StorageValidationError("profile-session retirement receipt changed during recovery")
         return True
     if current == predecessor:
-        successor_record = _decode_receipt(successor)
-        _delete_acceleration_secret(
+        successor_record = decode_receipt(successor)
+        delete_acceleration_secret(
             profile_id=successor_record.profile_id,
             session_id=successor_record.session_id,
             suppress_unavailable=False,
         )
-        if not _clear_captured_receipt(
+        if not clear_captured_receipt(
             journal_path,
             payload=journal_payload,
             maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
@@ -794,7 +416,7 @@ def _clear_retirement_journal(journal_path: Path, *, payload: bytes) -> bool:
     the fail-closed direction: an entry that may exist is left inert, never
     reachable, and never reused.
     """
-    cleared = _clear_captured_receipt(
+    cleared = clear_captured_receipt(
         journal_path,
         payload=payload,
         maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
@@ -840,11 +462,11 @@ def revoke_profile_sign_in(sign_in: SignInGenerationCustody) -> ReceiptDeletion:
         sign_in.advance()
         path = profile_session_path(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
         try:
-            _ensure_profile_session_directory(path)
-            with profile_custody_local_lock(_profile_session_lock_path(path)):
+            ensure_profile_session_directory(path)
+            with profile_custody_local_lock(profile_session_lock_path(path)):
                 keychain_retained = False
                 try:
-                    _recover_pending_retirement(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
+                    recover_pending_retirement(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
                 except (KeyringUnavailableError, ProfileCustodyRecordError, StorageValidationError):
                     keychain_retained = True
                 _clear_unrecovered_retirement(storage_root=sign_in.root, profile_id=sign_in.binding.profile_id)
@@ -856,7 +478,7 @@ def revoke_profile_sign_in(sign_in: SignInGenerationCustody) -> ReceiptDeletion:
                 payload, record = captured
                 if record.profile_id != sign_in.binding.profile_id:
                     return ReceiptDeletion.RECEIPT_RETAINED
-                deletion = _delete_refused_receipt(path=path, payload=payload, decoded=record)
+                deletion = delete_refused_receipt(path=path, payload=payload, decoded=record)
                 if keychain_retained and deletion is ReceiptDeletion.DELETED:
                     return ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED
                 return deletion
@@ -867,11 +489,11 @@ def revoke_profile_sign_in(sign_in: SignInGenerationCustody) -> ReceiptDeletion:
 def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
     """Retain the exact key locator until confirmed keychain and receipt removal."""
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
-    _ensure_profile_session_directory(path)
-    with profile_custody_local_lock(_profile_session_lock_path(path)):
+    ensure_profile_session_directory(path)
+    with profile_custody_local_lock(profile_session_lock_path(path)):
         # A failed recovery leaves its journal available for the next custody
         # attempt. Discarding it would lose the only locator of an orphan key.
-        _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+        recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
         observed = _read_receipt(path)
         if observed is None:
             return
@@ -881,12 +503,12 @@ def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
                 translated_message="errors.fail.fail_acceleration_receipt_revocation",
                 context={"profile_id": canonical_profile_bucket_id(profile_id)},
             )
-        _delete_acceleration_secret(
+        delete_acceleration_secret(
             profile_id=record.profile_id,
             session_id=record.session_id,
             suppress_unavailable=False,
         )
-        if not _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
+        if not clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
             raise AccelerationReceiptRevocationError(
                 translated_message="errors.fail.fail_acceleration_receipt_revocation",
                 context={"profile_id": canonical_profile_bucket_id(profile_id)},
@@ -902,7 +524,7 @@ def _clear_unrecovered_retirement(*, storage_root: Path, profile_id: UUID) -> No
     Raises:
         AccelerationReceiptRevocationError: The journal survived its clear.
     """
-    journal_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    journal_path = profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
     payload = read_optional_profile_custody_local_record(
         journal_path,
         maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
@@ -930,7 +552,7 @@ def mint_profile_session(
     sign_in: SignInGenerationCustody,
     generation: SignInGeneration,
     retain_sealing_key: Callable[[bytearray], None] | None = None,
-) -> _crypto.PersistedProfileSession:
+) -> acceleration_receipt_crypto.PersistedProfileSession:
     """Mint a profile receipt under the custody-wide session lifecycle lock.
 
     Validate all deterministic receipt inputs before opening the custody root.
@@ -959,13 +581,13 @@ def mint_profile_session(
         raise StorageValidationError("absolute_minutes must be a strict positive integer")
     if len(dek) != KEY_SIZE:
         raise encryption_error(f"dek must be exactly {KEY_SIZE} bytes")
-    now = _crypto.validate_profile_session_metadata(
+    now = acceleration_receipt_crypto.validate_profile_session_metadata(
         profile_id=profile_id,
         custody_generation=custody_generation,
         dek_epoch=dek_epoch,
         issued_at=now,
     )
-    if not login_id or len(login_id) > _crypto.PROFILE_SESSION_LOGIN_ID_MAX_LENGTH:
+    if not login_id or len(login_id) > acceleration_receipt_crypto.PROFILE_SESSION_LOGIN_ID_MAX_LENGTH:
         raise StorageValidationError("login_id must be a non-empty OS login locator of bounded length")
     if (
         sign_in.root != storage_root
@@ -1003,7 +625,7 @@ def _mint_profile_session(
     login_id: str,
     sign_in: SignInGeneration,
     retain_sealing_key: Callable[[bytearray], None] | None = None,
-) -> _crypto.PersistedProfileSession:
+) -> acceleration_receipt_crypto.PersistedProfileSession:
     """Mint the persisted session for a freshly-authenticated login.
 
     Generates the ephemeral session key, wraps ``dek`` under it with the
@@ -1039,19 +661,20 @@ def _mint_profile_session(
     idle_deadline = min(now + timedelta(minutes=idle_minutes), absolute_deadline)
 
     receipt_path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
-    retirement_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
-    _ensure_profile_session_directory(receipt_path)
-    with profile_custody_local_lock(_profile_session_lock_path(receipt_path)):
+    retirement_path = profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    ensure_profile_session_directory(receipt_path)
+    with profile_custody_local_lock(profile_session_lock_path(receipt_path)):
         # A prior crash or retirement failure has one bounded exact-byte
         # decision to finish before another random account can be minted.
-        _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+        with diagnostic_phase(_log, _MINT_PHASE_EVENT, "pending_retirement_recovery"):
+            recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
         prior = _read_receipt(receipt_path)
         predecessor = None if prior is None else prior[0]
 
-        session_key_buffer = bytearray(secrets.token_bytes(_crypto.PROFILE_SESSION_KEY_BYTES))
+        session_key_buffer = bytearray(secrets.token_bytes(acceleration_receipt_crypto.PROFILE_SESSION_KEY_BYTES))
         session_id = uuid4()
         try:
-            record = _crypto.wrap_profile_session_dek(
+            record = acceleration_receipt_crypto.wrap_profile_session_dek(
                 session_key=bytes(session_key_buffer),
                 dek=dek,
                 profile_id=profile_id,
@@ -1064,8 +687,8 @@ def _mint_profile_session(
                 idle_deadline=idle_deadline,
                 absolute_deadline=absolute_deadline,
             )
-            successor = _receipt_bytes(record)
-            journal = _pending_retirement_bytes(
+            successor = receipt_bytes(record)
+            journal = pending_retirement_bytes(
                 profile_id=profile_id,
                 predecessor=predecessor,
                 successor=successor,
@@ -1074,28 +697,32 @@ def _mint_profile_session(
             # process dies before a later phase, recovery sees whether the
             # exact current receipt is predecessor or successor and retires
             # only the corresponding staged/displaced UUID-pair account.
-            compare_and_replace_profile_custody_local_record(
-                retirement_path,
-                expected=None,
-                replacement=journal,
-                maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
-            )
+            with diagnostic_phase(_log, _MINT_PHASE_EVENT, "retirement_journal_write"):
+                compare_and_replace_profile_custody_local_record(
+                    retirement_path,
+                    expected=None,
+                    replacement=journal,
+                    maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+                )
+                record_minted_session(receipt_path, session_id)
             try:
-                _store_acceleration_secret(
-                    profile_id=profile_id,
-                    session_id=session_id,
-                    session_key=bytes(session_key_buffer),
-                )
-                published = _write_acceleration_receipt(
-                    storage_root=storage_root,
-                    profile_id=profile_id,
-                    record=record,
-                    predecessor=predecessor,
-                )
-                verified = read_optional_profile_custody_local_record(
-                    receipt_path,
-                    maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
-                )
+                with diagnostic_phase(_log, _MINT_PHASE_EVENT, "keychain_store"):
+                    store_acceleration_secret(
+                        profile_id=profile_id,
+                        session_id=session_id,
+                        session_key=bytes(session_key_buffer),
+                    )
+                with diagnostic_phase(_log, _MINT_PHASE_EVENT, "receipt_write"):
+                    published = write_acceleration_receipt(
+                        storage_root=storage_root,
+                        profile_id=profile_id,
+                        record=record,
+                        predecessor=predecessor,
+                    )
+                    verified = read_optional_profile_custody_local_record(
+                        receipt_path,
+                        maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+                    )
                 if verified != published:
                     raise StorageValidationError("profile-session receipt publication could not be verified")
             except BaseException:
@@ -1104,12 +731,13 @@ def _mint_profile_session(
                 # it will clean a pre-publication successor or finish
                 # retirement after publication without touching a substitute.
                 try:
-                    _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+                    recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
                 except (KeyringUnavailableError, ProfileCustodyRecordError, StorageValidationError) as exc:
                     _log.debug("profile-session mint cleanup deferred error_type=%s", type(exc).__name__)
                 raise
             try:
-                _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+                with diagnostic_phase(_log, _MINT_PHASE_EVENT, "predecessor_retirement"):
+                    recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
             except KeyringUnavailableError as exc:
                 # The new receipt/key pair is already verified and remains a
                 # valid acceleration.  Retiring its displaced predecessor is
@@ -1120,7 +748,25 @@ def _mint_profile_session(
                 retain_sealing_key(session_key_buffer)
             return record
         finally:
-            _zeroise(session_key_buffer)
+            zeroise(session_key_buffer)
+
+
+def _refresh_record_matches(
+    record: acceleration_receipt_crypto.PersistedProfileSession | None,
+    *,
+    sign_in: SignInGenerationCustody,
+    login_id: str,
+    now: datetime,
+) -> bool:
+    binding = sign_in.binding
+    return (
+        record is not None
+        and record.profile_id == binding.profile_id
+        and record.custody_generation == binding.custody_generation
+        and record.dek_epoch == b64_encode(binding.dek_epoch.bytes)
+        and now >= record.issued_at
+        and receipt_binding_refusal(record=record, login_id=login_id, generation=sign_in.observe()) is None
+    )
 
 
 def refresh_profile_session_with_key(
@@ -1141,11 +787,12 @@ def refresh_profile_session_with_key(
     if deadline <= now:
         return False
     binding = sign_in.binding
+    # The one validated receipt path names the lock, the retirement journal and the write.
     path = profile_session_path(storage_root=sign_in.root, profile_id=binding.profile_id)
-    with profile_custody_root_lock(sign_in.root), profile_custody_local_lock(_profile_session_lock_path(path)):
+    with profile_custody_root_lock(sign_in.root), profile_custody_local_lock(profile_session_lock_path(path)):
         if (
             read_optional_profile_custody_local_record(
-                _profile_session_retirement_path(storage_root=sign_in.root, profile_id=binding.profile_id),
+                _retirement_path_beside(path),
                 maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
             )
             is not None
@@ -1155,24 +802,19 @@ def refresh_profile_session_with_key(
         if captured is None:
             return False
         payload, decoded = captured
-        record = _current_record(decoded)
-        if (
-            record is None
-            or record.profile_id != binding.profile_id
-            or record.custody_generation != binding.custody_generation
-            or record.dek_epoch != b64_encode(binding.dek_epoch.bytes)
-            or now < record.issued_at
-            or _receipt_binding_refusal(record=record, login_id=login_id, generation=sign_in.observe()) is not None
-        ):
+        record = current_record(decoded)
+        if record is None or not _refresh_record_matches(record, sign_in=sign_in, login_id=login_id, now=now):
             return False
         try:
-            material = _crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
+            material = acceleration_receipt_crypto.unwrap_profile_session_dek(
+                session_key=bytes(receipt_key), record=record
+            )
         except DecryptionError:
             return False
         try:
             if min(record.idle_deadline, record.absolute_deadline) >= deadline:
                 return True
-            successor = _crypto.wrap_profile_session_dek(
+            successor = acceleration_receipt_crypto.wrap_profile_session_dek(
                 session_key=bytes(receipt_key),
                 dek=bytes(material),
                 profile_id=record.profile_id,
@@ -1185,20 +827,15 @@ def refresh_profile_session_with_key(
                 idle_deadline=max(record.idle_deadline, deadline),
                 absolute_deadline=max(record.absolute_deadline, deadline),
             )
-            _write_acceleration_receipt(
-                storage_root=sign_in.root,
-                profile_id=binding.profile_id,
-                record=successor,
-                predecessor=payload,
-            )
+            _publish_receipt(path, profile_id=binding.profile_id, record=successor, predecessor=payload)
             return True
         finally:
-            _zeroise(material)
+            zeroise(material)
 
 
 def _refusal(
     reason: ProfileSessionRefusalReason,
-    record: _crypto.PersistedProfileSession | None = None,
+    record: acceleration_receipt_crypto.PersistedProfileSession | None = None,
     *,
     deletion: ReceiptDeletion = ReceiptDeletion.NOT_REQUIRED,
     binding: ReceiptBindingRefusal | None = None,
@@ -1231,14 +868,14 @@ def _resume_artifacts_present(*, path: Path, retirement_path: Path) -> bool:
 
 def _receipt_refusal_reason(
     *,
-    record: _crypto.PersistedProfileSession,
+    record: acceleration_receipt_crypto.PersistedProfileSession,
     profile_id: UUID,
     custody_generation: int,
     dek_epoch: str,
     now: datetime,
 ) -> ProfileSessionRefusalReason | None:
     """Classify current metadata without choosing a caller's cleanup policy."""
-    if record.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
+    if record.schema_version != acceleration_receipt_crypto.PROFILE_SESSION_SCHEMA_VERSION:
         return ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH
     if record.profile_id != profile_id:
         return ProfileSessionRefusalReason.TAMPERED
@@ -1280,15 +917,15 @@ def borrow_profile_session_key(
     try:
         if read_optional_profile_custody_local_record(path, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES) is None:
             return _refusal(ProfileSessionRefusalReason.ABSENT, keychain=probe_profile_session_keychain())
-        with profile_custody_local_lock(_profile_session_lock_path(path)):
+        with profile_custody_local_lock(profile_session_lock_path(path)):
             payload = read_optional_profile_custody_local_record(path, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
             if payload is None:
                 return _refusal(ProfileSessionRefusalReason.ABSENT, keychain=probe_profile_session_keychain())
-            locator = _parse_receipt_header(payload)
+            locator = parse_receipt_header(payload)
             if locator.profile_id != profile_id:
                 return _refusal(ProfileSessionRefusalReason.TAMPERED)
             try:
-                key = _read_acceleration_secret(profile_id=locator.profile_id, session_id=locator.session_id)
+                key = read_acceleration_secret(profile_id=locator.profile_id, session_id=locator.session_id)
             except KeyringUnavailableError as exc:
                 return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, keychain=exc.unavailability)
             if key is None:
@@ -1335,21 +972,21 @@ def resume_profile_session_with_key(
     now = validate_utc_aware(now)
     if sign_in.root != storage_root or sign_in.binding.profile_id != profile_id:
         raise StorageValidationError("sign-in generation custody does not belong to this receipt")
-    if len(receipt_key) != _crypto.PROFILE_SESSION_KEY_BYTES:
+    if len(receipt_key) != acceleration_receipt_crypto.PROFILE_SESSION_KEY_BYTES:
         return _refusal(ProfileSessionRefusalReason.TAMPERED)
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
-    retirement_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    retirement_path = profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
     try:
         with profile_custody_root_lock(storage_root):
-            _ensure_profile_session_directory(path)
+            ensure_profile_session_directory(path)
             if not _resume_artifacts_present(path=path, retirement_path=retirement_path):
                 return _refusal(ProfileSessionRefusalReason.ABSENT)
-            with profile_custody_local_lock(_profile_session_lock_path(path)):
+            with profile_custody_local_lock(profile_session_lock_path(path)):
                 # An interrupted key swap is settled here, by the runtime, as
                 # an exact-byte decision on the journal; the supplied key never
                 # chooses a side. A keychain that cannot answer leaves it pending.
                 try:
-                    _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+                    recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
                 except KeyringUnavailableError as exc:
                     return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, keychain=exc.unavailability)
                 payload = read_optional_profile_custody_local_record(
@@ -1377,7 +1014,7 @@ def resume_profile_session_with_key(
 class _ExpectedReceipt(BaseModel):
     """Everything a receipt must match before its supplied key may unwrap it."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
     custody_generation: int
@@ -1394,8 +1031,11 @@ _GENERATION_UNAVAILABLE: Final[dict[SignInGenerationState, ReceiptBindingRefusal
 }
 
 
-def _receipt_binding_refusal(
-    *, record: _crypto.PersistedProfileSession, login_id: str, generation: SignInGenerationObservation
+def receipt_binding_refusal(
+    *,
+    record: acceleration_receipt_crypto.PersistedProfileSession,
+    login_id: str,
+    generation: SignInGenerationObservation,
 ) -> ReceiptBindingRefusal | None:
     """Decide whether ``record`` belongs to the expected sign-in, with no I/O.
 
@@ -1406,7 +1046,7 @@ def _receipt_binding_refusal(
         return _GENERATION_UNAVAILABLE.get(generation.state, ReceiptBindingRefusal.GENERATION_UNREADABLE)
     if record.sign_in != generation.current:
         return ReceiptBindingRefusal.GENERATION_CHANGED
-    if not _crypto.profile_session_login_matches(record=record, login_id=login_id):
+    if not acceleration_receipt_crypto.profile_session_login_matches(record=record, login_id=login_id):
         return ReceiptBindingRefusal.LOGIN_MISMATCH
     return None
 
@@ -1416,11 +1056,11 @@ def _refuse_supplied_key_receipt(
     *,
     path: Path,
     payload: bytes,
-    decoded: _DecodedReceipt,
+    decoded: DecodedReceipt,
     binding: ReceiptBindingRefusal | None = None,
 ) -> tuple[ProfileSessionResumeOutcome, None]:
     """Delete a receipt its own bytes refuse, and report the deletion it achieved."""
-    deletion = _delete_refused_receipt(path=path, payload=payload, decoded=decoded)
+    deletion = delete_refused_receipt(path=path, payload=payload, decoded=decoded)
     if deletion is not ReceiptDeletion.DELETED:
         _log.warning(
             "refused profile-session receipt not fully deleted reason=%s binding=%s deletion=%s",
@@ -1428,7 +1068,7 @@ def _refuse_supplied_key_receipt(
             None if binding is None else binding.value,
             deletion.value,
         )
-    return _refusal(reason, _current_record(decoded), deletion=deletion, binding=binding)
+    return _refusal(reason, current_record(decoded), deletion=deletion, binding=binding)
 
 
 def _resume_supplied_key_locked(
@@ -1440,14 +1080,14 @@ def _resume_supplied_key_locked(
 ) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
     """Decide one captured receipt against a supplied key under both receipt locks."""
     try:
-        decoded = _decode_receipt(payload)
+        decoded = decode_receipt(payload)
     except (ValueError, ValidationError):
-        cleared = _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+        cleared = clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
         return _refusal(
             ProfileSessionRefusalReason.MALFORMED,
             deletion=ReceiptDeletion.DELETED if cleared else ReceiptDeletion.RECEIPT_RETAINED,
         )
-    record = _current_record(decoded)
+    record = current_record(decoded)
     if record is None:
         return _refuse_supplied_key_receipt(
             ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH, path=path, payload=payload, decoded=decoded
@@ -1461,27 +1101,27 @@ def _resume_supplied_key_locked(
     )
     if reason is not None:
         return _refuse_supplied_key_receipt(reason, path=path, payload=payload, decoded=decoded)
-    binding = _receipt_binding_refusal(record=record, login_id=expected.login_id, generation=expected.generation)
+    binding = receipt_binding_refusal(record=record, login_id=expected.login_id, generation=expected.generation)
     if binding is not None and binding is not ReceiptBindingRefusal.LOGIN_MISMATCH:
         return _refuse_supplied_key_receipt(
             ProfileSessionRefusalReason.ABSENT, path=path, payload=payload, decoded=decoded, binding=binding
         )
     try:
-        dek = _crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
+        dek = acceleration_receipt_crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
     except DecryptionError:
         return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
     if binding is not None:
         # The login is the one refusal that depends on who is calling, so only
         # the holder of the proof may retire the sign-in over it; the key
         # recovered to prove that is not handed out.
-        _zeroise(dek)
+        zeroise(dek)
         return _refuse_supplied_key_receipt(
             ProfileSessionRefusalReason.ABSENT, path=path, payload=payload, decoded=decoded, binding=binding
         )
     return ProfileSessionResumeOutcome(resumed=True, record=record), dek
 
 
-def _delete_refused_receipt(*, path: Path, payload: bytes, decoded: _DecodedReceipt) -> ReceiptDeletion:
+def delete_refused_receipt(*, path: Path, payload: bytes, decoded: DecodedReceipt) -> ReceiptDeletion:
     """Remove both halves of a refused receipt and report what remains.
 
     The disk half is cleared even when the keychain cannot answer, as
@@ -1489,20 +1129,39 @@ def _delete_refused_receipt(*, path: Path, payload: bytes, decoded: _DecodedRece
     """
     keychain_retained = False
     try:
-        _delete_acceleration_secret(
+        delete_acceleration_secret(
             profile_id=decoded.profile_id,
             session_id=decoded.session_id,
             suppress_unavailable=False,
         )
     except KeyringUnavailableError:
         keychain_retained = True
-    if not _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
+    if not clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES):
         return ReceiptDeletion.RECEIPT_RETAINED
     return ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED if keychain_retained else ReceiptDeletion.DELETED
 
 
+def retained_profile_sessions(*, profile_id: UUID, receipt_path: Path) -> frozenset[UUID]:
+    """Return the sessions whose keys must stay: the receipt's, of any schema, and both a pending journal names.
+
+    The caller holds the receipt's local lock.
+    """
+    sessions: set[UUID] = set()
+    captured = _read_receipt(receipt_path)
+    if captured is not None:
+        if captured[1].profile_id != profile_id:
+            raise StorageValidationError("profile-session receipt profile differs")
+        sessions.add(captured[1].session_id)
+    pending = _read_pending_retirement(_retirement_path_beside(receipt_path), profile_id=profile_id)
+    if pending is not None:
+        _payload, predecessor, successor = pending
+        if predecessor is not None:
+            sessions.add(decode_receipt(predecessor).session_id)
+        sessions.add(decode_receipt(successor).session_id)
+    return frozenset(sessions)
+
+
 __all__ = [
-    "PROFILE_SESSION_KEYCHAIN_SERVICE",
     "ProfileSessionResumeOutcome",
     "ReceiptBindingRefusal",
     "ReceiptDeletion",
@@ -1511,4 +1170,5 @@ __all__ = [
     "mint_profile_session",
     "profile_session_path",
     "resume_profile_session_with_key",
+    "retained_profile_sessions",
 ]

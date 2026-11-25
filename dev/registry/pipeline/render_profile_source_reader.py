@@ -71,7 +71,7 @@ def _source_evidence_reader(source_path: Path) -> AbstractContextManager[Callabl
         raise RegistryValidationError(
             f"render profile source evidence requires a spreadsheet workbook: {source_path}",
         )
-    return _legacy_xls_cell_reader(source_path) if suffix == ".xls" else _ooxml_cell_reader(source_path)
+    return _xls_cell_reader(source_path) if suffix == ".xls" else _ooxml_cell_reader(source_path)
 
 
 def _read_profile_source_entries(
@@ -128,7 +128,7 @@ def _ooxml_cell_reader(source_path: Path) -> Generator[Callable[[str, str], obje
 
 
 @contextmanager
-def _legacy_xls_cell_reader(source_path: Path) -> Generator[Callable[[str, str], object]]:
+def _xls_cell_reader(source_path: Path) -> Generator[Callable[[str, str], object]]:
     """Read evidence cells out of a legacy binary XLS design."""
     import xlrd
 

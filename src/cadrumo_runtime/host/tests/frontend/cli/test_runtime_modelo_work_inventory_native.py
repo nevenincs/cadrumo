@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 from typing import cast
@@ -16,10 +15,9 @@ from cadrumo.application.modelo.work_inventory_operation import MODELO_WORK_LIST
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.login_session import resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (
@@ -33,8 +31,9 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
-from .cli_runner import invoke_cached_cli
+from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import native_api_cli_session
+from .native_profile_cli_invoke import invoke_native_profile_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -48,42 +47,12 @@ _LABEL = "Native modelo inventory operator"
 
 def _profile_facts() -> dict[str, str]:
     """Return complete, synthetic facts for the encrypted CLI profile."""
-    return {
-        "taxpayer_type.entity_type": "natural_person",
-        "identity.name": "Native",
-        "identity.surnames": "Inventory",
-        "activities.description": "consulting",
-        "censo.activity_start_date": "2025-01-01",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-    }
+    return native_general_iva_facts()
 
 
 def _invoke_work(fixture: NativeCliProfileFixture, *arguments: str) -> Result:
     """Invoke a native work command through the profile password channel."""
-    assert fixture.label is not None
-    with override_settings(cadrumo_cli_reveal_identifiers=False):
-        result = invoke_cached_cli(
-            (
-                "--format",
-                "json",
-                "--profile",
-                fixture.label,
-                "--profile-secrets-stdin",
-                "app",
-                "modelo",
-                "work",
-                *arguments,
-            ),
-            input=json.dumps({"profile_passphrase": fixture.passphrase}),
-        )
-    assert fixture.passphrase not in result.output
-    return result
+    return invoke_native_profile_cli(fixture, "app", "modelo", "work", *arguments)
 
 
 def _scope_for_destination(client_id: UUID, *, periods: frozenset[Period] | None) -> AccessScope:

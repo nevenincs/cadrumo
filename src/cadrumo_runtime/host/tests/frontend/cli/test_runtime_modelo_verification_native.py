@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -16,7 +17,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
@@ -30,7 +31,11 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import create_m130_work_unit, operator_profile_facts
+from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
+    SCENARIO_FILING_YEAR,
+    create_m130_work_unit,
+    operator_profile_facts,
+)
 from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -80,6 +85,8 @@ def test_native_cli_verify_and_file_preserve_settled_results_and_noop_notices(tm
             )
             assert created.exit_code == 0, created.output
             work_unit_id = require_schema_envelope(created.output)["work_unit_id"]
+            # The prior year's income is not supplied: a first-year activity has no earlier Modelo 100,
+            # so the backend derives 0 and casilla 13 is 100 (RIRPF art. 110.3.c, income <= 9000).
             calculated = _protected(
                 "calculate",
                 work_unit_id,
@@ -87,8 +94,6 @@ def test_native_cli_verify_and_file_preserve_settled_results_and_noop_notices(tm
                 "05=0.00",
                 "--casilla",
                 "06=0.00",
-                "--binding",
-                "irpf.previous_year_economic_activity_net_income=13000",
                 "--binding",
                 "modelo-130-resultados-negativos-anteriores=0",
             )
@@ -132,7 +137,9 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
             authority_operation.profile_schema(),
             facts=tuple(
                 UserProfileFact(path=path, value=value)
-                for path, value in operator_profile_facts(activity_start_date="2025-10-01").items()
+                for path, value in operator_profile_facts(
+                    activity_start_date=date(SCENARIO_FILING_YEAR, 10, 1).isoformat()
+                ).items()
             ),
         )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
@@ -185,7 +192,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
                     ),
                 )
             ),
-            periods=frozenset((Period.from_year_and_code(2025, "4T"),)),
+            periods=frozenset((Period.from_year_and_code(SCENARIO_FILING_YEAR, "4T"),)),
             allow_period_independent=False,
             allow_delegation=False,
         )
@@ -200,6 +207,7 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
         invoke_cli=run_cadrumo_cli,
     ) as api:
         work_unit_id = api.prepared
+        # Same first-year activity: the backend derives the prior year's income (0), so casilla 13 is 100.
         calculated = api.invoke_password(
             "app",
             "modelo",
@@ -210,8 +218,6 @@ def test_native_cli_api_key_obeys_exact_enrolled_modelo_scope(
             "05=0.00",
             "--casilla",
             "06=0.00",
-            "--binding",
-            "irpf.previous_year_economic_activity_net_income=13000",
             "--binding",
             "modelo-130-resultados-negativos-anteriores=0",
         )

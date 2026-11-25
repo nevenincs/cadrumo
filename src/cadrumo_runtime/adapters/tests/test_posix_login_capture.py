@@ -57,7 +57,7 @@ class _KernelSocket:
 
 @pytest.fixture
 def channel(monkeypatch: pytest.MonkeyPatch) -> Iterator[PosixChannel]:
-    monkeypatch.setattr(posix_channel, "_peer", lambda _socket: Peer(os_owner_id="synthetic-owner", process_id=123))
+    monkeypatch.setattr(posix_channel, "peer", lambda _socket: Peer(os_owner_id="synthetic-owner", process_id=123))
     monkeypatch.setattr(posix_channel, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(login, "sys", SimpleNamespace(platform="linux"))
     connected = PosixChannel(cast(socket.socket, _KernelSocket()))
@@ -78,8 +78,8 @@ def peer_fd(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[int, list[int]]]:
         native_close(owned)
 
     monkeypatch.setattr(posix_channel, "os", SimpleNamespace(get_inheritable=os.get_inheritable, close=close_owned))
-    monkeypatch.setattr(posix_channel, "_linux_peer_pidfd", lambda _socket: descriptor)
-    monkeypatch.setattr(posix_channel, "_require_live_linux_pidfd", lambda _descriptor: None)
+    monkeypatch.setattr(posix_channel, "linux_peer_pidfd", lambda _socket: descriptor)
+    monkeypatch.setattr(posix_channel, "require_live_linux_pidfd", lambda _descriptor: None)
     try:
         yield descriptor, closed
     finally:
@@ -134,7 +134,7 @@ def test_capture_refusal_releases_fd_and_preserves_reason(
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         return _LoginEvidence()
 
-    monkeypatch.setattr(posix_channel, "_require_live_linux_pidfd", alive)
+    monkeypatch.setattr(posix_channel, "require_live_linux_pidfd", alive)
     monkeypatch.setattr(linux_login, "capture_linux_login", capture)
     with pytest.raises(RefusalError) as refused:
         login.capture_runtime_login(channel)
@@ -405,7 +405,7 @@ def test_missing_kernel_option_refuses_without_numeric_pid_fallback(monkeypatch:
 
     monkeypatch.setattr(posix_channel, "linux_peer_pidfd_socket_option", lambda: 77)
     with pytest.raises(RefusalError) as refused:
-        posix_channel._linux_peer_pidfd(cast(socket.socket, MissingKernelOption()))
+        posix_channel.linux_peer_pidfd(cast(socket.socket, MissingKernelOption()))
     assert refused.value.reason is RefusalCode.UNAVAILABLE
     assert "synthetic" not in str(refused.value)
 
@@ -425,7 +425,7 @@ def test_native_poll_reports_peer_death_without_waiting(monkeypatch: pytest.Monk
     monkeypatch.setattr(login, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setattr(posix_channel, "select", SimpleNamespace(poll=KernelPoll, POLLIN=1, POLLERR=8, POLLHUP=16))
     with pytest.raises(RefusalError) as refused:
-        posix_channel._require_live_linux_pidfd(123)
+        posix_channel.require_live_linux_pidfd(123)
     assert refused.value.reason is RefusalCode.PEER_UNTRUSTED
 
 
@@ -437,14 +437,14 @@ def test_native_kernel_pidfd_is_caller_owned_and_noninheritable() -> None:
         descriptor = _native_peer_pidfd(left)
         try:
             assert not os.get_inheritable(descriptor)
-            posix_channel._require_live_linux_pidfd(descriptor)
+            posix_channel.require_live_linux_pidfd(descriptor)
             with open(f"/proc/self/fdinfo/{descriptor}", encoding="ascii") as information:
                 lines = information.read().splitlines()
             assert f"Pid:\t{os.getpid()}" in lines
             left.close()
             # The socket and returned PIDFD have independent ownership.
             os.fstat(descriptor)
-            posix_channel._require_live_linux_pidfd(descriptor)
+            posix_channel.require_live_linux_pidfd(descriptor)
         finally:
             os.close(descriptor)
         with pytest.raises(OSError) as released:
@@ -465,7 +465,7 @@ def _native_peer_pidfd(connected: socket.socket) -> int:
             pytest.skip("native kernel lacks SO_PEERPIDFD; kernel acceptance unavailable")
         raise
     os.close(probe)
-    return posix_channel._linux_peer_pidfd(connected)
+    return posix_channel.linux_peer_pidfd(connected)
 
 
 def _child_connect_and_transfer(address: str, control: socket.socket) -> None:
@@ -517,10 +517,10 @@ def test_native_kernel_pidfd_detects_original_peer_exit_with_transferred_stream_
         level, kind, packed = ancillary[0]
         assert level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS
         retained = socket.socket(fileno=struct.unpack("i", packed)[0])
-        peer_pid, peer_uid, _ = posix_channel._linux_peer_credentials(accepted)
+        peer_pid, peer_uid, _ = posix_channel.linux_peer_credentials(accepted)
         assert peer_pid == process_id and peer_uid == os.getuid()
         descriptor = _native_peer_pidfd(accepted)
-        posix_channel._require_live_linux_pidfd(descriptor)
+        posix_channel.require_live_linux_pidfd(descriptor)
         parent_control.sendall(b"X")
         exited, status = os.waitpid(process_id, 0)
         reaped = True
@@ -530,7 +530,7 @@ def test_native_kernel_pidfd_detects_original_peer_exit_with_transferred_stream_
         retained.sendall(b"R")
         assert accepted.recv(1) == b"R"
         with pytest.raises(RefusalError) as refused:
-            posix_channel._require_live_linux_pidfd(descriptor)
+            posix_channel.require_live_linux_pidfd(descriptor)
         assert refused.value.reason is RefusalCode.PEER_UNTRUSTED
     finally:
         parent_control.close()

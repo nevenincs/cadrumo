@@ -28,6 +28,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
     ModelRunRequested,
     ModelRunServed,
+    ModelRunTaskKind,
     decode_model_run_body,
 )
 from cadrumo_client.transport.service_client import InstalledServiceClient
@@ -41,8 +42,8 @@ _CONCURRENT_RUNS = 4
 class ModelRuns(Protocol):
     """The profile's lane lookup and run, as the service's run service answers them."""
 
-    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Return the lane a run for ``role`` would use."""
+    def lookup(self, role: str, *, task_kind: ModelRunTaskKind | None = None) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane a run for ``role`` doing ``task_kind`` would use."""
         ...
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
@@ -85,7 +86,7 @@ class ModelRunRelay:
         reply, body = fetched
         text = bytearray()
         try:
-            outcome, text = self._outcome(reply.role, reply.header, body)
+            outcome, text = self._outcome(reply.role, reply.task_kind, reply.header, body)
         finally:
             body[:] = bytes(len(body))
         try:
@@ -95,13 +96,15 @@ class ModelRunRelay:
         finally:
             text[:] = bytes(len(text))
 
-    def _outcome(self, role: str, header: ModelRunHeader | None, body: bytearray) -> tuple[ModelRunOutcome, bytearray]:
+    def _outcome(
+        self, role: str, task_kind: ModelRunTaskKind | None, header: ModelRunHeader | None, body: bytearray
+    ) -> tuple[ModelRunOutcome, bytearray]:
         runs = self._runs()
         if runs is None:
             return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
         try:
             if header is None:
-                lane = runs.lookup(role)
+                lane = runs.lookup(role, task_kind=task_kind)
                 if isinstance(lane, ModelRunRefusal):
                     return ModelRunOutcome(refusal=lane.code), bytearray()
                 return ModelRunOutcome(lane=lane), bytearray()

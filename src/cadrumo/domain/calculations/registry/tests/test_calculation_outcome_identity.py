@@ -37,6 +37,7 @@ from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..formula_runtime import RegistryCalculationResult, RegistryCalculationUnresolvedOutcome
 from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ..ids import LegalRefId, SourceRefId
+from .authored_editions import filing_year_envelope, revision_covering
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,6 +46,9 @@ _CONTESTED_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total"
 _OTHER_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-21",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-iva-2025",)
+
+_EXERCISE = filing_year_envelope().horizon
+_REVISION = str(revision_covering("130", _EXERCISE).id)
 
 _EARLIER_VALUE = Decimal("1")
 _LATER_VALUE = Decimal("999")
@@ -88,7 +92,7 @@ def test_filed_observation_keeps_repeated_detail_rows_in_order() -> None:
     """
     observation = RegistryModeloObservation(
         modelo="130",
-        filing_year=2026,
+        filing_year=_EXERCISE,
         period="1T",
         observations=(
             _observation(_CONTESTED_CASILLA, _EARLIER_VALUE),
@@ -111,7 +115,7 @@ def test_calculation_result_refuses_duplicate_observation_rows() -> None:
     with pytest.raises(ValidationError) as raised:
         RegistryCalculationResult(
             modelo="130",
-            revision="2019-y-siguientes",
+            revision=_REVISION,
             observations=(
                 _observation(_CONTESTED_CASILLA, _EARLIER_VALUE),
                 _observation(_CONTESTED_CASILLA, _LATER_VALUE),
@@ -125,7 +129,7 @@ def test_calculation_result_refuses_duplicate_unresolved_rows() -> None:
     with pytest.raises(ValidationError) as raised:
         RegistryCalculationResult(
             modelo="130",
-            revision="2019-y-siguientes",
+            revision=_REVISION,
             unresolved_outcomes=(
                 _unresolved(_CONTESTED_CASILLA),
                 _unresolved(_CONTESTED_CASILLA),
@@ -138,7 +142,7 @@ def test_calculation_result_refuses_duplicate_unresolved_rows() -> None:
 def test_calculation_result_accepts_distinct_observation_rows() -> None:
     result = RegistryCalculationResult(
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_REVISION,
         observations=(
             _observation(_CONTESTED_CASILLA, _EARLIER_VALUE),
             _observation(_OTHER_CASILLA, _LATER_VALUE),
@@ -161,7 +165,7 @@ def test_calculation_result_refuses_resolved_and_unresolved_for_one_casilla() ->
     with pytest.raises(ValidationError) as raised:
         RegistryCalculationResult(
             modelo="130",
-            revision="2019-y-siguientes",
+            revision=_REVISION,
             observations=(_observation(_CONTESTED_CASILLA, _LATER_VALUE),),
             unresolved_outcomes=(_unresolved(_CONTESTED_CASILLA),),
         )
@@ -173,7 +177,7 @@ def test_calculation_result_accepts_disjoint_resolved_and_unresolved_casillas() 
     """Different casillas may resolve and block independently."""
     result = RegistryCalculationResult(
         modelo="130",
-        revision="2019-y-siguientes",
+        revision=_REVISION,
         observations=(_observation(_OTHER_CASILLA, _LATER_VALUE),),
         unresolved_outcomes=(_unresolved(_CONTESTED_CASILLA),),
     )

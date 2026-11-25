@@ -10,37 +10,10 @@ a taxpayer with no economic activity is not forced to invent one.
 No mocks: the runner drives the real Typer command, the real wizard
 runtime, and the real encrypted-SQLite profile store.
 
-Non-interactive creation is now retired: `create` diverts a capable terminal
-to the profile manager and refuses a console-less host. What survives here is
-what does NOT depend on that path -- two edit refusals, whose fixtures now
-register through the credential door, and two foral refusals, which fire
-before the retirement check.
-
-Thirteen tests were retired with this change. Each is named with what answers
-it now, so a later reader does not read the deletions as lost coverage:
-
-- creates_non_interactively_without_spouse_flags, creates_with_explicit_no_spouse_flag,
-  creates_without_activity_start_date_flag: the subject WAS scripted creation,
-  which is retired. No successor; the capability is gone by design.
-- attribution_entity_profile_creates_without_spouse_flags:
-  application/user_profile/tests/test_taxpayer_type_completeness.py
-- pure_landlord_profile_creates_without_activity,
-  pure_landlord_profile_stores_explicit_iva_regime_when_operator_opts_in,
-  natural_person_with_economic_activity_stores_the_activity:
-  application/user_profile/tests/test_irnr_profile_completeness.py
-- non_resident_irnr_quiet_create_requires_country_before_registration,
-  gb_legal_entity_irnr_quiet_create_requires_representante_before_registration:
-  the same module, which asserts those paths among the missing-required set.
-- legal_entity_form_flag_populates_the_legal_entity_form_field,
-  activity_start_date_flag_stores_the_censo_alta_date: their subject is the
-  flag-to-fact mapping of a retired path. The mapping itself is declared in
-  application/wizard/catalogue.py, which is its own authority.
-- legal_entity_profile_create_and_edit_exposes_legal_name: the create half is
-  retired; the edit half is covered by the surviving edit refusals here.
-- missing_entity_type_does_not_re_report_supplied_identity_flags: its subject
-  is the CONTENT of a refusal message on the retired path. The application
-  layer does not render operator text, so it has no home rather than a
-  successor.
+Non-interactive creation is retired: `create` diverts a capable terminal to the
+profile manager and refuses a console-less host. The cases here do not depend on
+that path: two edit refusals, whose fixtures register through the credential
+door, and two foral refusals, which fire before the retirement check.
 
 The remaining cases assert the live setup-state boundary: registration and
 editing may leave a profile incomplete, while ``complete-setup`` refuses a
@@ -54,20 +27,17 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
-from ._profile_cli_support import (
-    create_quiet_profile as _create_profile,
+from .profile_cli_support import (
+    create_quiet_profile,
+    edit_quiet_profile,
+    invoke_protected_profile,
+    profile_rows,
 )
-from ._profile_cli_support import (
-    edit_quiet_profile as _edit_profile,
-)
-from ._profile_cli_support import invoke_protected_profile
-from ._profile_cli_support import native_profile_runtime as native_profile_runtime
-from ._profile_cli_support import (
-    profile_rows as _profile_rows,
-)
+from .profile_cli_support import native_profile_runtime as native_profile_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -101,12 +71,12 @@ def _registered_profile_exists(name: str) -> bool:
 def test_legal_entity_profile_create_defers_missing_legal_form_to_complete_setup() -> None:
     """Registration persists an incomplete legal entity; completion enforces its form."""
 
-    result = _create_profile(
+    result = create_quiet_profile(
         "missing-form-co",
         "--entity-type",
         "legal_entity",
         "--tax-id",
-        "B66012345",
+        "B00015032",
         "--activity",
         "consultoria informatica",
         *_COMMON_TERRITORY_ARGS,
@@ -123,7 +93,7 @@ def test_legal_entity_profile_create_defers_missing_legal_form_to_complete_setup
 def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None:
     """Registration leaves the operator at the explicit setup declaration."""
 
-    result = _create_profile(
+    result = create_quiet_profile(
         "irnr-profile",
         "--entity-type",
         "natural_person",
@@ -134,7 +104,7 @@ def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None
         "--country-of-fiscal-residence",
         "FR",
         "--tax-id",
-        "X1234567L",
+        "X0001500M",
         "--iva-regime",
         "GENERAL",
         *_COMMON_TERRITORY_ARGS,
@@ -151,29 +121,22 @@ def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None
 def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     """A branch-changing edit must not persist a legal entity without legal name."""
 
-    # The profile is registered through the credential door rather than the
-    # creation verb. This profile is already complete, so the edit itself must
-    # reject a transition that omits the legal name.
+    # The profile is registered through the credential door. This profile is
+    # already complete, so the edit itself must reject a transition that omits
+    # the legal name.
     register_cli_profile(
         label="branch-to-legal",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Branch",
             "identity.surnames": "Operator",
             "activities.description": "consultoria",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
         log_in=False,
     )
 
-    edit = _edit_profile(
+    edit = edit_quiet_profile(
         "branch-to-legal",
         "--entity-type",
         "legal_entity",
@@ -181,7 +144,7 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
 
     assert edit.exit_code != 0, edit.output
     assert "--legal-name" in edit.output
-    rows = _profile_rows("branch-to-legal")
+    rows = profile_rows("branch-to-legal")
     assert rows["taxpayer_type.entity_type"] == "natural_person"
     assert rows["identity.name"] == "Branch"
     assert rows["identity.surnames"] == "Operator"
@@ -192,31 +155,25 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
 def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     """Surnames remain a modelo-specific filing requirement, not setup state."""
 
-    # The profile is registered through the credential door rather than the
-    # creation verb. Setup remains incomplete to prove that the profile setup
-    # gate does not impose a modelo-specific surname requirement.
+    # The profile is registered through the credential door. Setup remains
+    # incomplete to prove that the profile setup gate does not impose a
+    # modelo-specific surname requirement.
     register_cli_profile(
         label="branch-to-natural",
         facts={
+            **native_general_iva_facts(),
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
-            "identity.tax_id": "B66012345",
+            "identity.tax_id": "B00015032",
             "identity.legal_name": "Branch Legal SL",
             "identity.surnames": "",
             "activities.description": "asesoria",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
         complete=False,
         log_in=False,
     )
 
-    edit = _edit_profile(
+    edit = edit_quiet_profile(
         "branch-to-natural",
         "--entity-type",
         "natural_person",
@@ -225,7 +182,7 @@ def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     )
 
     assert edit.exit_code == 0, edit.output
-    rows = _profile_rows("branch-to-natural")
+    rows = profile_rows("branch-to-natural")
     assert rows["taxpayer_type.entity_type"] == "natural_person"
     assert rows["identity.name"] == "Branch"
     assert "identity.surnames" not in rows
@@ -237,7 +194,7 @@ def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
 @pytest.mark.parametrize(
     ("name", "tax_id", "activity", "ccaa", "expected_url"),
     (
-        pytest.param("lourdes", "44444444A", "traductora", "pais_vasco", "sede.bizkaia.eus", id="pais_vasco"),
+        pytest.param("lourdes", "00001503P", "traductora", "pais_vasco", "sede.bizkaia.eus", id="pais_vasco"),
         pytest.param("navarrese", "44444445B", "agricultor", "navarra", "hacienda.navarra.es", id="navarra"),
     ),
 )
@@ -250,7 +207,7 @@ def test_profile_create_refuses_foral_tax_residence_with_concierto_economico_red
 ) -> None:
     """Foral tax residences must refuse AEAT profile creation with a legal redirect."""
 
-    result = _create_profile(
+    result = create_quiet_profile(
         name,
         "--entity-type",
         "natural_person",
@@ -277,7 +234,7 @@ def test_profile_create_foral_refusal_renders_localized_error_document_in_json_m
     Under ``--format json`` the refusal must route through the localized
     CadrumoError boundary — a registered ``REFUSED_PROFILE_FORAL_REGIME``
     error document — rather than a Click ``Usage`` box wrapping a localized
-    body. This is the operator-reported localization gap for foral CCAA.
+    body.
     """
     import json
 
@@ -298,7 +255,7 @@ def test_profile_create_foral_refusal_renders_localized_error_document_in_json_m
             "--surnames",
             "Foral",
             "--tax-id",
-            "44444444A",
+            "00001503P",
             "--activity",
             "traductora",
             "--tax-residence-ccaa",

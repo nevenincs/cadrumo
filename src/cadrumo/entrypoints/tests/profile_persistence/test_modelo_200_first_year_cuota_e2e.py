@@ -2,7 +2,7 @@
 
 The companion unit tests
 (``cadrumo.application.calculations.tests.test_modelo_200_202_pagos_fraccionados_fold``)
-prove the IS-3 fix at the resolver boundary: with ``modelo_202_first_year_cuota``
+prove the IS-3 fix at the resolver boundary: with ``modelo_202_no_base_instalments``
 set, ``resolve_relations_from_local_store`` resolves an otherwise-unresolved M202
 fold-in relation to ``Decimal(0)`` instead of ``None`` (the value that crashed the
 cuota-diferencial formula). But the landing commit claimed "verified end-to-end:
@@ -13,7 +13,7 @@ followed by ``verify_modelo_revision_with_preconditions`` (verify), with the fir
 the production way - from the persisted profile, NOT passed in by the test.
 
 Setup that triggers the live first-year flag
-(:func:`_first_year_modalidad_cuota_no_m202`):
+(:func:`_modelo_202_no_base_instalments`):
   - a legal-entity profile whose ``incn_prior_12_months`` (500.000) is at or below
     the LIS art. 40.3 INCN threshold (6.000.000), so the derived modality is
     ``ART_40_2_OPTIONAL`` (modalidad cuota); and
@@ -46,8 +46,9 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -64,7 +65,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -77,13 +78,10 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from ....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -114,6 +112,9 @@ _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     surface="_CASILLA_CUOTA_DIFERENCIAL",
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+# The rate reads the turnover of the preceding tax period, which a first ejercicio
+# does not have; LIS art. 101.2 refers it to the first period, so the filer states it.
+_FIRST_PERIOD_TURNOVER = {"modelo-200-incn-periodo-impositivo-anterior": Decimal("500000")}
 
 
 def _seed_first_year_modalidad_cuota_profile() -> None:
@@ -121,37 +122,29 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
 
     Mirrors the standard M200 six-binding sociedad scaffold, plus
     ``censo.activity_start_date`` in the filing year so
-    :func:`_first_year_modalidad_cuota_no_m202` sees a first-ejercicio
+    :func:`_modelo_202_no_base_instalments` sees a first-ejercicio
     modalidad-cuota filer. ``incn_prior_12_months`` 500.000 <= the
     6.000.000 LIS art. 40.3 threshold -> ART_40_2_OPTIONAL (modalidad cuota).
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="First Year Cuota Test SL"),
-            UserProfileFact(path="activities.description", value="software consultancy"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            # First IS ejercicio: activity starts in the filing year, so a pago
-            # fraccionado under modalidad cuota (art. 40.2) has no prior IS return.
-            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
+                UserProfileFact(path="identity.legal_name", value="First Year Cuota Test SL"),
+                UserProfileFact(path="activities.description", value="software consultancy"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+                UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
+                # First IS ejercicio: activity starts in the filing year, so a pago
+                # fraccionado under modalidad cuota (art. 40.2) has no prior IS return.
+                UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -192,7 +185,7 @@ def _calculate_m200(
     ) as _calculation_ports_173:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            binding_values={},
+            binding_values=_FIRST_PERIOD_TURNOVER,
             ports=_calculation_ports_173,
             clock=_T1,
         )
@@ -210,7 +203,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
     the discriminator against the flag-OFF status quo where it stays unresolved - and
     the resulting draft then verifies end-to-end with no crash.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # 1) Draft build via the full calculate action.
         result = _calculate_m200(secure_objects, operation=operation)
         values = result.revision.casilla_values
@@ -243,7 +236,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             actor="system",
-            workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime("GENERAL")),
+            workflow_profile=TaxpayerProfile(tax_id="B00015016", iva_regime=IVARegime("GENERAL")),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
         ).report

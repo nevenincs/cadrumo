@@ -8,7 +8,6 @@ from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
 
-from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from .....application.user_profile.automation_custody_port import AutomationCustodySnapshot, AutomationGrantMaterial
@@ -19,7 +18,7 @@ from .....application.user_profile.automation_lifecycle import (
     AutomationDenial,
 )
 from .....core.hashing import sha256_hex
-from .automation_control_projection import publication_intent, publication_payload
+from .automation_control_projection import GRANT_STATES_WITHOUT_WRAPPED_KEY, publication_intent, publication_payload
 from .automation_crypto import (
     canonical_record,
     parse_record,
@@ -168,7 +167,7 @@ class AutomationControlPublication(AutomationProfileLock):
         wraps: dict[UUID, SecretBytes] = {}
         entries: list[StoredAutomationGrant] = []
         for material in grants:
-            if material.grant.state in {AuthorityState.SUSPENDED, AuthorityState.REVOKED}:
+            if material.grant.state in GRANT_STATES_WITHOUT_WRAPPED_KEY:
                 entries.append(
                     StoredAutomationGrant(grant=material.grant, keys=material.keys, wrap_key_id=None, wrapped_dek=None)
                 )

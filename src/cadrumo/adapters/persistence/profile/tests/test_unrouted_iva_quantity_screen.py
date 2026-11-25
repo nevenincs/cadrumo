@@ -9,20 +9,31 @@ from pathlib import Path
 
 import pytest
 
-from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
-from .....application.aggregation.source_mesh import CalculationSourceContext
+from .....application.aggregation.modelo_bindings_iva import (
+    LedgerIvaAggregationSourceResolver,
+    recorded_prorrata_apportionment,
+    recorded_prorrata_only_exempt_output,
+)
+from .....application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.period import Period
+from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.schema import ModeloRevision
-from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.invoices.catalogue import InvoiceCatalogue
+from .....domain.invoices.enums import IvaRate
+from .....domain.invoices.models import Invoice
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from .....domain.iva.schema import IvaCategory
+from .....domain.iva.schema import InvoiceKind, IvaCategory
+from .....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from .....domain.transactions.date_partition import LedgerDatePartition
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from .....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..prorrata_register import ProrrataRegisterRepository
@@ -274,6 +285,87 @@ def test_the_import_base_lands_in_box_32_on_the_committed_revision(tmp_path: Pat
     ]
 
 
+class _InvoiceCatalogueReader:
+    def __init__(self, *invoices: Invoice) -> None:
+        self._catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice for invoice in invoices})
+
+    def load(self) -> InvoiceCatalogue:
+        return self._catalogue
+
+
+def _uncategorised_eu_service() -> Invoice:
+    """A 0 % service invoiced to a German business, read from the Libro de facturas with no IVA category."""
+    return Invoice.model_validate(
+        {
+            "bucket_id": _BUCKET_ID,
+            "kind": InvoiceKind.ISSUED.value,
+            "invoice_number": "2025-002",
+            "issued_at": "2025-01-31",
+            "counterparty_name": "Kunde GmbH",
+            "counterparty_tax_id": "DE123456788",
+            "counterparty_country": "DE",
+            "base_total": "1500.00",
+            "iva_total": "0.00",
+            "grand_total": "1500.00",
+            "currency": "EUR",
+            "payment_status": "PENDING",
+            "lines": [
+                {
+                    "description": "Servicio de consultoria",
+                    "quantity": "1",
+                    "unit_price": "1500.00",
+                    "subtotal": "1500.00",
+                    "iva_rate": IvaRate.from_registry("RATE_0").value,
+                    "iva_amount": "0.00",
+                },
+            ],
+        },
+    )
+
+
+def test_an_unrouted_invoice_base_is_named_by_its_invoice_date_and_amount(tmp_path: Path) -> None:
+    """The note a blocked check rests on names the record, its date and the amount it leaves out.
+
+    A base no box of the committed Modelo 303 draws still blocks; the note must
+    tell the filer which invoice to correct, not only that some record is wrong.
+    """
+    invoice = _uncategorised_eu_service()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        resolver = LedgerIvaAggregationSourceResolver(
+            transaction_repository=repository,
+            invoice_catalogue_read_ports=InvoiceCatalogueReadPorts(
+                invoice_reader=_InvoiceCatalogueReader(invoice),
+                transaction_reader=_EmptyTransactionCatalogueReader(),
+            ),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id=_BUCKET_ID,
+        )
+        resolution = resolver.resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=_revision("303"),
+            ),
+        )
+
+    (note,) = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+    assert note.source_ref == f"invoice:{invoice.invoice_id}"
+    assert note.fact == CalculationNoteFact.of(
+        CalculationNoteSentence.UNROUTED_IVA_BASE,
+        rows=(f"invoice:{invoice.invoice_id}:0",),
+        row_date="2025-01-31",
+        row_amount=Decimal("1500.00"),
+    )
+    assert "base_amount_sum" in note.message
+    assert "domestic_zero" in note.message
+
+
 def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:
     """A live residue advisory identifies the category carrying the amount, and only that one.
 
@@ -315,3 +407,186 @@ def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) 
         "intra_community_service_acquisition_reverse_charge",
     ):
         assert covered not in message, f"{covered} draws base on this revision and must not be blamed"
+
+
+def _envelope_years() -> tuple[int, ...]:
+    """Every filing year the registry supports, read off its envelope."""
+    support = published_authority_operation().modelo_directory("303").supported_filing_years
+    assert support is not None
+    upper = support.hard_ceiling if support.hard_ceiling is not None else support.horizon
+    return tuple(range(support.floor, upper + 1))
+
+
+def _exempt_row(provider_id: str, *, on: date, direction: TransactionDirection) -> Transaction:
+    """A domestic operation exempt under LIVA art. 20: a base and no cuota."""
+    raw = RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=on,
+        value_date=on,
+        amount=Decimal("8000.00"),
+        currency="EUR",
+        counterparty="Paciente particular",
+        description=f"operacion exenta {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="f" * 64,
+            source_row_index=3,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_NOW,
+            provider_name="manual",
+        ),
+        raw_fields={"row": provider_id},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("8000.00"),
+            "iva_rate": Decimal("0"),
+            "iva_amount": Decimal("0.00"),
+            "iva_category": IvaCategory("domestic_exempt"),
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": _NOW,
+            "classified_by": "manual",
+        },
+    )
+
+
+def _resolve_exempt(
+    tmp_path: Path, modelo: str, period: Period, row: Transaction, *, register: ProrrataRegister | None = None
+) -> tuple[ModeloRevision, CalculationSourceResolution]:
+    """Resolve one exempt row against the revision the registry selects for ``period``, at calculation grade."""
+    revision = (
+        published_authority_operation()
+        .snapshot(
+            modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+            grade=RegistryAuthorityGrade.CALCULATION,
+        )
+        .revision
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((row,)))
+        if register is not None:
+            ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository).save(register)
+        resolution = _resolver(repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo=modelo,
+                filing_year=period.filing_year,
+                period=period,
+                revision=revision,
+            ),
+        )
+    return revision, resolution
+
+
+def _apportioning_register(ejercicio: int) -> ProrrataRegister:
+    """A general prorrata for ``ejercicio`` carried from the prior year's final-period 303."""
+    prior = published_authority_operation().snapshot("303", filing_year=ejercicio - 1, period="4T")
+    return ProrrataRegister(
+        entries=(
+            ProrrataRegisterEntry(
+                ejercicio=ejercicio,
+                regime=ProrrataRegisterRegime.from_registry("general"),
+                especial_transition=None,
+                provisional_percentage=Decimal("80"),
+                provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+                source_observation_ref=f"303:{ejercicio - 1}:4T",
+                source_registry_snapshot_refs=(prior.snapshot_ref,),
+            ),
+        ),
+    )
+
+
+def _source_refs(resolution: CalculationSourceResolution) -> tuple[str, ...]:
+    return tuple(item.source_ref for item in resolution.provenance)
+
+
+def _reasons(resolution: CalculationSourceResolution) -> list[str]:
+    return [diagnostic.reason for diagnostic in resolution.diagnostics]
+
+
+def test_an_exempt_sale_without_deduction_right_is_left_to_the_prorrata_on_the_periodic_return(
+    tmp_path: Path,
+) -> None:
+    """Modelo 303 has no box for the base of an art. 20 exempt sale; it only drives the prorrata.
+
+    The base is accounted for, so it raises no blocking unrouted quantity, while the
+    advisory that the base is represented in no box of the revision stays.
+    """
+    for year in _envelope_years():
+        period = Period.from_year_and_code(year, "1T")
+        row = _exempt_row("asistencia-1", on=period.start_date, direction=TransactionDirection.INCOMING)
+        _, resolution = _resolve_exempt(tmp_path / str(year), "303", period, row)
+
+        assert "unrouted_declarable_quantity" not in _reasons(resolution), year
+        assert "structurally_unroutable_base_category" in _reasons(resolution), year
+
+
+def test_an_exempt_sale_left_to_an_unapplied_prorrata_is_recorded_for_the_verify_gate(tmp_path: Path) -> None:
+    """LIVA art. 102.Uno: with no apportionment applied, the calculation records the exempt output it left over."""
+    period = Period.from_year_and_code(max(_envelope_years()), "1T")
+    row = _exempt_row("asistencia-1", on=period.start_date, direction=TransactionDirection.INCOMING)
+
+    _, resolution = _resolve_exempt(tmp_path, "303", period, row)
+
+    assert recorded_prorrata_only_exempt_output(_source_refs(resolution)) == 1
+    assert recorded_prorrata_apportionment(_source_refs(resolution)) is None
+
+
+def test_an_exempt_sale_under_an_applied_prorrata_records_no_exempt_output_marker(tmp_path: Path) -> None:
+    period = Period.from_year_and_code(max(_envelope_years()), "1T")
+    row = _exempt_row("asistencia-1", on=period.start_date, direction=TransactionDirection.INCOMING)
+
+    _, resolution = _resolve_exempt(tmp_path, "303", period, row, register=_apportioning_register(period.filing_year))
+
+    assert recorded_prorrata_apportionment(_source_refs(resolution)) is not None
+    assert recorded_prorrata_only_exempt_output(_source_refs(resolution)) is None
+
+
+def test_a_received_exempt_base_records_no_exempt_output_marker(tmp_path: Path) -> None:
+    period = Period.from_year_and_code(max(_envelope_years()), "1T")
+    row = _exempt_row("seguro-1", on=period.start_date, direction=TransactionDirection.OUTGOING)
+
+    _, resolution = _resolve_exempt(tmp_path, "303", period, row)
+
+    assert recorded_prorrata_only_exempt_output(_source_refs(resolution)) is None
+
+
+def test_a_received_exempt_base_stays_unrouted_on_the_periodic_return(tmp_path: Path) -> None:
+    """Only the taxpayer's own exempt output drives the prorrata; a received exempt base still refuses."""
+    for year in _envelope_years():
+        period = Period.from_year_and_code(year, "1T")
+        row = _exempt_row("seguro-1", on=period.start_date, direction=TransactionDirection.OUTGOING)
+        _, resolution = _resolve_exempt(tmp_path / str(year), "303", period, row)
+
+        (note,) = [
+            diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+        ]
+        assert "base_amount_sum" in note.message, year
+        assert "domestic_exempt" in note.message, year
+
+
+def test_the_annual_summary_never_drops_an_exempt_sale_base(tmp_path: Path) -> None:
+    """The exclusion belongs to the periodic return: on Modelo 390 the base is drawn or reported, never lost."""
+    for year in _envelope_years():
+        period = Period.from_year_and_code(year, "0A")
+        row = _exempt_row("asistencia-1", on=period.start_date, direction=TransactionDirection.INCOMING)
+        revision, resolution = _resolve_exempt(tmp_path / str(year), "390", period, row)
+
+        drawn = sum(
+            (
+                resolution.binding_values.get(binding.id, Decimal("0"))
+                for binding in revision.bindings
+                if binding.source.value == "ledger_iva_aggregation"
+                and getattr(binding.provider, "fact", None) == "base_amount_sum"
+            ),
+            Decimal("0"),
+        )
+        assert drawn == Decimal("8000.00") or "unrouted_declarable_quantity" in _reasons(resolution), year

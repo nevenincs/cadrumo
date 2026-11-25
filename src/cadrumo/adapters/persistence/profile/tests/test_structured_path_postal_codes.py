@@ -32,6 +32,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -41,29 +42,28 @@ from cadrumo.application.ledger.invoice_draft_extraction import extract_invoice_
 from cadrumo.application.ledger.invoice_draft_records import InvoiceDraft
 from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.core.config import Settings
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
-from ._invoice_confirmation_test_support import (
+from .evidence_test_support import (
+    BUCKET_ID,
+    isolated_settings,
+    make_svc,
+    secure_objects,
+)
+from .evidence_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     invoice_draft_extraction_kwargs,
 )
-from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .evidence_test_support import (
-    isolated_settings,
-    secure_objects,
-)
-from .evidence_test_support import (
-    make_svc as _make_svc,
-)
-from .evidence_test_support import runtime_profile as runtime_profile
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -139,16 +139,16 @@ def _stored(
 ) -> str:
     staged = tmp_path / name
     staged.write_text(xml, encoding="utf-8")
-    return _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
+    return make_svc(settings, objects).add(bucket_id=BUCKET_ID, source_path=staged).record.evidence_id
 
 
 def _draft(evidence_id: str, settings: Settings, *, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     authority = InvoiceAuthorityFixture(operation=operation, legends=_registry_legends(operation))
     return extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 
@@ -197,7 +197,7 @@ def test_a_facturae_document_with_no_address_resolves_to_nothing(
     A reader that defaulted here would hand the resolver a well-formed mainland
     code, and the resolver's own refusal would never get the chance to fire.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         evidence_id = _stored(
             _corpus(_FACTURAE_WITHOUT_ADDRESSES),
             settings=isolated_settings,
@@ -212,13 +212,13 @@ def test_a_facturae_document_with_no_address_resolves_to_nothing(
         assert draft.customer_postal_code is None
         assert (
             territorial_scope_for_spanish_postal_code(
-                draft.supplier_postal_code, operation=_authority_operation_for_test
+                draft.supplier_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
             )
             is None
         )
         assert (
             territorial_scope_for_spanish_postal_code(
-                draft.customer_postal_code, operation=_authority_operation_for_test
+                draft.customer_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
             )
             is None
         )
@@ -237,7 +237,7 @@ def test_a_canarian_code_survives_the_document_as_canarias(
     IVA. This is the case a mainland default would silently swallow, and it is
     the reason the code has to travel exactly rather than approximately.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         xml = _corpus(_FACTURAE_WITH_ADDRESSES).replace(
             f"<PostCode>{_PRINTED_SUPPLIER_CODE}</PostCode>",
             f"<PostCode>{_CANARIAS_CODE}</PostCode>",
@@ -256,13 +256,17 @@ def test_a_canarian_code_survives_the_document_as_canarias(
 
         assert draft.supplier_postal_code == _CANARIAS_CODE
         assert territorial_scope_for_spanish_postal_code(
-            draft.supplier_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_canarias", operation=_authority_operation_for_test)
+            draft.supplier_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_canarias", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
         # The other party is untouched and must still read as the mainland, so the
         # case proves a territory was RESOLVED rather than that everything moved.
         assert territorial_scope_for_spanish_postal_code(
-            draft.customer_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_mainland", operation=_authority_operation_for_test)
+            draft.customer_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_mainland", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
 
 
 def test_a_ubl_document_carries_the_postal_zone(
@@ -332,7 +336,7 @@ def test_a_cii_document_carries_the_postcode_code(
     codes name excluded territories -- Santa Cruz de Tenerife
     and Ceuta -- so a reader that silently produced the mainland would fail.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         evidence_id = _stored(
             _CII_SPECIMEN,
             settings=isolated_settings,
@@ -346,8 +350,12 @@ def test_a_cii_document_carries_the_postcode_code(
         assert draft.supplier_postal_code == "38001"
         assert draft.customer_postal_code == "51001"
         assert territorial_scope_for_spanish_postal_code(
-            draft.supplier_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_canarias", operation=_authority_operation_for_test)
+            draft.supplier_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_canarias", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )
         assert territorial_scope_for_spanish_postal_code(
-            draft.customer_postal_code, operation=_authority_operation_for_test
-        ) == require_iva_territorial_scope("es_ceuta_melilla", operation=_authority_operation_for_test)
+            draft.customer_postal_code, operation=_authority_operation_for_test, effective_date=_ON_DATE
+        ) == require_iva_territorial_scope(
+            "es_ceuta_melilla", operation=_authority_operation_for_test, effective_date=_ON_DATE
+        )

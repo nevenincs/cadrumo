@@ -36,7 +36,7 @@ _PROVENANCE_BEARING_COMMANDS = ("ledger.evidence.extract", "ledger.evidence.conf
 
 def _draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         taxable_base=Decimal("1000.00"),
         provenance=(
             FieldProvenance(
@@ -52,8 +52,8 @@ def _draft() -> InvoiceDraft:
                 grounding=FieldGroundingOutcome.AMBIGUOUS,
                 anchor="B-12345674",
                 candidates=(
-                    FieldAmbiguityCandidate(value="B12345674", anchor="B-12345674"),
-                    FieldAmbiguityCandidate(value="X1234567L", anchor="X-1234567-L"),
+                    FieldAmbiguityCandidate(value="B00015016", anchor="B-12345674"),
+                    FieldAmbiguityCandidate(value="X0001500M", anchor="X-1234567-L"),
                 ),
             ),
         ),
@@ -101,7 +101,7 @@ def test_the_confirm_envelope_body_carries_the_drafts_provenance() -> None:
         "invoice_number": "0042",
         "issued_at": "2026-03-14",
         "counterparty_name": "Proveedor Ejemplo SL",
-        "counterparty_tax_id": "B12345674",
+        "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
         "base_total": "1000.00",
         "iva_total": "210.00",
@@ -120,7 +120,7 @@ def test_the_confirm_envelope_body_carries_the_drafts_provenance() -> None:
     assert reconciled["grounding"] == FieldGroundingOutcome.RECONCILED.value
     assert reconciled["anchor"] == "1.000,00 €"
     ambiguous = next(e for e in emitted["provenance"] if e["field"] == "supplier_tax_id")
-    assert [c["value"] for c in ambiguous["candidates"]] == ["B12345674", "X1234567L"]
+    assert [c["value"] for c in ambiguous["candidates"]] == ["B00015016", "X0001500M"]
 
 
 @pytest.mark.parametrize("command", _PROVENANCE_BEARING_COMMANDS)

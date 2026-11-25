@@ -56,7 +56,7 @@ def missing_filing_baseline_flag_groups(
     conditional = tuple(
         flag
         for flag in dict.fromkeys(
-            _profile_path_flag(path, profile_path_flags=profile_path_flags)
+            profile_path_flag(path, profile_path_flags=profile_path_flags)
             for path in conditional_profile_missing_required(values)
         )
         if flag not in identity_set
@@ -64,7 +64,7 @@ def missing_filing_baseline_flag_groups(
     return identity, conditional
 
 
-def _profile_path_flag(path: str, *, profile_path_flags: Mapping[str, str]) -> str:
+def profile_path_flag(path: str, *, profile_path_flags: Mapping[str, str]) -> str:
     """Return the long-option spelling for a profile path.
 
     The refusal that carries this names flags the operator retypes verbatim, so

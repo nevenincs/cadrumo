@@ -23,7 +23,7 @@ import pytest
 from cadrumo.application.operations.access_facts import operation_access_facts
 from cadrumo.application.operations.access_resolution import ResolvedOperationAccess
 from cadrumo.application.operations.person_acts import operation_is_persons_act
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
     AccessEvaluationContext,
@@ -40,7 +40,8 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.access_policy import intersect_scopes
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -54,6 +55,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 from cadrumo_mcp.mcp.access_scope import surface_scope
 from cadrumo_mcp.mcp.protocol_contract import MCP_TOOL_NAMES
 from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
+from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -65,7 +67,7 @@ _SCOPE_DENIED = AccessDenialCode.OPERATION_DENIED.value
 _COMMITTING = frozenset(AccessAction)
 _READING = _COMMITTING - {AccessAction.COMMIT}
 
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 10, 10, 12, tzinfo=UTC)
 _BOOT = UUID("5bb00000-0000-4000-8000-000000000001")
 _CONNECTION = UUID("5bb00000-0000-4000-8000-000000000002")
 _PARENT_CONNECTION = UUID("5bb00000-0000-4000-8000-000000000003")
@@ -85,7 +87,7 @@ TEST_CLIENT_NATIVE_BINDING = ProfileAccessBinding(
 
 @cache
 def mcp_operation_registry() -> OperationRegistry:
-    return build_production_operation_registry()
+    return production_operation_registry()
 
 
 @cache
@@ -482,7 +484,7 @@ def _declares_a_review(definition_id: str) -> bool:
 
 
 def test_the_tools_the_read_only_local_surface_leaves_out_serve_no_operation_on_it() -> None:
-    """Only the review tools are left out, and no listed operation declares a review."""
+    """Only review tools are left out, and no listed operation declares a review."""
     assert MCP_TOOL_NAMES - MCP_SURFACES[_READ_ONLY_LOCAL].tools == {"review", "respond"}
     reviewed = sorted(filter(_declares_a_review, _read_only_local_operations()))
     assert not reviewed, f"read-only local operations that need a tool the surface leaves out: {reviewed}"

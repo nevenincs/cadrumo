@@ -75,23 +75,21 @@ Registry mapping (M200 revision covering the edition):
       verification-expectations comment, which deliberately excludes 00582 as
       "situational"; asserted here as an intermediate cross-check only.)
     casilla DP200014B:00592 "Cuota liquida" = formula `modelo-200-cuota-
-      liquida`: max(00619, max(0, 00582 - sum-of-otras-deducciones)).
-      * WITHOUT tributacion minima (00619 fed 0, matching the manual's own
-        "sin tributacion minima" table): max(0, max(0, 350.000 - 80.000)) =
-        270.000 -> matches the manual's own "Cuota liquida [00592] 270.000"
-        exactly.
-      * WITH tributacion minima (00619 fed 300.000, the manual's own art. 30
-        bis.1 result): max(300.000, max(0, 350.000 - 80.000=270.000)) =
+      liquida`: max(0, 00582 - sum-of-otras-deducciones), the manual's own
+      "[00592] = [00582] - ([00583] + [00585] + [00584] + [00588] + ...)",
+      "siempre ... una cantidad positiva o cero". Its operands are the
+      deductions "aplicadas por el contribuyente en el periodo impositivo",
+      so the cuota liquida minima 00619 is not a floor on 00592: art. 30 bis
+      limits the deduction consigned in 00588 instead.
+      * WITHOUT tributacion minima (the "sin tributacion minima" table: 00588
+        80.000, 00619 0): max(0, 350.000 - 80.000) = 270.000 -> matches the
+        manual's own "Cuota liquida [00592] 270.000" exactly.
+      * WITH tributacion minima (the final table: the I+D+i deduction applied
+        only up to the minimum, "Deduccion incentivar determinadas
+        actividades [00588] -50.000 -30.0000", i.e. 50.000 applied and
+        30.000 pendiente, and 00619 300.000): max(0, 350.000 - 50.000) =
         300.000 -> matches the manual's own final "Cuota liquida [00592]
-        300.000" exactly. Note the registry formula's max(...) floor
-        reproduces the art. 30 bis effect WITHOUT needing the operator to
-        pre-limit casilla 00588 to the capped 50.000 the manual's own
-        art.30bis.2.b) allocation arithmetic derives (see the manual's own
-        "podra aplicarse 50.000 euros de deduccion de I+D+i... pues... existe
-        una diferencia de 50.000 euros"): feeding the FULL 80.000 euros of
-        generated (not manually pre-capped) deduccion still yields the
-        correct 300.000 floor, because max(00619, ...) dominates regardless
-        of how far past the floor the uncapped subtraction lands.
+        300.000" exactly.
     casilla DP200014B:00611 "Cuota diferencial - Estado" = formula `modelo-
       200-cuota-diferencial`: 00599 - (M202 pagos fraccionados relations).
       00599 = (tributacion_estado_porcentaje/100) x (00592 - 01766 - 01784) =
@@ -112,18 +110,16 @@ Registry mapping (M200 revision covering the edition):
 Anti-tautology: this test does not hand-compute 500.000, 350.000, 270.000, or
 300.000 from the registry's own cuota-chain formulas under test. Every raw
 input (base imponible via casilla 00501, DI deduction via casilla 00573,
-I+D+i deduction via casilla 00588, and the art. 30 bis cuota liquida minima
-via casilla 00619) is quoted verbatim from the manual's own printed tables
-above, and the two independent AEAT-printed scenarios (sin/con tributacion
-minima) are BOTH graded - proving the registry's max(00619, ...) floor
-mechanism is doing real work (the con-minima run changes casillas 00592/00611
-by exactly the manual's own delta), not a hand-computed absolute figure or a
-formula that ignores casilla 00619 entirely.
+I+D+i deduction applied via casilla 00588, and the art. 30 bis cuota liquida
+minima via casilla 00619) is quoted verbatim from the manual's own printed
+tables above, and the two independent AEAT-printed scenarios (sin/con
+tributacion minima) are BOTH graded.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -141,34 +137,35 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.tests.authored_editions import (
     authored_revisions_where,
     manual_editions_printing,
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
-    revision_id_for_observation,
 )
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from .observation_seeding_support import save_preceding_m200_turnover, save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -236,6 +233,10 @@ _CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES: CasillaId = validated_casilla_id(
     "DP200014B:00588",
     surface="_CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES",
 )
+# The "sin tributacion minima" table consigns the whole 80.000 of I+D+i deduction generated;
+# the oracle's declared inputs are the final table's, which consigns the 50.000 applied up to
+# the cuota liquida minima (module docstring).
+_DEDUCCION_INCENTIVAR_SIN_MINIMA = Decimal("80000.00")
 _CASILLA_CUOTA_LIQUIDA_MINIMA: CasillaId = validated_casilla_id(
     "DP200014B:00619",
     surface="_CASILLA_CUOTA_LIQUIDA_MINIMA",
@@ -301,6 +302,28 @@ _EJEMPLO1_EDITIONS = tuple(
 assert _EJEMPLO1_ORACLE.filing_year in _EJEMPLO1_EDITIONS
 
 
+def _in_exercise(casilla_id: CasillaId, filing_year: int) -> CasillaId:
+    """The oracle edition's casilla on the record the exercise's own design prints it on.
+
+    The oracle names its boxes by the record ids of the edition it cites; an earlier
+    design prints the same box on another record, so the counterpart is the one casilla
+    of the exercise's revision carrying the same ``continuidad_id``.
+    """
+    authority = published_authority_operation()
+
+    def casillas(year: int) -> Sequence[CasillaDefinition]:
+        return authority.snapshot(
+            _M200, filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+        ).revision.casillas
+
+    (chain,) = (
+        casilla.continuidad_id for casilla in casillas(_EJEMPLO1_ORACLE.filing_year) if casilla.id == casilla_id
+    )
+    assert chain is not None, f"{casilla_id} carries no continuidad_id"
+    (counterpart,) = (casilla.id for casilla in casillas(filing_year) if casilla.continuidad_id == chain)
+    return counterpart
+
+
 def _profile_instant(filing_year: int) -> datetime:
     """The sociedad and its zero instalments are recorded in the January after the exercise."""
     return datetime(filing_year + 1, 1, 15, 9, 0, tzinfo=UTC)
@@ -327,29 +350,21 @@ def _seed_sociedad_profile(filing_year: int) -> None:
     general bracket (INCN > 10.000.000). ``tributacion_estado_porcentaje`` is
     100 (comun regimen, no forales mentioned in the scenario).
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="A12345674"),
-            UserProfileFact(path="identity.legal_name", value="Sociedad A Ejemplo1 SL"),
-            UserProfileFact(path="activities.description", value="fabricacion industrial"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("25000000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="A00015008"),
+                UserProfileFact(path="identity.legal_name", value="Sociedad A Ejemplo1 SL"),
+                UserProfileFact(path="activities.description", value="fabricacion industrial"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("25000000")),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_profile_instant(filing_year),
         updated_at=_profile_instant(filing_year),
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -360,41 +375,24 @@ def _seed_zero_m202_pagos(filing_year: int) -> None:
     """
     obs_repo = CalculationObservationRepository()
     for period in _M202_PAGO_PERIODS:
-        obs_repo.save(
-            obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+        save_stamped_observation(
+            obs_repo,
+            RegistryModeloObservation(
+                modelo=_M202,
+                filing_year=filing_year,
+                period=period,
+                observations=registry_grounded_observations(
                     modelo=_M202,
                     filing_year=filing_year,
                     period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=filing_year,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: Decimal("0"),
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: Decimal("0"),
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
                 ),
-                source_kind=APP_FILING_SOURCE_KIND,
-                captured_at=_profile_instant(filing_year),
-                stamped_revision_id=revision_id_for_observation(
-                    RegistryModeloObservation(
-                        modelo=_M202,
-                        filing_year=filing_year,
-                        period=period,
-                        observations=registry_grounded_observations(
-                            modelo=_M202,
-                            filing_year=filing_year,
-                            period=period,
-                            casilla_values={
-                                _M202_PAGO_OUTPUT: Decimal("0"),
-                                _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                            },
-                        ),
-                    )
-                ),
-            )
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_profile_instant(filing_year),
         )
 
 
@@ -404,10 +402,25 @@ def _calculate_m200(
     filing_year: int,
     cuota_liquida_minima: Decimal,
     operation: PinnedAuthorityOperation,
+    deduccion_incentivar: Decimal | None = None,
 ) -> BucketAggregationCalculationResult:
-    """Run the live M200 0A calculate for the exercise with Ejemplo 1's manual casilla inputs."""
+    """Run the live M200 0A calculate for the exercise with Ejemplo 1's manual casilla inputs.
+
+    ``deduccion_incentivar`` replaces the declared casilla 00588 for the table that consigns
+    another amount; ``None`` keeps the oracle's declared figure.
+    """
+    declared = _oracle_declared_figures(_EJEMPLO1_ORACLE)
+    if deduccion_incentivar is not None:
+        assert _CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES in declared
+        declared[_CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES] = deduccion_incentivar
     _seed_sociedad_profile(filing_year)
     _seed_zero_m202_pagos(filing_year)
+    save_preceding_m200_turnover(
+        CalculationObservationRepository(),
+        filing_year=filing_year,
+        turnover=Decimal("25000000"),
+        captured_at=_profile_instant(filing_year),
+    )
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=secure_objects)
@@ -440,11 +453,11 @@ def _calculate_m200(
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs={
-                **_oracle_declared_figures(_EJEMPLO1_ORACLE),
+                **{_in_exercise(casilla_id, filing_year): value for casilla_id, value in declared.items()},
                 # Not declared: the cuota líquida mínima is what this scenario ASSERTS
                 # (casillas 00592 and 00611), so supplying it as a declared input would
                 # have the oracle check the figure it was handed.
-                _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
+                _in_exercise(_CASILLA_CUOTA_LIQUIDA_MINIMA, filing_year): cuota_liquida_minima,
             },
             ports=_calculation_ports_375,
             clock=_clock(filing_year, 10),
@@ -464,22 +477,25 @@ def test_m200_ejemplo1_con_tributacion_minima_manual_worked_example(
     liquida minima [00619] 300.000", "Cuota liquida [00592] 300.000". The
     manual's own art. 30 bis.1 computation ("BI despues de la reserva de
     nivelacion [01330] 2.000.000 / Tipo de gravamen 15% / Cuota liquida
-    minima [00619] 300.000") is fed here as the manual casilla 00619 input,
-    exactly as the manual states it - this test does not re-derive the 15%
-    art. 30 bis.1 floor itself (that sub-computation is not modelled as a
-    registry formula; casilla 00619 is `input_kind = manual`), only the
-    downstream max(00619, ...) cuota-liquida/cuota-diferencial chain that
-    IS a registry formula under test.
+    minima [00619] 300.000") is fed here as the manual casilla 00619 input and
+    the deduction applied up to it ("[00588] -50.000 -30.0000") as casilla
+    00588, exactly as the manual prints them - this test does not re-derive
+    the art. 30 bis limit itself (casillas 00588 and 00619 are manual inputs),
+    only the downstream cuota-liquida/cuota-diferencial chain that IS a
+    registry formula under test.
     """
     result = _calculate_m200(
         secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("300000.00"), operation=operation
     )
     values = result.revision.casilla_values
 
-    assert values[_CASILLA_CUOTA_INTEGRA] == _CUOTA_INTEGRA_EXPECTED
-    assert values[_CASILLA_CUOTA_INTEGRA_AJUSTADA_POSITIVA] == _CUOTA_INTEGRA_AJUSTADA_POSITIVA_EXPECTED
-    assert values[_CASILLA_CUOTA_LIQUIDA] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
-    assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_INTEGRA, filing_year)] == _CUOTA_INTEGRA_EXPECTED
+    assert (
+        values[_in_exercise(_CASILLA_CUOTA_INTEGRA_AJUSTADA_POSITIVA, filing_year)]
+        == _CUOTA_INTEGRA_AJUSTADA_POSITIVA_EXPECTED
+    )
+    assert values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)] == _CUOTA_LIQUIDA_CON_MINIMA_EXPECTED
 
 
 @pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
@@ -491,49 +507,22 @@ def test_m200_ejemplo1_sin_tributacion_minima_manual_worked_example(
     Oracle: the SAME manual Ejemplo 1's OTHER printed table,
     "Liquidacion del IS (sin tributacion minima)": "Cuota liquida minima
     [00619] 0", "Cuota liquida [00592] 270.000", "Resultado de la liquidacion
-    [01586] 270.000". Every other raw input (00501/00573/00588) is identical
-    to the con-minima scenario; only casilla 00619 changes (300.000 -> 0).
+    [01586] 270.000", with "Deduccion incentivar determinadas actividades
+    [00588] - 80.000". The other raw inputs (00501/00573) are identical to the
+    con-minima scenario; casilla 00588 carries the 80.000 this table consigns
+    and casilla 00619 is 0.
     """
     result = _calculate_m200(
-        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("0"), operation=operation
+        secure_objects,
+        filing_year=filing_year,
+        cuota_liquida_minima=Decimal("0"),
+        operation=operation,
+        deduccion_incentivar=_DEDUCCION_INCENTIVAR_SIN_MINIMA,
     )
     values = result.revision.casilla_values
 
-    assert values[_CASILLA_CUOTA_LIQUIDA] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
-    assert values[_CASILLA_CUOTA_DIFERENCIAL] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
-
-
-@pytest.mark.parametrize("filing_year", _EJEMPLO1_EDITIONS)
-def test_casilla_00619_anti_tautology_floor_changes_cuota_liquida(
-    secure_objects: SecureObjectRepository, filing_year: int, *, operation: PinnedAuthorityOperation
-) -> None:
-    """Anti-tautology: raising casilla 00619 from 0 to 300.000 must raise 00592/00611
-    by exactly the manual's own delta (30.000 = 300.000 - 270.000).
-
-    Proves the registry's ``modelo-200-cuota-liquida`` formula genuinely
-    consumes casilla 00619 as a floor (``max(00619, ...)``) rather than
-    ignoring it or returning a constant - both endpoints are independently
-    AEAT-printed figures from the SAME worked example (never hand-computed
-    from the formula under test).
-    """
-    sin_minima = _calculate_m200(
-        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("0"), operation=operation
-    )
-    con_minima = _calculate_m200(
-        secure_objects, filing_year=filing_year, cuota_liquida_minima=Decimal("300000.00"), operation=operation
-    )
-
-    delta = Decimal("300000.00") - Decimal("270000.00")
-    assert (
-        con_minima.revision.casilla_values[_CASILLA_CUOTA_LIQUIDA]
-        - sin_minima.revision.casilla_values[_CASILLA_CUOTA_LIQUIDA]
-        == delta
-    )
-    assert (
-        con_minima.revision.casilla_values[_CASILLA_CUOTA_DIFERENCIAL]
-        - sin_minima.revision.casilla_values[_CASILLA_CUOTA_DIFERENCIAL]
-        == delta
-    )
+    assert values[_in_exercise(_CASILLA_CUOTA_LIQUIDA, filing_year)] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
+    assert values[_in_exercise(_CASILLA_CUOTA_DIFERENCIAL, filing_year)] == _CUOTA_LIQUIDA_SIN_MINIMA_EXPECTED
 
 
 def test_m200_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction() -> None:

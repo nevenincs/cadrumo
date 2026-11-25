@@ -295,17 +295,6 @@ source_refs = ["lirpf-cuota-chain-authority"]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["comunidad autónoma", "deducciones"]
 [[revisions."2020".formulas]]
-id = "renta-capital-inmobiliario-intereses-gastos-passthrough"
-target_casilla_id = "1224"
-expression = { op = "copy", args = [{ casilla_id = "0108" }] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions."2020".formulas.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["rendimiento neto", "capital inmobiliario"]
-[[revisions."2020".formulas]]
 id = "renta-importe-derecho-reduccion-pension-suma"
 target_casilla_id = "0467"
 expression = { op = "sum", args = [
@@ -441,13 +430,17 @@ expression = { op = "if_then_else", args = [
     ] },
     { literal = "0" },
 ] }
-rounding = "money-2"
+rounding = "decimal-2-truncated"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63-2015"]
-source_refs = ["lirpf-cuota-chain-authority"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2020-manual-parte1"]
 
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["tipo medio de gravamen general estatal se expresará con dos decimales", "sin redondeo"]
 [[revisions."2020".formulas]]
 id = "renta-tipo-medio-gravamen-autonomico-base-liquidable-general"
 target_casilla_id = "0535"
@@ -459,13 +452,17 @@ expression = { op = "if_then_else", args = [
     ] },
     { literal = "0" },
 ] }
-rounding = "money-2"
+rounding = "decimal-2-truncated"
 legal_refs = ["ley-35-2006:art-74"]
-source_refs = ["lirpf-cuota-chain-authority"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2020-manual-parte1"]
 
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["tipo medio de gravamen general autonómico se", "expresará con dos decimales sin redondeo"]
 [[revisions."2020".formulas]]
 id = "renta-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
 target_casilla_id = "0542"
@@ -736,69 +733,11 @@ source_refs = ["lirpf-cuota-chain-authority"]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["capital mobiliario", "rendimiento"]
 [[revisions."2020".formulas]]
-id = "renta-capital-inmobiliario-rendimiento-neto"
-target_casilla_id = "0149"
-expression = { op = "sum", args = [
-        { casilla_id = "0102" },
-        { op = "negate", args = [{ casilla_id = "0104" }] },
-        { op = "negate", args = [{ casilla_id = "0107" }] },
-        { op = "negate", args = [{ casilla_id = "0109" }] },
-        { op = "negate", args = [{ casilla_id = "0110" }] },
-        { op = "negate", args = [{ casilla_id = "0111" }] },
-        { op = "negate", args = [{ casilla_id = "0112" }] },
-        { op = "negate", args = [{ casilla_id = "0113" }] },
-        { op = "negate", args = [{ casilla_id = "0114" }] },
-        { op = "negate", args = [{ casilla_id = "0115" }] },
-        { op = "negate", args = [{ casilla_id = "0116" }] },
-        { op = "negate", args = [{ casilla_id = "0117" }] },
-        { op = "negate", args = [{ casilla_id = "0131" }] },
-        { op = "negate", args = [{ casilla_id = "0132" }] },
-        { op = "negate", args = [{ casilla_id = "0146" }] },
-        { op = "negate", args = [{ casilla_id = "0147" }] },
-        { op = "negate", args = [{ casilla_id = "0148" }] },
-    ] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions."2020".formulas.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "rendimiento"]
-[[revisions."2020".formulas]]
-id = "renta-capital-inmobiliario-rendimiento-neto-reducido"
-target_casilla_id = "0154"
-expression = { op = "max", args = [
-        { op = "sum", args = [
-            { casilla_id = "0149" },
-            { op = "negate", args = [{ casilla_id = "0150" }] },
-            { op = "negate", args = [{ casilla_id = "0151" }] },
-        ] },
-        { casilla_id = "0152" },
-    ] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions."2020".formulas.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "rendimiento"]
-[[revisions."2020".formulas]]
 id = "renta-inmobiliario-suma-rentas-imputadas"
 target_casilla_id = "0155"
 expression = { op = "copy", args = [{ casilla_id = "0089" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-22"]
-source_refs = ["lirpf-cuota-chain-authority"]
-
-[[revisions."2020".formulas.source_citations]]
-source_ref = "lirpf-cuota-chain-authority"
-required_text = ["capital inmobiliario", "rendimiento"]
-[[revisions."2020".formulas]]
-id = "renta-capital-inmobiliario-suma-rendimientos-reducidos"
-target_casilla_id = "0156"
-expression = { op = "copy", args = [{ casilla_id = "0154" }] }
-rounding = "money-2"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]
@@ -905,17 +844,31 @@ id = "renta-estimacion-directa-rendimiento-neto"
 target_casilla_id = "0224"
 expression = { op = "if_then_else", args = [
     { op = "equal", args = [
-        { binding = "renta-modelo-100-estimacion-directa-es-normal" },
+        { binding = "renta-profile-has-economic-activity" },
         { literal = "1" },
     ] },
-    { op = "subtract", args = [
-        { casilla_id = "0180" },
-        { casilla_id = "0220" },
+    { op = "if_then_else", args = [
+        { op = "equal", args = [
+            { binding = "renta-profile-estimacion-directa" },
+            { literal = "1" },
+        ] },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [
+                { binding = "renta-modelo-100-estimacion-directa-es-normal" },
+                { literal = "1" },
+            ] },
+            { op = "subtract", args = [
+                { casilla_id = "0180" },
+                { casilla_id = "0220" },
+            ] },
+            { op = "subtract", args = [
+                { casilla_id = "0180" },
+                { casilla_id = "0223" },
+            ] },
+        ] },
+        { literal = "0" },
     ] },
-    { op = "subtract", args = [
-        { casilla_id = "0180" },
-        { casilla_id = "0223" },
-    ] },
+    { literal = "0" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "rd-439-2007:art-30"]
@@ -1959,10 +1912,37 @@ source_refs = ["lirpf-cuota-chain-authority"]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base imponible general", "ganancias"]
 [[revisions."2020".formulas]]
+id = "renta-capital-mobiliario-ahorro-saldo-positivo"
+target_casilla_id = "0429"
+expression = { op = "max", args = [
+    { casilla_id = "0041" },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+[[revisions."2020".formulas]]
+id = "renta-capital-mobiliario-ahorro-saldo-negativo"
+target_casilla_id = "0430"
+expression = { op = "max", args = [
+    { op = "negate", args = [{ casilla_id = "0041" }] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
+[[revisions."2020".formulas]]
 id = "renta-base-imponible-del-ahorro"
 target_casilla_id = "0460"
 expression = { op = "sum", args = [
-    { casilla_id = "0041" },
     { casilla_id = "0424" },
     { casilla_id = "0429" },
     { op = "negate", args = [{ casilla_id = "0436" }] },
@@ -2150,6 +2130,8 @@ expression = { op = "if_then_else", args = [
                         { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                         { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                         { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                        { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                        { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
                     ] },
                 ] },
                 { op = "lookup_bracket_by_ccaa", args = [
@@ -2171,6 +2153,8 @@ expression = { op = "if_then_else", args = [
                         { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                         { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                         { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                        { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                        { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
                     ] },
                 ] },
             ] },
@@ -2193,6 +2177,8 @@ expression = { op = "if_then_else", args = [
                     { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                     { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                     { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                    { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                    { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
                 ] },
             ] },
         ] },
@@ -2215,6 +2201,8 @@ expression = { op = "if_then_else", args = [
                 { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                 { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                 { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
             ] },
         ] },
     ] },
@@ -2237,6 +2225,8 @@ expression = { op = "if_then_else", args = [
             { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
             { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
             { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+            { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+            { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
         ] },
     ] },
 ] }
@@ -2284,6 +2274,8 @@ expression = { op = "if_then_else", args = [
                     { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                     { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                     { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                    { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                    { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
                 ] },
             ] },
             { op = "lookup_bracket_by_ccaa", args = [
@@ -2305,6 +2297,8 @@ expression = { op = "if_then_else", args = [
                     { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                     { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                     { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                    { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                    { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
                 ] },
             ] },
         ] },
@@ -2327,6 +2321,8 @@ expression = { op = "if_then_else", args = [
                 { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
                 { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
                 { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+                { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+                { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
             ] },
         ] },
     ] },
@@ -2349,6 +2345,8 @@ expression = { op = "if_then_else", args = [
             { key = "la_rioja", parameter = "renta-escala-autonomica-la-rioja-base-general" },
             { key = "madrid", parameter = "renta-escala-autonomica-madrid-base-general" },
             { key = "murcia", parameter = "renta-escala-autonomica-murcia-base-general" },
+            { key = "ceuta", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
+            { key = "melilla", parameter = "renta-escala-autonomica-ceuta-melilla-base-general" },
         ] },
     ] },
 ] }
@@ -2447,18 +2445,21 @@ required_text = ["cuota líquida estatal", "deducciones"]
 [[revisions."2020".formulas]]
 id = "renta-cuota-liquida-autonomica"
 target_casilla_id = "0571"
-expression = { op = "sum", args = [
-    { casilla_id = "0546" },
-    { op = "negate", args = [{ casilla_id = "0548" }] },
-    { op = "negate", args = [{ casilla_id = "0551" }] },
-    { op = "negate", args = [{ casilla_id = "0553" }] },
-    { op = "negate", args = [{ casilla_id = "0555" }] },
-    { op = "negate", args = [{ casilla_id = "0557" }] },
-    { op = "negate", args = [{ casilla_id = "0559" }] },
-    { op = "negate", args = [{ casilla_id = "0561" }] },
-    { op = "negate", args = [{ casilla_id = "0563" }] },
-    { op = "negate", args = [{ casilla_id = "0564" }] },
-    { op = "negate", args = [{ casilla_id = "0566" }] },
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "sum", args = [
+        { casilla_id = "0546" },
+        { op = "negate", args = [{ casilla_id = "0548" }] },
+        { op = "negate", args = [{ casilla_id = "0551" }] },
+        { op = "negate", args = [{ casilla_id = "0553" }] },
+        { op = "negate", args = [{ casilla_id = "0555" }] },
+        { op = "negate", args = [{ casilla_id = "0557" }] },
+        { op = "negate", args = [{ casilla_id = "0559" }] },
+        { op = "negate", args = [{ casilla_id = "0561" }] },
+        { op = "negate", args = [{ casilla_id = "0563" }] },
+        { op = "negate", args = [{ casilla_id = "0564" }] },
+        { op = "negate", args = [{ casilla_id = "0566" }] },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
@@ -2466,7 +2467,7 @@ source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
-required_text = ["Cuota líquida autonómica", "deducciones"]
+required_text = ["Cuota líquida autonómica", "deducciones", "El resultado de las operaciones a que se refiere el apartado anterior no podrá ser negativo"]
 [[revisions."2020".formulas]]
 id = "renta-cuota-liquida-estatal-incrementada"
 target_casilla_id = "0585"
@@ -2672,3 +2673,36 @@ source_refs = ["aeat-dr-100-2020-dictionary", "aeat-renta-2020-manual-parte1"]
 [[revisions."2020".formulas.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Mínimo por descendientes"]
+
+[[revisions."2020".formulas]]
+id = "renta-minimo-ascendientes-estatal"
+target_casilla_id = "0515"
+# Art. 59 LIRPF mínimo por ascendientes, parte estatal. The per-ascendant cuantía and
+# its sharing are computed by the profile-binding aggregate; this formula projects that
+# aggregate onto the casilla.
+expression = { op = "copy", args = [
+    { binding = "renta-profile-minimo-ascendientes-estatal" }
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El mínimo por ascendientes será de 1.150 euros anuales"]
+[[revisions."2020".formulas]]
+id = "renta-minimo-ascendientes-autonomico"
+target_casilla_id = "0516"
+# Art. 56.3 and 59 LIRPF mínimo por ascendientes, parte autonómica. The profile-binding
+# aggregate applies the comunidad's own art. 59 cuantías, or the state ones where it
+# approved none; this formula projects that aggregate onto the casilla.
+expression = { op = "copy", args = [
+    { binding = "renta-profile-minimo-ascendientes-autonomico" }
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incrementados o disminuidos a efectos de cálculo del gravamen autonómico"]

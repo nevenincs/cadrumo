@@ -6,9 +6,9 @@ from uuid import UUID
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.packaging.native.identity import DistributionIdentity, cmake_projection, identity
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

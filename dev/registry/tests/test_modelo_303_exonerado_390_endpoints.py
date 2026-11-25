@@ -11,11 +11,12 @@ from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, split_exercise_revisions
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
-from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
+from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
 from .profile_schema_support import committed_registry_validator
 
@@ -50,28 +51,42 @@ _ENDPOINTS = frozenset(
 )
 _TERRITORY_RATIOS = frozenset({"89", "90", "91", "92", "107"})
 _LEGAL_REFS = frozenset({"rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"})
-_DESIGNS = (
-    ("2023", "aeat-dr-303-2023", 2023, "2023", "4T"),
-    ("2024-hasta-08-y-2t", "aeat-dr-303-2024-early", 2024, "2024-early", "2T"),
-    ("2024-desde-09-y-3t", "aeat-dr-303-2024-late", 2024, "2024-late", "4T"),
-    ("2025", "aeat-dr-303-2025", 2025, "2025", "4T"),
-    ("2026-y-siguientes", "aeat-dr-303-2026", 2026, "2026", "4T"),
+# Every authored revision that carries the exonerado endpoints: all but the support-floor revision and
+# the early revision of the exercise whose first months split off, which shares its design's endpoints.
+_SPLIT_EARLY_REVISION, _ = split_exercise_revisions("303", early_period="1T", late_period="2T")
+_DESIGN_REVISIONS = tuple(
+    revision for revision in authored_revisions("303")[1:] if revision.id != _SPLIT_EARLY_REVISION.id
+)
+# The official design each of those revisions is filed on, in revision order.
+_DESIGN_SOURCES = (
+    "aeat-dr-303-2023",
+    "aeat-dr-303-2024-early",
+    "aeat-dr-303-2024-late",
+    "aeat-dr-303-2025",
+    "aeat-dr-303-2026",
+)
+_DESIGNS = tuple(
+    (
+        str(revision.id),
+        source_ref,
+        revision.valid_from.year,
+        source_ref.removeprefix("aeat-dr-303-"),
+        [
+            period
+            for period in revision.period_selector.periods_for_year(revision.valid_from.year)
+            if period.endswith("T")
+        ][-1],
+    )
+    for revision, source_ref in zip(_DESIGN_REVISIONS, _DESIGN_SOURCES, strict=True)
 )
 _CASILLA_TAG = re.compile(r"\[(\d{1,3})\]")
 
 
-@pytest.mark.parametrize(("revision_id", "source_ref", "filing_year", "design_epoch", "period"), _DESIGNS)
-def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set(
-    revision_id: str,
-    source_ref: str,
-    filing_year: int,
-    design_epoch: str,
-    period: str,
-) -> None:
-    source_root = bundled_path()
+def _assert_official_design_endpoints(source_ref: str, filing_year: int, design_epoch: str) -> None:
+    """Read the official DP30301 and DP30304 sheets and pin the exonerado endpoint set they print."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
     resolved = resolve_record_design_binary(
-        source_root,
+        bundled_path(),
         catalogues.sources,
         source_ref=source_ref,
         filing_year=filing_year,
@@ -118,7 +133,10 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
     assert all(official_fields[number].length == 5 for number in _TERRITORY_RATIOS)
     assert all(official_fields[number].length == 17 for number in _ENDPOINTS - _TERRITORY_RATIOS)
 
-    modelo, registry_catalogues = _committed_modelo("303")
+
+def _assert_registry_endpoints(revision_id: str, source_ref: str, filing_year: int, period: str) -> None:
+    """Pin the registry's own endpoint declarations for one revision."""
+    modelo, registry_catalogues = committed_modelo("303")
     snapshot = build_snapshot(
         modelo,
         registry_catalogues,
@@ -146,8 +164,8 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
         "88": "modelo-303-volumen-operaciones-anual"
     }
     # Each endpoint exports to exactly one field on DP30304 -- the same sheet
-    # this test reads above to build `official_fields`, and whose numbered field
-    # set it asserts equals `_ENDPOINTS`. This previously asserted the endpoints
+    # the official-design check reads to build its numbered field set, which it
+    # asserts equals `_ENDPOINTS`. This previously asserted the endpoints
     # carry NO export refs, which contradicted that evidence: a box AEAT prints
     # on the record design belongs in the fichero. The export wiring has since
     # landed for all six revisions, so the assertion is inverted to the property
@@ -162,8 +180,20 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
     assert all((casilla.data_type == "ratio") == (str(casilla.id) in _TERRITORY_RATIOS) for casilla in endpoints)
 
 
+@pytest.mark.parametrize(("revision_id", "source_ref", "filing_year", "design_epoch", "period"), _DESIGNS)
+def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set(
+    revision_id: str,
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+    period: str,
+) -> None:
+    _assert_official_design_endpoints(source_ref, filing_year, design_epoch)
+    _assert_registry_endpoints(revision_id, source_ref, filing_year, period)
+
+
 def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_producers() -> None:
-    modelo, catalogues = _committed_modelo("303")
+    modelo, catalogues = committed_modelo("303")
     committed_registry_validator(catalogues).validate_modelo(modelo)
 
     for _revision_id, _source_ref, filing_year, _design_epoch, period in _DESIGNS:

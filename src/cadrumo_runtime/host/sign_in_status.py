@@ -7,13 +7,16 @@ from pathlib import Path
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import inspect_profile_session
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_matches
+from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import (
+    PersistedProfileSession,
+    profile_session_login_matches,
+)
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
-from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import StorageError
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext, ProfileAccessBinding
 from cadrumo.application.workflow.errors import ProfileLabelAmbiguousError
 from cadrumo.application.workflow.profile_bucket_models import ProfileBucketPointer
 from cadrumo.application.workflow.profile_bucket_scan import resolve_profile_bucket
@@ -52,15 +55,7 @@ def observe_sign_in(
         observed = generation.observe()
         if observed.current is None:
             return SignInStatus(presence=SignInPresence.UNKNOWN)
-        if (
-            receipt.profile_id != profile_id
-            or receipt.custody_generation != binding.custody_generation
-            or receipt.dek_epoch != b64_encode(binding.dek_epoch.bytes)
-            or receipt.sign_in != observed.current
-            or not profile_session_login_matches(record=receipt, login_id=login.login_id)
-            or instant >= min(receipt.idle_deadline, receipt.absolute_deadline)
-            or login.lock_state is OsLockState.LOCKED
-        ):
+        if receipt_is_absent(receipt, binding, observed.current, profile_id, login, instant):
             return SignInStatus(presence=SignInPresence.ABSENT)
         if not login.active or login.lock_state is OsLockState.UNKNOWN or instant < receipt.issued_at:
             return SignInStatus(presence=SignInPresence.UNKNOWN)
@@ -76,6 +71,26 @@ def observe_sign_in(
         )
     except (OSError, ValueError, StorageError, ProfileCustodyRecordError, AutomationCustodyError, RefusalError):
         return SignInStatus(presence=SignInPresence.UNKNOWN)
+
+
+def receipt_is_absent(
+    receipt: PersistedProfileSession,
+    binding: ProfileAccessBinding,
+    generation: SignInGeneration,
+    profile_id: UUID,
+    login: OsLoginContext,
+    instant: datetime,
+) -> bool:
+    """Detect positively invalid receipt, binding or locked-login evidence."""
+    return (
+        receipt.profile_id != profile_id
+        or receipt.custody_generation != binding.custody_generation
+        or receipt.dek_epoch != b64_encode(binding.dek_epoch.bytes)
+        or receipt.sign_in != generation
+        or not profile_session_login_matches(record=receipt, login_id=login.login_id)
+        or instant >= min(receipt.idle_deadline, receipt.absolute_deadline)
+        or login.lock_state is OsLockState.LOCKED
+    )
 
 
 def observe_active_profile(

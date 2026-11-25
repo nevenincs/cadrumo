@@ -18,13 +18,15 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
-from cadrumo.application.modelo.operation_definitions import resolve_active_workflow_profile
+from cadrumo.application.modelo.operation_shared import resolve_active_workflow_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.tests.filing_reach_authority import filing_reach_operation
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -37,7 +39,7 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -52,7 +54,7 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLOCK = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
-_TAX_ID = "B12345674"
+_TAX_ID = "B00015016"
 _SOURCE_PERIOD = "0A"
 _SOURCE_YEAR = 2024
 _TARGET_PERIOD = "0A"
@@ -68,28 +70,18 @@ _PROFILE_BUCKET_ID = "20000000-0000-4000-8000-000000000299"
 
 def _seed_legal_entity_profile(bucket_id: str, operation: PinnedAuthorityOperation) -> None:
     """Seed the existing synthetic corporate-profile shape under this operation's schema pin."""
-    facts = (
-        UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-        UserProfileFact(path="identity.name", value="Test"),
-        UserProfileFact(path="identity.surnames", value="Operator"),
-        UserProfileFact(path="identity.legal_name", value="Test Company SL"),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="activities.description", value="economic activity"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.oss_enrolled", value=False),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="provenance.source", value="manual_cli"),
-        UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-        UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-        UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
-        UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+    facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
+            UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
+        ),
+        persona_id="sociedad-limitada",
     )
     seed_test_profile_record(
         create_user_profile_record(
@@ -248,11 +240,26 @@ def _import_clean_source_cohort(
 def test_m200_zero_prior_stock_still_checks_positive_applied_amount(
     tmp_path: Path,
     request: pytest.FixtureRequest,
+    applied_bin: Decimal,
+    expects_cap_finding: bool,
+) -> None:
+    """A clean prior filing with zero stock must not disable the target cap check.
+
+    The cap is a verification predicate, which runs only on a filing-grade
+    snapshot, so the target's edition is lifted to filing reach in the leased
+    operation alone; the registry's declared grade is unchanged.
+    """
+    with filing_reach_operation(modelo_id="200", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD) as operation:
+        _verify_zero_stock_target(tmp_path, request, operation, applied_bin, expects_cap_finding)
+
+
+def _verify_zero_stock_target(
+    tmp_path: Path,
+    request: pytest.FixtureRequest,
     authority_operation: PinnedAuthorityOperation,
     applied_bin: Decimal,
     expects_cap_finding: bool,
 ) -> None:
-    """A clean prior filing with zero stock must not disable the target cap check."""
     request.node.user_properties.extend(
         (
             ("authority_root", str(Path(os.environ["CADRUMO_AUTHORITY_ROOT"]).resolve())),

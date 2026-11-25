@@ -15,21 +15,25 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_serving_period
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 from ...calculations.tests.filing_evidence import general_m303_filing_evidence
-from .._registry_helpers import assert_revision_content_integrity
 from ..action_errors import StoredCalculationDriftError
+from ..registry_helpers import assert_revision_content_integrity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+_YEAR = filing_year_envelope().horizon
+
+
 def _m303_revision(*, operation: PinnedAuthorityOperation) -> CalculationRevision:
     evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"),
+        Period.from_year_and_code(_YEAR, "1T"),
         reference="test:revision-integrity:m303",
         operation=operation,
     )
@@ -45,14 +49,14 @@ def _m303_revision(*, operation: PinnedAuthorityOperation) -> CalculationRevisio
         filing_instance_evidence=evidence,
         source_provenance=(),
     )
-    instant = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+    instant = datetime(_YEAR, 4, 20, 10, 0, tzinfo=UTC)
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
-            revision_id="2026-y-siguientes",
-            modelo_year=2026,
+            revision_id=str(revision_serving_period("303", _YEAR, "1T").id),
+            modelo_year=_YEAR,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,
@@ -114,8 +118,8 @@ def _identity_caller_modules() -> tuple[Path, ...]:
     return modules
 
 
-def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
-    """Omission syntax is forbidden across production and test identity callers."""
+def _identity_calls_omitting(keyword_name: str) -> list[str]:
+    """Locate every revision-identity call, outside its defining module, that does not pass ``keyword_name``."""
     omissions: list[str] = []
     for path in _identity_caller_modules():
         if path.name == "calculation_revision.py":
@@ -127,10 +131,14 @@ def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
             name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
             if name != "derive_calculation_revision_id":
                 continue
-            if not any(keyword.arg == "filing_instance_evidence" for keyword in node.keywords):
+            if not any(keyword.arg == keyword_name for keyword in node.keywords):
                 omissions.append(f"{path.relative_to(_SOURCE_ROOT)}:{node.lineno}")
+    return omissions
 
-    assert omissions == []
+
+def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
+    """Omission syntax is forbidden across production and test identity callers."""
+    assert _identity_calls_omitting("filing_instance_evidence") == []
 
 
 def test_revision_id_filing_evidence_has_no_default_and_cannot_be_omitted() -> None:
@@ -149,21 +157,7 @@ def test_revision_id_filing_evidence_has_no_default_and_cannot_be_omitted() -> N
 
 def test_all_revision_id_calls_explicitly_select_source_provenance() -> None:
     """Every identity caller records either the canonical trace or explicit emptiness."""
-    omissions: list[str] = []
-    for path in _identity_caller_modules():
-        if path.name == "calculation_revision.py":
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
-            if name != "derive_calculation_revision_id":
-                continue
-            if not any(keyword.arg == "source_provenance" for keyword in node.keywords):
-                omissions.append(f"{path.relative_to(_SOURCE_ROOT)}:{node.lineno}")
-
-    assert omissions == []
+    assert _identity_calls_omitting("source_provenance") == []
 
 
 def test_revision_id_source_provenance_has_no_default_and_cannot_be_omitted() -> None:

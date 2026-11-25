@@ -1,8 +1,10 @@
-//! Links that leave the application open in the system's own handlers.
+//! Links that leave the application open in the system's own handlers, and
+//! files the host wrote shown in the system's file manager.
 //!
 //! The shell relays links from the documentation frame, so the host decides
 //! again what may leave: only `https:` and `mailto:` URLs, written plainly.
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
+use std::path::Path;
 use tauri::Url;
 
 /// Longest URL accepted. Browsers serialize longer links, but a link the
@@ -73,6 +75,26 @@ fn mail_fields(query: &str) -> bool {
 pub fn open(url: &Url) -> Result<()> {
     opener::open(url.as_str())
         .map_err(|e| ApplicationError::new(ErrorCode::SpawnFailed, Operation::Webview).caused_by(e))
+}
+
+/// Shows a file selected in the system file manager. The caller resolves the
+/// path from a token it issued; a path from the window never reaches here.
+#[cfg(windows)]
+pub fn reveal(path: &Path) -> std::io::Result<()> {
+    use std::os::windows::process::CommandExt;
+    // Explorer reads its own command line: the path is quoted after the
+    // switch, never as one argument with it. It can answer a failing status
+    // even when it showed the file, so only a failure to start it counts.
+    std::process::Command::new("explorer.exe")
+        .raw_arg(format!("/select,\"{}\"", path.display()))
+        .spawn()
+        .map(drop)
+}
+/// No portable call selects a file, so the folder holding it is opened.
+#[cfg(not(windows))]
+pub fn reveal(path: &Path) -> std::io::Result<()> {
+    let folder = path.parent().ok_or(std::io::ErrorKind::NotFound)?;
+    opener::open(folder).map_err(std::io::Error::other)
 }
 
 #[cfg(test)]

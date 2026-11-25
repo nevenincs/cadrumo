@@ -70,7 +70,7 @@ def _kdf() -> ProfileCustodyKdfParameters:
 
 def _publish(tmp_path: Path) -> Settings:
     """Publish one committed capsule the deletion protocol can operate on."""
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
     envelope = create_profile_custody_password_envelope(
         profile_id=_PROFILE_ID,
         password=_PASSPHRASE,
@@ -224,7 +224,7 @@ def test_a_second_deletion_marker_is_refused_on_the_same_capsule(tmp_path: Path)
 
 def test_marking_an_uncommitted_capsule_is_refused(tmp_path: Path) -> None:
     """There is nothing to bind a deletion to before publication."""
-    settings = Settings(cadrumo_local_storage_root=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
 
     with pytest.raises(ProfileCustodyRecordError, match="not committed"):
         write_profile_custody_deletion_marker(

@@ -10,10 +10,10 @@ Decimal, so a malformed amount REFUSES instead of silently reclassifying. An
 unknown binding id refuses with the accepted set.
 
 These tests exercise the real registry authority (no mocks): the Modelo 200
-``2024`` revision declares both an enum-channel binding
+newest revision declares both an enum-channel binding
 (``modelo-200-profile-legal-entity-form``, an ``args[1]`` enum-key argument
 of a dispatch op) and decimal-channel bindings (e.g.
-``modelo-200-pagos-fraccionados-anuales``), so the channel discriminator is
+``modelo-200-pago-fraccionado-primero-40-3``), so the channel discriminator is
 proven against genuine registry data rather than a synthetic shape.
 """
 
@@ -23,17 +23,23 @@ import pytest
 
 from ....core.errors.error_codes import build_error_envelope
 from ....core.errors.hierarchy import CadrumoError
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-from ....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
-from ..calculate_input import ModeloCalculateBindingInputError, _validated_binding_input_channel
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
+from ....domain.calculations.registry.tests.published_authority import (
+    published_revision,
+    published_snapshot,
+    published_supported_filing_years,
+)
+from ..calculate_input_validation import ModeloCalculateBindingInputError, validated_binding_input_channel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "200"
-_REVISION = "2024"
+_REVISION = str(revision_covering(_MODELO, newest_authored_edition(_MODELO)).id)
 _ENUM_BINDING: BindingId = "modelo-200-profile-legal-entity-form"
-_DECIMAL_BINDING: BindingId = "modelo-200-pagos-fraccionados-anuales"
+_DECIMAL_BINDING: BindingId = "modelo-200-pago-fraccionado-primero-40-3"
 
 # Modelo 100 declares a date-valued binding (taxpayer birth date) consumed by
 # the ``age_at_year_end`` op; it is profile-sourced, not a --binding channel.
@@ -61,7 +67,7 @@ def test_enum_consumed_binding_routes_to_enum_channel() -> None:
     revision, known, enum_ids = _channel_inputs()
     assert _ENUM_BINDING in known
     assert _ENUM_BINDING in enum_ids
-    key, channel = _validated_binding_input_channel(_ENUM_BINDING, revision, known, enum_ids)
+    key, channel = validated_binding_input_channel(_ENUM_BINDING, revision, known, enum_ids)
     assert key == _ENUM_BINDING
     assert channel == "enum"
 
@@ -71,7 +77,7 @@ def test_decimal_consumed_binding_routes_to_decimal_channel() -> None:
     revision, known, enum_ids = _channel_inputs()
     assert _DECIMAL_BINDING in known
     assert _DECIMAL_BINDING not in enum_ids
-    key, channel = _validated_binding_input_channel(_DECIMAL_BINDING, revision, known, enum_ids)
+    key, channel = validated_binding_input_channel(_DECIMAL_BINDING, revision, known, enum_ids)
     assert key == _DECIMAL_BINDING
     assert channel == "decimal"
 
@@ -80,7 +86,7 @@ def test_unknown_binding_id_refuses_with_accepted_set() -> None:
     """An unknown ``--binding`` id refuses with the revision's accepted ids."""
     revision, known, enum_ids = _channel_inputs()
     with pytest.raises(ModeloCalculateBindingInputError) as exc_info:
-        _validated_binding_input_channel("no-such-binding-id", revision, known, enum_ids)
+        validated_binding_input_channel("no-such-binding-id", revision, known, enum_ids)
 
     error = exc_info.value
     assert isinstance(error, CadrumoError)
@@ -103,9 +109,31 @@ def test_date_sourced_binding_is_detected_as_a_date_channel() -> None:
     date binding in the live registry, so a regression that stops detecting it
     fails here rather than passing vacuously.
     """
-    snapshot = published_snapshot("100", filing_year=2024, period="0A")
+    snapshot = published_snapshot("100", filing_year=newest_authored_edition("100"), period="0A")
     revision = snapshot.revision
     date_ids = revision_date_binding_ids(revision)
     assert _M100_DATE_BINDING in date_ids
     # A date binding is neither an enum nor a plain decimal override channel.
     assert _M100_DATE_BINDING not in enum_consumed_binding_ids(revision)
+
+
+def test_a_profile_derived_boolean_binding_refuses_a_caller_override_in_every_supported_year() -> None:
+    """Casilla 0168 follows the declared estimation regime, so ``--binding`` cannot state it."""
+    support = published_supported_filing_years()
+    assert support is not None
+    checked = 0
+    for year in sorted(support.years):
+        try:
+            revision = published_snapshot("100", filing_year=year, period="0A").revision
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        known = {binding.id for binding in revision.bindings}
+        with pytest.raises(ModeloCalculateBindingInputError) as exc_info:
+            validated_binding_input_channel(
+                "renta-modelo-100-estimacion-directa-es-normal", revision, known, enum_consumed_binding_ids(revision)
+            )
+
+        assert exc_info.value.translated_message == "application.modelo.errors.calculate_binding_is_profile_derived"
+        assert build_error_envelope(exc_info.value).code == "REFUSED_MODELO_CALCULATE_BINDING_INPUT"
+        checked += 1
+    assert checked

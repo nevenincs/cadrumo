@@ -1,0 +1,51 @@
+# Whether a payment of one income kind bears a retención, by the income tax its
+# recipient answers to. Each subject row names its provisions in the cite row of
+# the same key.
+#
+# An IRPF recipient's work income, activity income, urban rent and movable
+# capital income bear retención when a retenedor pays them: LIRPF art. 99 obliges
+# the payer and art. 101 sets the amount, RIRPF art. 75 lists the income subject
+# to it and art. 76 names who must withhold.
+#
+# An IS recipient's income bears retención only where RIS art. 60.1 lists it:
+# movable capital income (letter a), urban rent (letter e) and transmissions of
+# collective investment holdings (letter f), with the obligation arising at
+# exigibility or earlier payment (art. 65). An activity's professional fee is
+# not in that list, and an entity earns no rendimientos del trabajo, so a
+# retención stated on either is not one the payer owes or may declare.
+[fact]
+fact_id = "withholding-subject-income-by-recipient-regime"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "withholding-subject-income-by-recipient-regime:2015-07-12"
+date_axis = "filing_period"
+valid_from = 2015-07-12
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-75", "rd-439-2007:art-76", "rd-634-2015:art-60", "rd-634-2015:art-65"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "subject.irpf.work", value = "subject" },
+  { key = "cite.irpf.work", value = "ley-35-2006:art-99 ley-35-2006:art-101 rd-439-2007:art-75 rd-439-2007:art-76" },
+  { key = "subject.irpf.professional", value = "subject" },
+  { key = "cite.irpf.professional", value = "ley-35-2006:art-99 ley-35-2006:art-101 rd-439-2007:art-75 rd-439-2007:art-76" },
+  { key = "subject.irpf.urban_rent", value = "subject" },
+  { key = "cite.irpf.urban_rent", value = "ley-35-2006:art-99 ley-35-2006:art-101 rd-439-2007:art-75 rd-439-2007:art-76" },
+  { key = "subject.irpf.ordinary_movable_capital", value = "subject" },
+  { key = "cite.irpf.ordinary_movable_capital", value = "ley-35-2006:art-99 ley-35-2006:art-101 rd-439-2007:art-75 rd-439-2007:art-76" },
+  { key = "subject.irpf.investment_fund", value = "subject" },
+  { key = "cite.irpf.investment_fund", value = "ley-35-2006:art-99 ley-35-2006:art-101 rd-439-2007:art-75 rd-439-2007:art-76" },
+  { key = "subject.is.urban_rent", value = "subject" },
+  { key = "cite.is.urban_rent", value = "rd-634-2015:art-60 rd-634-2015:art-65" },
+  { key = "subject.is.ordinary_movable_capital", value = "subject" },
+  { key = "cite.is.ordinary_movable_capital", value = "rd-634-2015:art-60 rd-634-2015:art-65" },
+  { key = "subject.is.investment_fund", value = "subject" },
+  { key = "cite.is.investment_fund", value = "rd-634-2015:art-60 rd-634-2015:art-65" },
+  { key = "subject.is.professional", value = "not_subject" },
+  { key = "cite.is.professional", value = "rd-634-2015:art-60" },
+  { key = "subject.is.work", value = "not_subject" },
+  { key = "cite.is.work", value = "rd-634-2015:art-60" },
+]

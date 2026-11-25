@@ -35,6 +35,7 @@ from cadrumo.core.json_contract import ResolvedNoticeAction
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.filing.schema import (
     ModeloDraft,
     ModeloValue,
@@ -49,6 +50,8 @@ from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from ..perf_measurement import CPU_CONTENTION_MARGIN
 
+FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -56,7 +59,11 @@ pytestmark = [
 ]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id(
+    "gastos-deducibles-previos", surface="_M130_GASTOS_PREVIOS_CASILLA"
+)
+# The normal modality keeps box 02 equal to the supplied expenses, with no art. 30.2.ª provision.
+_M130_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
@@ -183,25 +190,27 @@ def test_overview_status_period_filter_matches_typed_draft_period(
 ) -> None:
     q1_draft = build_registry_filing_draft(
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         operation=operation,
         casilla_values=_valid_modelo_130_inputs(),
         binding_values=_valid_modelo_130_bindings(),
+        text_binding_values=_M130_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
     q2_draft = build_registry_filing_draft(
         modelo="130",
-        period=Period.from_year_and_code(2026, "2T"),
+        period=Period.from_year_and_code(FILING_YEAR, "2T"),
         operation=operation,
         casilla_values=_valid_modelo_130_inputs(),
         binding_values=_valid_modelo_130_bindings(),
+        text_binding_values=_M130_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
     repository = ModeloDraftRepository()
     repository.save(q1_draft)
     repository.save(q2_draft)
 
-    result = invoke_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
+    result = invoke_cli(["app", "overview", "status", "--period", "1T", "--year", str(FILING_YEAR)])
 
     assert result.exit_code == 0, result.output
     assert q1_draft.draft_id in result.output
@@ -215,14 +224,14 @@ def test_overview_status_period_filter_accepts_instalment_period(
 ) -> None:
     p1_draft = _minimal_stored_draft(
         modelo="202",
-        period=Period.from_year_and_code(2026, "1P"),
+        period=Period.from_year_and_code(FILING_YEAR, "1P"),
         casilla_id=_M202_CUOTA_CASILLA,
         amount=Decimal("1800.00"),
         operation=operation,
     )
     q1_draft = _minimal_stored_draft(
         modelo="303",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         casilla_id=_M202_CUOTA_CASILLA,
         amount=Decimal("168.00"),
         operation=operation,
@@ -231,10 +240,10 @@ def test_overview_status_period_filter_accepts_instalment_period(
     repository.save(p1_draft)
     repository.save(q1_draft)
 
-    result = invoke_cli(["app", "overview", "status", "--period", "1P", "--year", "2026"])
+    result = invoke_cli(["app", "overview", "status", "--period", "1P", "--year", str(FILING_YEAR)])
 
     assert result.exit_code == 0, result.output
-    assert "2026 1P" in result.output
+    assert f"{FILING_YEAR} 1P" in result.output
     assert p1_draft.draft_id in result.output
     assert q1_draft.draft_id not in result.output
 
@@ -246,7 +255,7 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json(
 ) -> None:
     """The real overview CLI renders one canonical typed-period display in both formats."""
 
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(FILING_YEAR, "1T")
     draft = _minimal_stored_draft(
         modelo="130",
         period=period,
@@ -256,15 +265,15 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json(
     )
     ModeloDraftRepository().save(draft)
 
-    text_result = invoke_cli(["app", "overview", "status", "--period", "1T", "--year", "2026"])
+    text_result = invoke_cli(["app", "overview", "status", "--period", "1T", "--year", str(FILING_YEAR)])
     json_result = invoke_cli(
-        ["--format", "json", "app", "overview", "status", "--period", "1T", "--year", "2026"],
+        ["--format", "json", "app", "overview", "status", "--period", "1T", "--year", str(FILING_YEAR)],
     )
 
     assert text_result.exit_code == 0, text_result.output
     assert json_result.exit_code == 0, json_result.output
     assert str(period) in text_result.output
-    assert "1T 2026" not in text_result.output
+    assert f"1T {FILING_YEAR}" not in text_result.output
     assert draft.draft_id in text_result.output
     assert json.loads(json_result.output)["result"]["period"] == str(period)
 
@@ -295,7 +304,7 @@ def test_retired_deadlines_noun_group_is_unknown(invoke_cli: CliInvocation) -> N
 def _valid_modelo_130_inputs() -> dict[CasillaId, Decimal]:
     return {
         _M130_INGRESOS_CASILLA: Decimal("10000"),
-        _M130_GASTOS_CASILLA: Decimal("4000"),
+        _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
         # Casilla 05 (pagos fraccionados anteriores) is previous-filing-bound; its
         # value flows through the matching binding id in _valid_modelo_130_bindings,
         # not as a raw casilla input (which the smuggling guard now rejects).
@@ -325,7 +334,7 @@ def _minimal_stored_draft(
     amount: Decimal,
     operation: PinnedAuthorityOperation,
 ) -> ModeloDraft:
-    now = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+    now = datetime(FILING_YEAR, 4, 20, 12, 0, tzinfo=UTC)
     values = (
         ModeloValue(
             casilla_id=casilla_id,

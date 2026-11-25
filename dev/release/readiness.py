@@ -54,7 +54,6 @@ from pydantic import ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.docs.download_matrix import load_descriptor, required_evidence_rows
 from dev.packaging.cohort_manifest import load_release_cohort
 from dev.packaging.evidence import (
@@ -64,6 +63,7 @@ from dev.packaging.evidence import (
     load_distribution_evidence,
 )
 from dev.packaging.python_cohort import load_python_cohort
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import content_digest, repository_files
 
 _UTF_8: Final = UTF_8
@@ -174,7 +174,7 @@ def _companion_version_pins(repo_root: Path, pyproject_version: str) -> tuple[tu
     return (observed_pins, expected_pins)
 
 
-def _repo_root() -> Path:
+def readiness_repo_root() -> Path:
     """Return the repository root two levels above this module."""
     return REPO_ROOT
 
@@ -622,7 +622,7 @@ def build_report(
     and the aggregated rows into ``var/promotion/*`` and must point the gate at
     them rather than at a working-tree default that does not exist in CI.
     """
-    root = Path(repo_root) if repo_root is not None else _repo_root()
+    root = Path(repo_root) if repo_root is not None else readiness_repo_root()
     checks: list[ReadinessCheck] = [
         check_project_names_are_canonical(root),
         check_version_surfaces_agree(root),

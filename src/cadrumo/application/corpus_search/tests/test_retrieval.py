@@ -14,12 +14,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from .._retrieval import run_retrieval
 from ..citation_lookup import bundled_citation_lookup
 from ..errors import CorpusSearchInputError
 from ..lexical_index import build_lexical_index, iter_corpus_chunks
 from ..models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
-from ._corpus_fixture import build_sample_corpus
+from ..retrieval import run_retrieval
+from .corpus_fixture import build_sample_corpus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

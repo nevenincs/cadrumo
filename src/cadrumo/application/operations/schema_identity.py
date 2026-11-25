@@ -13,7 +13,7 @@ from .registry_schema_validation import strict_model_json_schema
 
 type OperationPublicSchemaId = Annotated[
     str,
-    Field(min_length=3, max_length=160, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"),
+    Field(min_length=1, max_length=256, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"),
 ]
 
 

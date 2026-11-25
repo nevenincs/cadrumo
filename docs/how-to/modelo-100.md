@@ -3,8 +3,8 @@
 This page covers the annual Renta filing: creating the Modelo 100 declaration,
 letting the year's data flow in, supplying the manual values that apply to you,
 and checking and exporting the declaration. Modelo 100 is the annual IRPF
-(personal income tax) declaration; its official title is "Modelo 100. Declaración del Impuesto sobre la
-Renta de las Personas Físicas."
+(personal income tax) declaration; its official title is "<span lang="es">Modelo 100. Declaración del Impuesto sobre la
+Renta de las Personas Físicas.</span>"
 
 Modelo 100 is the largest form the tool prepares - the 2025 version carries
 over two thousand boxes and two hundred formulas - and it is the one
@@ -27,7 +27,7 @@ profile](profile-setup.md).
   is the year the income belongs to (the 2025 declaration is filed in 2026).
   Each filing year automatically uses its own version of the official form.
 - [Set up your taxpayer profile](profile-setup.md) with the Renta-relevant facts:
-  residence comunidad, marital status, spouse and descendant data, disability
+  autonomous community of residence, marital status, spouse and descendant data, disability
   grades. The profile fills dozens of Modelo 100 boxes, and an incomplete profile
   shows up as missing values later. Manage descendants with `aeat config profile
   descendiente add/list/remove`.
@@ -45,7 +45,7 @@ profile](profile-setup.md).
   `aeat app ledger inventory`. Calculation reads that register for boxes 0177,
   0181, and 0182.
 - Record the year's quarterly instalments as filed first. Modelo 100 folds in your
-  Modelo 130/131 payments on account and the retenciones reported on Modelos 111,
+  Modelo 130/131 payments on account and the withholdings reported on Modelos 111,
   123, 190, and 193 where they exist. Check what this declaration expects and what
   blocks it:
 
@@ -80,9 +80,12 @@ Calculation reads the year's classified entries in your records, the profile
 facts, the prior filings the tax rules bring in, and any carry-forward from last
 year's declaration (negative bases carry over through a rule that reads the prior
 filing), then runs the formulas of the tax rules and saves a draft calculation.
-Here box `0003` carries the 24000 of salary income, box `0012` the total
+Here box `0003` carries the 24000 of salary income from the payer's withholding
+record, box `0012` the total
 countable gross employment income (`24000.00`), and box `0019` the other deductible employment
-expenses (art. 19 LIRPF) of `2000.00`. The tool never fabricates a missing
+expenses (art. 19 LIRPF) of `2000.00`. The work-income boxes no payer certificate
+fills, such as employer contributions to pension plans, block the check until you
+state them, so the example states that there are none before checking. The tool never fabricates a missing
 prior period: what it does not have on record stays a visible blank for you to
 resolve, not a guessed zero.
 
@@ -101,10 +104,12 @@ warns that no inventory register is available and the boxes stay at `0`, so
 create the register before you file. Don't put stock figures in box 0155:
 calculation doesn't read it as an inventory figure.
 
-Supply a manual box value and recalculate by passing `--casilla 0003=24000` on the
-calculate command, alongside the `--binding` values the declaration still needs
-(the main sequence above shows the full form). Recalculating replaces the current
-draft calculation.
+Supply a manual box value and recalculate by passing `--casilla <box>=<value>` on
+the `calculate` command, alongside the `--binding` values the declaration still
+needs (the main sequence above shows the full form). A box that one of your records
+fills refuses a manual value: when a payer's withholding record states your
+employment income, box 0003 comes from that record, so correct the record instead.
+Recalculating replaces the current draft calculation.
 
 For the full input workflow - boxes Cadrumo fills in versus boxes you supply,
 offsets, and choosing among earlier calculations - see
@@ -119,6 +124,15 @@ including the checks across periods: every filing this declaration depends on
 must be recorded as filed and have its proof, and every carried figure must still
 point at the version of the tax rules it was filed under. A blocked report names
 the unresolved dependency. Resolve it, then run the check again. See [Check a draft declaration and act on the issues](verification-reports.md).
+
+The check applies to the calculation it checked. If you recalculate afterwards, the
+recalculated draft becomes the declaration's current calculation. Stating the work
+income again then reproduces the checked calculation, so no new draft is created: the
+result carries a notice that names the checked calculation by its revision ID and its
+state (checked and complete), and the recalculated draft stays current. The checked
+calculation is left exactly as it was. Export by the revision ID the notice names, as
+the example below does with `--revision`, so the export reads the checked calculation
+rather than the recalculated draft.
 
 Export the checked declaration. Modelo 100 always writes an XML file, whatever
 name you choose. Export refuses to overwrite an existing file unless you add

@@ -29,13 +29,13 @@ from cadrumo_client.commands.shared_contracts import (
     ValueContract,
 )
 
-from .._app_ledger_command_spec_support import (
-    _blank_default_text_option,
-    _boolean_flag_option,
-    _optional_text_option,
-    _repeatable_text_option,
-    _required_text_argument,
-    _required_text_option,
+from ..app_ledger_command_spec_support import (
+    blank_default_text_option,
+    boolean_flag_option,
+    optional_text_option,
+    repeatable_text_option,
+    required_text_argument,
+    required_text_option,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -60,7 +60,7 @@ def _assert_identical(produced: OptionSpec | ArgumentSpec, expected: OptionSpec 
 def test_optional_text_option_equals_the_literal_it_replaces() -> None:
     """The optional free-text primitive reproduces the displaced literal exactly."""
     _assert_identical(
-        _optional_text_option("taxable_base", ("--taxable-base",), "cli.ledger.classify.taxable_base_help"),
+        optional_text_option("taxable_base", ("--taxable-base",), "cli.ledger.classify.taxable_base_help"),
         OptionSpec(
             name="taxable_base",
             declarations=("--taxable-base",),
@@ -83,7 +83,7 @@ def test_optional_text_option_equals_the_literal_it_replaces() -> None:
 def test_required_text_option_equals_the_literal_it_replaces() -> None:
     """The mandatory free-text primitive reproduces the displaced literal exactly."""
     _assert_identical(
-        _required_text_option("transaction_id", ("--transaction-id",), "cli.ledger.evidence.pull_id_help"),
+        required_text_option("transaction_id", ("--transaction-id",), "cli.ledger.evidence.pull_id_help"),
         OptionSpec(
             name="transaction_id",
             declarations=("--transaction-id",),
@@ -106,7 +106,7 @@ def test_required_text_option_equals_the_literal_it_replaces() -> None:
 def test_blank_default_text_option_equals_the_literal_it_replaces() -> None:
     """The empty-string-default primitive reproduces the displaced literal exactly."""
     _assert_identical(
-        _blank_default_text_option("reason", ("--reason",), "cli.ledger.archive.reason_help"),
+        blank_default_text_option("reason", ("--reason",), "cli.ledger.archive.reason_help"),
         OptionSpec(
             name="reason",
             declarations=("--reason",),
@@ -129,7 +129,7 @@ def test_blank_default_text_option_equals_the_literal_it_replaces() -> None:
 def test_repeatable_text_option_equals_the_literal_it_replaces() -> None:
     """The repeatable free-text primitive reproduces the displaced literal exactly."""
     _assert_identical(
-        _repeatable_text_option("tag", ("--tag",), "cli.ledger.add.actor_help"),
+        repeatable_text_option("tag", ("--tag",), "cli.ledger.add.actor_help"),
         OptionSpec(
             name="tag",
             declarations=("--tag",),
@@ -152,7 +152,7 @@ def test_repeatable_text_option_equals_the_literal_it_replaces() -> None:
 def test_boolean_flag_option_equals_the_literal_it_replaces() -> None:
     """The boolean flag primitive reproduces the displaced literal exactly."""
     _assert_identical(
-        _boolean_flag_option("dry_run", ("--dry-run",), "cli.ledger.archive.reason_help"),
+        boolean_flag_option("dry_run", ("--dry-run",), "cli.ledger.archive.reason_help"),
         OptionSpec(
             name="dry_run",
             declarations=("--dry-run",),
@@ -175,7 +175,7 @@ def test_boolean_flag_option_equals_the_literal_it_replaces() -> None:
 def test_required_text_argument_equals_the_literal_it_replaces() -> None:
     """The positional free-text primitive reproduces the displaced literal exactly."""
     _assert_identical(
-        _required_text_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help"),
+        required_text_argument("transaction_id", "cli.app.ledger.evidence.pull_id_help"),
         ArgumentSpec(
             name="transaction_id",
             value=_TEXT,
@@ -199,11 +199,11 @@ def test_the_primitives_stay_distinguishable_from_one_another() -> None:
     """
     declarations = ("--x",)
     produced = [
-        _optional_text_option("x", declarations, "cli.ledger.add.actor_help"),
-        _required_text_option("x", declarations, "cli.ledger.add.actor_help"),
-        _blank_default_text_option("x", declarations, "cli.ledger.add.actor_help"),
-        _repeatable_text_option("x", declarations, "cli.ledger.add.actor_help"),
-        _boolean_flag_option("x", declarations, "cli.ledger.add.actor_help"),
+        optional_text_option("x", declarations, "cli.ledger.add.actor_help"),
+        required_text_option("x", declarations, "cli.ledger.add.actor_help"),
+        blank_default_text_option("x", declarations, "cli.ledger.add.actor_help"),
+        repeatable_text_option("x", declarations, "cli.ledger.add.actor_help"),
+        boolean_flag_option("x", declarations, "cli.ledger.add.actor_help"),
     ]
 
     assert len(set(produced)) == len(produced), "two parameter primitives produce the same declaration"
@@ -211,6 +211,6 @@ def test_the_primitives_stay_distinguishable_from_one_another() -> None:
 
 def test_declaration_aliases_survive_the_primitives() -> None:
     """Aliases are identity, not decoration, so every token must reach the spec."""
-    option = _optional_text_option("period", ("--period", "-p"), "cli.ledger.export.period_help")
+    option = optional_text_option("period", ("--period", "-p"), "cli.ledger.export.period_help")
 
     assert option.declarations == ("--period", "-p")

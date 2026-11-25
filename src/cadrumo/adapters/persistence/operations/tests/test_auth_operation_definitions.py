@@ -26,7 +26,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
@@ -113,7 +113,7 @@ def _supervisor(
 
 
 def _register_profile() -> UUID:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     registered = register_profile_with_credentials(
         label="S39 Auth Operation Subject",
         passphrase=_CURRENT,
@@ -160,7 +160,7 @@ def test_legacy_profile_login_is_not_an_operation() -> None:
 def test_passphrase_rotation_uses_one_ephemeral_payload_and_changes_real_custody(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register_profile()
         authenticate_profile_for_invocation(

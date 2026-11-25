@@ -25,32 +25,30 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
-from dev.docs.build_paths import docs_html_root
+from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.pagefind_index import build_search_index
+from dev.docs.tests.built_site import built_documentation_site
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
-from ..docs_delivery_probe import _assert_served_index_matches_build, _verify_published_search_index
+from ..docs_delivery_probe import assert_served_index_matches_build, verify_published_search_index
 from ..docs_site_languages import localized_languages
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
-# dev/deploy/tests -> parents[3] is the repo root.
-_REPO_ROOT = REPO_ROOT
-_BUILT_HTML = docs_html_root(_REPO_ROOT)
 _PAGES = 2
 
 
 def _built_root(tmp_path: Path, name: str, *, with_records: bool) -> Path:
-    """Build a real Pagefind index, with or without injected records."""
-    pages = list(scan_directory(_BUILT_HTML, pattern="*.html")[:_PAGES]) if _BUILT_HTML.is_dir() else []
-    if len(pages) < _PAGES:
-        pytest.fail(
-            f"need {_PAGES} built pages under {_BUILT_HTML}; this gate compares real indexes, "
-            "so it needs a real build to read.",
-        )
+    """Build a real Pagefind index, with or without injected records.
+
+    The pages are the first few of the English root of the run's shared
+    documentation compile.
+    """
+    built_html = built_documentation_site().language_root(OutputLanguage.EN.value)
+    pages = sorted(scan_directory(built_html, pattern="*.html"), key=lambda path: path.name)[:_PAGES]
+    assert len(pages) == _PAGES, f"need {_PAGES} built pages under {built_html}; found {len(pages)}"
     site = tmp_path / name
     site.mkdir(parents=True)
     for source in pages:
@@ -86,7 +84,7 @@ def test_a_record_free_published_index_is_refused(tmp_path: Path) -> None:
     published = _built_root(tmp_path, "published", with_records=False)
 
     with pytest.raises(SystemExit) as excinfo:
-        _assert_served_index_matches_build(
+        assert_served_index_matches_build(
             built=built / "pagefind" / "pagefind-entry.json",
             served=_entry_bytes(published),
             label="docs root",
@@ -101,7 +99,7 @@ def test_the_matching_published_index_passes(tmp_path: Path) -> None:
     """The other half: the index that was built and validated is accepted."""
     built = _built_root(tmp_path, "built", with_records=True)
 
-    _assert_served_index_matches_build(
+    assert_served_index_matches_build(
         built=built / "pagefind" / "pagefind-entry.json",
         served=_entry_bytes(built),
         label="docs root",
@@ -144,7 +142,7 @@ def test_the_one_index_is_read_at_the_apex_not_inside_a_language_root(tmp_path: 
         requested.append(url)
         return _entry_bytes(built)
 
-    _verify_published_search_index(html_root, base_url="https://example.invalid/docs", fetch=_fetch)
+    verify_published_search_index(html_root, base_url="https://example.invalid/docs", fetch=_fetch)
 
     assert requested == ["https://example.invalid/docs/pagefind/pagefind-entry.json"], requested
     for language in localized_languages():

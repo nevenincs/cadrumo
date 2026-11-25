@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 
 import pytest
@@ -9,10 +10,12 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.inventory import REPO_ROOT
 
@@ -20,13 +23,13 @@ from ...compiler.corpus_catalogue import verify_source_file
 from ...compiler.loader import load_modelo_directory
 from ...compiler.loader_cache import discover_modelo_sources
 from ..coverage import build_model_law_coverage_ledger
-from ..registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _modelos_by_id() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     return {modelo.id: modelo for modelo in modelos}, catalogues
 
 
@@ -39,15 +42,17 @@ def _snapshot(period: str = "alta") -> RegistrySnapshot:
     # reviewed to that rung. Ask for the rung the law-selected revision itself
     # declares rather than the FILING default, and a later promotion of 036
     # carries here without an edit.
-    # 2025 is split between two editions on 3 February, so an ad-hoc event names
-    # the day it happened; this one falls in the later edition.
-    on = date(2025, 6, 1)
-    revision = select_revision(modelo, filing_year=2025, period=period, on=on)
+    # The exercise the newest edition opens is split between two editions on its
+    # first day, so an event names the day it happened; this one falls in the
+    # later edition.
+    filing_year = open_ended_revision("036").valid_from.year
+    on = date(filing_year, 6, 1)
+    revision = select_revision(modelo, filing_year=filing_year, period=period, on=on)
     return build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year,
         period=period,
         on=on,
         grade=revision.effective_authority_grade,
@@ -58,9 +63,9 @@ def test_committed_modelo_036_registry_data_loads_as_active_censo_foundation() -
     snapshot = _snapshot()
 
     assert snapshot.modelo.id == "036"
-    assert snapshot.modelo.cadence == "ad_hoc"
+    assert snapshot.modelo.cadence == "event"
     assert snapshot.revision.period_selector.periods == ("alta", "modificacion", "baja")
-    assert snapshot.filing_schedules["modelo-036-event-triggered"].period_kind == "ad_hoc"
+    assert snapshot.filing_schedules["modelo-036-event-triggered"].period_kind == "event"
     assert snapshot.filing_schedules["modelo-036-event-triggered"].periods == ("alta", "modificacion", "baja")
 
 
@@ -93,13 +98,20 @@ def test_committed_modelo_036_has_registry_authority_coverage() -> None:
 def test_committed_modelo_036_record_design_source_matches_manifest() -> None:
     _, catalogues = _modelos_by_id()
     source = catalogues.sources["aeat-dr-036-2025"]
-
-    assert source.corpus_path == (
-        "corpus/aeat_official/disenos_registro/modelo_036/files/"
-        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
+    manifest = json.loads(
+        bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_036", "manifest.json").read_text(
+            encoding="utf-8"
+        )
     )
-    assert source.sha256 == "791479fbf9e905faf1e43fa0bfbff974d5edaf85d198495892fa8446a1da2ebd"
-    assert source.bytes == 126664
+    (artefact,) = [
+        item
+        for item in manifest["artefacts"]
+        if item["sha256"] == "791479fbf9e905faf1e43fa0bfbff974d5edaf85d198495892fa8446a1da2ebd"
+    ]
+
+    assert source.corpus_path == f"corpus/aeat_official/disenos_registro/modelo_036/{artefact['stored_path']}"
+    assert source.sha256 == artefact["sha256"]
+    assert source.bytes == artefact["bytes"] == 126664
     verify_source_file(REPO_ROOT, source)
 
 
@@ -119,7 +131,7 @@ def test_modelo_036_rejects_unknown_censo_event_period() -> None:
     modelos, _ = _modelos_by_id()
 
     with pytest.raises(RegistrySnapshotError, match="no revision"):
-        select_revision(modelos["036"], filing_year=2025, period="037")
+        select_revision(modelos["036"], filing_year=open_ended_revision("036").valid_from.year, period="037")
 
 
 def test_no_committed_modelo_037_toml_can_revive_active_support() -> None:

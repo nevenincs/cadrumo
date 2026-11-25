@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -16,11 +16,13 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
-from .profile_schema_support import authored_history_supported_filing_years
+from .profile_schema_support import authored_fact_catalogue, authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -32,37 +34,41 @@ _RATE_IDS = frozenset(
         "liva-art-161:recargo-rate-tabaco",
     }
 )
+_REPLACEMENT_SOURCE = "boe-rdl-20-2012-art-23-2012-09-01"
 _SOURCES = {
     "boe-liva-art-161-1993-01-01": (
         "d3d03690f5d833a832b1c81309cb76a806ba4bc7d02594233f08f2e071ad2e01",
         692,
-        date(1993, 1, 1),
-        date(1996, 12, 31),
     ),
     "boe-liva-art-161-1997-01-01": (
         "a75415a2ddc099e2114bf46e7888e4e8693d903d8d805e15f74a7e80e8a19c8a",
         1023,
-        date(1997, 1, 1),
-        date(2012, 8, 31),
     ),
     "boe-liva-art-161-2012-07-15": (
         "b80529868fb4904f88b67e98ec54dbb82e8ff876478bcce8666ddb84e1ffee34",
         1452,
-        date(2012, 9, 1),
-        None,
     ),
-    "boe-rdl-20-2012-art-23-2012-09-01": (
+    _REPLACEMENT_SOURCE: (
         "73cdc93bfe9819ebe29c68f3e6a57ccec8d7d9b6d744c3e8756a567e811fea6b",
         26194,
-        date(2012, 9, 1),
-        None,
     ),
 }
 
 
+@cache
+def _shared() -> RegistryCatalogues:
+    return load_shared_catalogues(bundled_path() / "registry" / "aeat")
+
+
+def _replacement_start() -> date:
+    """Return the day the Real Decreto-ley 20/2012 redaction takes effect, as its pinned source declares it."""
+    start = _shared().sources[_REPLACEMENT_SOURCE].applies_from
+    assert start is not None
+    return start
+
+
 def _catalogue() -> GovernedFactCatalogue:
-    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
-    return GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts if fact.fact_id in _RATE_IDS})
+    return authored_fact_catalogue(_RATE_IDS)
 
 
 def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
@@ -101,7 +107,7 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
             ("boe-liva-art-161-1997-01-01",),
         ),
         (
-            date(2012, 8, 31),
+            -timedelta(days=1),
             date(1997, 1, 1),
             {
                 "liva-art-161:recargo-rate-general": Decimal("0.04"),
@@ -112,8 +118,8 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
             ("boe-liva-art-161-1997-01-01",),
         ),
         (
-            date(2012, 9, 1),
-            date(2012, 9, 1),
+            timedelta(0),
+            None,
             {
                 "liva-art-161:recargo-rate-general": Decimal("0.052"),
                 "liva-art-161:recargo-rate-reducido": Decimal("0.014"),
@@ -125,8 +131,16 @@ def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
     ),
 )
 def test_equivalence_surcharge_rates_resolve_from_their_exact_boe_legal_window(
-    effective_date: date, variant_start: date, values: dict[str, Decimal], source_refs: tuple[str, ...]
+    effective_date: date | timedelta,
+    variant_start: date | None,
+    values: dict[str, Decimal],
+    source_refs: tuple[str, ...],
 ) -> None:
+    """A timedelta is an offset from the day the 2012 redaction takes effect, which its source pins."""
+    if isinstance(effective_date, timedelta):
+        effective_date = _replacement_start() + effective_date
+    if variant_start is None:
+        variant_start = _replacement_start()
     for fact_id, value in values.items():
         resolved = _resolve(fact_id, effective_date)
 
@@ -137,60 +151,38 @@ def test_equivalence_surcharge_rates_resolve_from_their_exact_boe_legal_window(
 
 
 @pytest.mark.parametrize(
-    ("fact_id", "before_first_window", "first_authored_date", "value", "source_ref"),
+    ("fact_id", "value"),
     (
-        (
-            "liva-art-161:recargo-rate-general",
-            date(1992, 12, 31),
-            date(1993, 1, 1),
-            Decimal("0.04"),
-            "boe-liva-art-161-1993-01-01",
-        ),
-        (
-            "liva-art-161:recargo-rate-reducido",
-            date(1992, 12, 31),
-            date(1993, 1, 1),
-            Decimal("0.01"),
-            "boe-liva-art-161-1993-01-01",
-        ),
-        (
-            "liva-art-161:recargo-rate-super-reducido",
-            date(1992, 12, 31),
-            date(1993, 1, 1),
-            Decimal("0.005"),
-            "boe-liva-art-161-1993-01-01",
-        ),
-        (
-            "liva-art-161:recargo-rate-tabaco",
-            date(1996, 12, 31),
-            date(1997, 1, 1),
-            Decimal("0.0175"),
-            "boe-liva-art-161-1997-01-01",
-        ),
+        ("liva-art-161:recargo-rate-general", Decimal("0.04")),
+        ("liva-art-161:recargo-rate-reducido", Decimal("0.01")),
+        ("liva-art-161:recargo-rate-super-reducido", Decimal("0.005")),
+        ("liva-art-161:recargo-rate-tabaco", Decimal("0.0175")),
     ),
 )
-def test_equivalence_surcharge_rates_do_not_precede_their_first_citable_window(
+def test_equivalence_surcharge_rates_before_their_first_window_read_it_as_a_backward_projection(
     fact_id: str,
-    before_first_window: date,
-    first_authored_date: date,
     value: Decimal,
-    source_ref: str,
 ) -> None:
-    """The first redaction states when it entered into force, and that is a legal boundary.
+    """A date always has a rate: before the first window, the first redaction answers, marked as projected."""
+    first = min(
+        variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None
+    )
 
-    A variant declaring an explicit ``valid_from`` is not projected behind it:
-    the surcharge did not exist in that form the day before, so resolution
-    refuses rather than answering with a rate nothing authorises.
-    """
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve(fact_id, before_first_window)
+    before = _resolve(fact_id, first - timedelta(days=1))
+    assert before.variant_id.endswith(first.isoformat())
+    assert before.payload.value == value
+    assert before.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before.projected_from_date == first
+    assert not before.published_on_date
 
-    resolved = _resolve(fact_id, first_authored_date)
+    resolved = _resolve(fact_id, first)
 
-    assert resolved.variant_id.endswith(first_authored_date.isoformat())
+    assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
+    assert resolved.published_on_date
+    assert resolved.variant_id.endswith(first.isoformat())
     assert resolved.payload.value == value
     assert resolved.payload.unit == "fraction"
-    assert resolved.source_refs == (source_ref,)
+    assert resolved.source_refs == (f"boe-liva-art-161-{first.isoformat()}",)
 
 
 def test_equivalence_surcharge_rates_are_authored() -> None:
@@ -211,8 +203,8 @@ def test_each_rate_variant_is_bounded_by_its_exact_boe_redaction_window() -> Non
             source = shared.sources[rate_source_ref]
             assert variant.valid_from == source.applies_from
             assert variant.valid_to == source.applies_to
-            if variant.valid_from == date(2012, 9, 1):
-                assert "boe-rdl-20-2012-art-23-2012-09-01" in variant.source_refs
+            if variant.valid_from == _replacement_start():
+                assert _REPLACEMENT_SOURCE in variant.source_refs
 
 
 def test_equivalence_surcharge_rates_cite_hash_pinned_boe_redactions() -> None:
@@ -220,12 +212,22 @@ def test_equivalence_surcharge_rates_cite_hash_pinned_boe_redactions() -> None:
     shared = load_shared_catalogues(source_root / "registry" / "aeat")
     catalogue = _catalogue()
 
-    for source_ref, (sha256, byte_count, applies_from, applies_to) in _SOURCES.items():
+    for source_ref, (sha256, byte_count) in _SOURCES.items():
         source = shared.sources[source_ref]
         assert source.sha256 == sha256
         assert source.bytes == byte_count
-        assert source.applies_from == applies_from
-        assert source.applies_to == applies_to
+    assert {
+        source_ref: (
+            None if source.applies_from is None else source.applies_from.isoformat(),
+            None if source.applies_to is None else source.applies_to.isoformat(),
+        )
+        for source_ref, source in ((ref, shared.sources[ref]) for ref in _SOURCES)
+    } == {
+        "boe-liva-art-161-1993-01-01": ("1993-01-01", "1996-12-31"),
+        "boe-liva-art-161-1997-01-01": ("1997-01-01", "2012-08-31"),
+        "boe-liva-art-161-2012-07-15": ("2012-09-01", None),
+        _REPLACEMENT_SOURCE: ("2012-09-01", None),
+    }
     assert (
         governed_fact_catalogue_failures(
             catalogue,

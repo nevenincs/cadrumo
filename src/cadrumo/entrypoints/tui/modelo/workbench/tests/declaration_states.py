@@ -11,17 +11,18 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_declaration_facts import (
     ModeloFormDeadline,
     ModeloFormEditClosure,
     ModeloFormFiling,
-    ModeloFormIssue,
     ModeloFormResult,
     ModeloFormResultDirection,
-    ModeloWorkForm,
 )
+from ......application.modelo.work_form_findings import ModeloFormIssue
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.result_disposition import ResultDisposition
 from ......domain.deadlines.festivos import DeadlineHolidayCoverage
+from ......domain.iva.refund_eligibility import RefundEligibility, RefundEligibilityBasis, RefundEligibilityOutcome
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -48,6 +49,15 @@ def with_result(
     casilla_id: str = "19",
 ) -> ModeloWorkForm:
     """The form with a settlement box, its value and the direction the read model states."""
+    eligibility = (
+        RefundEligibility(
+            outcome=RefundEligibilityOutcome.REFUND_ALLOWED,
+            basis=RefundEligibilityBasis.FINAL_PERIOD,
+            legal_refs=(),
+        )
+        if election
+        else None
+    )
     result = ModeloFormResult(
         casilla_id=casilla_id,
         box=casilla_id,
@@ -55,6 +65,7 @@ def with_result(
         direction=direction,
         disposition=disposition,
         election_may_change=election,
+        refund_eligibility=eligibility,
     )
     return form.model_copy(update={"result": result})
 
@@ -74,7 +85,7 @@ def with_deadline(
     deadline = ModeloFormDeadline(
         closes_on=closes,
         nominal_closes_on=closes - timedelta(days=shifted_by),
-        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         reference_on=REFERENCE_DAY,
         days_remaining=days_left,
         days_overdue=None if days_left is not None else days_late or 1,

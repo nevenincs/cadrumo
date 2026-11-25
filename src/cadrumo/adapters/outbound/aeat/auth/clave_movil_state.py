@@ -10,8 +10,8 @@ from bs4 import BeautifulSoup
 from .....core.config import Settings
 from .....core.external_constants import AeatClaveMovilSurface
 from .....core.remote_authority import canonical_remote_hostname, is_current_aeat_host
-from .._html import parse_html
-from ._clave_provider_common import is_authenticated_clave_landing
+from ..html import parse_html
+from .clave_provider_common import is_authenticated_clave_landing
 
 
 class ClaveMovilPageState(StrEnum):

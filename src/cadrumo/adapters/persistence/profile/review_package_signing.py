@@ -18,12 +18,12 @@ from ....application.modelo.review_package_signing_ports import (
 )
 from ....core.ed25519_signing import generate_ed25519_keypair_hex
 from ....core.identity.bucket import canonical_bucket_id
-from ....core.time.clock import now as _utc_now
+from ....core.time.clock import now
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
-from ..storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
+from ..storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ._review_package_keypair import ensure_singleton_keypair
+from .review_package_keypair import ensure_singleton_keypair
 
 
 def _signing_key_object_key(bucket_id: str) -> str:
@@ -65,7 +65,7 @@ class ReviewPackageSigningKeypairAdapter:
                 bucket_id=normalized_bucket_id,
                 private_key_hex=minted.private_key_hex,
                 public_key_hex=minted.public_key_hex,
-                created_at=generated_at or _utc_now(),
+                created_at=generated_at or now(),
             )
 
         def _mismatch_error() -> ReviewPackageSigningError:
@@ -76,7 +76,7 @@ class ReviewPackageSigningKeypairAdapter:
         try:
             return ensure_singleton_keypair(
                 repository=self._repository,
-                namespace=_NAMESPACE,
+                namespace=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE,
                 object_key=_signing_key_object_key(normalized_bucket_id),
                 model_type=ReviewPackageSigningKeypair,
                 generate=_generate,
@@ -103,10 +103,10 @@ class ReviewPackageSigningKeypairAdapter:
             )
         try:
             existing = self._repository.load(
-                _NAMESPACE.namespace,
+                MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.namespace,
                 _signing_key_object_key(normalized_bucket_id),
-                expected_class=_NAMESPACE.sensitivity,
-                max_supported_version=_NAMESPACE.schema_version,
+                expected_class=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.sensitivity,
+                max_supported_version=MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE.schema_version,
             )
             if existing is None:
                 return None
@@ -127,12 +127,17 @@ class ReviewPackageSigningKeypairAdapter:
 def build_review_package_signing_keypair_capability(
     *,
     bucket_id: str,
+    mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> ReviewPackageSigningKeypairCapability:
-    """Bind the signing-keypair capability to the secure store for ``bucket_id``."""
+    """Bind the signing-keypair capability to the secure store for ``bucket_id``.
+
+    ``mutation_writer`` admits the commit that mints a missing keypair.
+    """
     normalized_bucket_id = canonical_bucket_id(bucket_id)
     return ReviewPackageSigningKeypairAdapter(
         repository=secure_object_repository_for_bucket(normalized_bucket_id),
         bucket_id=normalized_bucket_id,
+        mutation_writer=mutation_writer,
     )
 
 

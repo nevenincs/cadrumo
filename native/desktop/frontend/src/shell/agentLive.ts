@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { failureCode } from "../errors";
 import { questionnaireFaults } from "./agentClarification";
 import type {
-  AgentApproval,
-  AgentQuestionnaire,
   AgentServiceStatus,
   AgentSession,
   AgentStreamEvent,
@@ -12,13 +17,20 @@ import type {
 import {
   isLiveStatus,
   replyIdOf,
-  type AgentDocumentReference,
+  type AgentColumnRecord,
   type AgentRead,
-  type AgentReplyRecord,
-  type AgentToolStatus,
-  type AgentTurnRecord,
   type AgentViews,
 } from "./agentViews";
+import type { ToolCallStatus } from "./agentGatewayContract";
+import type {
+  AgentApproval,
+  AgentDocumentReference,
+  AgentPersonRecord,
+  AgentQuestionnaire,
+  AgentReplyRecord,
+  AgentToolRecord,
+  AgentTurnRecord,
+} from "./agentSnapshotContract";
 
 // A conversation as it is being written: its history, read from the host,
 // with the host's stream applied on top. The stream is watched before the
@@ -45,24 +57,23 @@ import {
  * began it, `end` for one that continued it. */
 const LOCAL = "local:";
 
-type Person = Extract<AgentTurnRecord, { kind: "person" }>;
-type Tool = Extract<AgentTurnRecord, { kind: "tool" }>;
+/** A message sent here: it always has the id the column gave it. */
+type Sent = AgentPersonRecord & { id: string };
 
-const isLocal = (record: AgentTurnRecord): boolean =>
-  record.kind === "person" && record.id.startsWith(LOCAL);
+const isSent = (record: AgentColumnRecord): record is Sent =>
+  record.kind === "person" && record.id !== null && record.id.startsWith(LOCAL);
+
+const isLocal = (record: AgentColumnRecord): boolean => isSent(record);
 
 /** The messages sent here that `turns` holds, in the order they were sent. */
-const localMessages = (turns: readonly AgentTurnRecord[]): Person[] =>
-  turns.filter(
-    (record): record is Person =>
-      record.kind === "person" && record.id.startsWith(LOCAL),
-  );
+const localMessages = (turns: readonly AgentColumnRecord[]): Sent[] =>
+  turns.filter(isSent);
 
 /** A conversation's records so far, and what its reply waits on. */
 export type LiveTurns = {
   /** The history's records with the stream's applied, in the order a
    * conversation lists them. */
-  turns: AgentTurnRecord[];
+  turns: AgentColumnRecord[];
   /** The messages the history holds, by reply and id: their text is whole,
    * and the stream's text for them is not added to it. */
   recorded: readonly string[];
@@ -128,7 +139,7 @@ export function withoutRequest(live: LiveTurns, requestId: string): LiveTurns {
 
 /** The record of reply `id`, if the records have it. */
 export const replyRecord = (
-  turns: readonly AgentTurnRecord[],
+  turns: readonly AgentColumnRecord[],
   id: string,
 ): AgentReplyRecord | undefined =>
   turns.find(
@@ -138,7 +149,7 @@ export const replyRecord = (
 
 /** The newest reply of a conversation. */
 export const newestReply = (
-  turns: readonly AgentTurnRecord[],
+  turns: readonly AgentColumnRecord[],
 ): AgentReplyRecord | undefined =>
   [...turns]
     .reverse()
@@ -146,7 +157,7 @@ export const newestReply = (
 
 /** The reply still going, if there is one. */
 export const liveReply = (
-  turns: readonly AgentTurnRecord[],
+  turns: readonly AgentColumnRecord[],
 ): AgentReplyRecord | undefined =>
   [...turns]
     .reverse()
@@ -157,21 +168,36 @@ export const liveReply = (
 
 /** `turns` with a record for reply `id`, which the stream names before any
  * history does. A reply is running until something says otherwise. */
-function withReply(turns: AgentTurnRecord[], id: string): AgentTurnRecord[] {
+function withReply(
+  turns: AgentColumnRecord[],
+  id: string,
+): AgentColumnRecord[] {
   return replyRecord(turns, id)
     ? turns
-    : [...turns, { kind: "reply", id, status: "running" }];
+    : [
+        ...turns,
+        {
+          kind: "reply",
+          id,
+          status: "running",
+          provider_condition: null,
+          failure_reason: null,
+          queued_messages: 0,
+          selection: null,
+          usage: null,
+        },
+      ];
 }
 
 /** `turns` with `record` inserted at `at`. */
 const inserted = (
-  turns: AgentTurnRecord[],
+  turns: AgentColumnRecord[],
   at: number,
-  record: AgentTurnRecord,
+  record: AgentColumnRecord,
 ) => [...turns.slice(0, at), record, ...turns.slice(at)];
 
 /** Where a reply's records begin, its tool calls begin, and its record is. */
-function placesOf(turns: readonly AgentTurnRecord[], id: string) {
+function placesOf(turns: readonly AgentColumnRecord[], id: string) {
   const own = turns
     .map((record, index) => ({ record, index }))
     .filter(({ record }) => replyIdOf(record) === id);
@@ -203,7 +229,7 @@ function replied(
   };
 }
 
-const RANK: Record<AgentToolStatus, number> = {
+const RANK: Record<ToolCallStatus, number> = {
   pending: 0,
   in_progress: 1,
   completed: 2,
@@ -333,7 +359,19 @@ export function applyStreamEvent(
     case "tool": {
       const reply = event.reply_id;
       const turns = withReply(live.turns, reply);
-      const call: Tool = { kind: "tool", reply_id: reply, ...event.tool };
+      const call: AgentToolRecord = {
+        kind: "tool",
+        reply_id: reply,
+        id: event.tool.id,
+        title: event.tool.title,
+        tool_kind: event.tool.tool_kind,
+        status: event.tool.status,
+        tool_server: event.tool.tool_server ?? null,
+        tool_name: event.tool.tool_name ?? null,
+        tool_reach: event.tool.tool_reach ?? null,
+        failure: event.tool.failure ?? null,
+        details: [],
+      };
       const at = turns.findIndex(
         (record) =>
           record.kind === "tool" &&
@@ -342,15 +380,20 @@ export function applyStreamEvent(
       );
       if (at >= 0) {
         const held = turns[at];
-        // A call does not go back to an earlier state.
-        if (held?.kind === "tool" && RANK[call.status] < RANK[held.status])
+        // A call does not go back to an earlier state. One whose state the
+        // host could not read takes the stream's.
+        if (
+          held?.kind === "tool" &&
+          held.status !== null &&
+          RANK[event.tool.status] < RANK[held.status]
+        )
           return quiet(live);
         // What the history said of the call stays: the stream says none.
-        const details = held?.kind === "tool" ? held.details : undefined;
+        const details = held?.kind === "tool" ? held.details : [];
         return quiet({
           ...live,
           turns: turns.map((record, index) =>
-            index === at ? (details ? { ...call, details } : call) : record,
+            index === at ? { ...call, details } : record,
           ),
         });
       }
@@ -465,14 +508,14 @@ export function withSent(
   const sentBefore = turns.filter(
     (record) => isLocal(record) && replyIdOf(record) === sent.reply_id,
   ).length;
-  const message: Person = {
+  const message: Sent = {
     kind: "person",
     id: `${LOCAL}${sent.at}:${sent.reply_id}:${sentBefore}`,
     reply_id: sent.reply_id,
     text: sent.text,
     sent_at: now.toISOString(),
-    ...(sent.attachments?.length ? { attachments: sent.attachments } : {}),
-    ...(sent.skills?.length ? { skills: sent.skills } : {}),
+    attachments: sent.attachments ?? [],
+    skills: sent.skills ?? [],
   };
   const places = placesOf(turns, sent.reply_id);
   return {
@@ -493,7 +536,7 @@ export function withHistory(
   records: AgentTurnRecord[],
   pending: LivePending,
 ): LiveTurns {
-  let turns = [...records];
+  let turns: AgentColumnRecord[] = [...records];
   let taken = new Set<number>();
   for (const sent of localMessages(live.turns)) {
     const at = turns.findIndex(
@@ -536,7 +579,7 @@ export function withHistory(
 
 export type LiveConversation = {
   /** The records, read and streamed. */
-  read: AgentRead<AgentTurnRecord[]>;
+  read: AgentRead<AgentColumnRecord[]>;
   /** The reply still being written that can be stopped, by its handle. */
   open: string | null;
   /** A reply is still going: being written, waiting for the person,
@@ -842,7 +885,7 @@ export function useLiveConversation({
   const mine = key !== null && state.for === key;
   const live = mine ? state.live : null;
   const read = useMemo(
-    (): AgentRead<AgentTurnRecord[]> =>
+    (): AgentRead<AgentColumnRecord[]> =>
       key === null
         ? { kind: "unavailable" }
         : mine && state.failed !== null
@@ -867,35 +910,88 @@ export function useLiveConversation({
   };
 }
 
+/** One host watch of the agent's status for every surface that reads it. The
+ * host keeps a single listener, so a second surface subscribing would take the
+ * notices from the first; the window therefore subscribes once for a session
+ * and hands each change, and the last one at once, to every surface. */
+type StatusWatch = {
+  listeners: Set<(status: AgentServiceStatus) => void>;
+  last: AgentServiceStatus | null;
+  stop: Promise<() => void>;
+};
+const statusWatches = new WeakMap<AgentSession, StatusWatch>();
+
+export function watchStatus(
+  session: AgentSession,
+  listener: (status: AgentServiceStatus) => void,
+): Promise<() => void> {
+  let watch = statusWatches.get(session);
+  if (!watch) {
+    const made: StatusWatch = {
+      listeners: new Set(),
+      last: null,
+      stop: Promise.resolve(() => undefined),
+    };
+    made.stop = session.observeStatus((status) => {
+      made.last = status;
+      for (const heard of [...made.listeners]) heard(status);
+    });
+    // A watch the host refused is dropped, so the next surface asks again.
+    made.stop.catch(() => {
+      if (statusWatches.get(session) === made) statusWatches.delete(session);
+    });
+    statusWatches.set(session, made);
+    watch = made;
+  }
+  const held = watch;
+  held.listeners.add(listener);
+  if (held.last) listener(held.last);
+  return Promise.resolve(() => {
+    held.listeners.delete(listener);
+    if (held.listeners.size > 0 || statusWatches.get(session) !== held) return;
+    statusWatches.delete(session);
+    held.stop.then(
+      (unsubscribe) => unsubscribe(),
+      () => undefined,
+    );
+  });
+}
+
 /** Where the agent service is, as the host reports it while `enabled`, or
  * null until it has said. */
 export function useAgentStatus(
   session: AgentSession | undefined,
+  reader: string | null,
   enabled: boolean,
 ): AgentServiceStatus | null {
-  const disabledSinceObservation = useRef(false);
+  const owner = useMemo(
+    () => ({ session, reader, enabled }),
+    [session, reader, enabled],
+  );
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [owner],
+  );
   const [state, setState] = useState<{
-    for: AgentSession | null;
+    for: typeof owner | null;
     status: AgentServiceStatus | null;
   }>({ for: null, status: null });
   useEffect(() => {
-    if (!session || !enabled) {
-      // A status belongs to one continuous observation of one session. In
-      // particular, Ready from before sign-out cannot be reused when the same
-      // window becomes readable again while the supervisor restarts.
-      disabledSinceObservation.current = true;
-      setState({ for: null, status: null });
-      return;
-    }
-    disabledSinceObservation.current = false;
+    const { session, reader, enabled } = owner;
+    if (!session || reader === null || !enabled) return;
+    const mine = generation.current;
     let alive = true;
     let heard = false;
     let stop: (() => void) | null = null;
     const hear = (status: AgentServiceStatus) => {
       heard = true;
-      if (alive) setState({ for: session, status });
+      if (alive && mine === generation.current)
+        setState({ for: owner, status });
     };
-    session.observeStatus(hear).then(
+    watchStatus(session, hear).then(
       (unsubscribe) => {
         if (alive) stop = unsubscribe;
         else unsubscribe();
@@ -906,7 +1002,8 @@ export function useAgentStatus(
     // status that cannot be read is not known, and nothing says otherwise.
     session.status().then(
       (status) => {
-        if (alive && !heard) setState({ for: session, status });
+        if (alive && !heard && mine === generation.current)
+          setState({ for: owner, status });
       },
       () => undefined,
     );
@@ -914,11 +1011,8 @@ export function useAgentStatus(
       alive = false;
       stop?.();
     };
-  }, [session, enabled]);
-  return session &&
-    enabled &&
-    !disabledSinceObservation.current &&
-    state.for === session
+  }, [owner]);
+  return session && reader !== null && enabled && state.for === owner
     ? state.status
     : null;
 }

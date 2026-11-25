@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:18+0200\n"
+"POT-Creation-Date: 2026-11-22 02:08+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -28,15 +28,16 @@ msgid ""
 "declaration, letting the year's data flow in, supplying the manual values"
 " that apply to you, and checking and exporting the declaration. Modelo "
 "100 is the annual IRPF (personal income tax) declaration; its official "
-"title is \"Modelo 100. Declaración del Impuesto sobre la Renta de las "
-"Personas Físicas.\""
+"title is \"<span lang=\"es\">Modelo 100. Declaración del Impuesto sobre "
+"la Renta de las Personas Físicas.</span>\""
 msgstr ""
 "Esta página cubre la presentación anual de la Renta: crear la declaración"
 " del Modelo 100, dejar que fluyan los datos del ejercicio, aportar los "
 "valores manuales que te correspondan y comprobar y exportar la "
 "declaración. El Modelo 100 es la declaración anual del IRPF (impuesto "
-"sobre la renta de las personas físicas); su título oficial es «Modelo "
-"100. Declaración del Impuesto sobre la Renta de las Personas Físicas.»"
+"sobre la renta de las personas físicas); su título oficial es «<span "
+"lang=\"es\">Modelo 100. Declaración del Impuesto sobre la Renta de las "
+"Personas Físicas.</span>»"
 
 #: ../../how-to/modelo-100.md:9
 msgid ""
@@ -96,10 +97,11 @@ msgstr ""
 #: ../../how-to/modelo-100.md:29
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) with the Renta-relevant "
-"facts: residence comunidad, marital status, spouse and descendant data, "
-"disability grades. The profile fills dozens of Modelo 100 boxes, and an "
-"incomplete profile shows up as missing values later. Manage descendants "
-"with `aeat config profile descendiente add/list/remove`."
+"facts: autonomous community of residence, marital status, spouse and "
+"descendant data, disability grades. The profile fills dozens of Modelo "
+"100 boxes, and an incomplete profile shows up as missing values later. "
+"Manage descendants with `aeat config profile descendiente "
+"add/list/remove`."
 msgstr ""
 "[Configurar tu perfil de contribuyente](profile-setup.md) con los datos "
 "relevantes para la Renta: comunidad de residencia, estado civil, datos "
@@ -135,7 +137,7 @@ msgstr ""
 #: ../../how-to/modelo-100.md:47
 msgid ""
 "Record the year's quarterly instalments as filed first. Modelo 100 folds "
-"in your Modelo 130/131 payments on account and the retenciones reported "
+"in your Modelo 130/131 payments on account and the withholdings reported "
 "on Modelos 111, 123, 190, and 193 where they exist. Check what this "
 "declaration expects and what blocks it:"
 msgstr ""
@@ -198,11 +200,14 @@ msgid ""
 "forward from last year's declaration (negative bases carry over through a"
 " rule that reads the prior filing), then runs the formulas of the tax "
 "rules and saves a draft calculation. Here box `0003` carries the 24000 of"
-" salary income, box `0012` the total countable gross employment income "
-"(`24000.00`), and box `0019` the other deductible employment expenses "
-"(art. 19 LIRPF) of `2000.00`. The tool never fabricates a missing prior "
-"period: what it does not have on record stays a visible blank for you to "
-"resolve, not a guessed zero."
+" salary income from the payer's withholding record, box `0012` the total "
+"countable gross employment income (`24000.00`), and box `0019` the other "
+"deductible employment expenses (art. 19 LIRPF) of `2000.00`. The work-"
+"income boxes no payer certificate fills, such as employer contributions "
+"to pension plans, block the check until you state them, so the example "
+"states that there are none before checking. The tool never fabricates a "
+"missing prior period: what it does not have on record stays a visible "
+"blank for you to resolve, not a guessed zero."
 msgstr ""
 "El cálculo lee los apuntes clasificados del año en tus registros, los "
 "datos del perfil, las presentaciones previas que las reglas fiscales "
@@ -210,14 +215,18 @@ msgstr ""
 " negativas se arrastran mediante una regla que lee la presentación "
 "previa), ejecuta después las fórmulas de las reglas fiscales y guarda un "
 "cálculo en borrador. Aquí la casilla `0003` recoge los 24000 de "
-"rendimientos del trabajo, la casilla `0012` el total de rendimientos "
-"íntegros del trabajo computables (`24000.00`) y la casilla `0019` los "
-"otros gastos deducibles del trabajo (art. 19 LIRPF) de `2000.00`. La "
-"herramienta nunca inventa un periodo previo que falte: lo que no consta "
-"en tu registro queda como un hueco visible para que lo resuelvas, no como"
-" un cero supuesto."
+"rendimientos del trabajo del registro de retenciones del pagador, la "
+"casilla `0012` el total de rendimientos íntegros del trabajo computables "
+"(`24000.00`) y la casilla `0019` los otros gastos deducibles del trabajo "
+"(art. 19 LIRPF) de `2000.00`. Las casillas de rendimientos del trabajo "
+"que ningún certificado del pagador rellena, como las aportaciones del "
+"empleador a planes de pensiones, bloquean la comprobación hasta que las "
+"declares, así que el ejemplo declara que no hay ninguna antes de "
+"comprobar. La herramienta nunca inventa un periodo previo que falte: lo "
+"que no consta en tu registro queda como un hueco visible para que lo "
+"resuelvas, no como un cero supuesto."
 
-#: ../../how-to/modelo-100.md:89
+#: ../../how-to/modelo-100.md:92
 msgid ""
 "Most of Modelo 100's boxes are optional manual inputs for situations your"
 " records cannot know (employment income details, capital income, "
@@ -228,7 +237,7 @@ msgstr ""
 " de los rendimientos del trabajo, rendimientos del capital, deducciones)."
 " Averigua qué te corresponde y qué sigue faltando:"
 
-#: ../../how-to/modelo-100.md:97
+#: ../../how-to/modelo-100.md:100
 msgid ""
 "For stock under estimación directa, boxes 0177, 0181, and 0182 are filled"
 " from your encrypted inventory register for the filing year. `--casilla` "
@@ -246,20 +255,26 @@ msgstr ""
 "que crea el registro antes de presentar. No pongas cifras de existencias "
 "en la casilla 0155: el cálculo no la lee como una cifra de inventario."
 
-#: ../../how-to/modelo-100.md:104
+#: ../../how-to/modelo-100.md:107
 msgid ""
 "Supply a manual box value and recalculate by passing `--casilla "
-"0003=24000` on the calculate command, alongside the `--binding` values "
-"the declaration still needs (the main sequence above shows the full "
-"form). Recalculating replaces the current draft calculation."
+"<box>=<value>` on the `calculate` command, alongside the `--binding` "
+"values the declaration still needs (the main sequence above shows the "
+"full form). A box that one of your records fills refuses a manual value: "
+"when a payer's withholding record states your employment income, box 0003"
+" comes from that record, so correct the record instead. Recalculating "
+"replaces the current draft calculation."
 msgstr ""
 "Aporta el valor de una casilla manual y recalcula pasando `--casilla "
-"0003=24000` en el comando de cálculo, junto con los valores `--binding` "
-"que la declaración todavía necesita (la secuencia principal de arriba "
-"muestra el formato completo). Recalcular sustituye el cálculo en borrador"
-" actual."
+"<box>=<value>` en el comando `calculate`, junto con los valores "
+"`--binding` que la declaración todavía necesita (la secuencia principal "
+"de arriba muestra el formato completo). Una casilla que rellena uno de "
+"tus registros rechaza un valor manual: cuando el registro de retenciones "
+"de un pagador recoge tus rendimientos del trabajo, la casilla 0003 sale "
+"de ese registro, así que corrige el registro. Recalcular sustituye el "
+"cálculo en borrador actual."
 
-#: ../../how-to/modelo-100.md:109
+#: ../../how-to/modelo-100.md:114
 msgid ""
 "For the full input workflow - boxes Cadrumo fills in versus boxes you "
 "supply, offsets, and choosing among earlier calculations - see [Review "
@@ -274,11 +289,11 @@ msgstr ""
 "declaración ensamblada, consulta [Revisar los cálculos con Google Sheets"
 "](review-with-google-sheets.md)."
 
-#: ../../how-to/modelo-100.md:115
+#: ../../how-to/modelo-100.md:120
 msgid "Export and file"
 msgstr "Exporta y presenta"
 
-#: ../../how-to/modelo-100.md:117
+#: ../../how-to/modelo-100.md:122
 msgid ""
 "The check step in the calculation example ran the annual completeness "
 "check, including the checks across periods: every filing this declaration"
@@ -297,7 +312,31 @@ msgstr ""
 " a ejecutar la comprobación. Consulta [Comprobar un borrador de "
 "declaración y actuar según las incidencias](verification-reports.md)."
 
-#: ../../how-to/modelo-100.md:123
+#: ../../how-to/modelo-100.md:128
+msgid ""
+"The check applies to the calculation it checked. If you recalculate "
+"afterwards, the recalculated draft becomes the declaration's current "
+"calculation. Stating the work income again then reproduces the checked "
+"calculation, so no new draft is created: the result carries a notice that"
+" names the checked calculation by its revision ID and its state (checked "
+"and complete), and the recalculated draft stays current. The checked "
+"calculation is left exactly as it was. Export by the revision ID the "
+"notice names, as the example below does with `--revision`, so the export "
+"reads the checked calculation rather than the recalculated draft."
+msgstr ""
+"La comprobación se aplica al cálculo que comprobó. Si vuelves a calcular "
+"después, el borrador recalculado pasa a ser el cálculo actual de la "
+"declaración. Al declarar de nuevo los rendimientos del trabajo se "
+"reproduce entonces el cálculo comprobado, así que no se crea un borrador "
+"nuevo: el resultado incluye un aviso que nombra el cálculo comprobado por"
+" su identificador de revisión y su estado (comprobada y completa), y el "
+"borrador recalculado sigue siendo el actual. El cálculo comprobado queda "
+"exactamente como estaba. Exporta por el identificador de revisión que "
+"nombra el aviso, como hace el ejemplo siguiente con `--revision`, para "
+"que la exportación lea el cálculo comprobado y no el borrador "
+"recalculado."
+
+#: ../../how-to/modelo-100.md:137
 msgid ""
 "Export the checked declaration. Modelo 100 always writes an XML file, "
 "whatever name you choose. Export refuses to overwrite an existing file "
@@ -322,7 +361,7 @@ msgstr ""
 "que aquí el registro de la presentación se muestra como ejemplo que no se"
 " ejecuta, igual que la descarga de conciliación, que lee de la AEAT:"
 
-#: ../../how-to/modelo-100.md:137
+#: ../../how-to/modelo-100.md:151
 msgid ""
 "See [Reconcile a filed modelo against its AEAT receipt](reconcile.md) for"
 " the reconciliation verdicts."
@@ -330,11 +369,11 @@ msgstr ""
 "Consulta [Conciliar un modelo presentado con tu justificante de la "
 "AEAT](reconcile.md) para conocer los veredictos de conciliación."
 
-#: ../../how-to/modelo-100.md:139
+#: ../../how-to/modelo-100.md:153
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/modelo-100.md:141
+#: ../../how-to/modelo-100.md:155
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -342,21 +381,20 @@ msgstr ""
 "[Análisis a fondo: cómo se compone la declaración de la "
 "renta](../explanation/how-renta-is-assembled.md)"
 
-#: ../../how-to/modelo-100.md:142
+#: ../../how-to/modelo-100.md:156
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Preparar un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)"
 
-#: ../../how-to/modelo-100.md:143
+#: ../../how-to/modelo-100.md:157
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/modelo-100.md:144
+#: ../../how-to/modelo-100.md:158
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Presentar tu modelo en el portal de la AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-100.md:145
+#: ../../how-to/modelo-100.md:159
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr ""
 "[Conciliar un modelo presentado con tu justificante de la "
 "AEAT](reconcile.md)"
-

@@ -19,8 +19,8 @@ from cadrumo.application.filing.tests.export_support import (
 )
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
-from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ..filing_export_payload_acceptance import (
     FilingExportLiveProofEntry,
@@ -31,12 +31,20 @@ from ..filing_export_payload_acceptance import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("governed_fact_scope")]
 
 _FIRST_RECORD = "m151-page-01"
-_FIRST_FIELD = "m151-2023.pagina01.f001"
-_SECOND_FIELD = "m151-2023.pagina01.f002"
+_REVISION = open_ended_revision("151")
+_DESIGN_EPOCH = str(_REVISION.valid_from.year)
+_FIRST_FIELD = f"m151-{_DESIGN_EPOCH}.pagina01.f001"
+_SECOND_FIELD = f"m151-{_DESIGN_EPOCH}.pagina01.f002"
+
+
+def _coordinate_period():
+    return modelo_151_export_coordinate_draft().period
 
 
 def _m151_layout(registry_authority):
-    return registry_authority.snapshot("151", filing_year=2025, period="0A").revision.export_layouts[0]
+    return registry_authority.snapshot(
+        "151", filing_year=_coordinate_period().filing_year, period="0A"
+    ).revision.export_layouts[0]
 
 
 def _m151_entry() -> FilingExportLiveProofEntry:
@@ -48,10 +56,10 @@ def _m151_entry() -> FilingExportLiveProofEntry:
     """
     return FilingExportLiveProofEntry(
         modelo=Modelo("151"),
-        revision="2025-y-siguientes",
-        design_epoch="2023",
-        filing_year=2025,
-        period=Period.from_year_and_code(2025, "0A"),
+        revision=str(_REVISION.id),
+        design_epoch=_DESIGN_EPOCH,
+        filing_year=_coordinate_period().filing_year,
+        period=_coordinate_period(),
         draft=modelo_151_export_coordinate_draft(),
         producer_snapshot=m151_producer_snapshot(),
         expected_payload_sha256="0" * 64,

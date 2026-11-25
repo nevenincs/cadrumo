@@ -18,20 +18,13 @@ so a catalogue that translated nothing could not pass either.
 
 from __future__ import annotations
 
-import sys
-import threading
-import time
-import traceback
-
 import pytest
 from textual.widgets import Button, Input, Label, Select, Static
 from textual.widgets._select import SelectOverlay
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
-)
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
@@ -43,6 +36,9 @@ from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ..components.host import ScreenHostApp
 from ..secret.registration import RecoveryCodeScreen, RecoveryOfferScreen, RegistrationScreen
 from .fixture import recovery_enrollment_attempt, registration_attempt
+from .registration_pilot import wait_for_screen
+from .settled_click import click_when_laid_out
+from .settling import settle, settle_until
 
 pytestmark = [
     pytest.mark.integration,
@@ -66,60 +62,6 @@ def _screen() -> RegistrationScreen:
         register=registration_attempt,
         enroll_recovery=recovery_enrollment_attempt,
     )
-
-
-def _thread_stacks() -> str:
-    """Every live thread's stack, so a wait that expires says what it waited on."""
-    frames = sys._current_frames()
-    names = {thread.ident: thread.name for thread in threading.enumerate()}
-    return "\n".join(
-        f"--- {names.get(ident, ident)} ---\n{''.join(traceback.format_stack(frame)[-12:])}"
-        for ident, frame in frames.items()
-    )
-
-
-async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_seconds: float = 120.0) -> bool:
-    """Pause until ``screen_type`` is active and ``composed`` is queryable on it.
-
-    Creation and recovery enrolment run real key derivation, and a pushed
-    screen is active before its ``compose`` has run, so both the screen and one
-    of its widgets are awaited before the page's words are read. The bound is
-    wall-clock rather than a poll count: key derivation on a contended host
-    outlasted a fixed thirty-second budget, and a slow host is not a failure
-    of the screen under test.
-    """
-
-    def _ready() -> bool:
-        return isinstance(pilot.app.screen, screen_type) and bool(pilot.app.screen.query(composed))
-
-    deadline = time.monotonic() + deadline_seconds
-    while time.monotonic() < deadline:
-        if _ready():
-            return True
-        await pilot.pause(0.1)
-    if _ready():
-        return True
-    # Below the per-test timeout on purpose: an expiring wait reports what every
-    # thread was doing instead of the timeout killing the worker silently.
-    print(f"{screen_type.__name__} did not appear within {deadline_seconds:g}s\n{_thread_stacks()}", file=sys.stderr)
-    return False
-
-
-async def _click_when_laid_out(pilot, selector: str, *, deadline_seconds: float = 120.0) -> None:
-    """Click ``selector`` once it occupies screen space, retrying only a click that missed.
-
-    A composed widget can still have no region until the next layout pass; on a
-    loaded host the click then lands on nothing and the flow silently stalls.
-    ``Pilot.click`` reports whether it hit the target, so a miss is retried and a
-    hit is never repeated.
-    """
-    deadline = time.monotonic() + deadline_seconds
-    while time.monotonic() < deadline:
-        matches = pilot.app.screen.query(selector)
-        if matches and matches.first().region.area > 0 and await pilot.click(selector):
-            return
-        await pilot.pause(0.1)
-    raise AssertionError(f"{selector} never became clickable within {deadline_seconds:g}s")
 
 
 def _text(app: RegistrationScreen, selector: str) -> str:
@@ -170,8 +112,7 @@ def _chooser_rows(app: RegistrationScreen) -> list[str]:
 async def _choose(pilot, language: str) -> None:
     """Take the language chooser, as an operator does."""
     pilot.app.screen.query_one("#field-output-language", Select).value = language
-    await pilot.pause()
-    await pilot.pause()
+    await settle(pilot)
 
 
 @pytest.mark.asyncio
@@ -186,7 +127,7 @@ async def test_choosing_a_language_rewords_the_first_screen(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
 
             started = _expected_copy(_STARTING_LANGUAGE)
             target = _expected_copy(_TARGET_LANGUAGE)
@@ -229,13 +170,13 @@ async def test_the_language_switch_keeps_what_has_already_been_typed(tmp_path) -
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _choose(pilot, _STARTING_LANGUAGE)
 
             app.query_one("#field-username", Input).value = "Half Filled"
             app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
-            await pilot.pause()
+            await settle(pilot)
             assert app.query_one("#strength-line", Static).has_class("strength-strong")
 
             await _choose(pilot, _TARGET_LANGUAGE)
@@ -266,14 +207,14 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
     with isolated_profile_storage_root(tmp_path=tmp_path):
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _choose(pilot, _TARGET_LANGUAGE)
 
             app.query_one("#field-username", Input).value = "Language Subject"
             app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
-            await pilot.pause()
-            await _click_when_laid_out(pilot, "#btn-create")
+            await settle(pilot)
+            assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#btn-create", Button))
 
             # The offer that follows creation is still the first surface, so
             # it must answer in the language the chooser was left on. Each
@@ -291,7 +232,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             for key in (*offer_zones.values(), *offer_buttons.values()):
                 assert tr(key, locale=_STARTING_LANGUAGE) != tr(key, locale=_TARGET_LANGUAGE), key
 
-            assert await _wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
+            assert await wait_for_screen(pilot, RecoveryOfferScreen, composed="#btn-skip-recovery"), (
                 "creation must be followed by the offer"
             )
             offer = pilot.app.screen
@@ -302,8 +243,8 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             for selector, key in offer_buttons.items():
                 assert str(offer.query_one(selector, Button).label) == tr(key, locale=_TARGET_LANGUAGE), selector
 
-            await _click_when_laid_out(pilot, "#btn-setup-recovery")
-            assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
+            assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#btn-setup-recovery", Button))
+            assert await wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
                 f"setting up must show the code screen, but {type(pilot.app.screen).__name__} is active: "
                 f"{[str(widget.render()) for widget in pilot.app.screen.query(Static)][:6]}"
             )
@@ -336,12 +277,8 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             code = str(code_screen.query_one("#code-value", Static).content)
             assert code, "the code must be on screen before it can be typed back"
             verification.value = code
-            await _click_when_laid_out(pilot, "#btn-confirm-code")
-            await pilot.app.workers.wait_for_complete()
-            for _ in range(300):
-                if app.outcome is not None:
-                    break
-                await pilot.pause(0.1)
+            assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#btn-confirm-code", Button))
+            await settle_until(pilot, lambda: app.outcome is not None, "the profile to be created", workers=False)
 
         assert app.error is None
         assert app.outcome is not None, "the screen must still create the profile"
@@ -350,7 +287,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         # unlocked belongs to that thread's context and not this one.
         # Unlocking again through the ordinary login door is how the test
         # reaches the encrypted record the screen actually wrote.
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         authenticate_profile_for_invocation(
             name="Language Subject",
             passphrase_callback=lambda: _CREDENTIAL_INPUT,
@@ -398,7 +335,7 @@ async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None
 
         app = _screen()
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             await _choose(pilot, _TARGET_LANGUAGE)
             assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (
                 "the explicit locale must be live inside the screen, or the assertion below is vacuous"

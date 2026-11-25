@@ -16,11 +16,7 @@ from cadrumo.application.operations import profile_guard
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from cadrumo.application.user_profile import google_configuration_operation as worker
 from cadrumo.application.user_profile import google_configuration_operation_contracts as contracts
 from cadrumo.application.user_profile.access_contracts import (
@@ -47,8 +43,14 @@ from cadrumo.application.user_profile.google_configuration_operation_ports impor
 )
 from cadrumo.application.user_profile.google_configuration_result_projection import project_google_configuration_result
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDecision, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_mcp.mcp.access_scope import surface_scope
@@ -57,7 +59,7 @@ from cadrumo_mcp.mcp.surfaces import MCP_SURFACES, McpSurfaceName
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("38383838-3838-4383-8383-383838383838")
-_NOW = datetime(2026, 10, 10, 12, tzinfo=UTC)
+_NOW = datetime(filing_year_envelope().horizon, 10, 10, 12, tzinfo=UTC)
 _PIN = cast(PinnedAuthorityOperation, object())
 _CLI = OperationFrontendProjection.CLI
 _MCP = OperationFrontendProjection.EXTERNAL_CLIENT
@@ -310,7 +312,7 @@ def test_the_projector_releases_each_read_only_as_its_own_stored_record() -> Non
         session_present=True,
         account_email="persona@example.invalid",
         granted_scopes=("https://www.googleapis.com/auth/drive.file",),
-        issued_at="2026-10-01T09:00:00+00:00",
+        issued_at=f"{_NOW.year}-10-01T09:00:00+00:00",
     )
     folder = contracts.GoogleFolderViewProjection(
         profile_id=_PROFILE, configured=True, root_folder_id="synthetic-root-folder"
@@ -494,7 +496,7 @@ async def test_the_registered_status_read_stores_its_record_without_opening_a_co
         session_present=True,
         account_email="persona@example.invalid",
         granted_scopes=("https://www.googleapis.com/auth/drive.file",),
-        issued_at="2026-10-01T09:00:00+00:00",
+        issued_at=f"{_NOW.year}-10-01T09:00:00+00:00",
     )
 
     def run(

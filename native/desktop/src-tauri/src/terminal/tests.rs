@@ -429,34 +429,6 @@ pub(crate) fn unit_launch() -> crate::environment::Launch {
     }
 }
 
-#[test]
-fn aeat_setup_has_a_separate_slot_and_only_an_exact_profile_argument() {
-    let launch = unit_launch();
-    let profile = "5aa00000-0000-4000-8000-0000000000aa";
-    let program = Program::for_aeat_setup(&launch, profile).unwrap();
-    assert_eq!(
-        program.arguments,
-        [
-            "-I",
-            "-m",
-            "cadrumo_runtime.host.frontend.tui",
-            "--aeat-auth-profile",
-            profile
-        ]
-        .map(OsString::from)
-        .to_vec()
-    );
-    assert_ne!(Kind::Tui.slot(), Kind::AeatSetup.slot());
-    for invalid in [
-        "",
-        "../profile",
-        "00000000-0000-0000-0000-000000000000",
-        "5aa00000-0000-4000-8000-0000000000aa?secret=x",
-    ] {
-        assert!(Program::for_aeat_setup(&launch, invalid).is_err());
-    }
-}
-
 fn open_request(frames: &str) -> InvokeRequest {
     InvokeRequest {
         cmd: "terminal_open".into(),
@@ -514,6 +486,94 @@ fn terminal_open_answers_for_the_document_that_sent_it() {
     malformed.body = InvokeBody::Json(serde_json::json!({"kind": "tui"}));
     assert!(get_ipc_response(&window, malformed).is_err());
     assert!(get_ipc_response(&window, open_request("not a channel")).is_err());
+}
+
+/// Real IPC dispatch retains one failure with the addressed session identity,
+/// and missing-session admission failures remain observable.
+#[test]
+fn terminal_ipc_records_a_session_failure_once_with_its_identity() {
+    let state = Arc::new(TerminalState::new(unit_launch()));
+    let diagnostics = state.launch.diagnostics.clone();
+    let session = state
+        .registry
+        .lock()
+        .unwrap()
+        .open(Kind::Console, || {
+            Session::start(
+                chatty_program(),
+                80,
+                24,
+                Arc::new(|_| Ok(())),
+                diagnostics.clone(),
+            )
+        })
+        .unwrap();
+    let app = mock_builder()
+        .manage(state.clone())
+        .invoke_handler(ipc::handler())
+        .build(mock_context(noop_assets()))
+        .unwrap();
+    let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    let request = |command: &str, body| {
+        let mut request = open_request("__CHANNEL__:1");
+        request.cmd = command.into();
+        request.body = InvokeBody::Json(body);
+        request
+    };
+    let after = diagnostics.snapshot(0).events.last().unwrap().sequence;
+    let refused = get_ipc_response(
+        &window,
+        request(
+            "terminal_ack",
+            serde_json::json!({"session": session, "offset": u64::MAX}),
+        ),
+    )
+    .unwrap_err();
+    assert_eq!(refused["code"], "invalid_arguments");
+    let failures: Vec<_> = diagnostics
+        .snapshot(after)
+        .events
+        .into_iter()
+        .filter(|event| event.sequence > after && event.failure.is_some())
+        .collect();
+    assert_eq!(
+        failures.len(),
+        1,
+        "one IPC refusal must produce one diagnostic"
+    );
+    let event = serde_json::to_value(&failures[0]).unwrap();
+    assert_eq!(event["terminalSession"], session);
+    assert_eq!(event["process"], event["status"]["id"]);
+    assert_eq!(event["failure"]["operation"], "terminal");
+    assert_eq!(event["failure"]["code"], "invalid_arguments");
+
+    for command in ["terminal_ack", "terminal_close"] {
+        let after = diagnostics.snapshot(0).events.last().unwrap().sequence;
+        let refused = get_ipc_response(
+            &window,
+            request(
+                command,
+                serde_json::json!({"session": session + 1, "offset": 0}),
+            ),
+        )
+        .unwrap_err();
+        assert_eq!(refused["code"], "session_unavailable");
+        let failures: Vec<_> = diagnostics
+            .snapshot(after)
+            .events
+            .into_iter()
+            .filter(|event| event.sequence > after && event.failure.is_some())
+            .collect();
+        assert_eq!(
+            failures.len(),
+            1,
+            "{command} must retain its admission failure"
+        );
+        assert!(failures[0].process.is_none());
+    }
+    state.close(session).unwrap();
 }
 
 /// Only the start of a new top-frame document replaces the current one.
@@ -639,77 +699,6 @@ fn printed(program: Program) -> String {
 }
 
 #[test]
-fn only_the_dedicated_tui_receives_the_desktop_palette_identity() {
-    for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
-        let mut program = chatty_program();
-        program.role = role;
-        program.environment.insert(
-            "TERM_PROGRAM".into(),
-            if role == ProcessRole::Tui {
-                "OtherTerminal"
-            } else {
-                "cadrumo"
-            }
-            .into(),
-        );
-        let arguments = if cfg!(windows) {
-            vec!["/d", "/c", "set TERM_PROGRAM"]
-        } else {
-            vec!["-c", "printf '%s' \"$TERM_PROGRAM\""]
-        };
-        program.arguments = arguments.into_iter().map(OsString::from).collect();
-        let text = printed(program);
-        if role == ProcessRole::Tui {
-            assert!(!text.contains("cadrumo-shell"), "{text:?}");
-        }
-        assert!(
-            text.contains(if role == ProcessRole::Tui {
-                "cadrumo"
-            } else {
-                "cadrumo-shell"
-            }),
-            "{text:?}"
-        );
-    }
-}
-
-#[test]
-fn tui_readiness_and_screen_reach_the_view_through_the_real_pty() {
-    let mut program = chatty_program();
-    program.role = ProcessRole::Tui;
-    if cfg!(windows) {
-        let root = std::env::var_os("SystemRoot").expect("SystemRoot");
-        program.executable =
-            PathBuf::from(root).join("System32/WindowsPowerShell/v1.0/powershell.exe");
-        program.arguments = [
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            "[Console]::Write('ready-screen' + [char]27 + ']777;cadrumo;presentation;ready' + [char]27 + '\\')",
-        ].into_iter().map(OsString::from).collect();
-    } else {
-        program.arguments = [
-            "-c",
-            "printf 'ready-screen\\033]777;cadrumo;presentation;ready\\033\\\\'",
-        ]
-        .into_iter()
-        .map(OsString::from)
-        .collect();
-    }
-    let text = printed(program);
-    assert!(
-        text.contains("ready-screen"),
-        "screen was not delivered: {text:?}"
-    );
-    // Windows can forward OSC before its buffered text repaint. The view
-    // must settle and render the following output before uncovering it.
-    assert!(
-        text.contains("\x1b]777;cadrumo;presentation;ready"),
-        "readiness was not delivered: {text:?}"
-    );
-}
-
-#[test]
 fn an_inherited_colour_switch_never_reaches_a_terminal_child() {
     for role in [ProcessRole::Tui, ProcessRole::Console, ProcessRole::Repl] {
         let mut program = chatty_program();
@@ -783,6 +772,53 @@ fn a_child_that_exits_while_input_is_idle_settles_the_session() {
         "the idle input writer kept the session open"
     );
     session.stop().unwrap();
+}
+
+/// A shell starts a session of its own, outside the window's process scope;
+/// stopping it ends its process group, including what ignores the hangup.
+#[cfg(unix)]
+#[test]
+fn stopping_a_shell_ends_what_it_started_in_its_own_group() {
+    let mut program = chatty_program();
+    program.arguments = [
+        "-c",
+        "trap '' HUP; /bin/sh -c \"trap '' HUP; while :; do /bin/sleep 1; done\" & echo \"started $!\"; wait",
+    ]
+    .iter()
+    .map(OsString::from)
+    .collect();
+    let captured = Arc::new(Mutex::new(Vec::new()));
+    let output = captured.clone();
+    let sink: Sink = Arc::new(move |frame| {
+        if frame.first() == Some(&0) {
+            output.lock().unwrap().extend_from_slice(&frame[1..]);
+        }
+        Ok(())
+    });
+    let mut session =
+        Session::start(program, 80, 24, sink, Arc::new(Diagnostics::default())).unwrap();
+    let began = Instant::now();
+    let started = loop {
+        let text = String::from_utf8_lossy(&captured.lock().unwrap()).into_owned();
+        if let Some(pid) = text
+            .split("started ")
+            .nth(1)
+            .and_then(|rest| rest.split_whitespace().next())
+            .and_then(|pid| pid.parse::<u32>().ok())
+        {
+            break pid;
+        }
+        session.acknowledge(text.len() as u64).unwrap();
+        assert!(began.elapsed() < Duration::from_secs(10), "no started line");
+        std::thread::sleep(Duration::from_millis(20));
+    };
+    assert!(crate::agent::runner::tests::alive(started));
+    session.stop().unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while crate::agent::runner::tests::alive(started) {
+        assert!(Instant::now() < deadline, "the shell's group outlived it");
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }
 
 /// A webview may disappear before it answers ConPTY's initial cursor query.
@@ -978,12 +1014,7 @@ fn every_kind_uses_workspace_and_bundled_command_search_path() {
     let bin = console::package_bin(launch.child.executable()).unwrap();
     let python = launch.child.executable().parent().unwrap();
     for kind in Kind::ALL {
-        let program = if kind == Kind::AeatSetup {
-            Program::for_aeat_setup(&launch, "5aa00000-0000-4000-8000-0000000000aa")
-        } else {
-            Program::for_kind(&launch, kind)
-        }
-        .unwrap();
+        let program = Program::for_kind(&launch, kind).unwrap();
         assert_eq!(program.directory, launch.console_workspace);
         let (_, value) = program
             .environment

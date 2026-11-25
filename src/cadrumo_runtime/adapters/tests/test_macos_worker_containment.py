@@ -20,8 +20,9 @@ from typing import Any, cast
 import pytest
 
 from cadrumo.core.async_cleanup import close_async_resources
-from cadrumo.core.config import Settings
-from cadrumo.core.storage_environment import storage_directory
+from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE, profile_root
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -32,6 +33,7 @@ from ..macos_coalition import (
     read_macos_resource_coalition,
     terminate_macos_coalition,
 )
+from ..macos_job_print import MacosJobPrint, parse_macos_job_print
 from ..macos_process import (
     MacosProcessIncarnation,
     MacosSignalDelivery,
@@ -39,12 +41,8 @@ from ..macos_process import (
     read_macos_process,
     signal_macos_incarnation,
 )
-from ..macos_worker_process import (
-    MacosJobPrint,
-    _NativeMacosWorkerHost,
-    decode_macos_worker_marker,
-    parse_macos_job_print,
-)
+from ..macos_worker_host import NativeMacosWorkerHost
+from ..macos_worker_markers import decode_macos_worker_marker
 from .macos_test_process import MacosTestProcess
 
 pytestmark = [
@@ -198,9 +196,9 @@ class _ContainmentCleanup:
             deadline = time.monotonic() + 10
             while _job(label) is not None:
                 if time.monotonic() >= deadline:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 time.sleep(0.05)
-        _NativeMacosWorkerHost().remove_marker(label)
+        NativeMacosWorkerHost().remove_marker(label)
 
     def _release(self) -> None:
         failures: list[BaseException] = []
@@ -249,14 +247,13 @@ def _launch_parent(tmp_path: Path, *, mode: str | None = None) -> MacosTestProce
         ),
         cwd=tmp_path,
         env={
-            **{name: value for name, value in os.environ.items() if name in Settings.storage_env_var_names()},
             "PATH": "/usr/bin:/bin",
             "LANG": "C",
             "LC_ALL": "C",
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "PYTHONPATH": str(source_root),
             "CADRUMO_AUTHORITY_ROOT": os.environ["CADRUMO_AUTHORITY_ROOT"],
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+            "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
             _SENTINEL: "runtime-environment-must-not-reach-the-worker",
         },
     )
@@ -332,13 +329,14 @@ def _assert_worker_inherited_nothing(directory: Path, worker_pid: int) -> None:
     assert _SENTINEL not in environment
     # Explicit storage routing is part of the launch contract. Darwin may add its locale variable.
     root = directory / "cadrumo-storage"
-    expected = _CLEAN_ENVIRONMENT | {
-        name: value for name, value in os.environ.items() if name in Settings.storage_env_var_names()
-    }
-    expected["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
-    temporary_root = storage_directory("CADRUMO_TEMP_DIR", "tmp", root=root)
+    expected = _CLEAN_ENVIRONMENT | {"CADRUMO_STORAGE_ROOT": str(root)}
+    temporary_root = root / storage_location(StorageCategory.TEMPORARY_FILES).relative_path()
     expected.update({name: str(temporary_root) for name in ("TEMP", "TMP", "TMPDIR")})
     expected["CADRUMO_AUTHORITY_ROOT"] = os.environ["CADRUMO_AUTHORITY_ROOT"]
+    # The worker is told the folder of the one profile it serves, beneath that root.
+    profile_folder = environment.get(PROFILE_ROOT_VARIABLE)
+    assert profile_folder is not None and Path(profile_folder) == profile_root(root, Path(profile_folder).name)
+    expected[PROFILE_ROOT_VARIABLE] = profile_folder
     assert {name: value for name, value in environment.items() if name != "__CF_USER_TEXT_ENCODING"} == expected
     marker = _read_json(directory / "macos-parent-marker.json")
     identities = {(int(device), int(inode)) for _fd, device, inode in record["descriptors"]}

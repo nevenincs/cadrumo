@@ -1,0 +1,350 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-aeat-sync'
+date: '2026-10-29'
+modified: '2026-10-29'
+body_schema: 'body-v2'
+body_hash: 'sha256:03c2dcb706f57c59f79934395dfe1bdc2843c92090f9e7695aa41cc2600a5391'
+related:
+  - "[[2026-10-29-desktop-aeat-sync-plan]]"
+---
+
+# `desktop-aeat-sync` ledger
+
+## Changes
+
+- `S01` `M` `.vault/adr/2026-10-29-desktop-aeat-sync-adr.md`
+- `S01` `M` `.vault/adr/2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr.md`
+- `S01` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S01` `M` `.vault/adr/2026-08-08-sync-control-surface-adr.md`
+- `S01` `R` `.vault/adr/2026-10-29-desktop-aeat-sync-shell-profile-reads-amendment-adr.md` -> `.vault/_archive/adr/2026-10-29-desktop-aeat-sync-shell-profile-reads-amendment-adr.md`
+- `S01` `R` `.vault/adr/2026-10-29-desktop-aeat-sync-desktop-shell-amendment-adr.md` -> `.vault/_archive/adr/2026-10-29-desktop-aeat-sync-desktop-shell-amendment-adr.md`
+- `S01` `R` `.vault/adr/2026-10-29-desktop-aeat-sync-sync-control-surface-amendment-adr.md` -> `.vault/_archive/adr/2026-10-29-desktop-aeat-sync-sync-control-surface-amendment-adr.md`
+- `S01` `M` `.vault/plan/2026-10-29-desktop-aeat-sync-plan.md`
+- `S01` `verify:` `vaultspec-core vault check all --feature desktop-aeat-sync` -> `pass`
+- `S02` `M` `.vault/adr/2026-10-29-desktop-aeat-sync-adr.md`
+- `S02` `verify:` `vaultspec-core vault check all --feature desktop-aeat-sync` -> `pass`
+- `S22` `M` `native/desktop/frontend/src/App.tsx`
+- `S22` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S22` `A` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S22` `verify:` `npm run check` -> `pass`
+- `S22` `verify:` `playwright censo-palette user-profile palette navigation-guards keyboard` -> `pass`
+- `S05` `M` `src/cadrumo/application/live/filed_bulk_capture_operation.py`
+- `S05` `M` `src/cadrumo/application/live/filed_history_operation.py`
+- `S05` `M` `src/cadrumo/application/live/iva_wallet_history_capture_operation.py`
+- `S05` `M` `src/cadrumo/core/storage_taxonomy_locations.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/app_live_commands.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/app_live_iva_commands.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/operation_filed_bulk.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/operation_filed_history.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/operation_iva_history_capture.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_filed_bulk.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_filed_history.py`
+- `S05` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_iva_history_capture.py`
+- `S05` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_filed_bulk_capture_operation.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_filed_history_operation.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/test_iva_wallet_history_capture_operation.py`
+- `S05` `verify:` `pytest focused 73 tests` -> `pass`
+- `S05` `verify:` `ruff and ty on touched files` -> `pass`
+- `S12` `A` `native/desktop/frontend/src/shell/aeatSync.ts`
+- `S12` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/navigation/windowViews.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S12` `M` `native/desktop/frontend/tests/scenarios/agent-page-links.spec.ts`
+- `S12` `M` `native/desktop/frontend/tests/scenarios/navigation-register.spec.ts`
+- `S12` `verify:` `npm run check` -> `pass`
+- `S12` `verify:` `playwright navigation-register palette agent-page-links aeat-sync` -> `pass`
+- `S13` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S13` `A` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S13` `A` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S13` `verify:` `npm run check` -> `pass`
+- `S13` `verify:` `playwright aeat-sync` -> `pass`
+- `S08` `M` `native/desktop/src-tauri/src/app.rs`
+- `S08` `A` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S08` `A` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S08` `A` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S08` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S08` `verify:` `just check-rust clippy fmt` -> `pass`
+- `S08` `verify:` `desktop-host-unit-test aeat_sync 8 of 11` -> `fail`
+- `S06` `M` `src/cadrumo/adapters/outbound/aeat/auth/errors.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/aeat/sede/errors.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_navigation_timeout.py`
+- `S06` `M` `src/cadrumo/adapters/outbound/aeat/tests/test_live_iva_failure_translation.py`
+- `S06` `M` `src/cadrumo/application/live/errors.py`
+- `S06` `M` `src/cadrumo/application/live/filed_capture_queries.py`
+- `S06` `M` `src/cadrumo/application/live/filed_data_capture.py`
+- `S06` `M` `src/cadrumo/application/live/filed_history_pull.py`
+- `S06` `M` `src/cadrumo/application/live/iva_remote_state.py`
+- `S06` `A` `src/cadrumo/application/live/profile_taxpayer_number.py`
+- `S06` `M` `src/cadrumo/application/live/tests/test_filed_bulk_capture.py`
+- `S06` `M` `src/cadrumo/application/live/verify_capture_operation.py`
+- `S06` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S06` `M` `src/cadrumo/entrypoints/adapter_composition_ports.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_verify_capture_operation.py`
+- `S06` `M` `src/cadrumo/locales/ca/application.yml`
+- `S06` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S06` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S06` `M` `src/cadrumo/locales/en/application.yml`
+- `S06` `M` `src/cadrumo/locales/en/errors.yml`
+- `S06` `M` `src/cadrumo/locales/es/application.yml`
+- `S06` `M` `src/cadrumo/locales/es/cli.yml`
+- `S06` `M` `src/cadrumo/locales/es/errors.yml`
+- `S06` `M` `src/cadrumo/locales/hu/application.yml`
+- `S06` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S06` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S06` `verify:` `focused pytest` -> `pass`
+- `S06` `verify:` `just check-style` -> `pass`
+- `S17` `M` `dev/locales/desktop_chrome.py`
+- `S17` `M` `dev/locales/desktop_interface_keys.py`
+- `S17` `M` `src/cadrumo/locales/ca/common.yml`
+- `S17` `M` `src/cadrumo/locales/en/common.yml`
+- `S17` `M` `src/cadrumo/locales/es/common.yml`
+- `S17` `M` `src/cadrumo/locales/hu/common.yml`
+- `S17` `verify:` `dev.locales status --check` -> `pass`
+- `S17` `verify:` `desktop-frontend-generated` -> `fail`
+- `S14` `M` `native/desktop/frontend/src/App.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncFlow.stories.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncFlow.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/aeatSync/Preflight.tsx`
+- `S14` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S14` `A` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S14` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/aeatSync.ts`
+- `S14` `A` `native/desktop/frontend/src/shell/aeatSyncPrepare.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S14` `verify:` `tsc and eslint` -> `pass`
+- `S03` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S03` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S03` `M` `src/cadrumo/application/workbench_generation_calendar.py`
+- `S03` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S03` `verify:` `pytest application/aeat_sync 107` -> `pass`
+- `S03` `verify:` `test_workbench_generation 37` -> `pass`
+- `S26` `A` `src/cadrumo/application/aeat_sync/tests/test_status.py`
+- `S26` `verify:` `pytest aeat_sync/tests/test_status.py 43` -> `pass`
+- `S04` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S04` `M` `dev/quality/metadata/import_load_targets.json`
+- `S04` `A` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S04` `A` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S04` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S04` `A` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/operation_composition_live.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_expectations.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_support.py`
+- `S04` `verify:` `test_status_operation and test_access_facts 15` -> `pass`
+- `S04` `verify:` `just check-style` -> `pass`
+- `S15` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.stories.tsx`
+- `S15` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.tsx`
+- `S15` `A` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S15` `A` `native/desktop/frontend/src/dev/aeatSyncRunWords.ts`
+- `S15` `A` `native/desktop/frontend/src/shell/aeatSyncRun.ts`
+- `S15` `verify:` `tsc and eslint` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncResults.stories.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/BorradorImport.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/NotificationResults.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S16` `A` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S16` `A` `native/desktop/frontend/src/dev/aeatSyncResultsWords.ts`
+- `S16` `A` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/BorradorImport.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/NotificationResults.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncResultsWords.ts`
+- `S16` `verify:` `npm run check` -> `pass`
+- `S07` `M` `.vault/adr/2026-10-29-desktop-aeat-sync-adr.md`
+- `S07` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/live_state_composition.py`
+- `S07` `A` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_iva_wallet_history_capture_operation.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_notifications_capture_operation.py`
+- `S07` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S07` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S07` `verify:` `pytest touched areas 152` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S08` `verify:` `desktop-host-unit-test aeat_sync 11 of 11` -> `pass`
+- `S23` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.stories.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S23` `A` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S23` `M` `native/desktop/frontend/src/App.tsx`
+- `S23` `verify:` `playwright censo-modelo censo-palette modelo-declarations` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncPageFlow.stories.tsx`
+- `S16` `D` `native/desktop/frontend/src/dev/aeatSyncResultsWords.ts`
+- `S16` `D` `native/desktop/frontend/src/dev/aeatSyncRunWords.ts`
+- `S16` `M` `native/desktop/frontend/src/App.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.stories.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.stories.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncResults.stories.tsx`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S16` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S16` `verify:` `npm run check` -> `pass`
+- `S16` `verify:` `playwright aeat-sync user-profile censo-palette navigation-register 65` -> `pass`
+- `S09` `M` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S09` `A` `native/desktop/src-tauri/src/shell/aeat_sync/run.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/picked_files.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/user_profile/censo.rs`
+- `S10` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S11` `verify:` `desktop-host-unit-test aeat_sync 30` -> `pass`
+- `S11` `verify:` `just check-rust clippy rustfmt` -> `pass`
+- `S24` `M` `native/desktop/frontend/src/components/profile/ProfileSync.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S24` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S24` `M` `native/desktop/frontend/src/shell/profileCenso.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S24` `verify:` `npm run check` -> `pass`
+- `S24` `verify:` `playwright 69` -> `pass`
+- `S25` `M` `native/desktop/frontend/src/components/profile/ProfileSync.tsx`
+- `S25` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S25` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S25` `M` `native/desktop/frontend/src/shell/profileCenso.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S25` `verify:` `npm run check` -> `pass`
+- `S25` `verify:` `playwright 69` -> `pass`
+- `S27` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S27` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/tests/test_status.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S27` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S27` `verify:` `pytest src/cadrumo/application/aeat_sync/tests` -> `pass`
+- `S27` `verify:` `lint-imports --config .importlinter` -> `pass`
+- `S27` `verify:` `just check-style` -> `pass`
+- `S27` `verify:` `just check-format` -> `pass`
+- `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S28` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test (CADRUMO_DESKTOP_HOST_TEST_FILTER=aeat_sync)` -> `pass`
+- `S28` `verify:` `just check-rust` -> `pass`
+- `S29` `M` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S29` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S29` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncResults.stories.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`
+- `S29` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S29` `verify:` `npm run check` -> `pass`
+- `S29` `verify:` `playwright tests/scenarios/aeat-sync.spec.ts` -> `pass`
+- `S17` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S17` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S17` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S17` `verify:` `desktop-frontend-generated` -> `pass`
+- `S17` `verify:` `dev.locales status --check` -> `pass`
+- `S18` `M` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S18` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S18` `verify:` `npm run check` -> `pass`
+- `S18` `verify:` `playwright aeat-sync 26` -> `pass`
+- `S19` `M` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S19` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S19` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S19` `verify:` `npm run check` -> `pass`
+- `S19` `verify:` `playwright aeat-sync 26` -> `pass`
+- `S27` `verify:` `pytest aeat_sync+operations+contract-manifest+conformance, import-boundaries contracts, style, format, types` -> `pass`
+- `S27` `M` `src/cadrumo/application/operations/capabilities.py`
+- `S27` `M` `src/cadrumo/application/operations/tests/test_capabilities.py`
+- `S27` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/run.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/user_profile/censo.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/user_profile/views.rs`
+- `S10` `verify:` `desktop-host-unit-test shell::aeat_sync 34` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test shell::user_profile 30` -> `pass`
+- `S10` `verify:` `just check-rust 24/24` -> `pass`
+- `S11` `verify:` `desktop-host-unit-test shell::aeat_sync 34` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/shell/aeatSync.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/aeatSyncRun.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S12` `verify:` `npm run check` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/outcomeIcons.ts`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/UnknownWarning.tsx`
+- `S16` `verify:` `npm run check` -> `pass`
+- `S19` `verify:` `playwright aeat-sync 27` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test aeat_sync 37` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test user_profile 30` -> `pass`
+- `S10` `verify:` `just check-rust` -> `pass`
+- `S11` `verify:` `desktop-host-unit-test aeat_sync 37` -> `pass`
+- `S15` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S15` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S15` `verify:` `npm run check` -> `pass`
+- `S15` `verify:` `playwright aeat-sync 27` -> `pass`
+- `S04` `M` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S04` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S04` `verify:` `pytest aeat_sync status 143` -> `pass`
+- `S04` `verify:` `just check-style check-format check-types` -> `pass`
+- `S04` `verify:` `lint-imports` -> `pass`
+- `S20` `M` `.vault/audit/2026-10-29-desktop-aeat-sync-audit.md`
+- `S20` `verify:` `third review pass` -> `pass`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S10` `verify:` `desktop-host-unit-test aeat_sync 39` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test user_profile 31` -> `pass`
+- `S10` `verify:` `just check-rust` -> `pass`
+- `S27` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S27` `verify:` `pytest aeat_sync status 149` -> `pass`
+- `S27` `verify:` `check-style check-format check-types` -> `pass`
+
+## Notes
+
+- `S22` commit 65d05917db also carried the P04.S12 worker's uncommitted App.tsx mounting edits
+- `S05` repo-wide gates red from concurrent in-progress P02 work; S07 reruns all gates
+- `S12` command shapes defined frontend-first; host S08 aligns to them
+- `S13` no rail item yet, added with S14; strings pending P05
+- `S08` 3 manifest tests await live.sync.status in P02.S07; step closes after they pass
+- `S06` en/cli.yml `session_ended` line left uncommitted (file holds another session's edits); notifications fetch session-ended raise in `live_state_composition.py` moved to S07
+- `S17` first pass: 40 overview keys; generated build waits for keys from in-progress screen steps; common.yml commit carried other sessions' hunks
+- `S14` owner ruling 2026-10-29: no sign-in or selection screens; flow not yet mounted in the page
+- `S04` IVA wallet freshness not refreshed by history-capture; handled in S07
+- `S15` views built and in Storybook; not yet mounted; host lacks resume and `acknowledged_unknown`
+- `S16` census routed via onReviewCensus; borrador import wired to port only; not yet mounted
+- `S07` manifest regenerated content landed in 29d0663d16 by another session; session-ended is a plain refusal so it is not a declared refusal-detail code in the manifest; en cli.yml line uncommitted (foreign hunks); remaining gate failures are in other sessions' dev/locales and dev/docs files and the live.sede.view conformance case
+- `S23` App.tsx onCensus hunk lands with the screen-connection commit; census reattach across profile remount unproven (useCensoSync has no status read on mount) - for P06.S24
+- `S16` screens connected into one page flow; stopgap word tables removed; includes the Modelo census App.tsx hunk
+- `S09` builds only together with S10 outcome.rs
+- `S10` gaps: filed result rows need a backend extension; access readiness reuses auth.local-read outside the closed list (decision pending)
+- `S27` just check-types fails only in dev/docs files another session owns; just check-import-boundaries kept 30 of 30 contracts with no finding but reported unavailable because the source tree changed while it ran
+- `S17` owner wording rulings applied (plain browser naming, short labels) in 6bf8e4cdb5 and ba5a53ba05; en/adapters browser line left uncommitted (foreign hunks)
+- `S18` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
+- `S19` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
+- `S01` review fixes: ADR bodies restated to owner rulings (no sign-in step, selection or dry run; item-level progress)
+- `S20` rounds 1-2 required revision (high findings fixed in fb5296ee4f, 9366afc6df); round 3 passed with 2 low findings and the blocked en locale line

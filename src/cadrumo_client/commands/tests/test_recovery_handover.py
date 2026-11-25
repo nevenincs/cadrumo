@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
-from cadrumo_client.commands.recovery_handover import _write_recovery_handoff
+from cadrumo_client.commands.recovery_handover import write_recovery_handoff
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -34,7 +34,7 @@ def test_a_partial_write_still_delivers_the_whole_document(tmp_path: Path, monke
         return real_write(fd, bytes(data[:3]))
 
     monkeypatch.setattr(os, "write", three_bytes_at_a_time)
-    _write_recovery_handoff(descriptor, _CODE)
+    write_recovery_handoff(descriptor, _CODE)
 
     assert json.loads(target.read_bytes()) == {"recovery_code": _CODE}
     assert target.read_bytes().endswith(b"\n")
@@ -48,7 +48,7 @@ def test_a_descriptor_that_accepts_nothing_is_refused_and_still_closed(
     monkeypatch.setattr(os, "write", lambda fd, data: 0)
 
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        _write_recovery_handoff(descriptor, _CODE)
+        write_recovery_handoff(descriptor, _CODE)
 
     assert refused.value.translated_message == "cli.config.profile.recovery.handoff_unwritable"
     _assert_closed(descriptor)

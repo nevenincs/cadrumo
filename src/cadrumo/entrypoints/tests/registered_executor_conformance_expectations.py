@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 
 from ...application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
+from ...application.inventory.registered_requests import INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID
+from ...application.inventory.registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
 from ...application.invoices.catalogue_read_operation import (
     INVOICE_LIST_OPERATION_DEFINITION_ID,
     INVOICE_VIEW_OPERATION_DEFINITION_ID,
@@ -31,12 +33,12 @@ from ...application.workflow.run_read_operation import (
     WORKFLOW_RUN_READ_OPERATION_DEFINITION_ID,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from ..operation_composition import build_production_operation_registry
 from .conformance_families import CONFORMANCE_FAMILIES
 from .conformance_family_contract import RegisteredExecutorConformanceCase
+from .production_operation_registry import production_operation_registry
 
 
-def _registered_definition_ids() -> tuple[str, ...]:
+def registered_definition_ids() -> tuple[str, ...]:
     """Every definition the production registry actually composes.
 
     The matrix is parametrised from this rather than from a hand-listed
@@ -48,10 +50,10 @@ def _registered_definition_ids() -> tuple[str, ...]:
     the matrix by existing, and reports a missing scenario rather than
     reconciling quietly.
     """
-    return tuple(sorted(definition.definition_id for definition in build_production_operation_registry().definitions))
+    return tuple(sorted(definition.definition_id for definition in production_operation_registry().definitions))
 
 
-def _expectations_owned_once(
+def expectations_owned_once(
     cases: Iterable[RegisteredExecutorConformanceCase],
 ) -> Mapping[str, RegisteredExecutorConformanceCase]:
     """Key scenarios by definition id, refusing a second scenario for the same operation."""
@@ -63,7 +65,7 @@ def _expectations_owned_once(
     return expectations
 
 
-_EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_owned_once(
+EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_owned_once(
     (
         *(case for family in CONFORMANCE_FAMILIES for case in family.cases),
         *(
@@ -113,6 +115,8 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 "ledger.evidence.consent.list",
                 "ledger.evidence.review.list",
                 "ledger.evidence.review.view",
+                "operations.history.list",
+                "reference.corpus.search",
             )
         ),
         *(
@@ -205,6 +209,9 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "user-profile.descendants", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
+            "user-profile.ascendants", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        RegisteredExecutorConformanceCase(
             "user-profile.complete-setup",
             OperationTerminalCondition.REFUSED,
             OperationEffect.UNKNOWN,
@@ -212,6 +219,15 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "user-profile.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        RegisteredExecutorConformanceCase(
+            "user-profile.imputation-election.read", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        RegisteredExecutorConformanceCase(
+            "user-profile.imputation-election.set", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        RegisteredExecutorConformanceCase(
+            "user-profile.record-groups", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
         RegisteredExecutorConformanceCase(
             "workbench.generation",
@@ -233,6 +249,7 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             )
             for definition_id in (
                 "modelo.work.form",
+                "modelo.work.filing_state",
                 "modelo.work.casilla_help",
                 "modelo.edit.renew",
                 "modelo.edit.preflight",
@@ -241,6 +258,16 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        RegisteredExecutorConformanceCase(
+            # The isolated supervisor has no desktop view stream. The view owns
+            # its browser resource scope, then refuses stream admission before
+            # launching a browser or attempting authentication.
+            "live.sede.view",
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            ("sede-view.acquire",),
+            expected_refusal_ref="REFUSED_PROFILE_ACCESS",
         ),
         RegisteredExecutorConformanceCase(
             # The composed provider preflight refuses before discovery: the
@@ -360,6 +387,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "live.verify.latest", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        RegisteredExecutorConformanceCase(
+            "live.sync.status",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("sync-status.read", "sync-status.result"),
         ),
         RegisteredExecutorConformanceCase(
             "live.justificante.list",
@@ -485,11 +518,6 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("modelo-reconcile-pull.prepare",),
             expected_refusal_ref="REFUSED_LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NOT_FOUND",
         ),
-        # Verify against a closed runtime endpoint: the executor settles its
-        # typed not-ready outcome and changes nothing on the host.
-        RegisteredExecutorConformanceCase(
-            "local-reader.provision", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
-        ),
         RegisteredExecutorConformanceCase(
             "modelo.work.rename", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
@@ -505,6 +533,18 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "modelo.work.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("modelo.work.list",)
+        ),
+        RegisteredExecutorConformanceCase(
+            "modelo.declarations.list",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("modelo.declarations.list",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "modelo.declarations.search",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("modelo.declarations.search",),
         ),
         RegisteredExecutorConformanceCase(
             "modelo.work.history",
@@ -667,12 +707,6 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("ledger.evidence.remove",),
         ),
         RegisteredExecutorConformanceCase(
-            "ledger.evidence.reader-readiness",
-            OperationTerminalCondition.SUCCEEDED,
-            OperationEffect.NONE,
-            ("ledger.evidence.reader-readiness",),
-        ),
-        RegisteredExecutorConformanceCase(
             "ledger.evidence.extract",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
@@ -698,6 +732,18 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "ledger.update", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.update",)
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.update.batch.preview",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.update.batch.preview",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.update.batch",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            ("ledger.update.batch",),
         ),
         RegisteredExecutorConformanceCase(
             "ledger.attach", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.attach",)
@@ -727,10 +773,58 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "ledger.track", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.track",)
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.sealed.read", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.sealed.read",)
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.list",)
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.rule.trial",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.rule.trial",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.invoice.duplicate",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.duplicate",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.invoice.match",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.match",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.split.check",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.split.check",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.staged.check",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.staged.check",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.entry-options",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.entry-options",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.known-values", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.known-values",)
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.invoice.add", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.invoice.add",)
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.invoice.preview",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.preview",),
         ),
         RegisteredExecutorConformanceCase(
             MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
@@ -764,13 +858,17 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 "seed",
                 "seed_sector",
                 "settle_sector",
+                "declare_gross",
+                "remove_gross",
             )
         ),
         *(
             RegisteredExecutorConformanceCase(
                 definition_id,
                 OperationTerminalCondition.SUCCEEDED,
-                OperationEffect.NONE if definition_id == "ledger.inventory.list" else OperationEffect.UPDATED,
+                OperationEffect.NONE
+                if definition_id in {"ledger.inventory.list", "ledger.inventory.inspect"}
+                else OperationEffect.UPDATED,
                 (definition_id,),
             )
             for definition_id in (
@@ -779,16 +877,40 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
                 "ledger.inventory.movement.add",
                 "ledger.inventory.valuation.preview",
                 "ledger.inventory.closing-authority.record",
+                "ledger.inventory.inspect",
+                # The claim needs a seeded ledger transaction; the inventory facts family owns its scenario.
+                *(
+                    change_id
+                    for change_id in INVENTORY_LEDGER_CHANGE_REQUEST_TYPES
+                    if change_id != INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID
+                ),
             )
         ),
         *(
             RegisteredExecutorConformanceCase(
                 f"ledger.actividad-asset.{action}",
                 OperationTerminalCondition.SUCCEEDED,
-                OperationEffect.UPDATED if action in {"create", "correct", "claim"} else OperationEffect.NONE,
+                OperationEffect.UPDATED
+                if action in {"create", "correct", "claim", "describe", "dispose"}
+                else OperationEffect.NONE,
                 (f"ledger.actividad-asset.{action}",),
             )
-            for action in ("create", "inspect", "correct", "forecast", "claim", "filing-handoff")
+            for action in (
+                "create",
+                "inspect",
+                "correct",
+                "forecast",
+                "claim",
+                "filing-handoff",
+                "describe",
+                "dispose",
+                "disposal-calculate",
+                "list",
+                "plan",
+                "timeline",
+                "form-options",
+                "acquisition-candidates",
+            )
         ),
         RegisteredExecutorConformanceCase(
             "user-profile.recovery.status",
@@ -884,6 +1006,19 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             ("modelo.work.wizard_attempt",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "modelo.work.disagreements", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        *(
+            # The seeded calculation holds no disagreement, so no finding id names one.
+            RegisteredExecutorConformanceCase(
+                definition_id,
+                OperationTerminalCondition.REFUSED,
+                OperationEffect.NONE,
+                expected_refusal_ref="REFUSED_CREDIT_RESOLUTION",
+            )
+            for definition_id in ("modelo.work.accept_disagreement", "modelo.work.revoke_disagreement")
         ),
         RegisteredExecutorConformanceCase(
             "modelo.work.verify", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED

@@ -8,7 +8,7 @@ relations. The pull and calculate surfaces read this ONE store
 (``aeat-calculation-aggregation``).
 
 Each annual modelo declares how its source is composed in
-:data:`_ANNUAL_WITHHOLDING_SOURCES`: Modelo 190 folds the active quarterly
+the routing fact's annual composition: Modelo 190 folds the active quarterly
 Modelo 111 projections, and Modelo 193 adds the pending and settled
 disclosure phases of captured Modelo 123 capital allocations to its manual
 window. Every other modelo reads its own window.
@@ -50,7 +50,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -59,6 +59,8 @@ from ...domain.calculations.registry.withholding_bindings import (
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
 )
+from ...domain.filing.declared_party_name_filing import PartyNameRefusals
+from ..invoices.source_resolver_ports import CounterpartyFilingNameReader, InvoiceSourcePersistenceError
 from .errors import AggregationValidationError
 from .m193_phase_materialization import (
     Modelo193PhaseAmountField,
@@ -80,47 +82,24 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from .source_resolution_operations import storage_degradation_resolution
+from .source_resolution_operations import source_context_operation, storage_degradation_resolution
 from .withholding_filing_cadence import (
     WithholdingFilerCadence,
     require_quarterly_withholding_source,
     withholding_filer_cadence_for_work_profile,
+)
+from .withholding_modelo_routing import AnnualWithholdingComposition, annual_withholding_composition
+from .withholding_party_names import (
+    DeclaredPerceptors,
+    PerceptorReference,
+    declare_perceptors,
+    perceptor_name_refusal_diagnostics,
 )
 
 if TYPE_CHECKING:
     from ...core.period import Period
 
 _WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
-
-
-@dataclass(frozen=True, slots=True)
-class _AnnualWithholdingSource:
-    """How one annual modelo composes its per-perceptor-clave source.
-
-    ``periodic_percepciones`` names the periodic modelo whose active
-    projections replace the annual window; ``None`` reads the modelo's own
-    window. ``capital_disclosure_retenciones`` names the periodic retención
-    modelo whose captured capital allocations materialise Modelo 193 disclosure
-    phases next to that window; ``None`` adds no phase rows.
-    """
-
-    periodic_percepciones: Modelo | None = None
-    capital_disclosure_retenciones: Modelo | None = None
-
-    @property
-    def periodic_source(self) -> Modelo | None:
-        """Return the periodic modelo whose quarterly windows this composition reads, if any."""
-        return self.periodic_percepciones or self.capital_disclosure_retenciones
-
-
-_OWN_WINDOW = _AnnualWithholdingSource()
-
-_ANNUAL_WITHHOLDING_SOURCES: Mapping[str, _AnnualWithholdingSource] = MappingProxyType(
-    {
-        Modelo("190").value: _AnnualWithholdingSource(periodic_percepciones=Modelo("111")),
-        Modelo("193").value: _AnnualWithholdingSource(capital_disclosure_retenciones=Modelo("123")),
-    }
-)
 
 
 def _revision_declares_withholding_scalar(revision: ModeloRevision) -> bool:
@@ -146,13 +125,13 @@ def annual_withholding_periodic_source(modelo: str) -> Modelo | None:
     """Return the periodic withholding modelo whose windows ``modelo``'s annual source reads.
 
     ``None`` for a modelo that reads its own window, which is every modelo
-    outside :data:`_ANNUAL_WITHHOLDING_SOURCES`. Exposed so a later filing-grade
+    the routing fact does not name. Exposed so a later filing-grade
     gate can name the periodic source whose absence it is judging without
     restating the composition table: that table decides which quarters this
     resolver totals, so the gate's question and the resolver's answer have to
     come from the same declaration.
     """
-    return _ANNUAL_WITHHOLDING_SOURCES.get(Modelo(modelo).value, _OWN_WINDOW).periodic_source
+    return annual_withholding_composition(Modelo(modelo).value).periodic_source
 
 
 def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[CalculationSourceProvenance, ...]:
@@ -326,7 +305,7 @@ def _refuse_allocation_collisions(
 
 
 def _refuse_unscheduled_quarters(
-    composition: _AnnualWithholdingSource,
+    composition: AnnualWithholdingComposition,
     *,
     modelo: str,
     cadence: Callable[[], WithholdingFilerCadence],
@@ -342,14 +321,17 @@ def _refuse_unscheduled_quarters(
     )
 
 
-def _work_profile_cadence(context: CalculationSourceContext) -> WithholdingFilerCadence:
-    """Resolve the filer cadence from the profile the calculation loaded."""
-    with bundled_indexed_authority().operation() as operation:
-        return withholding_filer_cadence_for_work_profile(
-            context.profile,
-            filing_year=context.filing_year,
-            operation=operation,
-        )
+def _work_profile_cadence(
+    context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> WithholdingFilerCadence:
+    """Resolve the filer cadence from the profile the calculation loaded, under ``operation``'s generation."""
+    return withholding_filer_cadence_for_work_profile(
+        context.profile,
+        filing_year=context.filing_year,
+        operation=operation,
+    )
 
 
 class WithholdingSourceResolver:
@@ -366,14 +348,25 @@ class WithholdingSourceResolver:
     resolver_id: ClassVar[str] = _WITHHOLDING_SOURCE.value
     owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_WITHHOLDING_SOURCE,)
 
-    def __init__(self, *, ports: PercepcionObservationPorts, retencion_ports: RetencionObservationPorts) -> None:
-        """Bind the bucket-scoped percepciones and retención capabilities."""
+    def __init__(
+        self,
+        *,
+        ports: PercepcionObservationPorts,
+        retencion_ports: RetencionObservationPorts,
+        filing_names: CounterpartyFilingNameReader | None = None,
+    ) -> None:
+        """Bind the bucket-scoped percepciones and retención capabilities.
+
+        ``filing_names`` is absent where no record naming a perceptor is built;
+        no name slot is then filled and none is reported.
+        """
         self._ports = ports
         self._retencion_ports = retencion_ports
+        self._filing_names = filing_names
 
     def _window(
         self,
-        composition: _AnnualWithholdingSource,
+        composition: AnnualWithholdingComposition,
         *,
         modelo: str,
         period: Period,
@@ -388,9 +381,10 @@ class WithholdingSourceResolver:
 
     def _disclosure_phase_rows(
         self,
-        composition: _AnnualWithholdingSource,
+        composition: AnnualWithholdingComposition,
         *,
         filing_year: int,
+        operation: PinnedAuthorityOperation,
     ) -> tuple[Modelo193PhaseRow, ...]:
         if composition.capital_disclosure_retenciones is None:
             return ()
@@ -398,8 +392,7 @@ class WithholdingSourceResolver:
             composition.capital_disclosure_retenciones.value,
             filing_year,
         )
-        with bundled_indexed_authority().operation() as operation:
-            pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
+        pending_disclosure_years = modelo_193_pending_disclosure_years(operation)
         return materialize_modelo_193_disclosure_phases(
             allocations,
             filing_year=filing_year,
@@ -413,6 +406,7 @@ class WithholdingSourceResolver:
         period: Period,
         revision: ModeloRevision,
         cadence: Callable[[], WithholdingFilerCadence],
+        operation: PinnedAuthorityOperation,
     ) -> AnnualWithholdingDetail | None:
         """Return the stored per-perceptor-clave rows the calculation reads for ``modelo`` in ``period``.
 
@@ -432,10 +426,10 @@ class WithholdingSourceResolver:
         """
         if not _revision_declares_withholding_scalar(revision):
             return None
-        composition = _ANNUAL_WITHHOLDING_SOURCES.get(modelo, _OWN_WINDOW)
+        composition = annual_withholding_composition(modelo)
         _refuse_unscheduled_quarters(composition, modelo=modelo, cadence=cadence)
         window = self._window(composition, modelo=modelo, period=period)
-        phase_rows = self._disclosure_phase_rows(composition, filing_year=period.filing_year)
+        phase_rows = self._disclosure_phase_rows(composition, filing_year=period.filing_year, operation=operation)
         _refuse_allocation_collisions(
             modelo=modelo,
             filing_year=period.filing_year,
@@ -448,15 +442,34 @@ class WithholdingSourceResolver:
             phase_source_modelo=composition.capital_disclosure_retenciones,
         )
 
+    def _declared_perceptors(self, observations: tuple[WithholdingObservation, ...]) -> DeclaredPerceptors | None:
+        """Return each perceptor with its declared filing name, or ``None`` where names are not read."""
+        if self._filing_names is None:
+            return None
+        return declare_perceptors(
+            (
+                PerceptorReference(
+                    country_code=observation.country_code or "",
+                    tax_id=observation.perceptor_tax_id,
+                    row_ref=observation.source_id,
+                    printed_name=observation.perceptor_legal_name,
+                )
+                for observation in observations
+            ),
+            self._filing_names,
+        )
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve withholding totals from the bucket-scoped observation store."""
         try:
-            detail = self.load_calculation_detail(
-                modelo=context.modelo,
-                period=context.period,
-                revision=context.revision,
-                cadence=lambda: _work_profile_cadence(context),
-            )
+            with source_context_operation(context) as operation:
+                detail = self.load_calculation_detail(
+                    modelo=context.modelo,
+                    period=context.period,
+                    revision=context.revision,
+                    cadence=lambda: _work_profile_cadence(context, operation=operation),
+                    operation=operation,
+                )
         except (PercepcionObservationPersistenceError, RetencionObservationPersistenceError) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -472,10 +485,34 @@ class WithholdingSourceResolver:
         # its fact, so a nil-percepciones filer can calculate; the advisory below
         # makes the zero loud (no-silent-under-declaration), never a hard refusal.
         binding_values = resolve_withholding_binding_values(context.revision, observations)
+        try:
+            perceptors = self._declared_perceptors(observations)
+        except InvoiceSourcePersistenceError as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        party_name_refusals = PartyNameRefusals(modelo=str(context.modelo)) if perceptors is not None else None
+        row_binding_values = resolve_withholding_binding_row_values(
+            context.revision,
+            observations,
+            parties=() if perceptors is None else perceptors.parties,
+            party_name_refusals=party_name_refusals,
+        )
         diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
+        if party_name_refusals is not None and perceptors is not None:
+            diagnostics = perceptor_name_refusal_diagnostics(
+                party_name_refusals.refusals,
+                perceptors,
+                context=context,
+                resolver_id=self.resolver_id,
+            )
         if not observations:
             legal_refs, source_refs = withholding_binding_grounding(context.revision)
             diagnostics = (
+                *diagnostics,
                 CalculationSourceDiagnostic(
                     reason="withholding_detail_absent",
                     source_kind=_WITHHOLDING_SOURCE,
@@ -505,7 +542,7 @@ class WithholdingSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            row_binding_values=resolve_withholding_binding_row_values(context.revision, observations),
+            row_binding_values=row_binding_values,
             diagnostics=(*diagnostics, *_settled_amount_authority_diagnostics(detail.phase_rows)),
             provenance=(*_provenance(observations), *phase_provenance),
         )

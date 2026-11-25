@@ -7,26 +7,28 @@ import pytest
 from ....core.errors.error_codes import build_error_envelope, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 from ....domain.calculations.registry.tests.published_authority import published_revision
-from ..calculate_input import (
+from ..calculate_input_validation import (
     ModeloCalculateDecimalInputError,
     ModeloCalculateRelationInputError,
     ModeloCalculateTextInputError,
-    _decimal,
-    _projected_m210_tipo_renta_code,
-    _text_value,
-    _validated_m210_official_tipo_renta_code,
-    _validated_relation_id,
+    decimal,
+    projected_m210_tipo_renta_code,
+    text_value,
+    validated_m210_official_tipo_renta_code,
+    validated_relation_id,
 )
 from ..selectors import ModeloCalculationRevisionSelector
-from ..work_addressing import ModeloRevisionPick, ModeloRevisionPickError
+from ..work_address_errors import ModeloRevisionPickError
+from ..work_addressing import ModeloRevisionPick
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_decimal_override_error_is_typed_registered_and_localized() -> None:
     with pytest.raises(ModeloCalculateDecimalInputError) as exc_info:
-        _decimal("not-decimal", flag="--relation", key="iva_base")
+        decimal("not-decimal", flag="--relation", key="iva_base")
 
     error = exc_info.value
     assert isinstance(error, CadrumoError)
@@ -38,7 +40,7 @@ def test_decimal_override_error_is_typed_registered_and_localized() -> None:
 
 def test_empty_text_override_error_is_typed_registered_and_localized() -> None:
     with pytest.raises(ModeloCalculateTextInputError) as exc_info:
-        _text_value("   ", key="tipo_renta")
+        text_value("   ", key="tipo_renta")
 
     error = exc_info.value
     assert isinstance(error, CadrumoError)
@@ -53,12 +55,9 @@ def test_empty_text_override_error_is_typed_registered_and_localized() -> None:
 def test_m210_tipo_renta_accepts_a_declared_code_and_projects_to_its_concept() -> None:
     # A declared official code is accepted and PROJECTED to the TipoRentaIrnr
     # rate-concept token the engine keys on (code 18 -> pension, 01 -> general).
+    assert projected_m210_tipo_renta_code(validated_m210_official_tipo_renta_code("18", key="tipo_renta")) == "pension"
     assert (
-        _projected_m210_tipo_renta_code(_validated_m210_official_tipo_renta_code("18", key="tipo_renta")) == "pension"
-    )
-    assert (
-        _projected_m210_tipo_renta_code(_validated_m210_official_tipo_renta_code("  01 ", key="tipo_renta"))
-        == "general"
+        projected_m210_tipo_renta_code(validated_m210_official_tipo_renta_code("  01 ", key="tipo_renta")) == "general"
     )
 
 
@@ -66,7 +65,7 @@ def test_m210_tipo_renta_fetch_gated_code_refuses_as_fetch_gated_not_invalid() -
     # Code 13 (asistencia técnica) is a REAL official code whose rate is not yet
     # grounded — the operator must be told "fetch-gated", never "invalid".
     with pytest.raises(ModeloCalculateTextInputError) as exc_info:
-        _validated_m210_official_tipo_renta_code("13", key="tipo_renta")
+        validated_m210_official_tipo_renta_code("13", key="tipo_renta")
 
     error = exc_info.value
     assert isinstance(error, CadrumoError)
@@ -84,7 +83,7 @@ def test_m210_tipo_renta_unknown_code_refuses_and_lists_accepted_and_fetch_gated
     # A value that is not any official code is refused, naming both the accepted
     # declared codes and the fetch-gated (pending-grounding) ones.
     with pytest.raises(ModeloCalculateTextInputError) as exc_info:
-        _validated_m210_official_tipo_renta_code("99", key="tipo_renta")
+        validated_m210_official_tipo_renta_code("99", key="tipo_renta")
 
     error = exc_info.value
     assert error.translated_message == "application.modelo.errors.calculate_m210_tipo_renta_unknown"
@@ -99,13 +98,13 @@ def test_m210_tipo_renta_unknown_code_refuses_and_lists_accepted_and_fetch_gated
 
 
 def test_unknown_relation_override_error_names_revision_relation_ids() -> None:
-    revision = published_revision("200", "2024")
+    revision = published_revision("200", str(revision_covering("200", newest_authored_edition("200")).id))
     relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
-    accepted_relation = "modelo-200-pagos-fraccionados-anuales"
+    accepted_relation = "modelo-200-pago-fraccionado-primero-40-3"
     assert accepted_relation in relation_ids
 
     with pytest.raises(ModeloCalculateRelationInputError) as exc_info:
-        _validated_relation_id("Bad Relation", relation_ids)
+        validated_relation_id("Bad Relation", relation_ids)
 
     error = exc_info.value
     assert isinstance(error, CadrumoError)

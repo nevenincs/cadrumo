@@ -4,17 +4,14 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 from typing import TypedDict
 
 import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
-from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
@@ -23,12 +20,12 @@ from ....domain.iva.schema import (
 )
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..iva_ledger import IvaLedgerAggregation
 from ..m303_arrivals import (
     resolve_m303_supplier_regime_arrival,
 )
 from .iva_authority_support import aggregate_iva_ledger_observations
+from .iva_cash_accounting_support import cash_accounting_raw, cash_accounting_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -36,73 +33,10 @@ _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _Q2_2026 = Period.from_year_and_code(2026, "2T")
 _Q3_2026 = Period.from_year_and_code(2026, "3T")
 _Q4_2027 = Period.from_year_and_code(2027, "4T")
-_DEFAULT_CASH_ACCOUNTING_TREATMENT = IvaCashAccountingTreatment("none")
 
 
 def _revision_303():
     return published_snapshot("303", filing_year=2026, period="2T").revision
-
-
-def _raw(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente criterio caja",
-        description=f"cash-accounting {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="d" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": "ledger_transaction"},
-    )
-
-
-def _transaction(
-    provider_id: str,
-    *,
-    direction: TransactionDirection,
-    booked_date: date,
-    taxable_base: Decimal,
-    iva_amount: Decimal,
-    cash_accounting_treatment: IvaCashAccountingTreatment = _DEFAULT_CASH_ACCOUNTING_TREATMENT,
-    operation_date: date | None = None,
-    cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = (),
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": _raw(provider_id, booked_date=booked_date, amount=taxable_base + iva_amount),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "taxable_base": taxable_base,
-            "iva_rate": Decimal("0.21"),
-            "iva_amount": iva_amount,
-            "iva_category": IvaCategory("domestic_general"),
-            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_current")
-            if direction is TransactionDirection.OUTGOING
-            else None,
-            "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-                source_locator=f"invoice:{provider_id}",
-                evidence_digest="a" * 64,
-            )
-            if direction is TransactionDirection.OUTGOING
-            else None,
-            "cash_accounting_treatment": cash_accounting_treatment,
-            "operation_date": operation_date,
-            "cash_accounting_payment_evidence": cash_accounting_payment_evidence,
-            "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
 
 
 def _binding_values(*transactions: Transaction, period: Period) -> dict[str, Decimal]:
@@ -127,7 +61,7 @@ class _CommonTransactionFields(TypedDict):
 
 
 def test_cash_accounting_supply_reports_art75_information_before_collection_and_settles_when_collected() -> None:
-    cash_sale = _transaction(
+    cash_sale = cash_accounting_transaction(
         "cash-sale",
         direction=TransactionDirection.INCOMING,
         booked_date=date(2026, 4, 15),
@@ -143,7 +77,7 @@ def test_cash_accounting_supply_reports_art75_information_before_collection_and_
             ),
         ),
     )
-    ordinary_sale = _transaction(
+    ordinary_sale = cash_accounting_transaction(
         "ordinary-sale",
         direction=TransactionDirection.INCOMING,
         booked_date=date(2026, 3, 25),
@@ -165,7 +99,7 @@ def test_cash_accounting_supply_reports_art75_information_before_collection_and_
 
 
 def test_cash_accounting_purchase_reports_acquisition_information_without_admitting_ordinary_domestic_rows() -> None:
-    cash_purchase = _transaction(
+    cash_purchase = cash_accounting_transaction(
         "supplier-cash-purchase",
         direction=TransactionDirection.OUTGOING,
         booked_date=date(2026, 4, 10),
@@ -181,7 +115,7 @@ def test_cash_accounting_purchase_reports_acquisition_information_without_admitt
             ),
         ),
     )
-    ordinary_purchase = _transaction(
+    ordinary_purchase = cash_accounting_transaction(
         "ordinary-purchase",
         direction=TransactionDirection.OUTGOING,
         booked_date=date(2026, 3, 22),
@@ -211,7 +145,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
     the immutable arrival deduplicates the one ledger identity only after that
     affiliation has established the fact for each relevant filing period.
     """
-    cash_purchase = _transaction(
+    cash_purchase = cash_accounting_transaction(
         "supplier-regime-partial",
         direction=TransactionDirection.OUTGOING,
         booked_date=date(2026, 4, 10),
@@ -286,7 +220,7 @@ def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without
 
 def test_supplier_regime_arrival_covers_the_statutory_fallback_and_leaves_empty_periods_blank() -> None:
     """A partial payment leaves a lawful fallback settlement; unrelated periods create no SI artifact."""
-    partially_unpaid_purchase = _transaction(
+    partially_unpaid_purchase = cash_accounting_transaction(
         "supplier-regime-fallback",
         direction=TransactionDirection.OUTGOING,
         booked_date=date(2026, 3, 12),
@@ -329,7 +263,7 @@ def test_supplier_regime_arrival_covers_the_statutory_fallback_and_leaves_empty_
 
 def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplier_evidence_in_a_mixed_period() -> None:
     """Taxpayer-regime cash timing is never evidence that the taxpayer received a supplier-regime operation."""
-    taxpayer_cash_sale = _transaction(
+    taxpayer_cash_sale = cash_accounting_transaction(
         "taxpayer-regime-sale",
         direction=TransactionDirection.INCOMING,
         booked_date=date(2026, 3, 20),
@@ -345,7 +279,7 @@ def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplie
             ),
         ),
     )
-    supplier_cash_purchase = _transaction(
+    supplier_cash_purchase = cash_accounting_transaction(
         "supplier-regime-mixed",
         direction=TransactionDirection.OUTGOING,
         booked_date=date(2026, 3, 24),
@@ -386,7 +320,7 @@ def _not_subject_transaction(
     """A cuota-less row under the cash-accounting regime, category varied by the caller."""
     return Transaction.model_validate(
         {
-            "raw": _raw(provider_id, booked_date=date(2026, 2, 10), amount=Decimal("1000.00")),
+            "raw": cash_accounting_raw(provider_id, booked_date=date(2026, 2, 10), amount=Decimal("1000.00")),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
@@ -538,8 +472,8 @@ def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() ->
         "taxable_base": Decimal("1000.00"),
         "iva_amount": Decimal("210.00"),
     }
-    ordinary = _transaction("ordinary-rate-box", booked_date=date(2025, 4, 20), **common)
-    cash = _transaction(
+    ordinary = cash_accounting_transaction("ordinary-rate-box", booked_date=date(2025, 4, 20), **common)
+    cash = cash_accounting_transaction(
         "cash-rate-box",
         booked_date=date(2025, 4, 15),
         cash_accounting_treatment=IvaCashAccountingTreatment("taxpayer_regime"),

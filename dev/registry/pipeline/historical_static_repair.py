@@ -17,29 +17,44 @@ from hashlib import sha256
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev.temporary_output import prepare_temp_root
 
-from ..compiler.authority import compile_validated_authority, inspect_authoring_candidate
-from ..compiler.identity import resolve_registry_identity
+from ..compiler.authority import (
+    AuthoringCandidateInspection,
+    compile_validated_authority,
+    inspect_authoring_candidate,
+)
+from ..compiler.identity import RegistryIdentity, resolve_registry_identity
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
-from ._export_tree import render_complete_export_tree
+from .export_tree import render_complete_export_tree
+from .export_tree_models import RenderedExportTree
 from .generated_form_bridge import generated_form_interpreting_input_digest, registry_evidence_content_digest
-from .render_check import _revision_render_inputs, compare_export_tree_roots, revision_render_inputs
+from .render_check import (
+    RevisionRenderInputs,
+    build_revision_render_inputs,
+    compare_export_tree_roots,
+    revision_render_inputs,
+)
 from .source_defects import source_defects_for
 from .tree_publication_artifacts import verify_generated_export_package
 
-_REVISION = "2016-2017"
 _MODELO = "232"
 _SOURCE_REF = "aeat-dr-232-2016"
 _SOURCE_SHA256 = "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
 _OLD_MANIFEST_SHA256 = "f4e1bb800af4c511c93e0d1df74520b70cc0ee986338b57f31c46c619582d6fa"
-_STALE_BINDING = re.compile(r"^modelo 232 revision 2016-2017: export field '[^']+' references unknown binding '[^']+'$")
+
+#: Stands for the target revision in a reviewed layout id or finding. The old
+#: manifest digest pins the revision the reviewed package was generated for, so
+#: the revision is the invocation's, checked against that package, never
+#: written into this table.
+_REVISION_SLOT = "{revision}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,25 +63,41 @@ class _RepairTarget:
     layout_id: str
     finding_count: int
     exact_findings: frozenset[str] | None = None
+    stale_binding: re.Pattern[str] | None = None
+
+    def for_revision(self, modelo: str, revision: str) -> _RepairTarget:
+        """Return this reviewed target with its revision slot filled for one invocation."""
+        return _RepairTarget(
+            source_sha256=self.source_sha256,
+            layout_id=self.layout_id.replace(_REVISION_SLOT, revision),
+            finding_count=self.finding_count,
+            exact_findings=(
+                None
+                if self.exact_findings is None
+                else frozenset(finding.replace(_REVISION_SLOT, revision) for finding in self.exact_findings)
+            ),
+            stale_binding=re.compile(
+                rf"^modelo {re.escape(modelo)} revision {re.escape(revision)}: "
+                r"export field '[^']+' references unknown binding '[^']+'$"
+            ),
+        )
 
 
-_REVIEWED_TARGETS = {
-    (_MODELO, _REVISION, _SOURCE_REF, 2016, "0A", _OLD_MANIFEST_SHA256): _RepairTarget(
-        _SOURCE_SHA256, "generated-modelo-232-2016-2017-fichero", 140
+#: Reviewed repair targets keyed by (modelo, official design, old manifest SHA-256).
+REVIEWED_TARGETS = {
+    (_MODELO, _SOURCE_REF, _OLD_MANIFEST_SHA256): _RepairTarget(
+        _SOURCE_SHA256, f"generated-modelo-{_MODELO}-{_REVISION_SLOT}-fichero", 140
     ),
     (
         "720",
-        "2013-y-siguientes",
         "aeat-dr-720",
-        2024,
-        "0A",
         "1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d",
     ): _RepairTarget(
         "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
         "modelo-720-fichero-aeat",
         9,
         frozenset(
-            f"modelo 720 revision 2013-y-siguientes: export field 'modelo-720-{record}-{field}' "
+            f"modelo 720 revision {_REVISION_SLOT}: export field 'modelo-720-{record}-{field}' "
             f"references unknown binding 'modelo-720.{record}.{field}'"
             for record, field in (
                 ("type_1", "ejercicio"),
@@ -78,12 +109,12 @@ _REVIEWED_TARGETS = {
         )
         | frozenset(
             {
-                "modelo 720 revision 2013-y-siguientes: form layout 'form-layout' form layout is stale: "
+                f"modelo 720 revision {_REVISION_SLOT}: form layout 'form-layout' form layout is stale: "
                 "its source_state_digest no longer matches the revision; regenerate it",
             }
         )
         | frozenset(
-            "modelo 720 revision 2013-y-siguientes: form layout 'form-layout' shows binding "
+            f"modelo 720 revision {_REVISION_SLOT}: form layout 'form-layout' shows binding "
             f"'modelo-720.type_1.{field}', which the revision does not declare"
             for field in (
                 "ejercicio",
@@ -94,31 +125,28 @@ _REVIEWED_TARGETS = {
     ),
     (
         "720",
-        "2013-y-siguientes",
         "aeat-dr-720",
-        2024,
-        "0A",
         "83c26f2c7c2848ec9544889d070b071d69d24608f48bd52782a6d608039d23b9",
     ): _RepairTarget(
         "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7",
         "modelo-720-fichero-aeat",
         6,
         frozenset(
-            f"modelo 720 revision 2013-y-siguientes: export field 'modelo-720-{record}-{field}' "
+            f"modelo 720 revision {_REVISION_SLOT}: export field 'modelo-720-{record}-{field}' "
             f"references unknown binding 'modelo-720.{record}.{field}'"
             for record in ("type_1", "type_2")
             for field in ("tipo-de-registro", "modelo-declaracion")
         )
         | frozenset(
             {
-                "modelo 720 revision 2013-y-siguientes: fixed-width export layout 'modelo-720-fichero-aeat' "
+                f"modelo 720 revision {_REVISION_SLOT}: fixed-width export layout 'modelo-720-fichero-aeat' "
                 "has 2 design record(s) without a unique source-to-record join, so per-record coverage is unverified. "
                 "design record 'Tipo 1 - Registro De Declarante': "
                 "no unique authored record joins its source constants; "
                 "layout-wide byte coverage cannot verify this record | "
                 "design record 'Tipo 2 - Registro De Detalle': no unique authored record joins its source constants; "
                 "layout-wide byte coverage cannot verify this record",
-                "modelo 720 revision 2013-y-siguientes: form layout 'form-layout' form layout is stale: "
+                f"modelo 720 revision {_REVISION_SLOT}: form layout 'form-layout' form layout is stale: "
                 "its source_state_digest no longer matches the revision; regenerate it",
             }
         ),
@@ -126,12 +154,14 @@ _REVIEWED_TARGETS = {
 }
 
 
-def _validate_repair_findings(target: _RepairTarget, findings: tuple[str, ...]) -> None:
+def validate_repair_findings(target: _RepairTarget, findings: tuple[str, ...]) -> None:
+    """Require repair findings to match the target's expected count and exact findings."""
     exact = target.exact_findings
     if len(findings) != target.finding_count or (
         frozenset(findings) != exact
         if exact is not None
-        else any(_STALE_BINDING.fullmatch(finding) is None for finding in findings)
+        else target.stale_binding is None
+        or any(target.stale_binding.fullmatch(finding) is None for finding in findings)
     ):
         raise RegistryValidationError("historical repair has findings beyond the reviewed target defects")
 
@@ -153,48 +183,26 @@ def validated_historical_repair_source(
     *, modelo: str, revision: str, source_ref: str, filing_year: int, period: str, expected_manifest_sha256: str | None
 ) -> ValidatedRegistryAuthority:
     """Validate a one-target temporary overlay before the normal publisher runs."""
-    if expected_manifest_sha256 is None:
-        raise RegistryValidationError("historical repair requires the exact reviewed target manifest")
-    target = _REVIEWED_TARGETS.get((modelo, revision, source_ref, filing_year, period, expected_manifest_sha256))
-    if target is None:
-        raise RegistryValidationError(
-            "historical repair requires an exact reviewed M232/2016 or M720/2024 target and manifest"
-        )
+    target, expected_manifest_sha256 = _reviewed_repair_target(
+        modelo, revision, source_ref, filing_year, period, expected_manifest_sha256
+    )
     source_root = bundled_path()
     registry_root = bundled_path("registry", "aeat")
     interpreting_digest = generated_form_interpreting_input_digest(modelo)
     evidence_content_digest = registry_evidence_content_digest(source_root)
     target_export = registry_root / "modelos" / modelo / "revisions" / revision / "export"
     old_manifest = target_export / "_generation.provenance.json"
-    if sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256:
-        raise RegistryValidationError("historical repair old manifest changed from the reviewed digest")
-    old_package = verify_generated_export_package(target_export)
-    old_identity = (
-        str(old_package.modelo),
-        str(old_package.revision_id),
-        str(old_package.source_ref),
-        old_package.source_sha256,
+    _require_old_repair_package(
+        old_manifest, target_export, expected_manifest_sha256, modelo, revision, source_ref, target
     )
-    if old_identity != (
-        modelo,
-        revision,
-        source_ref,
-        target.source_sha256,
-    ):
-        raise RegistryValidationError("historical repair old package identity or source pin changed")
     initial_identity = resolve_registry_identity(
         registry_root,
         collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
     )
     original = inspect_authoring_candidate(registry_root, source_root, identity=initial_identity)
-    _validate_repair_findings(target, original.findings)
-    selected_source = original.components.catalogues.sources.get(source_ref)
-    if selected_source is None or selected_source.sha256 != target.source_sha256:
-        raise RegistryValidationError("historical repair selected official source changed")
-    definition = next((item for item in original.components.modelos if str(item.id) == modelo), None)
-    if definition is None:
-        raise RegistryValidationError("historical repair structural source lacks its target modelo")
-    preliminary = _revision_render_inputs(
+    validate_repair_findings(target, original.findings)
+    definition = _reviewed_repair_definition(original, source_ref, target, modelo)
+    preliminary = build_revision_render_inputs(
         definition,
         original.components.catalogues,
         modelo=modelo,
@@ -207,9 +215,7 @@ def validated_historical_repair_source(
     )
     if preliminary.layout_id != target.layout_id or (preliminary.transport_profile.line_ending != "crlf"):
         raise RegistryValidationError("historical repair generated transport differs from the reviewed target")
-    with tempfile.TemporaryDirectory(
-        prefix=f"cadrumo-m{modelo}-static-repair-", dir=prepare_temporary_directory()
-    ) as scratch:
+    with tempfile.TemporaryDirectory(prefix=f"cadrumo-m{modelo}-static-repair-", dir=prepare_temp_root()) as scratch:
         overlay = Path(scratch) / "registry" / "aeat"
         shutil.copytree(registry_root, overlay)
         overlay_export = overlay / "modelos" / modelo / "revisions" / revision / "export"
@@ -262,59 +268,158 @@ def validated_historical_repair_source(
         )
         if ordinary != preliminary:
             raise RegistryValidationError("historical repair validated render inputs differ from structural inputs")
-        with tempfile.TemporaryDirectory(
-            prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temporary_directory()
-        ) as rerender:
-            confirmed_root = Path(rerender) / "export"
-            confirmed = render_complete_export_tree(
-                confirmed_root,
-                revision_id=ordinary.revision_id,
-                joined=ordinary.joined,
-                semantic_map=ordinary.semantic_map,
-                transport_profile=ordinary.transport_profile,
-                render_profile=ordinary.render_profile,
-                render_profile_source_evidence=ordinary.render_profile_source_evidence,
-                source_defects=source_defects_for(source_ref),
-            )
-            if (
-                confirmed.layout != preliminary_render.layout
-                or confirmed.field_derivations != preliminary_render.field_derivations
-            ):
-                raise RegistryValidationError("historical repair validated output differs from structural render")
-            comparison = compare_export_tree_roots(
-                modelo=modelo,
-                revision=revision,
-                layout_id=ordinary.layout_id,
-                committed_root=overlay_export,
-                rendered_root=confirmed_root,
-            )
-            if not comparison.reproduced:
-                raise RegistryValidationError("historical repair validated render does not reproduce overlay")
-        after = resolve_registry_identity(
+        require_reproduced_repair(ordinary, preliminary_render, overlay_export, modelo, revision, source_ref)
+        _require_unchanged_repair_inputs(
             registry_root,
-            collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
+            source_root,
+            modelo,
+            original,
+            initial_identity,
+            evidence_content_digest,
+            interpreting_digest,
+            old_manifest,
+            expected_manifest_sha256,
         )
-        evidence_after = collect_source_evidence_fingerprints(source_root, use_cache=False)
-        changed_inputs = {
-            "registry": after.digest != original.registry_fingerprint,
-            "evidence_inventory": evidence_after != original.source_evidence_fingerprint,
-            "evidence_content": registry_evidence_content_digest(source_root) != evidence_content_digest,
-            "interpreting_inputs": generated_form_interpreting_input_digest(modelo) != interpreting_digest,
-            "target_manifest": sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256,
-        }
-        changed = [name for name, differs in changed_inputs.items() if differs]
-        if changed:
-            before_paths = {
-                path: (size, modified, digest) for path, size, modified, digest in initial_identity.fingerprints
-            }
-            after_paths = {path: (size, modified, digest) for path, size, modified, digest in after.fingerprints}
-            changed_paths = sorted(
-                path
-                for path in before_paths.keys() | after_paths.keys()
-                if before_paths.get(path) != after_paths.get(path)
-            )
-            raise RegistryValidationError(
-                "historical repair live source or old target changed during validation: "
-                f"inputs={changed}; registry_paths={changed_paths[:12]}; registry_path_count={len(changed_paths)}"
-            )
         return validated
+
+
+def _reviewed_repair_definition(
+    original: AuthoringCandidateInspection, source_ref: str, target: _RepairTarget, modelo: str
+) -> ModeloDefinition:
+    selected_source = original.components.catalogues.sources.get(source_ref)
+    if selected_source is None or selected_source.sha256 != target.source_sha256:
+        raise RegistryValidationError("historical repair selected official source changed")
+    definition = next((item for item in original.components.modelos if str(item.id) == modelo), None)
+    if definition is None:
+        raise RegistryValidationError("historical repair structural source lacks its target modelo")
+    return definition
+
+
+def _reviewed_repair_target(
+    modelo: str,
+    revision: str,
+    source_ref: str,
+    filing_year: int,
+    period: str,
+    expected_manifest_sha256: str | None,
+) -> tuple[_RepairTarget, str]:
+    if expected_manifest_sha256 is None:
+        raise RegistryValidationError("historical repair requires the exact reviewed target manifest")
+    target = REVIEWED_TARGETS.get((modelo, source_ref, expected_manifest_sha256))
+    if target is None or not _revision_selects(modelo, revision, filing_year, period):
+        raise RegistryValidationError(
+            "historical repair requires an exact reviewed target and manifest at a coordinate its revision selects"
+        )
+    return target.for_revision(modelo, revision), expected_manifest_sha256
+
+
+def _revision_selects(modelo: str, revision: str, filing_year: int, period: str) -> bool:
+    """Return whether the authored revision's own period selector selects the requested frame."""
+    revisions = load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo)).revisions
+    selected = revisions.get(revision)
+    if selected is None:
+        return False
+    selector = selected.period_selector
+    return selector.includes_year(filing_year) and period in selector.periods_for_year(filing_year)
+
+
+def _require_unchanged_repair_inputs(
+    registry_root: Path,
+    source_root: Path,
+    modelo: str,
+    original: AuthoringCandidateInspection,
+    initial_identity: RegistryIdentity,
+    evidence_content_digest: str,
+    interpreting_digest: str,
+    old_manifest: Path,
+    expected_manifest_sha256: str,
+) -> None:
+    after = resolve_registry_identity(
+        registry_root,
+        collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
+    )
+    evidence_after = collect_source_evidence_fingerprints(source_root, use_cache=False)
+    changed_inputs = {
+        "registry": after.digest != original.registry_fingerprint,
+        "evidence_inventory": evidence_after != original.source_evidence_fingerprint,
+        "evidence_content": registry_evidence_content_digest(source_root) != evidence_content_digest,
+        "interpreting_inputs": generated_form_interpreting_input_digest(modelo) != interpreting_digest,
+        "target_manifest": sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256,
+    }
+    changed = [name for name, differs in changed_inputs.items() if differs]
+    if changed:
+        before_paths = {
+            path: (size, modified, digest) for path, size, modified, digest in initial_identity.fingerprints
+        }
+        after_paths = {path: (size, modified, digest) for path, size, modified, digest in after.fingerprints}
+        changed_paths = sorted(
+            path for path in before_paths.keys() | after_paths.keys() if before_paths.get(path) != after_paths.get(path)
+        )
+        raise RegistryValidationError(
+            "historical repair live source or old target changed during validation: "
+            f"inputs={changed}; registry_paths={changed_paths[:12]}; registry_path_count={len(changed_paths)}"
+        )
+
+
+def require_reproduced_repair(
+    ordinary: RevisionRenderInputs,
+    preliminary_render: RenderedExportTree,
+    overlay_export: Path,
+    modelo: str,
+    revision: str,
+    source_ref: str,
+) -> None:
+    """Refuse a repair witness the validated authority does not reproduce byte for byte."""
+    with tempfile.TemporaryDirectory(prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temp_root()) as rerender:
+        confirmed_root = Path(rerender) / "export"
+        confirmed = render_complete_export_tree(
+            confirmed_root,
+            revision_id=ordinary.revision_id,
+            joined=ordinary.joined,
+            semantic_map=ordinary.semantic_map,
+            transport_profile=ordinary.transport_profile,
+            render_profile=ordinary.render_profile,
+            render_profile_source_evidence=ordinary.render_profile_source_evidence,
+            source_defects=source_defects_for(source_ref),
+        )
+        if (
+            confirmed.layout != preliminary_render.layout
+            or confirmed.field_derivations != preliminary_render.field_derivations
+        ):
+            raise RegistryValidationError("historical repair validated output differs from structural render")
+        comparison = compare_export_tree_roots(
+            modelo=modelo,
+            revision=revision,
+            layout_id=ordinary.layout_id,
+            committed_root=overlay_export,
+            rendered_root=confirmed_root,
+        )
+        if not comparison.reproduced:
+            raise RegistryValidationError("historical repair validated render does not reproduce overlay")
+
+
+def _require_old_repair_package(
+    old_manifest: Path,
+    target_export: Path,
+    expected_manifest_sha256: str,
+    modelo: str,
+    revision: str,
+    source_ref: str,
+    target: _RepairTarget,
+) -> None:
+    if sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256:
+        raise RegistryValidationError("historical repair old manifest changed from the reviewed digest")
+    old_package = verify_generated_export_package(target_export)
+    old_identity = (
+        str(old_package.modelo),
+        str(old_package.revision_id),
+        str(old_package.source_ref),
+        old_package.source_sha256,
+    )
+    if old_identity != (
+        modelo,
+        revision,
+        source_ref,
+        target.source_sha256,
+    ):
+        raise RegistryValidationError("historical repair old package identity or source pin changed")

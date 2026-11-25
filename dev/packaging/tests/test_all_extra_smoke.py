@@ -179,19 +179,18 @@ def test_the_probe_accepts_an_install_where_every_registered_extra_imports() -> 
 
 
 def test_the_probe_refuses_a_registered_extra_that_installs_but_does_not_import() -> None:
-    """``ofx`` and ``llm`` are the two the displaced hand-kept list never reached.
+    """``ofx`` is one the displaced hand-kept list never reached.
 
     A supply that resolves but no longer imports is not hypothetical: the
-    ``llm`` extra declares ``nvidia-ml-py`` and the product imports ``pynvml``,
-    and the production reader answers ``ImportError`` with an ``UNKNOWN``
-    accelerator, so the regression is silent everywhere else.
+    ``ofx`` extra declares ``ofxtools`` and the product imports it lazily, so
+    the regression is silent everywhere else.
     """
     import tempfile
 
     records = _live_registry_records()
-    unreached = {"ofxtools", "pynvml"}
+    unreached = {"ofxtools"}
     present = [name for _extra, name in records if name not in unreached]
-    assert len(present) == len(records) - 2, records
+    assert len(present) == len(records) - 1, records
 
     with tempfile.TemporaryDirectory() as raw:
         root = pathlib.Path(raw)
@@ -199,7 +198,7 @@ def test_the_probe_refuses_a_registered_extra_that_installs_but_does_not_import(
         result = _run(root, optional_import_probe_source(companions=()))
 
     assert result.returncode != 0
-    assert "ofxtools" in result.stderr or "pynvml" in result.stderr
+    assert "ofxtools" in result.stderr
 
 
 def test_the_displaced_three_name_probe_passes_the_same_install() -> None:
@@ -207,13 +206,13 @@ def test_the_displaced_three_name_probe_passes_the_same_install() -> None:
 
     The shape this lane carried enumerated google, browser and anthropic by
     hand. Run against the very fixture the registry-driven probe refuses, it
-    exits zero: the gate read as an all-extras proof while two of five extras
+    exits zero: the gate read as an all-extras proof while two of four extras
     had no invocation site in it at all.
     """
     import tempfile
 
     records = (*_live_registry_records(), ("anthropic", "anthropic"))
-    present = [name for _extra, name in records if name not in {"ofxtools", "pynvml"}]
+    present = [name for _extra, name in records if name not in {"ofxtools"}]
 
     with tempfile.TemporaryDirectory() as raw:
         root = pathlib.Path(raw)

@@ -10,19 +10,28 @@ from functools import cache
 
 import pytest
 
-from .._paths import LOCALES_DIR
+from cadrumo.domain.calculations.registry.modelo_localization import render_rotating_year
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+
 from ..casilla_catalogue_models import CatalogueFindings
 from ..casilla_reviewed_wording import REVIEWED_EQUIVALENT_SPANISH
 from ..casilla_source_inventory import edition_text_gaps, repeated_edition_text
 from ..casilla_text_policy import SOURCE_TRUNCATED_SPANISH
 from ..modelo_casilla_catalogue import ModeloCasillaCatalogue
+from ..paths import LOCALES_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @cache
+def _catalogue() -> ModeloCasillaCatalogue:
+    """The published catalogue, loaded once; every gate here only reads it."""
+    return ModeloCasillaCatalogue.published(LOCALES_DIR)
+
+
+@cache
 def _findings() -> CatalogueFindings:
-    return ModeloCasillaCatalogue.published(LOCALES_DIR).findings()
+    return _catalogue().findings()
 
 
 def test_the_shipped_casilla_catalogue_stores_each_text_once() -> None:
@@ -117,11 +126,7 @@ def test_no_rendering_stands_for_two_composed_segments() -> None:
 
 def test_every_source_truncation_is_still_stored() -> None:
     """An exemption for a cut official text must name Spanish the catalogue still stores."""
-    stored = {
-        text
-        for text in ModeloCasillaCatalogue.published(LOCALES_DIR).values["es"].values()
-        if (text is not None and text)
-    }
+    stored = {text for text in _catalogue().values["es"].values() if (text is not None and text)}
     assert stored >= SOURCE_TRUNCATED_SPANISH, sorted(SOURCE_TRUNCATED_SPANISH - stored)
 
 
@@ -133,7 +138,7 @@ def test_every_edition_text_is_authored_in_every_locale() -> None:
 
 def test_every_reviewed_equivalence_still_excuses_a_shared_translation() -> None:
     """Each entry must still match a lineage the screen would otherwise report, or it is stale."""
-    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    catalogue = _catalogue()
     unexcused = {
         locale: set(catalogue.stale_translations(locale, excused={}))
         for locale in {locale for locale, _modelo, _lineage in REVIEWED_EQUIVALENT_SPANISH}
@@ -151,6 +156,19 @@ def test_no_lineage_keeps_a_translation_the_spanish_outgrew() -> None:
     assert not any(findings.stale_translations.values()), findings.stale_translations
 
 
+def _as_the_product_renders(text: str | None, casilla: CasillaDefinition) -> str | None:
+    """Put a catalogue text on the product reader's layer.
+
+    The product's casilla reader renders a rotating slot's ``{year}`` before it
+    returns the caption, while this module reads the text as stored. Rendering
+    the stored text the same way compares the two readers at one layer, so the
+    comparison still fails for any text collapse moved to the wrong key.
+    """
+    if text is None:
+        return None
+    return render_rotating_year(text, offset=casilla.rotating_year_offset, ejercicio=None)
+
+
 def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> None:
     """The product's own reader returns what the delta-keyed catalogue resolves.
 
@@ -163,7 +181,7 @@ def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> Non
     """
     from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
-    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    catalogue = _catalogue()
     resolved = {
         (occurrence.modelo, occurrence.revision, occurrence.casilla, locale): (
             catalogue.resolve(index, "label", locale),
@@ -184,7 +202,11 @@ def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> Non
                     if coordinate not in resolved:
                         unknown.append(f"{modelo.id}/{revision_id}/{casilla.id} {locale}")
                         continue
-                    served = resolved[coordinate]
+                    stored_label, stored_help = resolved[coordinate]
+                    served = (
+                        _as_the_product_renders(stored_label, casilla),
+                        _as_the_product_renders(stored_help, casilla),
+                    )
                     read += 1
                     product = (casilla.get_label(locale), casilla.get_help(locale))
                     if product != served:

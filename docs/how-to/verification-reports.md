@@ -97,7 +97,7 @@ The report shows:
 
 Each issue carries:
 
-- A severity: **blocking** or **warning**.
+- A severity: **`blocking`** or **`warning`**.
 - A kind: `missing_required_casilla`, `reconciliation_mismatch`,
   `cross_period_dependency_unclean`, `blocking_rule`, or `advisory`.
 - The affected box, where one applies.
@@ -156,11 +156,11 @@ your records or another source is `bound`, and `--casilla` refuses it with `cann
 override bucket-derived source-bound casillas`. Fix the source for those. See
 [Review your calculation values](review-calculation-values.md). Check which kind a
 box is, then supply the value for a manual one and recalculate. The example
-supplies box 44, the prorrata regularisation, and the recalculation carries it
-into the deductible total:
+supplies box 77, the import VAT that Customs assessed and that is still pending
+payment, and the recalculation carries it into the result in box 71:
 
 ```{cli-sequence} verification-reports-incomplete
-:verify: Confirm the supplied manual value reaches the recalculated deductible total.
+:verify: Confirm the supplied manual value reaches the recalculated result.
 ```
 
 Then [run the check again](#after-any-fix-re-run-verification). For the full input

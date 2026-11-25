@@ -14,10 +14,12 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.core.toml import freeze_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 from cadrumo.domain.calculations.registry.facts.variants import FactOwnership
+
+from .loader_cache import TomlContentCache
 
 __all__ = ["is_governed_fact_filename", "load_governed_fact_file", "load_governed_facts"]
 
@@ -45,7 +47,18 @@ def load_governed_fact_file(path: Path) -> GovernedFact:
         raise RegistryLoadError(
             f"{source_path}: governed fact filename must match NNNN-<stable-slug>.toml",
         )
-    data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
+    return _GOVERNED_FACTS_BY_CONTENT.load(source_path)
+
+
+def _governed_fact_from_document(source_path: Path, document: dict[str, object]) -> GovernedFact:
+    """Validate one parsed fact document; ``source_path`` only names the file in a refusal.
+
+    The fact is a pure function of the document and is frozen throughout, so
+    one validated fact answers every later read of the same bytes. A staged
+    candidate copies the whole facts tree and compiles it repeatedly, and
+    validation, not parsing, is what each copy cost.
+    """
+    data = freeze_toml(document)
     if set(data) != {"fact"}:
         raise RegistryLoadError(f"{source_path}: governed fact file must declare exactly one [fact] table")
     table = data["fact"]
@@ -65,6 +78,9 @@ def load_governed_fact_file(path: Path) -> GovernedFact:
             f"{source_path}: authored fact files cannot declare generated variants {generated!r}",
         )
     return fact
+
+
+_GOVERNED_FACTS_BY_CONTENT = TomlContentCache(_governed_fact_from_document, error_factory=RegistryLoadError)
 
 
 def load_governed_facts(facts_dir: Path) -> tuple[GovernedFact, ...]:

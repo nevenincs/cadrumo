@@ -39,10 +39,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ...core.draft_discrepancy import DraftDiscrepancyKind
+from ...core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
 from ...domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
 from ...domain.iva.regime_legend import RegimeLegend
-from .invoice_draft_records import DraftDiscrepancyFinding
+from .invoice_draft_records import DraftDiscrepancyFinding, FindingWords
 
 if TYPE_CHECKING:
     from .invoice_draft_records import InvoiceDraft
@@ -101,8 +101,14 @@ def regime_contradiction_finding(
         has_repercutido_line=draft_prints_a_repercutido_line(draft),
         legends=legends,
     )
-    if derivation.outcome is not LegendDerivationOutcome.CONTRADICTED:
+    legend = derivation.legend
+    if derivation.outcome is not LegendDerivationOutcome.CONTRADICTED or legend is None:
         return None
+    wording = (
+        DraftFindingWording.MENTION_EXPECTS_REPERCUTIDO_LINE
+        if legend.expects_repercutido_line
+        else DraftFindingWording.MENTION_EXPECTS_NO_REPERCUTIDO_LINE
+    )
 
     # `field` names the mention rather than the category. The category was never
     # established -- the axis withholds it precisely here -- so pointing at it
@@ -111,5 +117,5 @@ def regime_contradiction_finding(
     return DraftDiscrepancyFinding(
         kind=DraftDiscrepancyKind.REGIME_CONTRADICTED,
         field="regime_legend",
-        detail=derivation.note,
+        words=FindingWords.of(wording, mention=legend.phrase, provision=legend.provision),
     )

@@ -1,7 +1,8 @@
 //! Catalogue rollback selection uses complete native inventory and stable-anchor proof.
-use cadrumo_application::{component::Cancellation, installation::DiscoveryContract};
+use cadrumo_application::{
+    component::Cancellation, installation::DiscoveryContract, value::Sha256Digest,
+};
 use serde_json::json;
-use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
 
 fn executable(path: &Path) {
@@ -24,7 +25,7 @@ fn release(contract: &DiscoveryContract, prefix: &Path, release: &str, image: &[
         "build": {"application_id":"test.cutover", "channel":"stable", "version": release,
             "target": if cfg!(windows) {"windows-x86-64"} else {"fixture"}},
         "layout": {"abi":1,"platform":contract.layout.platform}, "python":"fixture", "distributions":{},
-        "files":{member.as_str():format!("{:x}",Sha256::digest(image))},
+        "files":{member.as_str():Sha256Digest::of(image).to_string()},
         "user_docs":{"directory":"docs/user","bundled":false}
     })).unwrap()).unwrap();
 }

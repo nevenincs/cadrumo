@@ -164,6 +164,15 @@ establishing_reference = "ley-37-1992:art-84"
 notes = "Adquisición de servicios a un prestador establecido en otro Estado miembro. El art. 69.Uno.1.º localiza la operación en el TAI por estar aquí el destinatario, y el art. 84.Uno.2.º lo convierte en sujeto pasivo: la cuota se autorrepercute."
 
 [[place_of_supply_rules]]
+rule_id = "R26_services_b2b_non_tai_inbound"
+valid_from = 2022-01-01
+valid_to = 2026-12-31
+supply_nature = "services"
+legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84"]
+establishing_reference = "ley-37-1992:art-84"
+notes = "Adquisición de servicios a un prestador establecido fuera de la Comunidad o en Canarias, Ceuta o Melilla, que el art. 3.Dos excluye del territorio de aplicación del Impuesto. El art. 69.Uno.1.º localiza la operación en el TAI por estar aquí establecido el destinatario empresario o profesional, «con independencia de dónde se encuentre establecido el prestador», y el art. 84.Uno.2.º a) hace sujeto pasivo al destinatario cuando la operación la efectúa una persona no establecida en el TAI: la cuota se autorrepercute. El art. 70 recoge los supuestos que la localizan de otro modo y prevalece."
+
+[[place_of_supply_rules]]
 rule_id = "R16_external_scheme_services"
 valid_from = 2022-01-01
 valid_to = 2026-12-31

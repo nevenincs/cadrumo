@@ -1,0 +1,162 @@
+format = 1
+persona = "autonomo-fontanero"
+
+[[documents]]
+id = "factura-fon-alq-01"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-01"]
+relation = "source"
+note = "The rent invoice ALQ-01 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-mat-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-MAT-1"]
+relation = "source"
+note = "The supply invoice SH-0001 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-02"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-02"]
+relation = "source"
+note = "The rent invoice ALQ-02 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-03"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-03"]
+relation = "source"
+note = "The rent invoice ALQ-03 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-ges-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-GES-1"]
+relation = "source"
+note = "The gestoría invoice GA-001 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-04"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-04"]
+relation = "source"
+note = "The rent invoice ALQ-04 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-mat-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-MAT-2"]
+relation = "source"
+note = "The supply invoice SH-0002 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-05"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-05"]
+relation = "source"
+note = "The rent invoice ALQ-05 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-06"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-06"]
+relation = "source"
+note = "The rent invoice ALQ-06 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-ges-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-GES-2"]
+relation = "source"
+note = "The gestoría invoice GA-002 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-07"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-07"]
+relation = "source"
+note = "The rent invoice ALQ-07 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-mat-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-MAT-3"]
+relation = "source"
+note = "The supply invoice SH-0003 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-08"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-08"]
+relation = "source"
+note = "The rent invoice ALQ-08 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-09"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-09"]
+relation = "source"
+note = "The rent invoice ALQ-09 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-ges-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-GES-3"]
+relation = "source"
+note = "The gestoría invoice GA-003 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-10"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-10"]
+relation = "source"
+note = "The rent invoice ALQ-10 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-mat-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-MAT-4"]
+relation = "source"
+note = "The supply invoice SH-0004 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-11"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-11"]
+relation = "source"
+note = "The rent invoice ALQ-11 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-alq-12"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-ALQ-12"]
+relation = "source"
+note = "The rent invoice ALQ-12 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-fon-ges-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["FON-GES-4"]
+relation = "source"
+note = "The gestoría invoice GA-004 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

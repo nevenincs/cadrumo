@@ -22,8 +22,8 @@ def revisions_overlap(left: ModeloRevision, right: ModeloRevision) -> bool:
     at least one shared filing year and period code, and says NOTHING about
     when either revision is in force. Two consecutive editions of a modelo
     that serve the same period vocabulary -- successive census editions both
-    serving ``alta``/``modificacion``/``baja``, or successive ad-hoc editions
-    both serving ``AD-HOC`` -- overlap under this predicate even when their
+    serving ``alta``/``modificacion``/``baja``, or successive quarterly
+    editions both serving ``1T``-``4T`` -- overlap under this predicate even when their
     validity windows merely meet end-to-start and can never be live at the
     same time. Callers asking "could both of these be in force at once"
     want :func:`revisions_coexist` instead.

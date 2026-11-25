@@ -23,37 +23,38 @@ from typing import TypedDict
 
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.modelo import Modelo
-from ...core.parsing.dates import parse_date as _parse_date_canonical
-from ...core.parsing.utils import parse_bool as _parse_bool
+from ...core.parsing.dates import parse_date
+from ...core.parsing.utils import parse_bool
 from ...core.period import Period
-from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ..calculations.registry.ccaa_catalogue import require_ccaa
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
     require_irpf_income_category,
 )
 from ..calculations.registry.irpf_regimes import require_irpf_special_regime
-from ..calculations.registry.iva_regime_vocabulary import default_iva_regime as _default_iva_regime
 from ..calculations.registry.iva_regime_vocabulary import (
+    default_iva_regime,
     iva_regime_no_aplica_token,
+    iva_regime_recargo_equivalencia_token,
+    iva_regime_simplificado_token,
     require_iva_regime,
+    resolve_iva_regime_catalogue,
 )
 from ..calculations.registry.m303_schema_vocabulary import (
+    m303_general_only_regime_composition,
     m303_regime_composition_choices,
     m303_tax_territory_choices,
     require_m303_regime_composition,
     require_m303_tax_territory,
-    resolve_m303_tax_territory_catalogue,
 )
-from ..calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country, require_fiscal_residency
+from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from ..calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type_natural_person_token
 from ..contribuyente.renta_codes import FiscalResidency
 from ..user_profile.quarter_sets import parse_quarter_set
 from ..user_profile.setup_answers import SetupAnswers
+from ..user_profile.values import section_field_key
 from .errors import ProfileError
-from .festivos import CalendarCCAA
 from .models import (
     CrossPeriodGroupMemberRoster,
     IrpfActivityKind,
@@ -61,6 +62,7 @@ from .models import (
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
+    M303RegimeComposition,
     M303TaxTerritory,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -74,6 +76,7 @@ def taxpayer_profile_from_mapping(
     *,
     tax_id_default: str,
     iva_regime_default: IVARegime | None = None,
+    withhold_unanswered_iva_block: bool = False,
 ) -> TaxpayerProfile:
     """Build an :class:`TaxpayerProfile` from a profile-values mapping.
 
@@ -85,8 +88,18 @@ def taxpayer_profile_from_mapping(
     ``NO_APLICA`` for natural persons without economic-activity income
     and to ``iva_regime_default`` for profiles that still require an
     IVA regime declaration.
+
+    A claimed Modelo IVA block that still leaves one of its required facts
+    unanswered is refused, because a calculation or filing built on it would
+    have to guess the answer. A read model that must still show everything the
+    answered facts decide passes ``withhold_unanswered_iva_block``: the
+    unanswered paths are then named in
+    :attr:`TaxpayerProfile.iva_block_unanswered_paths`, an unanswered yes/no
+    fact stays ``None`` in the block, and a block missing its territory or
+    composition is left out, so the consumer can report what depends on them
+    as undetermined instead of failing whole.
     """
-    iva_regime_default = _default_iva_regime() if iva_regime_default is None else require_iva_regime(iva_regime_default)
+    iva_regime_default = default_iva_regime() if iva_regime_default is None else require_iva_regime(iva_regime_default)
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
     typed = project_setup_answers(padded)
     return _build_taxpayer_profile(
@@ -94,6 +107,7 @@ def taxpayer_profile_from_mapping(
         typed,
         tax_id_default=tax_id_default,
         iva_regime_default=iva_regime_default,
+        withhold_unanswered_iva_block=withhold_unanswered_iva_block,
     )
 
 
@@ -143,9 +157,11 @@ _BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
     ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
     ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
     ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
+    ("pays_non_resident_income_with_retencion", "withholding.pays_non_resident_income_with_retencion"),
     ("does_intracomunitario", "iva.does_intracomunitario"),
     ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
     ("monedas_virtuales_extranjero_above_threshold", "obligations.monedas_virtuales_extranjero_above_threshold"),
+    ("patrimonio_declaration_threshold_met", "obligations.patrimonio_declaration_threshold_met"),
     (
         "premio_loteria_gravamen_especial_sin_retencion",
         "obligations.premio_loteria_gravamen_especial_sin_retencion",
@@ -156,7 +172,7 @@ _BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
 
 
 def _forward_bare_profile_flags(canonical: Mapping[str, str], padded: dict[str, str]) -> None:
-    """Forward legacy bare flag names to the canonical wizard paths."""
+    """Forward schema ``model_selectors`` flag aliases to the canonical wizard paths."""
     for bare, canonical_key in _BARE_PROFILE_FLAG_KEYS:
         if bare in canonical and canonical_key not in canonical:
             padded[canonical_key] = canonical[bare]
@@ -167,14 +183,6 @@ class _ObjectiveEstimationFields(TypedDict):
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None
     objective_estimation_prior_year_purchases_eur: Decimal | None
-    objective_estimation_modulos_iae_epigraph: str
-    objective_estimation_modulos_module_1_units: Decimal | None
-    objective_estimation_modulos_module_2_units: Decimal | None
-    objective_estimation_modulos_module_3_units: Decimal | None
-    objective_estimation_modulos_module_4_units: Decimal | None
-    objective_estimation_modulos_module_5_units: Decimal | None
-    objective_estimation_modulos_module_6_units: Decimal | None
-    objective_estimation_modulos_module_7_units: Decimal | None
 
 
 class _ProfileAxisFields(TypedDict):
@@ -189,57 +197,42 @@ class _ProfileAxisFields(TypedDict):
 
 
 class _ProfileWithholdingFields(TypedDict):
-    has_employees: bool
+    has_employees: bool | None
     colegio_concertado: bool | None
-    pays_professionals_with_retencion: bool
-    professional_income_withholding_ge_70pct: bool
-    art109_activity_income_withholding_ge_70pct: bool
-    pays_rent_with_retencion: bool
-    pays_capital_income_with_retencion: bool
+    pays_professionals_with_retencion: bool | None
+    art109_activity_income_withholding_ge_70pct: bool | None
+    pays_rent_with_retencion: bool | None
+    pays_capital_income_with_retencion: bool | None
+    pays_non_resident_income_with_retencion: bool | None
 
 
 class _ProfileObligationFields(TypedDict):
-    does_intracomunitario: bool
+    does_intracomunitario: bool | None
     third_party_transactions_above_347_threshold: bool | None
     bienes_extranjero_above_threshold: bool | None
     monedas_virtuales_extranjero_above_threshold: bool | None
+    patrimonio_declaration_threshold_met: bool | None
     premio_loteria_gravamen_especial_sin_retencion: bool | None
     premio_loteria_gravamen_especial_trimestres: frozenset[str] | None
 
 
 class _ProfileRelationshipFields(TypedDict):
     iva: ModeloIVAProfile | None
+    iva_block_unanswered_paths: tuple[str, ...]
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...]
     enrollment: ModeloEnrollment
-
-
-class _ProfileAddressFields(TypedDict):
-    fiscal_address_cadastral_reference: str
-    fiscal_address_is_habitual_vivienda: bool
-    holiday_territory: CalendarCCAA | None
 
 
 class _ProfileActivityFields(TypedDict):
     activity_start_date: date | None
     activity_end_date: date | None
     incn_prior_12_months: Decimal | None
-
-
-class _ProfileCorporateFields(TypedDict):
-    new_entity_first_two_profit_periods: bool | None
-    ley_49_2002_special_regime_option_declared: bool | None
-    ley_49_2002_special_regime_option_date: date | None
-    ley_49_2002_special_regime_renunciation_declared: bool | None
-    ley_49_2002_special_regime_renunciation_date: date | None
+    regimen_entidades_navieras_tonelaje: bool | None
 
 
 class _ProfileEstablishmentFields(TypedDict):
-    establecimiento_type: str
-    elected_withholding_pct: str
-    vivienda_office_total_m2: Decimal | None
-    vivienda_office_office_m2: Decimal | None
     iae_epigraph: str
-    notes: str
+    activity_iae_epigraphs: tuple[str | None, ...]
 
 
 class _ProfileRegimeFields(TypedDict):
@@ -254,18 +247,12 @@ class _ProfileRepresentativeFields(TypedDict):
     representante_fiscal_nombre: str | None
 
 
-class _ProfilePagadoresFields(TypedDict):
-    irpf_pagadores_count: int | None
-    irpf_pagadores_secondary_income: Decimal | None
-    irpf_pagadores_total_work_income: Decimal | None
-
-
 def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEstimationFields:
-    """Return the estimación objetiva (módulos) ``TaxpayerProfile`` kwargs.
+    """Return the estimación objetiva ``TaxpayerProfile`` kwargs.
 
-    Groups the prior-year gross-income figures and the seven módulos unit
-    counts the M131/M303 régimen de módulos formulas consume, keeping this
-    cohesive field family out of the main constructor call.
+    Groups the prior-year gross-income and purchase figures that bound the
+    régimen de módulos exclusion limits, keeping this cohesive field family
+    out of the main constructor call.
     """
     return _ObjectiveEstimationFields(
         objective_estimation_prior_year_gross_income_eur=_parse_decimal(
@@ -280,31 +267,6 @@ def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEsti
         objective_estimation_prior_year_purchases_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
         ),
-        objective_estimation_modulos_iae_epigraph=canonical.get(
-            "irpf.objective_estimation_modulos_iae_epigraph",
-            "",
-        ),
-        objective_estimation_modulos_module_1_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_1_units"),
-        ),
-        objective_estimation_modulos_module_2_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_2_units"),
-        ),
-        objective_estimation_modulos_module_3_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_3_units"),
-        ),
-        objective_estimation_modulos_module_4_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_4_units"),
-        ),
-        objective_estimation_modulos_module_5_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_5_units"),
-        ),
-        objective_estimation_modulos_module_6_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_6_units"),
-        ),
-        objective_estimation_modulos_module_7_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_7_units"),
-        ),
     )
 
 
@@ -314,6 +276,7 @@ def _build_taxpayer_profile(
     *,
     tax_id_default: str,
     iva_regime_default: IVARegime,
+    withhold_unanswered_iva_block: bool,
 ) -> TaxpayerProfile:
     """Assemble the profile from ordered, domain-specific field families."""
     return TaxpayerProfile(
@@ -326,14 +289,15 @@ def _build_taxpayer_profile(
         **_resolve_profile_withholding_fields(typed),
         **_objective_estimation_fields(canonical),
         **_resolve_profile_obligation_fields(typed),
-        **_resolve_profile_relationship_fields(canonical, typed),
-        **_resolve_profile_address_fields(canonical, typed),
+        **_resolve_profile_relationship_fields(
+            canonical,
+            typed,
+            withhold_unanswered_iva_block=withhold_unanswered_iva_block,
+        ),
         **_resolve_profile_activity_fields(canonical),
-        **_resolve_profile_corporate_fields(canonical),
-        **_resolve_profile_establishment_fields(canonical, typed),
+        **_resolve_profile_establishment_fields(canonical),
         **_resolve_profile_regime_fields(canonical, typed),
         **_resolve_profile_representative_fields(canonical),
-        **_resolve_profile_pagadores_fields(canonical),
     )
 
 
@@ -347,10 +311,14 @@ def _resolve_profile_axes(
     """Resolve identity, tax axes, and the profile-level IVA default."""
     entity_type = typed.entity_type or None
     legal_entity_form = typed.legal_entity_form or None
-    income_categories = _resolve_income_categories(typed.irpf_income_categories)
     declaration_roles = _resolve_declaration_roles(typed.declaration_roles)
     estimation_regime = typed.irpf_estimation_regime or None
     activity_kind = typed.irpf_activity_kind or None
+    income_categories = _income_categories_with_proven_activity(
+        _resolve_income_categories(typed.irpf_income_categories),
+        entity_type=entity_type,
+        activity_axis_declared=estimation_regime is not None or activity_kind is not None,
+    )
     tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(
         canonical.get("iva.regime"),
@@ -376,13 +344,15 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
     """Project the withholding answers that are already typed by SetupAnswers."""
     colegio_concertado = typed.colegio_concertado if isinstance(typed.colegio_concertado, bool) else None
     return {
-        "has_employees": typed.has_employees,
+        "has_employees": _declared_bool(typed.has_employees),
         "colegio_concertado": colegio_concertado,
-        "pays_professionals_with_retencion": typed.pays_professionals_with_retencion,
-        "professional_income_withholding_ge_70pct": typed.professional_income_withholding_ge_70pct,
-        "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
-        "pays_rent_with_retencion": typed.pays_rent_with_retencion,
-        "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
+        "pays_professionals_with_retencion": _declared_bool(typed.pays_professionals_with_retencion),
+        "art109_activity_income_withholding_ge_70pct": _declared_bool(
+            typed.art109_activity_income_withholding_ge_70pct,
+        ),
+        "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
+        "pays_capital_income_with_retencion": _declared_bool(typed.pays_capital_income_with_retencion),
+        "pays_non_resident_income_with_retencion": _declared_bool(typed.pays_non_resident_income_with_retencion),
     }
 
 
@@ -394,7 +364,7 @@ def _declared_bool(value: object) -> bool | None:
 def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligationFields:
     """Project the obligation flags that are already typed by SetupAnswers."""
     return {
-        "does_intracomunitario": typed.does_intracomunitario,
+        "does_intracomunitario": _declared_bool(typed.does_intracomunitario),
         "third_party_transactions_above_347_threshold": _declared_bool(
             typed.third_party_transactions_above_347_threshold,
         ),
@@ -402,6 +372,7 @@ def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligatio
         "monedas_virtuales_extranjero_above_threshold": _declared_bool(
             typed.monedas_virtuales_extranjero_above_threshold,
         ),
+        "patrimonio_declaration_threshold_met": _declared_bool(typed.patrimonio_declaration_threshold_met),
         "premio_loteria_gravamen_especial_sin_retencion": _declared_bool(
             typed.premio_loteria_gravamen_especial_sin_retencion,
         ),
@@ -414,108 +385,63 @@ def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligatio
 def _resolve_profile_relationship_fields(
     canonical: Mapping[str, str],
     typed: SetupAnswers,
+    *,
+    withhold_unanswered_iva_block: bool,
 ) -> _ProfileRelationshipFields:
     """Resolve IVA detail, grouped rosters, and enrollment facts."""
+    unanswered = modelo_iva_unanswered_paths(canonical) if withhold_unanswered_iva_block else ()
     return {
-        "iva": _resolve_modelo_iva_profile(canonical, typed),
+        "iva": _resolve_modelo_iva_profile(canonical, typed, unanswered=unanswered),
+        "iva_block_unanswered_paths": unanswered,
         "cross_period_group_member_rosters": _parse_cross_period_group_member_rosters(canonical),
         "enrollment": ModeloEnrollment(
-            large_company=typed.enrollment_large_company,
+            large_company=_declared_bool(typed.enrollment_large_company),
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),
     }
 
 
-def _resolve_profile_address_fields(canonical: Mapping[str, str], typed: SetupAnswers) -> _ProfileAddressFields:
-    """Resolve fiscal-address facts and preserve the explicit bool parser."""
-    return {
-        "fiscal_address_cadastral_reference": canonical.get("address.cadastral_reference", ""),
-        "fiscal_address_is_habitual_vivienda": _parse_bool(canonical.get("address.is_habitual_vivienda")) or False,
-        "holiday_territory": _resolve_holiday_territory(canonical, typed),
-    }
-
-
-def _resolve_holiday_territory(canonical: Mapping[str, str], typed: SetupAnswers) -> CalendarCCAA | None:
-    """Return the autonomous community whose holidays extend this taxpayer's deadlines.
-
-    Only a resident natural person's explicitly stored common-regime residence
-    establishes it: a natural person's fiscal domicile is the habitual
-    residence (LGT art. 48.2.a), and that residence's non-working days extend
-    a deadline (Ley 39/2015 art. 30.6).  Residence and fiscal residency are
-    read from stored values, not typed answers, because the typed answers
-    substitute catalogue defaults for missing facts.  Legal
-    entities, non-residents and foral taxpayers are left unresolved rather
-    than assigned a territory their fiscal domicile has not established.
-    """
-    declared = canonical.get("tax_residence.ccaa", "").strip()
-    if not declared or typed.entity_type != entity_type_natural_person_token():
-        return None
-    residency = canonical.get("taxpayer_type.fiscal_residency", "").strip()
-    if not residency or fiscal_residency_requires_country(residency):
-        return None
-    scope = typed.tax_residence_jurisdiction_scope.strip()
-    try:
-        if scope and resolve_m303_tax_territory_catalogue().definition(scope).is_foral:
-            return None
-        return resolve_calendar_ccaa_catalogue().territory_for_tax_residence(str(require_ccaa(declared)))
-    except RegistryValidationError as exc:
-        raise ProfileError(f"tax_residence.ccaa {declared!r} has no deadline-calendar territory") from exc
-
-
 def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileActivityFields:
-    """Resolve activity dates and the prior-year INCN amount."""
+    """Resolve activity dates, the prior-year INCN amount and the navieras tonelaje regime."""
     return {
-        "activity_start_date": _parse_date(canonical.get("censo.activity_start_date")),
-        "activity_end_date": _parse_date(canonical.get("censo.activity_end_date")),
+        "activity_start_date": profiles_parse_date(canonical.get("censo.activity_start_date")),
+        "activity_end_date": profiles_parse_date(canonical.get("censo.activity_end_date")),
         "incn_prior_12_months": _parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
+        "regimen_entidades_navieras_tonelaje": parse_bool(
+            canonical.get("taxpayer_type.regimen_entidades_navieras_tonelaje"),
+        ),
     }
 
 
-def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileCorporateFields:
-    """Resolve corporate option declarations and their dates."""
-    from ..calculations.registry.setup_profile_bindings import profile_field_bindings
-
-    corporate_bindings = {
-        field: path
-        for field, path in profile_field_bindings().items()
-        if field == "new_entity_first_two_profit_periods" or field.endswith("_declared") or field.endswith("_date")
-    }
-    expected = set(_ProfileCorporateFields.__annotations__)
-    if set(corporate_bindings) != expected:
-        raise ProfileError(
-            "registry setup profile catalogue does not declare the complete corporate field set",
-        )
-    return _ProfileCorporateFields(
-        new_entity_first_two_profit_periods=_parse_optional_bool(
-            canonical.get(corporate_bindings["new_entity_first_two_profit_periods"]),
-        ),
-        ley_49_2002_special_regime_option_declared=_parse_optional_bool(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_option_declared"]),
-        ),
-        ley_49_2002_special_regime_option_date=_parse_date(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_option_date"]),
-        ),
-        ley_49_2002_special_regime_renunciation_declared=_parse_optional_bool(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_renunciation_declared"]),
-        ),
-        ley_49_2002_special_regime_renunciation_date=_parse_date(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_renunciation_date"]),
-        ),
-    )
+_ACTIVITY_IAE_EPIGRAPH_PATH = "activities.iae_epigraph"
 
 
-def _resolve_profile_establishment_fields(
-    canonical: Mapping[str, str],
-    typed: SetupAnswers,
-) -> _ProfileEstablishmentFields:
-    """Resolve establishment, office, activity, and user-note fields."""
+def _activity_iae_epigraphs(canonical: Mapping[str, str]) -> tuple[str | None, ...]:
+    """Return every declared activity row's IAE epigraph, in row order.
+
+    Rows live at ``activities.INDEX.iae_epigraph``, and the setup wizard writes
+    a single implicit row without an index. Both spellings reduce to the same
+    field through :func:`domain.user_profile.values.section_field_key`, so the
+    rows are collected by that reduction rather than by a second path grammar.
+    The implicit row comes first and indexed rows follow numerically, matching
+    the order a profile surface shows them in. A row recording no epigraph
+    contributes ``None``: a rule reading these must tell an unclassified
+    activity apart from one classified elsewhere.
+    """
+    rows: list[tuple[int, str | None]] = []
+    for path, value in canonical.items():
+        if section_field_key(path) != _ACTIVITY_IAE_EPIGRAPH_PATH:
+            continue
+        index = path.removeprefix("activities.").removesuffix(".iae_epigraph")
+        rows.append((int(index) + 1 if index.isdigit() else 0, value.strip() or None))
+    return tuple(epigraph for _, epigraph in sorted(rows, key=lambda row: row[0]))
+
+
+def _resolve_profile_establishment_fields(canonical: Mapping[str, str]) -> _ProfileEstablishmentFields:
+    """Resolve the activity epigraph, as the unindexed scalar and as every declared row."""
     return {
-        "establecimiento_type": canonical.get("censo.establecimiento_type", ""),
-        "elected_withholding_pct": canonical.get("censo.elected_withholding_pct", ""),
-        "vivienda_office_total_m2": _parse_decimal(canonical.get("vivienda_office.total_m2")),
-        "vivienda_office_office_m2": _parse_decimal(canonical.get("vivienda_office.office_m2")),
-        "iae_epigraph": canonical.get("activities.iae_epigraph", ""),
-        "notes": typed.notes,
+        "iae_epigraph": canonical.get(_ACTIVITY_IAE_EPIGRAPH_PATH, ""),
+        "activity_iae_epigraphs": _activity_iae_epigraphs(canonical),
     }
 
 
@@ -530,7 +456,7 @@ def _resolve_profile_regime_fields(
         "irpf_special_regime": _resolve_special_regime(
             typed.irpf_special_regime or canonical.get("irpf.special_regime", ""),
         ),
-        "special_regime_start_date": _parse_date(
+        "special_regime_start_date": profiles_parse_date(
             typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date"),
         ),
         "fiscal_residency": _resolve_fiscal_residency(
@@ -548,31 +474,6 @@ def _resolve_profile_representative_fields(canonical: Mapping[str, str]) -> _Pro
         "representante_fiscal_nif": canonical.get("taxpayer_type.representante_fiscal_nif") or None,
         "representante_fiscal_nombre": canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
     }
-
-
-def _resolve_profile_pagadores_fields(canonical: Mapping[str, str]) -> _ProfilePagadoresFields:
-    """Resolve the multiple-payer work-income facts."""
-    return {
-        "irpf_pagadores_count": _parse_optional_int(canonical.get("irpf.pagadores_count")),
-        "irpf_pagadores_secondary_income": _parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
-        "irpf_pagadores_total_work_income": _parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
-    }
-
-
-def _parse_optional_bool(raw: str | None) -> bool | None:
-    """Three-state boolean: undeclared (``None``), affirmative, or negative.
-
-    Distinguishes an absent fact from a positively-declared ``False``.
-    The new-entity first-two-profit-periods state is opt-in: a profile
-    that has not declared the fact must remain outside the LIS Art. 29
-    15 percent override, which requires telling ``None`` apart from
-    ``False`` at the typed boundary.
-
-    The three-state shape is exactly what the canonical parser already
-    returns, so this delegates rather than restating the token sets --
-    which is what it used to do, while importing that same parser.
-    """
-    return _parse_bool(raw)
 
 
 def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
@@ -629,7 +530,11 @@ MODELO_IVA_BLOCK_CLAIMING_PATHS: frozenset[str] = frozenset(
 #: Undeclared is not the same answer as "no" for these four: each selects a
 #: filing obligation or a deduction entitlement, so defaulting an unanswered
 #: one to ``False`` would file a taxpayer out of a regime they never spoke
-#: about.
+#: about. The other six enrolments carry the same distinction without the
+#: refusal: the projection keeps an unanswered one as ``None`` so the
+#: obligation it gates reports incomplete instead of refusing the whole
+#: block, because those modelos are decided per modelo rather than per
+#: block.
 _MODELO_IVA_REQUIRED_BOOL_PATHS = (
     "iva.redeme_enrolled",
     "iva.cash_accounting_regime_enrolled",
@@ -657,8 +562,9 @@ def profile_claims_modelo_iva_block(values: Mapping[str, object]) -> bool:
     Presence is value-bearing, not truth-bearing: answering "no" to an IVA
     enrolment still claims the block, because declining a regime is a
     declaration about IVA. Only an absent or blank path leaves it unclaimed.
+    A stable order gives tracked mappings the same reads before the first declaration.
     """
-    return any(_declared(values.get(path)) for path in MODELO_IVA_BLOCK_CLAIMING_PATHS)
+    return any(_declared(values.get(path)) for path in sorted(MODELO_IVA_BLOCK_CLAIMING_PATHS))
 
 
 def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
@@ -669,7 +575,63 @@ def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str
     """
     if not profile_claims_modelo_iva_block(values):
         return ()
+    if _is_pure_recargo_equivalencia(values) or _implied_m303_regime_composition(values) is not None:
+        return tuple(path for path in MODELO_IVA_BLOCK_REQUIRED_PATHS if path != "iva.m303_regime_composition")
     return MODELO_IVA_BLOCK_REQUIRED_PATHS
+
+
+def modelo_iva_unanswered_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the paths a claimed Modelo IVA block obliges ``values`` to carry but leaves unanswered.
+
+    In :data:`MODELO_IVA_BLOCK_REQUIRED_PATHS` order; empty when the block is
+    unclaimed or complete.
+    """
+    return tuple(path for path in modelo_iva_profile_required_paths(values) if not _declared(values.get(path)))
+
+
+#: The large-company condition (LIVA art. 121 volume, RIVA art. 71.3) decides
+#: whether Modelos 303, 111, 115, 123 and 216 are filed monthly or quarterly;
+#: until it is stated no filing window of theirs can be dated.
+FILING_CADENCE_LARGE_COMPANY_PATH = "censo.large_company"
+
+#: The withholding payer facts whose stated "yes" makes one of those
+#: withholding self-assessments owed.
+_CADENCE_DECIDED_PAYER_FACT_PATHS: tuple[str, ...] = (
+    "withholding.has_employees",
+    "withholding.pays_professionals_with_retencion",
+    "withholding.pays_rent_with_retencion",
+    "withholding.pays_capital_income_with_retencion",
+    "withholding.pays_non_resident_income_with_retencion",
+)
+
+
+def filing_cadence_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the cadence facts ``values`` must carry before its periodic deadlines can be dated.
+
+    The large-company condition is owed once the profile claims the Modelo IVA
+    block or states that it pays withholding-subject income; a profile with
+    neither files none of the modelos whose cadence it decides.
+    """
+    if profile_claims_modelo_iva_block(values) or any(
+        _stated_yes(values.get(path)) for path in _CADENCE_DECIDED_PAYER_FACT_PATHS
+    ):
+        return (FILING_CADENCE_LARGE_COMPANY_PATH,)
+    return ()
+
+
+def _stated_yes(value: object) -> bool:
+    return value is True or (isinstance(value, str) and value.strip().lower() == "true")
+
+
+def iva_regime_owes_m303_regime_composition(regime: str) -> bool:
+    """Report whether a filer declaring ``regime`` and no composition still owes the Modelo 303 composition.
+
+    False when the regime settles it (a general-regime filer) or leaves nothing for it to
+    describe (a pure recargo de equivalencia retailer); the question-asking surfaces gate on
+    this so they ask exactly what :func:`modelo_iva_profile_required_paths` demands.
+    """
+    values = {"iva.regime": regime}
+    return not (_is_pure_recargo_equivalencia(values) or _implied_m303_regime_composition(values) is not None)
 
 
 def _declared(value: object) -> bool:
@@ -682,50 +644,131 @@ def _required_iva_bool(value: object, *, path: str) -> bool:
     return value
 
 
-def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
-    """Build an IVA block only when a block-owned fact is explicitly present."""
-    if not profile_claims_modelo_iva_block(canonical):
+def _is_pure_recargo_equivalencia(values: Mapping[str, object]) -> bool:
+    """Report whether the declared IVA regime is the recargo de equivalencia and no composition is stated.
+
+    A retailer whose only regime is the recargo de equivalencia is charged the recargo by its
+    supplier and files no Modelo 303 for those activities (LIVA arts. 154-163), so the
+    composition of general and simplified regimes in that modelo has nothing to describe.
+    A composition stated alongside the regime is still honoured.
+    """
+    token = _undeclared_composition_regime_token(values)
+    if token is None:
+        return False
+    try:
+        return token == iva_regime_recargo_equivalencia_token()
+    except RegistryValidationError:
+        return False
+
+
+def _implied_m303_regime_composition(values: Mapping[str, object]) -> M303RegimeComposition | None:
+    """Return the composition a declared regime settles when no composition is stated.
+
+    Every supported Modelo 303 design answers the "tributa exclusivamente en
+    régimen simplificado" field of a general-regime filer with "3" NO (sólo RG),
+    so a self-assessing regime other than the simplified one files under the
+    general regime alone. The simplified regime settles nothing: its filer may
+    also carry general-regime activities (LIVA art. 122.Dos.1.º) and must say
+    whether the composition is simplified only or mixed.
+    """
+    token = _undeclared_composition_regime_token(values)
+    if token is None:
         return None
+    try:
+        catalogue = resolve_iva_regime_catalogue()
+        if token not in catalogue.self_assessment_tokens or token == iva_regime_simplificado_token():
+            return None
+        return m303_general_only_regime_composition()
+    except RegistryValidationError:
+        return None
+
+
+def _undeclared_composition_regime_token(values: Mapping[str, object]) -> str | None:
+    """Return the declared IVA regime token when no composition is stated, else ``None``."""
+    if _declared(values.get("iva.m303_regime_composition")):
+        return None
+    raw = values.get("iva.regime")
+    if not _declared(raw):
+        return None
+    return str(raw).strip().upper().replace("-", "_")
+
+
+def _resolve_m303_regime_composition(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+) -> M303RegimeComposition | None:
+    """Resolve the Modelo 303 composition: declared, settled by the regime, or none for a recargo retailer."""
     if not typed.iva_m303_regime_composition:
+        implied = _implied_m303_regime_composition(canonical)
+        if implied is not None:
+            return implied
+        if _is_pure_recargo_equivalencia(canonical):
+            return None
         raise ProfileError(
             f"iva.m303_regime_composition must be explicitly declared for Modelo IVA; "
             f"accepted values: {_accepted_m303_regime_composition()}",
         )
     try:
-        composition = require_m303_regime_composition(typed.iva_m303_regime_composition)
+        return require_m303_regime_composition(typed.iva_m303_regime_composition)
     except RegistryValidationError as exc:
         raise ProfileError(
             f"unsupported iva.m303_regime_composition {typed.iva_m303_regime_composition!r}; "
             f"accepted values: {_accepted_m303_regime_composition()}",
         ) from exc
+
+
+def _resolve_modelo_iva_profile(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+    *,
+    unanswered: tuple[str, ...] = (),
+) -> ModeloIVAProfile | None:
+    """Build an IVA block only when a block-owned fact is explicitly present.
+
+    ``unanswered`` names the required paths a read projection admits as
+    unanswered. A yes/no fact among them stays ``None``; the territory or the
+    composition among them leaves no block to build.
+    """
+    if not profile_claims_modelo_iva_block(canonical):
+        return None
+    if not set(unanswered) <= set(_MODELO_IVA_REQUIRED_BOOL_PATHS):
+        return None
+
+    def required_yes_no(value: object, *, path: str) -> bool | None:
+        return None if path in unanswered else _required_iva_bool(value, path=path)
+
+    composition = _resolve_m303_regime_composition(canonical, typed)
     return ModeloIVAProfile(
         tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
         regime_composition=composition,
-        roi_enrolled=typed.iva_roi_enrolled is True,
-        oss_enrolled=typed.iva_oss_enrolled is True,
-        group_member_enrolled=typed.iva_group_member_enrolled is True,
-        group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled is True,
-        sii_enrolled=typed.iva_sii_enrolled is True,
-        redeme_enrolled=_required_iva_bool(typed.iva_redeme_enrolled, path="iva.redeme_enrolled"),
-        intracommunity_operations_exceed_50000_eur=(typed.iva_intracommunity_operations_exceed_50000_eur is True),
-        cash_accounting_regime_enrolled=_required_iva_bool(
+        roi_enrolled=_declared_bool(typed.iva_roi_enrolled),
+        oss_enrolled=_declared_bool(typed.iva_oss_enrolled),
+        group_member_enrolled=_declared_bool(typed.iva_group_member_enrolled),
+        group_dominant_entity_enrolled=_declared_bool(typed.iva_group_dominant_entity_enrolled),
+        sii_enrolled=_declared_bool(typed.iva_sii_enrolled),
+        redeme_enrolled=required_yes_no(typed.iva_redeme_enrolled, path="iva.redeme_enrolled"),
+        intracommunity_operations_exceed_50000_eur=_declared_bool(
+            typed.iva_intracommunity_operations_exceed_50000_eur,
+        ),
+        cash_accounting_regime_enrolled=required_yes_no(
             typed.iva_cash_accounting_regime_enrolled,
             path="iva.cash_accounting_regime_enrolled",
         ),
-        voluntary_sii_enrolled=_required_iva_bool(
+        voluntary_sii_enrolled=required_yes_no(
             typed.iva_voluntary_sii_enrolled,
             path="iva.voluntary_sii_enrolled",
         ),
-        hydrocarbon_deposit_advance_payment_deduction_entitled=_required_iva_bool(
+        hydrocarbon_deposit_advance_payment_deduction_entitled=required_yes_no(
             typed.iva_hydrocarbon_deposit_advance_payment_deduction_entitled,
             path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
         ),
     )
 
 
-def _parse_date(raw: str | None) -> date | None:
+def profiles_parse_date(raw: str | None) -> date | None:
+    """Parse an ISO date from the censo or refuse with a profile error."""
     try:
-        return _parse_date_canonical(raw, fmt="iso8601", on_error="raise")
+        return parse_date(raw, fmt="iso8601", on_error="raise")
     except ValueError as exc:
         raise ProfileError(f"invalid censo date {raw!r}; expected ISO-8601") from exc
 
@@ -737,15 +780,6 @@ def _parse_decimal(raw: str | None) -> Decimal | None:
         return Decimal(raw.strip())
     except InvalidOperation as exc:
         raise ProfileError(f"invalid censo decimal {raw!r}") from exc
-
-
-def _parse_optional_int(raw: str | None) -> int | None:
-    if not (raw is not None and raw):
-        return None
-    try:
-        return int(raw.strip())
-    except ValueError:
-        return None
 
 
 def _parse_cross_period_group_member_rosters(canonical: Mapping[str, str]) -> tuple[CrossPeriodGroupMemberRoster, ...]:
@@ -785,11 +819,13 @@ def _parse_group_member_roster_key(key: str) -> tuple[str | None, int | None, st
     for prefix in ("cross_period.group_member_roster.", "iva_grupo.member_roster."):
         if not key.startswith(prefix):
             continue
-        parts = key[len(prefix) :].split(".")
-        if len(parts) == 3 and parts[1].isdigit():
-            return parts[0], int(parts[1]), parts[2]
-        if len(parts) == 2 and parts[0].isdigit():
-            return Modelo("322").value, int(parts[0]), parts[1]
+        match key[len(prefix) :].split("."):
+            case [modelo, year, token] if year.isdigit():
+                return modelo, int(year), token
+            case [year, token] if year.isdigit():
+                return Modelo("322").value, int(year), token
+            case _:
+                continue
     return None, None, None
 
 
@@ -810,6 +846,25 @@ def _resolve_income_categories(raw: str) -> frozenset[IrpfIncomeCategory]:
     """
     tokens = [token.strip() for token in raw.split(",") if token.strip()]
     return frozenset(require_irpf_income_category(token) for token in tokens)
+
+
+def _income_categories_with_proven_activity(
+    declared: frozenset[IrpfIncomeCategory],
+    *,
+    entity_type: EntityType | None,
+    activity_axis_declared: bool,
+) -> frozenset[IrpfIncomeCategory]:
+    """Complete undeclared categories that the activity axes already prove.
+
+    An IRPF estimation regime determines rendimientos de actividades
+    económicas (LIRPF arts. 28 and 31) and the profesional/sectorial axis
+    classifies an economic activity (RIRPF art. 95), so a natural person who
+    declares either has economic-activity income. A category set the operator
+    did declare is their statement and is kept as declared.
+    """
+    if declared or not activity_axis_declared or entity_type != entity_type_natural_person_token():
+        return declared
+    return frozenset({irpf_income_category_actividad_economica_token()})
 
 
 def _resolve_declaration_roles(raw: str) -> frozenset[ThirdPartyDeclarationRole]:
@@ -847,8 +902,10 @@ def _default_iva_regime_for_profile(
 def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | None:
     """Project the SetupAnswers fiscal-residency field to a typed enum or None.
 
-    A blank string means the operator has not declared fiscal residency
-    (treated as RESIDENT_IRPF by engine consumers); typed ``None`` signals that.
+    A blank string means the operator has not declared fiscal residency, and
+    typed ``None`` carries that forward. No consumer may read it as the
+    resident category: habitual residence in Spain selects the tax itself, so
+    an unanswered residency leaves every residency-gated modelo incomplete.
     """
     if raw == "":
         return None

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#declaracion-profile-printed-box-scope'
 date: '2026-07-25'
-modified: '2026-08-15'
-body_hash: 'sha256:aad3c3f765612b7ee6cb3b436d4132ba1a95371447135fbfe4570bad27d96091'
+modified: '2026-11-04'
+body_hash: 'sha256:08d320fcd3bec610d39f31a003676a9680db8a7f57f7b6710227a0a76d3039f6'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-research]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
@@ -20,14 +20,15 @@ related:
 Asked whether to re-scope both M303 revisions or only `2023-y-siguientes`, the
 operator ruled **all revisions**. So the six ids leave `2023-y-siguientes` and the
 five present in `2009-y-siguientes` leave it too, in one coherent change. The
-alternative — leaving 2009 asserting five printed boxes the form does not print —
+alternative — leaving the older revision asserting five printed boxes the form does not print —
 is rejected.
 
 Two consequences follow directly from the ruling and are binding on the plan:
 
 - The fixture generator's primitive draw block is **deleted**, not gated. Gating
   behind a legacy-template branch was only required under the rejected option.
-- `2009-y-siguientes` is a live, fully-built authority for filing years 2009-2022
+- `2009-y-siguientes` is a live, fully-built authority for every filing year before the newer
+revision begins
   (118 casillas, 67 formulas, 94 bindings) whose revision id is asserted by real
   parser and verification-chain tests over seven fixture PDFs. Its half is real
   work, not a rename.
@@ -167,21 +168,21 @@ Two things the paragraph above does not capture, both of which change the work:
   and `303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`
   carry these targets. The Implementation says "The profile drops ..." in the
   singular; dropping the targets from only the current revision leaves the
-  2009 revision asserting printed boxes the form does not print — the very
+  older revision asserting printed boxes the form does not print — the very
   defect this decision exists to remove, preserved in the older revision.
-  Whether the 2009 revision is re-scoped in the same change or deliberately
+  Whether the older revision is re-scoped in the same change or deliberately
   left (with a stated reason) is a decision this ADR should make explicitly
   before a plan is written against it.
 
   **CORRECTION (same day).** An earlier revision of this paragraph said both
   profiles "name the six ids". That is wrong, and the difference changes the
-  work. Parsed from the `target_casillas` tables: the 2023 profile carries **18**
-  targets including all six; the 2009 profile carries **9** targets including only
+  work. Parsed from the `target_casillas` tables: the newer profile carries **18**
+  targets including all six; the older profile carries **9** targets including only
   **five** — `iva.autoconsumo.promotor.base` is absent from it, and the underlying
-  casilla does not exist anywhere in the 2009 revision (zero files mention
-  `autoconsumo`, against one in 2023). Post-drop the target lists become **12**
+  casilla does not exist anywhere in the older revision (zero files mention
+  `autoconsumo`, against one in the newer). Post-drop the target lists become **12**
   and **4**. So option (A), re-scoping both, removes six ids from one profile and
-  five from the other, and touches no autoconsumo concept in 2009 because there is
+  five from the other, and touches no autoconsumo concept in the older revision because there is
   none to touch.
 
 ### The `min_coverage` floor, which the Implementation mandates restating but leaves unnumbered

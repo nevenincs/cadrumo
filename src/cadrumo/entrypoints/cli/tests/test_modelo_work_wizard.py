@@ -44,9 +44,9 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
-from cadrumo.application.flows import line_frontend as _line_frontend
+from cadrumo.application.flows import line_frontend
 from cadrumo.application.flows.copy import assemble_page_copy
 from cadrumo.application.flows.definition import FlowDefinition, FlowPage
 from cadrumo.application.flows.errors import FlowCopyResolutionError
@@ -61,15 +61,15 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.flows import FlowMode
 from cadrumo.core.operator_action_enums import ActionConditionality, NoRecoveryOutcome
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.cli import _modelo_work_wizard_cli
-from cadrumo.entrypoints.cli._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.entrypoints.cli import modelo_work_wizard_cli
+from cadrumo.entrypoints.cli.modelo_work_wizard_payloads import WizardPromptedCasillaPayload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 from .modelo_work_scenarios import load_work_unit_by_id
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -82,10 +82,11 @@ _GASTOS = Decimal("600.00")
 _RENDIMIENTO_NETO = _INGRESOS - _GASTOS
 _PAGO_FRACCIONADO = (_RENDIMIENTO_NETO * Decimal("20") / Decimal("100")).quantize(Decimal("0.01"))
 
-# The M130 1T manual-input surface (registry ``input_kind = "manual"``) is
-# casillas 06/08/10/16/18 (see ``_MANUAL_CASILLAS``), all zero for this oracle
-# (no withholdings, not an agrarian activity, no vivienda deduction, first
-# filing of the ejercicio).
+# The M130 1T manual-input surface (registry casillas with no ``input_kind``) is
+# casillas 06, 16 and 18 plus the art. 32.1 reducible-yield working figure (see
+# ``_MANUAL_CASILLAS``), all zero for this oracle (no withholdings, no vivienda
+# deduction, first filing of the ejercicio, no reducible yield); boxes 08 and 10
+# are bound to the declared-activity split.
 #
 # The one ``previous_filing`` binding whose selector has no local prior M100
 # filing to auto-resolve at 1T with a blank bucket. It is not absent-by-design
@@ -94,7 +95,7 @@ _PAGO_FRACCIONADO = (_RENDIMIENTO_NETO * Decimal("20") / Decimal("100")).quantiz
 _PREV_YEAR_INCOME_ANSWER = "13000"
 
 
-_MANUAL_CASILLAS = ["06", "08", "10", "16", "18"]
+_MANUAL_CASILLAS = ["06", "16", "18", "rendimiento-neto-reducible-art-32-1"]
 _PREV_YEAR_BINDING_KEY = "irpf.previous_year_economic_activity_net_income"
 
 
@@ -304,7 +305,7 @@ def test_wizard_scripted_path_walks_the_manual_sequence_and_lands_the_m130_draft
     )
     assert result.exit_code == 0, result.output
 
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["state"] == "borrador"
     casillas = payload["casilla_values"]
     assert Decimal(casillas["01"]) == _INGRESOS
@@ -347,7 +348,7 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
         ],
     )
     assert scripted_result.exit_code == 0, scripted_result.output
-    scripted_draft = _payload(scripted_result.output)["casilla_values"]
+    scripted_draft = unwrap_schema_envelope(scripted_result.output)["casilla_values"]
     canonical_result = _invoke(
         wizard_profile,
         [
@@ -360,7 +361,7 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate(
         ],
     )
     assert canonical_result.exit_code == 0, canonical_result.output
-    canonical_draft = _payload(canonical_result.output)["casilla_values"]
+    canonical_draft = unwrap_schema_envelope(canonical_result.output)["casilla_values"]
 
     assert scripted_draft == canonical_draft
 
@@ -407,13 +408,13 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
     _seed_m130_ledger("wizard-cli-source-provenance", fixture=wizard_profile, operation=operation)
     work_unit_id = _create_m130_work_unit(wizard_profile)
 
-    # Five registry-discovered manual casillas, then submit from review.
+    # Four registry-discovered manual casillas, then submit from review.
     keystrokes = "0\r" * len(_MANUAL_CASILLAS) + "\r"
     with create_pipe_input() as pipe:
         pipe.send_text(keystrokes)
 
-        def _headless_line_frontend(definition: FlowDefinition) -> _line_frontend.LineFlowFrontend:
-            return _line_frontend.LineFlowFrontend(
+        def _headless_line_frontend(definition: FlowDefinition) -> line_frontend.LineFlowFrontend:
+            return line_frontend.LineFlowFrontend(
                 definition,
                 input=pipe,
                 output=PlainTextOutput(StringIO()),
@@ -424,30 +425,35 @@ def test_registered_wizard_cli_interactive_flow_emits_ledger_source_provenance(
         # replaced; explicit IO merely avoids claiming this test process's
         # non-TTY stdio is an operator console. The preceding refusal test
         # keeps that production guard covered independently.
-        monkeypatch.setattr(_modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
+        monkeypatch.setattr(modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
         result = _invoke(wizard_profile, ["app", "modelo", "work", "wizard", work_unit_id])
 
     assert result.exit_code == 0, result.output
     document = json.loads(result.output)
     assert document["command"] == "modelo.work.wizard"
-    payload = _payload(result.output)
-    assert {row["key"] for row in payload["prompted_casillas"]} == {"06", "08", "10", "16", "18"}
+    payload = unwrap_schema_envelope(result.output)
+    assert {row["key"] for row in payload["prompted_casillas"]} == set(_MANUAL_CASILLAS)
     provenance = payload["source_provenance"]
     assert provenance, "the wizard CLI JSON must retain the calculated ledger source trace"
+    ledger_contributors = ("ledger_renta_income_aggregation", "ledger_renta_gastos_pago_fraccionado_aggregation")
     ledger_rows = {
-        row["contributor_binding_source"]: row["source_ref"]
-        for row in provenance
-        if row["contributor_binding_source"]
-        in {
-            "ledger_renta_income_aggregation",
-            "ledger_renta_gastos_pago_fraccionado_aggregation",
-        }
+        contributor: [row["source_ref"] for row in provenance if row["contributor_binding_source"] == contributor]
+        for contributor in ledger_contributors
     }
-    assert set(ledger_rows) == {
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gastos_pago_fraccionado_aggregation",
+    # Each ledger contributor traces its figures to the ledger rows it read.
+    assert all(any(source_ref.startswith("transaction:") for source_ref in refs) for refs in ledger_rows.values()), (
+        ledger_rows
+    )
+    # Beside them, a contributor names only the boxes it fed directly: the income resolver hands
+    # Modelo 130 box 06 the retención the issued invoices state (RIRPF art. 110), and nothing else.
+    directly_fed = {
+        contributor: sorted(ref for ref in refs if not ref.startswith("transaction:"))
+        for contributor, refs in ledger_rows.items()
     }
-    assert all(source_ref.startswith("transaction:") for source_ref in ledger_rows.values())
+    assert directly_fed == {
+        "ledger_renta_income_aggregation": ["bound_input:06"],
+        "ledger_renta_gastos_pago_fraccionado_aggregation": [],
+    }, ledger_rows
     _assert_encrypted_calculation_matches_cli(
         wizard_profile,
         operation=operation,
@@ -472,18 +478,18 @@ def test_registered_m123_wizard_prompts_registry_pages_and_publishes(
     with create_pipe_input() as pipe:
         pipe.send_text(keystrokes)
 
-        def _headless_line_frontend(definition: FlowDefinition) -> _line_frontend.LineFlowFrontend:
-            return _line_frontend.LineFlowFrontend(
+        def _headless_line_frontend(definition: FlowDefinition) -> line_frontend.LineFlowFrontend:
+            return line_frontend.LineFlowFrontend(
                 definition,
                 input=pipe,
                 output=PlainTextOutput(StringIO()),
             )
 
-        monkeypatch.setattr(_modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
+        monkeypatch.setattr(modelo_work_wizard_cli, "LineFlowFrontend", _headless_line_frontend)
         result = _invoke(wizard_profile, ["app", "modelo", "work", "wizard", work_unit_id])
 
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert {row["key"] for row in payload["prompted_casillas"]} == page_ids
     assert payload["saved"] is True
     _assert_encrypted_calculation_matches_cli(

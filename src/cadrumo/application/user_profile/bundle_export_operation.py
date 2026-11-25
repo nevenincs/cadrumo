@@ -41,7 +41,7 @@ from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.identity.profile import ProfileId
 from ...core.locks import exclusive_file_lock
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import effective_storage_root
 from ...core.time.utc import validate_utc_aware
 from ..journal_repository import JournalRepositoryBase
@@ -112,7 +112,7 @@ class ProfileBundleExportOperation(BaseModel):
     later reconciliation emit the byte-identical (idempotent) event.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     operation_id: Hex64Str
     status: ProfileBundleExportOperationStatus
@@ -180,7 +180,7 @@ class UnreadableExportJournal(BaseModel):
     contents.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     journal_id: str = Field(min_length=1)
     reason: str = Field(min_length=1)
@@ -189,7 +189,7 @@ class UnreadableExportJournal(BaseModel):
 class ProfileBundleExportJournalScan(BaseModel):
     """Every journal the repository could read, and every one it could not."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     operations: tuple[ProfileBundleExportOperation, ...]
     unreadable: tuple[UnreadableExportJournal, ...]

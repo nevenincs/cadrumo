@@ -14,18 +14,10 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.errors import OperationDeclarationError
 from cadrumo.application.operations.frontend_requests import (
@@ -54,10 +46,6 @@ from cadrumo.application.operations.supervisor_context import SupervisorExecutor
 from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -65,6 +53,7 @@ from cadrumo.core.operations import (
 from cadrumo.core.operator_progress import OperatorProgress, emit_operator_progress
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -179,23 +168,6 @@ class OperatorProgressExecutor:
         )
 
 
-def _capabilities() -> OperationCapabilities:
-    """Declare the narrow valid contract that omits the tested mutations."""
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.UNSUPPORTED,
-        deadline=OperationDeadline.ABSENT,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset(),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
-
-
 def _definition(*, executor_type: type[object], build: Callable[[], object]) -> OperationDefinition:
     """Build one public registered operation definition with narrow declarations."""
     return OperationDefinition(
@@ -210,7 +182,7 @@ def _definition(*, executor_type: type[object], build: Callable[[], object]) -> 
         ),
         phase_codes=("operation.phase.declared",),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
+        capabilities=supervisor_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
 
@@ -260,17 +232,18 @@ def _request() -> OperationRequest[BaseModel]:
     )
 
 
-def _repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    """Build real filesystem and encrypted persistence adapters."""
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
+def _submit_with_executor(tmp_path: Path, profile: TestRuntimeProfile, executor: object):
+    """Submit one operation to a supervisor whose registry builds ``executor``."""
+    journal, leases, operands = operation_repositories(
+        storage_root=tmp_path / "durable-state", profile_objects=profile.repository
     )
+    supervisor = _supervisor(
+        registry=_registry(executor_type=type(executor), build=lambda: executor),
+        journal=journal,
+        leases=leases,
+        operands=operands,
+    )
+    return supervisor, asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
 
 
 @pytest.mark.parametrize(
@@ -284,16 +257,7 @@ def test_supervisor_context_refuses_undeclared_event_claims_without_journal_muta
 ) -> None:
     """Phase and effect refusals retain the exact pre-attempt persisted history."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=type(executor), build=lambda: executor),
-            journal=journal,
-            leases=leases,
-            operands=operands,
-        )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        supervisor, operation_id = _submit_with_executor(tmp_path, profile, executor)
 
         with pytest.raises(OperationDeclarationError, match="not declared"):
             asyncio.run(run_to_settlement(supervisor, operation_id))
@@ -312,16 +276,7 @@ def test_supervisor_context_refuses_undeclared_resource_ownership_without_journa
     """A refused resource-family handoff neither persists nor reaches settlement cleanup."""
     executor = UndeclaredResourceExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
-            storage_root=tmp_path / "durable-state", profile_objects=profile.repository
-        )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=type(executor), build=lambda: executor),
-            journal=journal,
-            leases=leases,
-            operands=operands,
-        )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        supervisor, operation_id = _submit_with_executor(tmp_path, profile, executor)
 
         with pytest.raises(OperationDeclarationError, match="not declared"):
             asyncio.run(run_to_settlement(supervisor, operation_id))
@@ -352,7 +307,9 @@ def test_supervisor_journals_executor_operator_progress_as_public_notice_events(
     executor = OperatorProgressExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
         registry = _registry(executor_type=type(executor), build=lambda: executor)
         supervisor = _supervisor(registry=registry, journal=journal, leases=leases, operands=operands)
         operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))

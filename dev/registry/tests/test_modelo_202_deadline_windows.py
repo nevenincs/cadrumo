@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.core.period import PeriodKind, registry_period_kind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from .profile_schema_support import committed_registry_validator
@@ -15,22 +16,19 @@ from .profile_schema_support import committed_registry_validator
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
+# Per supported filing year, in envelope order: each instalment's (month, day) opening, official close
+# and domiciliación cutoff, all inside the filing year.
+_DEADLINE_DAYS_BY_SUPPORTED_YEAR = (
+    (((4, 1), (4, 20), (4, 15)), ((10, 1), (10, 20), (10, 15)), ((12, 1), (12, 20), (12, 15))),
+    (((4, 1), (4, 20), (4, 15)), ((10, 1), (10, 20), (10, 15)), ((12, 1), (12, 20), (12, 15))),
+    (((4, 1), (4, 22), (4, 17)), ((10, 1), (10, 21), (10, 16)), ((12, 1), (12, 20), (12, 17))),
+    (((4, 1), (4, 21), (4, 15)), ((10, 1), (10, 20), (10, 15)), ((12, 1), (12, 22), (12, 17))),
+    (((4, 1), (4, 20), (4, 15)), ((10, 1), (10, 20), (10, 15)), ((12, 1), (12, 21), (12, 15))),
+)
 _EXPECTED_WINDOWS = {
-    (2022, "1P"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
-    (2022, "2P"): (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
-    (2022, "3P"): (date(2022, 12, 1), date(2022, 12, 20), date(2022, 12, 15)),
-    (2023, "1P"): (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
-    (2023, "2P"): (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
-    (2023, "3P"): (date(2023, 12, 1), date(2023, 12, 20), date(2023, 12, 15)),
-    (2024, "1P"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
-    (2024, "2P"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
-    (2024, "3P"): (date(2024, 12, 1), date(2024, 12, 20), date(2024, 12, 17)),
-    (2025, "1P"): (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
-    (2025, "2P"): (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
-    (2025, "3P"): (date(2025, 12, 1), date(2025, 12, 22), date(2025, 12, 17)),
-    (2026, "1P"): (date(2026, 4, 1), date(2026, 4, 20), date(2026, 4, 15)),
-    (2026, "2P"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
-    (2026, "3P"): (date(2026, 12, 1), date(2026, 12, 21), date(2026, 12, 15)),
+    (year, f"{instalment}P"): tuple(date(year, *month_day) for month_day in month_days)
+    for year, per_year in zip(filing_year_envelope().years, _DEADLINE_DAYS_BY_SUPPORTED_YEAR, strict=True)
+    for instalment, month_days in enumerate(per_year, start=1)
 }
 
 
@@ -48,7 +46,7 @@ def test_committed_modelo_202_has_exact_supported_year_deadline_census() -> None
         )
         for revision in modelo.revisions.values()
         for window in revision.deadline_windows
-        if 2022 <= window.period.filing_year <= 2026
+        if window.period.filing_year in filing_year_envelope().years
     }
 
     assert observed == _EXPECTED_WINDOWS
@@ -61,9 +59,9 @@ def test_committed_modelo_202_windows_use_canonical_periods_sources_and_owners()
         (revision, window)
         for revision in modelo.revisions.values()
         for window in revision.deadline_windows
-        if 2022 <= window.period.filing_year <= 2026
+        if window.period.filing_year in filing_year_envelope().years
     ]
-    assert len(windows) == len(_EXPECTED_WINDOWS) == 15
+    assert len(windows) == len(_EXPECTED_WINDOWS)
 
     for revision, window in windows:
         filing_year = window.period.filing_year

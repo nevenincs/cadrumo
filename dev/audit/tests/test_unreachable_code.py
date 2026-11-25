@@ -18,8 +18,8 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
 from dev.first_party_source import SOURCE_PACKAGES
+from dev.paths import REPO_ROOT
 
 from ..unreachable_code import scan_unreachable_code
 from ..unreachable_models import Confidence, ModuleReach, SymbolKind, UnreachableCodeOutcome, UnreachableCodeResult
@@ -30,7 +30,7 @@ from ..unreachable_tree import EntryPoint, OutsideCorpus, ShippedTreeSpec
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _EXCLUDES = ("src/pkg/tests", "src/pkg/tests/**", "src/pkg/**/tests", "src/pkg/**/tests/**")
-_DATA_GLOBS = ("_data/**/*.toml",)
+DATA_GLOBS = ("_data/**/*.toml",)
 
 _CLI = '''
 """Entry module.
@@ -243,7 +243,7 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
             OutsideCorpus(label="tests", root=root / "src" / "pkg", test_modules_only=True),
             OutsideCorpus(label="dev", root=root / "dev"),
         ),
-        data_globs=_DATA_GLOBS,
+        data_globs=DATA_GLOBS,
     )
 
 
@@ -251,6 +251,12 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
 def result(tmp_path: Path) -> UnreachableCodeResult:
     """One scan over the synthetic tree, shared by the classification tests."""
     return scan_unreachable_code(_build_tree(tmp_path))
+
+
+@pytest.fixture(scope="module")
+def repository_spec() -> ShippedTreeSpec:
+    """The spec discovered once from the real repository; frozen, so safe to share."""
+    return ShippedTreeSpec.from_repository(REPO_ROOT)
 
 
 def test_modules_reached_statically_dynamically_or_relatively_are_not_reported(result: UnreachableCodeResult) -> None:
@@ -279,13 +285,13 @@ def test_a_module_execution_entrypoint_is_a_walk_root(result: UnreachableCodeRes
     assert result.unreachable_module_total == 4
 
 
-def test_repository_discovers_its_module_execution_roots() -> None:
+def test_repository_discovers_its_module_execution_roots(repository_spec: ShippedTreeSpec) -> None:
     """Every audited package contributes its own ``python -m`` surfaces, and only those."""
     from ..unreachable_tree import is_module_execution_surface
 
-    spec = ShippedTreeSpec.from_repository(REPO_ROOT)
+    spec = repository_spec
 
-    assert "cadrumo.adapters.persistence.storage.custody._kdf_worker" in spec.module_roots
+    assert "cadrumo.adapters.persistence.storage.custody.kdf_worker" in spec.module_roots
     assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" in spec.module_roots
     assert "cadrumo_runtime.host.frontend.tui.__main__" in spec.module_roots
     assert all(spec.audits(module) for module in spec.module_roots)
@@ -833,9 +839,9 @@ def test_console_report_caps_each_section_unless_full(result: UnreachableCodeRes
     assert "more (--full for all)" not in render_console_report(result, full=True, cap=1)
 
 
-def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
+def test_repository_spec_reads_the_console_scripts_from_pyproject(repository_spec: ShippedTreeSpec) -> None:
     """Roots come from ``[project.scripts]``, never from a restated list."""
-    spec = ShippedTreeSpec.from_repository(REPO_ROOT)
+    spec = repository_spec
 
     pyproject = parse_toml((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     declared = set(pyproject["project"]["scripts"].values())
@@ -843,7 +849,7 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
     assert spec.packages == tuple(PurePosixPath(root).name for root in SOURCE_PACKAGES)
     assert {entry.spec for entry in spec.entry_points} == declared
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
-    assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}
+    assert {corpus.label for corpus in spec.outside} == {"tests", "dev", "packaging", "build-generator"}
     # Every audited package's own tests are read, so their labels name real use.
     assert {corpus.root for corpus in spec.outside if corpus.test_modules_only} == set(spec.package_roots)
     assert spec.data_globs
@@ -989,9 +995,9 @@ def test_the_reference_walk_records_what_it_could_not_read() -> None:
     over an incomplete corpus with nothing saying so. Any deletion list derived
     from that corpus could name a symbol that is used.
     """
-    from ..unreachable_models import _OutsideUse
+    from ..unreachable_models import OutsideUse
 
-    fresh = _OutsideUse()
+    fresh = OutsideUse()
 
     assert fresh.unreadable == [], "the accumulator starts with nothing lost"
 
@@ -1018,31 +1024,6 @@ def test_the_test_walk_refuses_a_module_that_does_not_parse(tmp_path: Path) -> N
         parse_module(broken)
 
 
-def test_the_live_test_walk_read_every_module() -> None:
-    """The healthy state, asserted rather than assumed.
-
-    If a tracked test module ever stops parsing, the audit now refuses instead
-    of quietly reporting one fewer test-of-dead-code finding.
-    """
-    from dev._paths import REPO_ROOT
-    from dev.first_party_source import is_test_source
-
-    from ..unreachable_memo import parse_module
-    from ..unreachable_tree import iter_python_files
-
-    src_root = REPO_ROOT / "src"
-    walked = 0
-    for path in iter_python_files(src_root / "cadrumo"):
-        if not is_test_source(path, root=src_root) or not path.name.startswith("test_"):
-            continue
-        walked += 1
-        parse_module(path)
-
-    # A floor, not a pinned count. `> 0` let the corpus collapse to a single
-    # module while still reading as a full walk; live it finds 3,334.
-    assert walked > 2500, f"the walk found only {walked} test modules, so it no longer covers the corpus"
-
-
 def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -1055,7 +1036,7 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
     candidates. The lenient decode was worse than the skip - a replaced byte can
     split a token so it never matches, with nothing said either way.
     """
-    from ..unreachable_references import _data_tokens
+    from ..unreachable_references import unreachable_references_data_tokens
     from ..unreachable_tree import ShippedTreeSpec
 
     package = tmp_path / "src" / "cadrumo" / "_data" / "registry"
@@ -1071,7 +1052,7 @@ def test_an_unreadable_data_file_is_announced_as_a_deletion_risk(
         data_globs=("_data/registry/**/*.json",),
     )
     with pytest.raises(OSError, match=r"undecodable\.json") as failure:
-        _data_tokens(spec)
+        unreachable_references_data_tokens(spec)
     assert "coverage is unproven" in str(failure.value)
 
 

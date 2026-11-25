@@ -7,13 +7,13 @@ from enum import Enum
 from importlib.util import resolve_name
 from typing import Final
 
-from cadrumo_client.commands._parameter_validation import (
+from cadrumo_client.commands.parameter_validation import (
     require_token,
     validate_not_supported_schema,
     validate_target_schema,
     validate_unavailable_schema,
 )
-from cadrumo_client.commands._policy_validation import (
+from cadrumo_client.commands.policy_validation import (
     validate_deferred_target,
     validate_lazy_binding,
     validate_parameter_constraint,
@@ -21,7 +21,7 @@ from cadrumo_client.commands._policy_validation import (
     validate_translation_key,
     validate_value_contract,
 )
-from cadrumo_client.commands._structure_validation import validate_result_schema
+from cadrumo_client.commands.structure_validation import validate_result_schema
 
 type LiteralValue = str | int | float | bool | bytes | None
 
@@ -152,15 +152,14 @@ class ValueContract:
     """Deferred annotation and conversion hooks for one CLI parameter."""
 
     annotation: DeferredTarget
-    click_type: DeferredTarget | None = None
     parser: DeferredTarget | None = None
     completion: DeferredTarget | None = None
     callback: DeferredTarget | None = None
     choices: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        """Validate that the click type, parser, and choices are mutually exclusive, or raise."""
-        validate_value_contract(self.click_type, self.parser, self.choices)
+        """Validate that the parser and choices are mutually exclusive, or raise."""
+        validate_value_contract(self.parser, self.choices)
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,6 +177,8 @@ class ParameterConstraint:
     readable: bool = True
     resolve_path: bool = False
     allow_dash: bool = False
+    non_blank: bool = False
+    """Refuse an empty or whitespace-only text value and strip the surrounding whitespace of any other."""
 
     def __post_init__(self) -> None:
         """Validate the scalar bound and path-constraint invariants, or raise."""
@@ -219,6 +220,10 @@ class ResultSchemaSpec:
 #: duplicate definition rather than a convenience: eighteen modules each
 #: declared their own `_STR` / `_INT` / `_BOOL` before these were centralised.
 TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str"))
+
+
+NON_BLANK_CONSTRAINT: Final[ParameterConstraint] = ParameterConstraint(non_blank=True)
+"""Constraint for an identifier or selector parameter that must name something."""
 
 
 WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))

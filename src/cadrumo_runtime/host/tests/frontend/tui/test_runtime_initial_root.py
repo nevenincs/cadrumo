@@ -1,4 +1,4 @@
-"""Initial routing uses explicit setup state and refuses a foreign profile view."""
+"""Initial routing uses the explicit setup state of an exact profile's status, and reads its overview only to open it."""
 
 from __future__ import annotations
 
@@ -8,13 +8,14 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.entrypoints.tui.app import RootBindingV1
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 from cadrumo.entrypoints.tui.tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....frontend.tui import runtime_initial_root
@@ -39,8 +40,14 @@ def test_initial_route_uses_explicit_state_and_exact_profile(
             subscribe_lifecycle_notices=None,
         ),
     )
+    status = SimpleNamespace(
+        profile_id=uuid4() if foreign_profile else profile_id,
+        record_revision=1,
+        content_digest="a" * 64,
+        setup_state=state,
+    )
     overview = ProfileOverview(
-        profile_id=str(uuid4() if foreign_profile else profile_id),
+        profile_id=str(profile_id),
         record_revision=1,
         content_digest="a" * 64,
         label="Test profile",
@@ -48,7 +55,14 @@ def test_initial_route_uses_explicit_state_and_exact_profile(
         sections=(),
         missing_required=(),
     )
-    monkeypatch.setattr(runtime_initial_root, "read_profile_overview", lambda *_args, **_kwargs: overview)
+    overview_reads: list[bool] = []
+
+    def read_overview(*_args: object, **_kwargs: object) -> ProfileOverview:
+        overview_reads.append(True)
+        return overview
+
+    monkeypatch.setattr(runtime_initial_root, "read_profile_status", lambda *_args, **_kwargs: status)
+    monkeypatch.setattr(runtime_initial_root, "read_profile_overview", read_overview)
     monkeypatch.setattr(
         RuntimeInitialRoot,
         "_session",
@@ -57,14 +71,13 @@ def test_initial_route_uses_explicit_state_and_exact_profile(
     workbench_reads: list[bool] = []
     full_binding = cast(RootBindingV1, object())
 
-    def workbench(_self: RuntimeInitialRoot, initial_profile: ProfileOverview | None = None) -> RootBindingV1:
-        assert initial_profile is overview
+    def workbench(_self: RuntimeInitialRoot) -> RootBindingV1:
         workbench_reads.append(True)
         return full_binding
 
     monkeypatch.setattr(RuntimeInitialRoot, "_workbench", workbench)
 
-    async def recovery() -> FrontendClient:
+    async def recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("routing must not open another client")
 
     def operations() -> Never:
@@ -81,71 +94,57 @@ def test_initial_route_uses_explicit_state_and_exact_profile(
         with pytest.raises(RefusalError) as refused:
             root.load()
         assert refused.value.reason is RefusalCode.INVALID_FRAME
-        assert workbench_reads == []
+        assert (workbench_reads, overview_reads) == ([], [])
     elif state is ProfileSetupState.COMPLETE:
         assert root.load() is full_binding
         assert workbench_reads == [True]
+        assert overview_reads == [], "Home needs only the status; the overview is read off the capture"
     else:
         binding = root.load()
         assert binding.initial_destination is not None
         assert binding.initial_destination.destination == "workbench.profile"
         assert binding.initial_account_session is not None
         assert workbench_reads == []
+        assert overview_reads == [True]
         assert overview.complete  # Missing-field counts never complete setup implicitly.
 
 
-@pytest.mark.parametrize("changed", [None, "profile_id", "record_revision", "content_digest", "setup_state"])
-def test_complete_profile_reuse_requires_current_provenance(
-    monkeypatch: pytest.MonkeyPatch, changed: str | None
+@pytest.mark.parametrize("foreign_profile", [False, True])
+def test_a_capture_reads_only_the_status_of_its_exact_profile(
+    monkeypatch: pytest.MonkeyPatch, *, foreign_profile: bool
 ) -> None:
     from ....frontend.tui import runtime_workbench
 
     profile_id = uuid4()
-    overview = ProfileOverview(
-        profile_id=str(profile_id),
+    status = SimpleNamespace(
+        profile_id=uuid4() if foreign_profile else profile_id,
         record_revision=1,
         content_digest="a" * 64,
-        label="Test profile",
         setup_state=ProfileSetupState.COMPLETE,
-        sections=(),
     )
-    current = SimpleNamespace(
-        profile_id=profile_id, record_revision=1, content_digest="a" * 64, setup_state=ProfileSetupState.COMPLETE
-    )
-    if changed is not None:
-        setattr(
-            current,
-            changed,
-            {
-                "profile_id": uuid4(),
-                "record_revision": 2,
-                "content_digest": "b" * 64,
-                "setup_state": ProfileSetupState.INCOMPLETE,
-            }[changed],
-        )
-    status_reads: list[bool] = []
-    full_reads: list[bool] = []
-
-    def status(*_args: object, **_kwargs: object) -> SimpleNamespace:
-        status_reads.append(True)
-        return current
-
     client = cast(
         FrontendClient,
         SimpleNamespace(
             profile_id=profile_id,
             session_id=uuid4(),
             frontend=OperationFrontendProjection.TUI,
-            read_profile_view=status,
+            read_profile_view=lambda *_args, **_kwargs: status,
         ),
     )
-    fresh = overview.model_copy(update={"record_revision": 2})
+    overview_reads: list[bool] = []
 
-    def read(*_args: object, **_kwargs: object) -> ProfileOverview:
-        full_reads.append(True)
-        return fresh
+    def read_overview(*_args: object, **_kwargs: object) -> ProfileOverview:
+        overview_reads.append(True)
+        return ProfileOverview(
+            profile_id=str(profile_id),
+            record_revision=1,
+            content_digest="a" * 64,
+            label="Test profile",
+            setup_state=ProfileSetupState.COMPLETE,
+            sections=(),
+        )
 
-    monkeypatch.setattr(runtime_workbench, "read_profile_overview", read)
+    monkeypatch.setattr(runtime_workbench, "read_profile_overview", read_overview)
     monkeypatch.setattr(
         runtime_workbench,
         "read_workbench_generation",
@@ -153,7 +152,7 @@ def test_complete_profile_reuse_requires_current_provenance(
     )
     monkeypatch.setattr(runtime_workbench, "read_runtime_account_session", lambda *_args, **_kwargs: None)
 
-    async def recovery() -> FrontendClient:
+    async def recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("capture must not open another client")
 
     def operations() -> Never:
@@ -166,7 +165,10 @@ def test_complete_profile_reuse_requires_current_provenance(
         open_recovery_client=recovery,
         operation_registry=operations,
     )
-    assert root._read(initial_profile=overview).profile is (overview if changed is None else fresh)
-    assert status_reads == [True]
-    assert full_reads == ([] if changed is None else [True])
-    assert root._read().profile is fresh  # Later Home refreshes always read afresh.
+    if foreign_profile:
+        with pytest.raises(RefusalError) as refused:
+            root._read()
+        assert refused.value.reason is RefusalCode.UNAVAILABLE
+        assert overview_reads == []
+    else:
+        assert root._read().status is status

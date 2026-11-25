@@ -8,23 +8,33 @@ import logging
 import os
 import sys
 import threading
+import time
 import tracemalloc
 from io import StringIO
+from pathlib import Path
 from threading import Barrier
 from typing import cast, override
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.log_records import delivered_records
+
 from ..diagnostic_log import (
     DiagnosticFormatter,
+    DiagnosticValue,
     diagnostic_event,
+    diagnostic_phase,
     diagnostic_process,
     diagnostic_scope,
+    diagnostic_slow_call,
     diagnostic_timing_event,
     stamp_diagnostic_record,
     stamp_diagnostic_scalar_fields,
 )
-from ..logging import LOG_FILE_FORMAT, SecretScrubbingFilter, get_logger
+from ..log_file_handler import AnnouncingRotatingFileHandler
+from ..log_scrubbing import SecretScrubbingFilter
+from ..logging import LOG_FILE_FORMAT, flush_logging, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -317,7 +327,7 @@ async def test_concurrent_tasks_and_threads_keep_distinct_attempts_and_restore_p
 
     def make_thread_record() -> logging.LogRecord:
         record = make_record()
-        threaded.wait(timeout=5)
+        threaded.wait(timeout=HANG_GUARD_SECONDS)
         return record
 
     async def attempt() -> tuple[str, tuple[logging.LogRecord, ...], logging.LogRecord]:
@@ -325,7 +335,7 @@ async def test_concurrent_tasks_and_threads_keep_distinct_attempts_and_restore_p
             identifiers.append(identifier)
             if len(identifiers) == 8:
                 ready.set()
-            await asyncio.wait_for(ready.wait(), timeout=5)
+            await asyncio.wait_for(ready.wait(), timeout=HANG_GUARD_SECONDS)
             before = make_record()
             inherited = await asyncio.to_thread(make_thread_record)
             with diagnostic_scope() as nested:
@@ -364,7 +374,7 @@ async def test_cancelled_task_restores_its_parent_context_without_changing_sibli
 
     with diagnostic_process("tui"), diagnostic_scope() as parent:
         task = asyncio.create_task(cancelled_attempt())
-        await asyncio.wait_for(entered.wait(), timeout=5)
+        await asyncio.wait_for(entered.wait(), timeout=HANG_GUARD_SECONDS)
         sibling = _record()
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
@@ -516,6 +526,7 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
             },
             clock=lambda: observed,
         )
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     records = [record for record in caplog.records if record.name == logger.name]
     if isinstance(observed, bool) or not 0 <= observed <= (1 << 63) - 1:
         assert records == []
@@ -528,6 +539,196 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
     assert "profile_id" not in context
     assert _PRIVATE_INPUT_CANARY not in records[0].__dict__["diagnostic_context"]
     assert len(context) <= 32
+
+
+def test_event_fields_reach_the_written_line_only_as_scrubbed_allowed_scalars() -> None:
+    # Isolated from the root handlers, which carry their own scrubbing filter:
+    # this pins the project logger's filter, the layer that also covers records
+    # written before any host configured logging.
+    iban = "ES9121000418450200051332"
+    logger = get_logger("cadrumo.tests.event_fields")
+    stream = StringIO()
+    handler = logging.StreamHandler(stream)
+    handler.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+    logger.addHandler(handler)
+    previous_level, previous_propagate = logger.level, logger.propagate
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    try:
+        diagnostic_event(
+            logger,
+            "synthetic_dispatch_slow",
+            fields={
+                "budget_seconds": 1.5,
+                "password": _PRIVATE_INPUT_CANARY,
+                "reason": f"account {iban}",
+                "outcome": "refused",
+            },
+            level=logging.WARNING,
+        )
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
+    finally:
+        logger.removeHandler(handler)
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+    line = stream.getvalue()
+    context: object = json.loads(line.split(" | ", 1)[1])
+    assert isinstance(context, dict)
+
+    assert context["budget_seconds"] == 1.5
+    assert str(context["reason"]).startswith("account sha256:")
+    assert "password" not in context
+    assert _PRIVATE_INPUT_CANARY not in line
+    assert iban not in line
+
+
+def test_stall_lock_and_recovery_timing_fields_reach_the_log_file_and_unlisted_fields_do_not(tmp_path: Path) -> None:
+    logger = get_logger("cadrumo.tests.stall_timing_fields")
+    log_file = tmp_path / "diagnostic.log"
+    handler = AnnouncingRotatingFileHandler(str(log_file), encoding="utf-8")
+    handler.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+    logger.addHandler(handler)
+    previous_level, previous_propagate = logger.level, logger.propagate
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    listed: dict[str, DiagnosticValue] = {
+        "child_process_id": 4321,
+        "definition_id": "ledger.rule.add",
+        "dump_file": "profile-worker-stall-4321.txt",
+        "hold_seconds": 1.25,
+        "job_empty_seconds": 0.5,
+        "members_signalled_seconds": 2.0,
+        "wait_seconds": 0.75,
+        # The custody recovery window a worker loss opens.
+        "window_seconds": 120.0,
+    }
+    try:
+        diagnostic_event(
+            logger,
+            "synthetic_stall_timing",
+            fields={
+                **listed,
+                "dump_path": str(tmp_path / "profile-worker-stall-4321.txt"),
+                "session_id": _PRIVATE_INPUT_CANARY,
+            },
+            level=logging.WARNING,
+        )
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
+    finally:
+        logger.removeHandler(handler)
+        handler.close()
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+    line = log_file.read_text(encoding="utf-8")
+    context: object = json.loads(line.split(" | ", 1)[1])
+    assert isinstance(context, dict)
+
+    assert {name: context[name] for name in listed} == listed
+    assert "dump_path" not in context and "session_id" not in context
+    assert _PRIVATE_INPUT_CANARY not in line
+    assert str(tmp_path) not in line
+
+
+def test_a_slow_call_is_reported_once_with_its_fields_and_a_prompt_call_is_not(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.slow_call")
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        with diagnostic_slow_call(logger, "synthetic_prompt_call", threshold_seconds=60.0):
+            pass
+        with diagnostic_slow_call(
+            logger, "synthetic_slow_call", threshold_seconds=0.02, fields={"phase": "lookup", "definition_id": "x"}
+        ):
+            time.sleep(0.05)
+
+    (record,) = delivered_records(caplog, logger.name)
+    assert record.getMessage() == "synthetic_slow_call"
+    assert record.levelno == logging.WARNING
+    _, context = _context(record)
+    assert context["phase"] == "lookup" and context["definition_id"] == "x"
+    assert context["outcome"] == "completed"
+    assert isinstance(context["elapsed_seconds"], float) and context["elapsed_seconds"] >= 0.02
+
+
+def test_a_slow_call_that_raises_is_reported_and_its_exception_propagates_unchanged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.slow_call_raising")
+    failure = ValueError("synthetic failure")
+    with (
+        caplog.at_level(logging.DEBUG, logger=logger.name),
+        pytest.raises(ValueError, match="synthetic failure") as caught,
+        diagnostic_slow_call(logger, "synthetic_slow_call", threshold_seconds=0.0),
+    ):
+        raise failure
+
+    assert caught.value is failure
+    (record,) = delivered_records(caplog, logger.name)
+    assert record.levelno == logging.WARNING
+    assert _context(record)[1]["outcome"] == "raised"
+
+
+def test_a_prompt_call_is_recorded_at_the_level_asked_for_and_a_slow_one_still_warns(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.slow_call_prompt_level")
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        with diagnostic_slow_call(
+            logger, "synthetic_prompt_call", threshold_seconds=60.0, prompt_level=logging.DEBUG, fields={"phase": "a"}
+        ):
+            pass
+        with diagnostic_slow_call(
+            logger, "synthetic_slow_call", threshold_seconds=0.0, prompt_level=logging.DEBUG, fields={"phase": "b"}
+        ):
+            pass
+
+    prompt, slow = delivered_records(caplog, logger.name)
+    assert (prompt.levelno, slow.levelno) == (logging.DEBUG, logging.WARNING)
+    for record, phase in ((prompt, "a"), (slow, "b")):
+        _, context = _context(record)
+        assert context["phase"] == phase and context["outcome"] == "completed"
+        assert isinstance(context["elapsed_seconds"], float) and context["elapsed_seconds"] >= 0.0
+
+
+def test_a_phase_is_recorded_with_its_name_its_seconds_and_what_the_block_counted(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.phase")
+    with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as identifier:
+        with diagnostic_phase(logger, "synthetic_phase", "loading", fields={"definition_id": "x.y"}) as measured:
+            measured["item_count"] = 3
+            measured["taxpayer_name"] = _PRIVATE_INPUT_CANARY
+        with diagnostic_phase(logger, "synthetic_phase", "waiting", slow_seconds=0.0):
+            pass
+
+    prompt, slow = delivered_records(caplog, logger.name)
+    assert [record.getMessage() for record in (prompt, slow)] == ["synthetic_phase"] * 2
+    assert (prompt.levelno, slow.levelno) == (logging.DEBUG, logging.WARNING)
+    _, context = _context(prompt)
+    assert context["phase"] == "loading" and context["definition_id"] == "x.y"
+    assert context["item_count"] == 3 and context["outcome"] == "completed"
+    assert context["diagnostic_id"] == identifier
+    assert isinstance(context["elapsed_seconds"], float)
+    assert "taxpayer_name" not in context
+    assert _PRIVATE_INPUT_CANARY not in prompt.__dict__["diagnostic_context"]
+    assert _context(slow)[1]["phase"] == "waiting"
+
+
+def test_a_phase_that_raises_is_recorded_and_its_exception_propagates_unchanged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.phase_raising")
+    failure = ValueError("synthetic failure")
+    with (
+        caplog.at_level(logging.DEBUG, logger=logger.name),
+        pytest.raises(ValueError, match="synthetic failure") as caught,
+        diagnostic_phase(logger, "synthetic_phase", "loading"),
+    ):
+        raise failure
+
+    assert caught.value is failure
+    (record,) = delivered_records(caplog, logger.name)
+    assert _context(record)[1]["outcome"] == "raised"
 
 
 @pytest.mark.parametrize("failure_site", ("clock", "log"))
@@ -606,6 +807,7 @@ async def test_timed_task_scopes_cross_threads_and_restore_the_parent_after_fail
     with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as parent:
         results = await asyncio.gather(observe(1, fail=False), observe(2, fail=True), return_exceptions=True)
         diagnostic_timing_event(logger, "synthetic_timing", clock=lambda: 100)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     records = [record for record in caplog.records if record.name == logger.name]
     assert len(set(identifiers)) == 2 and parent not in identifiers
     assert results[0] == identifiers[0] and isinstance(results[1], ValueError)
@@ -626,6 +828,7 @@ def test_declared_worker_failure_cannot_be_logged_below_error(
     logger = get_logger("cadrumo.tests.worker_levels")
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         diagnostic_event(logger, "worker_lifecycle", fields={"outcome": "failed"}, level=requested)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     assert caplog.records[-1].levelno == logging.ERROR
 
 
@@ -636,4 +839,5 @@ def test_technical_event_defaults_to_debug_and_operator_info_is_preserved(
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         diagnostic_event(logger, "worker_attestation_started")
         diagnostic_event(logger, "service_ready", level=logging.INFO)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     assert [record.levelno for record in caplog.records] == [logging.DEBUG, logging.INFO]

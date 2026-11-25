@@ -41,11 +41,14 @@ from .commit_fence import (
 )
 from .models import BulkClassifyResult
 from .protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
+from .validation_messages import ledger_refusal_messages
 
 LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID = "ledger.classify.bulk"
 LEDGER_BULK_CLASSIFY_VALIDATION_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 _CLI_SOURCE_COMMAND = "aeat app ledger classify --file"
+_MAX_VALIDATION_MESSAGES = 8
+"""How many input refusals one rejected table reports."""
 _VALIDATION_ERRORS = (TransactionValidationError, RegistryValidationError, ValidationError, ValueError)
 
 
@@ -69,8 +72,10 @@ class LedgerBulkClassifyRequest(BaseModel):
     operand is the classification table itself, never a path to one.
     Columns: transaction_id, classification (required); category_id, business_pct,
     usage_ratio_id, taxable_base, iva_rate, iva_amount, iva_category, irpf_category,
-    notes (optional). Blank optional cells preserve existing values. Results
-    report applied/skipped counts and each failed row; a batch is not atomic.
+    arrendamiento_ref, inmueble_ref, gasto_capital_inmobiliario, posicion_ref,
+    concepto_capital_mobiliario, notes (optional).
+    Blank optional cells preserve existing values. Results report applied/skipped
+    counts and each failed row; a batch is not atomic.
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
@@ -188,7 +193,9 @@ class LedgerBulkClassifyExecutor:
             projection = LedgerBulkClassifyProjection(
                 profile_id=payload.profile_id,
                 outcome="validation_error",
-                validation_messages=(str(error) or "CSV classification input is invalid",),
+                validation_messages=ledger_refusal_messages(
+                    error, limit=_MAX_VALIDATION_MESSAGES, fallback="CSV classification input is invalid"
+                ),
             )
             detail_ref = await context.operands.put(
                 LedgerBulkClassifyExecutionResult(projection=projection), written_at=now()
@@ -238,7 +245,8 @@ def _require_refusal_receipt(receipt: OperationTerminalReceipt) -> None:
         raise ValueError("CSV classification validation refusal has an incompatible terminal receipt")
 
 
-def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project a bulk classify result, checking its identity and receipt effect."""
     projection = _require_matching_result_identity(result, receipt)
     if projection.outcome == "classified":
         expected_effect = (
@@ -274,11 +282,12 @@ def resolve_ledger_bulk_classify_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require the exact profile, all-period disclosure and mutation authority."""
-    if request.definition_id != LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerBulkClassifyRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
+        request_type=LedgerBulkClassifyRequest,
+    )
 
 
 def build_ledger_bulk_classify_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
@@ -286,6 +295,6 @@ def build_ledger_bulk_classify_registration(definition: OperationDefinition) -> 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerBulkClassifyProjection,
-        result_projector=_project_result,
+        result_projector=project_result,
         access_resolver=resolve_ledger_bulk_classify_access,
     )

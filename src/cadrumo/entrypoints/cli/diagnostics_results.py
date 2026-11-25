@@ -28,7 +28,7 @@ from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.date_range import validate_inclusive_iso_date_range
 from ...core.unit_proportion import is_unit_proportion
-from ._decimal_wire import DecimalWireText
+from .decimal_wire import DecimalWireText
 
 
 # The canonical run-health models express these bounds on real int/Decimal

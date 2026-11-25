@@ -21,7 +21,10 @@ const NOT_FOR_THE_CATALOGUE = new Set([
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.tsx"],
   addons: ["@storybook/addon-a11y"],
-  framework: { name: "@storybook/react-vite", options: {} },
+  framework: {
+    name: "@storybook/react-vite",
+    options: { builder: { configLoader: "runner" } },
+  },
   core: {
     disableTelemetry: true,
     enableCrashReports: false,

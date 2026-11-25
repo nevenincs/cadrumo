@@ -47,6 +47,7 @@ from cadrumo.domain.calculations.registry.design_constant_bindings import (
     validate_design_constant_binding,
 )
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_CONTENT,
@@ -137,7 +138,7 @@ def test_the_design_constant_admission_is_not_an_empty_filter() -> None:
     fields. Exercise the retained binding representation independently instead
     of demanding an obsolete live binding just to make a filter nonempty.
     """
-    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions[str(open_ended_revision("720").id)]
     constants = [
         field
         for layout in revision.export_layouts

@@ -1,31 +1,24 @@
 """The mínimo advisory collectors are actually consulted by the coordinator.
 
 A collector that returns the right rows when called directly, and is never
-called, protects nobody. Every mínimo-por-descendientes collector was wired
-into :func:`collect_bucket_aggregation_advisory_diagnostics` with no test on
-the wiring itself: deleting a call line failed nothing, because every test
-invoked the collectors directly.
+called, protects nobody.
 
-So these tests drive the COORDINATOR and assert the advisory arrives through it.
+These tests drive the COORDINATOR and assert the advisory arrives through it.
 Nothing here calls a collector, which is the whole point -- a test that would
 still pass with the wiring line removed is testing the collector twice and the
 wiring never.
 
 All four mínimo-family collectors are covered, plus ``settlement_not_computed``
-as the first of the non-mínimo wirings. An earlier pass claimed "both
-collectors" and covered two, having enumerated the population from what it had
-touched rather than from the coordinator's own call block. Read whole, that
-block wires TEN collectors.
+as the first of the non-mínimo wirings. The coordinator's call block wires
+TEN collectors.
 
-Audit state of the other five, measured rather than assumed:
 ``prorrata_regularizacion`` is covered by
 ``test_prorrata_especial_mandatory_live_emit``, which drives this coordinator
 and asserts its kind arrives. ``official_box_unpopulated``,
 ``prior_payment_not_deducted``, ``prior_payment_minoracion_not_captured`` and
 ``bienes_inversion_regularizacion`` remain unwired-tested: each needs its own
 modelo fixture (a seeded observation repository, an M303 ledger) rather than a
-revision and a profile, so they are a separate piece of work rather than more
-cases here.
+revision and a profile.
 """
 
 from __future__ import annotations
@@ -43,6 +36,8 @@ from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.calculations.registry.schema_input_kind import InputKind
+from .....domain.calculations.registry.schema_references import TemporalProjectionDirection
+from .....domain.calculations.registry.temporal import revision_temporal_resolution
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from .....domain.contribuyente.renta_codes import RentaMaritalStatus
@@ -58,7 +53,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 __all__ = ["advisory_profile_bucket"]
 
 _BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
-_FILING_YEAR = 2024
 _ESTATAL_CASILLA: CasillaId = "0513"
 #: Annual period token for the Modelo 100 walk (named so the literal does not
 #: read as a credential to the security linter).
@@ -76,7 +70,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return published_authority_operation().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return published_authority_operation().snapshot("100", filing_year=_newest_authored_year(), period="0A").revision
 
 
 def _write(
@@ -108,12 +102,13 @@ def _source_diagnostics(
         casilla_values,
         modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
-        filing_year=_FILING_YEAR,
+        filing_year=_newest_authored_year(),
         bucket_id=_BUCKET_ID,
         observation_repository=repositories.observation,
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
 
 
@@ -123,18 +118,18 @@ def _source_kinds(casilla_values: dict[CasillaId, Decimal]) -> set[str]:
 
 
 def test_the_rentas_undeclared_advisory_reaches_the_coordinator() -> None:
-    """The new collector's wiring, which would otherwise ship unguarded.
+    """The rentas-undeclared collector's wiring, which would otherwise ship unguarded.
 
     A cohabiting 10-year-old with no rentas figure, against a non-zero
     aggregate: exactly the state the collector fires on. If its call line were
     removed from the coordinator this set would not contain the kind.
     """
-    _write(DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)))
+    _write(DescendantInfo(birth_date=date(_newest_authored_year() - 10, 5, 1)))
     assert _RENTAS_UNDECLARED in _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})
 
 
 def test_the_undeclared_advisory_reaches_the_coordinator() -> None:
-    """The pre-existing wiring the review found unguarded.
+    """Wiring of the zero-aggregate collector.
 
     A profile with no descendiente facts against a zero aggregate is the state
     that collector owns, and it is reached through the coordinator here rather
@@ -152,42 +147,81 @@ def test_the_prorrata_inferred_advisory_reaches_the_coordinator() -> None:
     per-descendant answer, is the state it fires on.
     """
     _write(
-        DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)),
-        marital_status=RentaMaritalStatus.CASADO.value,
+        DescendantInfo(birth_date=date(_newest_authored_year() - 10, 5, 1)),
+        marital_status=RentaMaritalStatus.CASADO.code,
         declaration_type="1",
     )
     assert _PRORRATA_INFERRED in _source_kinds({_ESTATAL_CASILLA: Decimal("1200")})
 
 
-def _supported_year_with_manual_settlement() -> int:
-    """The first supported Modelo 100 year whose revision leaves a settlement casilla manual.
+def _newest_authored_year() -> int:
+    """The newest Modelo 100 year the support envelope serves from its own authored edition.
 
-    Read from the registry support envelope and the revisions' own structure,
-    so the fixture follows the envelope instead of naming a year it may drop.
+    A year the envelope reaches only by projecting another edition has no filing
+    snapshot, so it is never a candidate.
     """
     operation = published_authority_operation()
     supported = operation.modelo_directory(Modelo("100").value).supported_filing_years
     assert supported is not None, "Modelo 100 declares no filing-year support envelope"
-    for year in supported.years:
-        revision = operation.snapshot(Modelo("100").value, filing_year=year, period=_ANNUAL_PERIOD).revision
-        if revision.formulas and any(
-            casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES and casilla.input_kind != InputKind.COMPUTED
-            for casilla in revision.casillas
-        ):
+    for year in sorted(supported.years, reverse=True):
+        selected = operation.revision_for_context(Modelo("100").value, filing_year=year, period=_ANNUAL_PERIOD)
+        resolution = revision_temporal_resolution(selected, filing_year=year, period=_ANNUAL_PERIOD, support=supported)
+        if resolution.projection_direction is TemporalProjectionDirection.AUTHORED:
             return year
-    raise AssertionError(f"no supported Modelo 100 year in {supported.years} leaves a settlement casilla manual")
+    raise AssertionError(f"no supported Modelo 100 year in {supported.years} has its own authored edition")
+
+
+def _with_manual_settlement(revision: ModeloRevision) -> ModeloRevision:
+    """The same revision with its settlement-role casillas left for the operator to enter."""
+    casillas = tuple(
+        casilla.model_copy(update={"input_kind": InputKind.MANUAL})
+        if casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES
+        else casilla
+        for casilla in revision.casillas
+    )
+    return revision.model_copy(update={"casillas": casillas})
 
 
 def test_the_settlement_advisory_reaches_the_coordinator() -> None:
-    """A non-mínimo wiring, audited because this class keeps producing findings.
+    """A non-mínimo wiring.
 
     ``settlement_not_computed`` fires where a revision declares a settlement-role
-    casilla that is NOT computed, which only the partially modelled Modelo 100
-    revisions do, so the fixture year is selected from the support envelope by
-    that structure rather than shared with every other case in this module. The
-    state is a property of the revision alone, so no profile setup is needed.
+    casilla that is NOT computed. Every supported Modelo 100 edition now computes
+    its settlement, so the case is a filing-grade revision with those casillas
+    turned manual: the advisory is a property of the revision alone, so the
+    coordinator must surface it for any such revision, and no profile setup is
+    needed. The control below proves the unaltered revision stays quiet.
     """
-    filing_year = _supported_year_with_manual_settlement()
+    filing_year = _newest_authored_year()
+    authored = published_authority_operation().snapshot("100", filing_year=filing_year, period=_ANNUAL_PERIOD).revision
+    assert any(casilla.semantic_role in SETTLEMENT_SEMANTIC_ROLES for casilla in authored.casillas)
+    revision = _with_manual_settlement(authored)
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
+    diagnostics = collect_bucket_aggregation_advisory_diagnostics(
+        revision,
+        {},
+        modelo=Modelo("100").value,
+        period_token=_ANNUAL_PERIOD,
+        filing_year=filing_year,
+        bucket_id=_BUCKET_ID,
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
+    )
+    assert _SETTLEMENT in {diagnostic.source_kind for diagnostic in diagnostics}
+
+
+def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> None:
+    """Control for the case above: the same authored revision, its settlement left computed.
+
+    That edition computes its settlement casillas, so the kind must NOT appear.
+    Without this the test above would pass against a collector that fired on
+    every revision, which would say nothing about the condition it claims to
+    detect.
+    """
+    filing_year = _newest_authored_year()
     revision = published_authority_operation().snapshot("100", filing_year=filing_year, period=_ANNUAL_PERIOD).revision
     repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
@@ -201,30 +235,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
         prorrata_register_repository=repositories.prorrata_register,
         bienes_inversion_repository=repositories.bienes_inversion,
         transaction_repository=repositories.transactions,
-    )
-    assert _SETTLEMENT in {diagnostic.source_kind for diagnostic in diagnostics}
-
-
-def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> None:
-    """Control for the case above, and it is the same collector on a different year.
-
-    2024 computes its settlement casillas, so the kind must NOT appear. Without
-    this the test above would pass against a collector that fired on every
-    revision, which would say nothing about the condition it claims to detect.
-    """
-    revision = published_authority_operation().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
-    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
-    diagnostics = collect_bucket_aggregation_advisory_diagnostics(
-        revision,
-        {},
-        modelo=Modelo("100").value,
-        period_token=_ANNUAL_PERIOD,
-        filing_year=2024,
-        bucket_id=_BUCKET_ID,
-        observation_repository=repositories.observation,
-        prorrata_register_repository=repositories.prorrata_register,
-        bienes_inversion_repository=repositories.bienes_inversion,
-        transaction_repository=repositories.transactions,
+        invoice_reader=repositories.invoices,
     )
     assert _SETTLEMENT not in {diagnostic.source_kind for diagnostic in diagnostics}
 
@@ -240,11 +251,11 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
     """
     _write(
         DescendantInfo(
-            birth_date=date(_FILING_YEAR - 10, 5, 1),
+            birth_date=date(_newest_authored_year() - 10, 5, 1),
             rentas_anuales_euros=Decimal("0"),
             prorrata_minimo=False,
         ),
-        marital_status=RentaMaritalStatus.SOLTERO.value,
+        marital_status=RentaMaritalStatus.SOLTERO.code,
         declaration_type="1",
     )
     kinds = _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})
@@ -256,9 +267,8 @@ def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> 
 def test_the_undeclared_advisory_grounds_from_the_casilla_it_addresses() -> None:
     """Casilla-derived: this advisory's subject IS casilla 0513's own zero.
 
-    Population A in the grounding reference's own terms -- the casilla already
-    carries the exact provision the message names (plain "Art. 58"), so the
-    correct disposition is the casilla-derived path, not a minted assertion.
+    The casilla already carries the exact provision the message names (plain
+    "Art. 58"), so the message is derived from the casilla, not asserted separately.
     """
     diagnostics = tuple(
         diagnostic

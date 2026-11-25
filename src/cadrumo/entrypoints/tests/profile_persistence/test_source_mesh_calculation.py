@@ -16,11 +16,12 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError, ModeloAggregationInputConflictError
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -29,44 +30,39 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET = "44444444-4444-4444-8444-444444444444"
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="source mesh"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-    UserProfileFact(path="renta_taxpayer.sex", value="H"),
-    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-    UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-    UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+_READY_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="source mesh"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        # The ledger holds intra-Community acquisitions, so the taxpayer conducts intra-Community operations.
+        UserProfileFact(path="iva.does_intracomunitario", value=True),
+    )
 )
 
 
@@ -74,13 +70,13 @@ _READY_PROFILE_FACTS = (
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         yield profile.repository
@@ -191,7 +187,10 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
         operation=operation,
     )
 
-    with pytest.raises(ModeloAggregationBindingError) as excinfo, bundled_indexed_authority().operation() as operation:
+    with (
+        pytest.raises(ModeloAggregationInputConflictError) as excinfo,
+        bundled_indexed_authority().operation() as operation,
+    ):
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -199,7 +198,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
             binding_values={binding_id: Decimal("99.00")},
             clock=_T1,
         )
-    assert excinfo.value.translated_message == "errors.error.error_modelo_aggregation_binding"
+    assert excinfo.value.translated_message == "application.modelo.errors.source_owned_binding_override"
 
     assert cr_repo.load().revisions == {}
 

@@ -48,16 +48,36 @@ SESSION_EVENT_FRAME_KIND = b"E"
 _SECRET = b"S"
 
 
+_REPLY_OR_EVENT_KINDS = frozenset({DOCUMENT_FRAME_KIND, SESSION_EVENT_FRAME_KIND})
+
+
 type SecretBearingRequest = ProfileLogin | ProfileResume | PasswordReset | OperationSecret | EnrollmentSubmit
 
 
 def read_frame_payload(channel: ByteChannel, *, kind: bytes, deadline: float) -> bytes:
     """Read exactly one kind-checked bounded frame before interpreting its content."""
+    return read_frame_of_kinds(channel, kinds=frozenset({kind}), deadline=deadline)[1]
+
+
+def read_frame_of_kinds(channel: ByteChannel, *, kinds: frozenset[bytes], deadline: float) -> tuple[bytes, bytes]:
+    """Read one bounded frame whose kind the caller's connection admits, returning kind and payload.
+
+    The kind and size are checked before any payload byte is read. The caller
+    owns closing the channel when this refuses.
+    """
     header = channel.read_exact(5, deadline=deadline)
+    kind = header[:1]
     size = struct.unpack("!I", header[1:])[0]
-    if header[:1] != kind or not 0 < size <= MAXIMUM_FRAME_BYTES:
+    if kind not in kinds or not 0 < size <= MAXIMUM_FRAME_BYTES:
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    return channel.read_exact(size, deadline=deadline)
+    return kind, channel.read_exact(size, deadline=deadline)
+
+
+def encode_frame(kind: bytes, payload: bytes) -> bytes:
+    """Frame one bounded payload under a one-byte kind and its network-order size."""
+    if len(kind) != 1 or not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return kind + struct.pack("!I", len(payload)) + payload
 
 
 def _read_frame(channel: ByteChannel, *, kind: bytes, deadline: float) -> bytes:
@@ -95,12 +115,8 @@ def read_reply_or_event[Model: BaseModel](
 ) -> Model | ConnectionEvent:
     """Demultiplex only at a complete reply boundary, never inside a secret or transfer."""
     try:
-        header = channel.read_exact(5, deadline=deadline)
-        size = struct.unpack("!I", header[1:])[0]
-        if header[:1] not in {DOCUMENT_FRAME_KIND, SESSION_EVENT_FRAME_KIND} or not 0 < size <= MAXIMUM_FRAME_BYTES:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        payload = channel.read_exact(size, deadline=deadline)
-        if header[:1] == SESSION_EVENT_FRAME_KIND:
+        kind, payload = read_frame_of_kinds(channel, kinds=_REPLY_OR_EVENT_KINDS, deadline=deadline)
+        if kind == SESSION_EVENT_FRAME_KIND:
             return decode_document(payload, EventFrame).root
         return decode_document(payload, model)
     except BaseException as error:
@@ -136,7 +152,7 @@ def document_frame(document: BaseModel) -> bytes:
     payload = canonical_json_bytes(document.model_dump(mode="json", exclude=_unnamed_optional_members(document)))
     if not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    return DOCUMENT_FRAME_KIND + struct.pack("!I", len(payload)) + payload
+    return encode_frame(DOCUMENT_FRAME_KIND, payload)
 
 
 def write_document(channel: ByteChannel, document: BaseModel, *, deadline: float) -> None:
@@ -183,6 +199,17 @@ def _write_bounded_reply(
             payload_digest=sha256_hex(payload),
         )
         write_document(channel, header, deadline=deadline)
+    except (ValueError, TypeError) as failure:
+        raise _invalid_transfer(channel, failure) from None
+    except BaseException as error:
+        close_transport_after_failure(channel, error)
+        raise
+    write_document_transfer(channel, payload, deadline=deadline)
+
+
+def write_document_transfer(channel: ByteChannel, payload: bytes, *, deadline: float) -> None:
+    """Write one canonical document as ordered bounded chunks after the header announcing it."""
+    try:
         for offset in range(0, len(payload), SUBMISSION_PAYLOAD_CHUNK_BYTES):
             write_document(
                 channel,
@@ -193,15 +220,45 @@ def _write_bounded_reply(
                 deadline=deadline,
             )
     except (ValueError, TypeError) as failure:
-        error = RefusalError(RefusalCode.INVALID_FRAME)
-        for name in ("_transport_cleanup", "async_cleanup_error"):
-            if name in failure.__dict__:
-                error.__dict__[name] = failure.__dict__[name]
-        close_transport_after_failure(channel, error)
-        raise error from None
+        raise _invalid_transfer(channel, failure) from None
     except BaseException as error:
         close_transport_after_failure(channel, error)
         raise
+
+
+def read_document_transfer[Model: BaseModel](
+    channel: ByteChannel, descriptor: SubmissionPayloadDescriptor, model: type[Model], *, deadline: float
+) -> Model:
+    """Release one strictly decoded document only once its chunks reproduce the announced bytes.
+
+    A missing, reordered or resized chunk, a digest mismatch or an invalid
+    document refuses as an invalid frame and closes the transport.
+    """
+    buffer = SubmissionPayloadBuffer(descriptor)
+    try:
+        for _ in range(0, descriptor.byte_count, SUBMISSION_PAYLOAD_CHUNK_BYTES):
+            buffer.append(read_document(channel, SubmissionPayloadChunk, deadline=deadline))
+        document = json.loads(
+            buffer.finish(), object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
+        )
+        return model.model_validate_json(canonical_json_bytes(document))
+    except (ValueError, TypeError, RecursionError) as failure:
+        raise _invalid_transfer(channel, failure) from None
+    except BaseException as error:
+        close_transport_after_failure(channel, error)
+        raise
+    finally:
+        buffer.close()
+
+
+def _invalid_transfer(channel: ByteChannel, failure: BaseException) -> RefusalError:
+    """Close the transport for a refused transfer, keeping any cleanup failure it carried."""
+    error = RefusalError(RefusalCode.INVALID_FRAME)
+    for name in ("_transport_cleanup", "async_cleanup_error"):
+        if name in failure.__dict__:
+            error.__dict__[name] = failure.__dict__[name]
+    close_transport_after_failure(channel, error)
+    return error
 
 
 def read_profile_status(channel: ByteChannel, header: ProfileStatusTransfer, *, deadline: float) -> ProfileStatus:
@@ -227,35 +284,21 @@ def _read_bounded_reply[Reply: ProfileStatus | SessionInventoryReply](
     *,
     deadline: float,
 ) -> Reply:
-    buffer = SubmissionPayloadBuffer(
-        SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest)
+    reply = read_document_transfer(
+        channel,
+        SubmissionPayloadDescriptor(byte_count=header.byte_count, payload_digest=header.payload_digest),
+        reply_type,
+        deadline=deadline,
     )
-    try:
-        for _ in range(0, header.byte_count, SUBMISSION_PAYLOAD_CHUNK_BYTES):
-            buffer.append(read_document(channel, SubmissionPayloadChunk, deadline=deadline))
-        document = json.loads(
-            buffer.finish(), object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
-        )
-        reply = reply_type.model_validate_json(canonical_json_bytes(document))
-        if (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
-            header.request_id,
-            header.runtime_boot_id,
-            header.connection_id,
-        ):
-            raise ValueError("runtime reply transfer identity mismatch")
-        return reply
-    except (ValueError, TypeError, RecursionError) as failure:
+    if (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
+        header.request_id,
+        header.runtime_boot_id,
+        header.connection_id,
+    ):
         error = RefusalError(RefusalCode.INVALID_FRAME)
-        for name in ("_transport_cleanup", "async_cleanup_error"):
-            if name in failure.__dict__:
-                error.__dict__[name] = failure.__dict__[name]
         close_transport_after_failure(channel, error)
-        raise error from None
-    except BaseException as error:
-        close_transport_after_failure(channel, error)
-        raise
-    finally:
-        buffer.close()
+        raise error
+    return reply
 
 
 def write_secret(channel: ByteChannel, secret: bytearray, *, deadline: float) -> None:

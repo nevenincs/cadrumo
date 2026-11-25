@@ -15,11 +15,8 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
     active_profile_isolated_backend_fixture,
 )
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.workflow.persistence import workflow_state_repository
@@ -27,9 +24,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -139,12 +134,20 @@ def _revision(
 def test_export_service_refuses_ledger_revision_without_evidence_reference(
     active_profile: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        revision = _revision(
-            work_unit=_persisted_work_unit(operation=operation), source_transaction_ids=(_TX_ID,), operation=operation
-        )
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        work_unit = _persisted_work_unit(operation=operation)
+        revision = _revision(work_unit=work_unit, source_transaction_ids=(_TX_ID,), operation=operation)
         repository = CalculationRevisionCatalogueRepository()
         repository.save(upsert_calculation_revision(repository.load(), revision))
+        # A calculation makes its revision the work unit's current one; a work unit with no
+        # current calculation exports nothing.
+        work_units = WorkUnitCatalogueRepository()
+        work_units.save(
+            upsert_work_unit(
+                work_units.load(),
+                work_unit.model_copy(update={"current_calculation_revision_id": revision.calculation_revision_id}),
+            )
+        )
         output_path = tmp_path / "modelo-303.txt"
 
         with pytest.raises(ModeloExportEvidenceMissingError):

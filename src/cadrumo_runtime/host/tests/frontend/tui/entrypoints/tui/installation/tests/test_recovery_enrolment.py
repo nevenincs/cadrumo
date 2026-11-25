@@ -33,10 +33,10 @@ from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.installation.act_screen import InstallationActScreen
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
-from cadrumo.entrypoints.tui.installation.texts import yes_no
 from cadrumo.entrypoints.tui.secret.registration import RecoveryCodeScreen
 from cadrumo.entrypoints.tui.tests.frame import screen_text
-from cadrumo.tests.async_condition import until
+from cadrumo.entrypoints.tui.tests.settling import settle_until
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.installation_client import InstallationClient
@@ -108,18 +108,20 @@ def _shown(app: App[None]) -> str:
 
 
 def _logged(caplog: pytest.LogCaptureFixture) -> str:
-    return caplog.text + "".join(repr(record.__dict__) for record in caplog.records)
+    return delivered_text(caplog) + "".join(repr(record.__dict__) for record in delivered_records(caplog))
 
 
 async def _enrolling(pilot: Pilot[None], area: InstallationScreen, served: _ServedProfile) -> InstallationActScreen:
     """Open the enrolment act, give it the profile and its passphrase, and run it."""
     area.open_act(InstallationAct.RECOVERY_ENROLL)
-    await until(
+    await settle_until(
         pilot,
         lambda: (
             isinstance(pilot.app.screen, InstallationActScreen)
             and bool(pilot.app.screen.query("#installation-act-result"))
         ),
+        "( isinstance(pilot.app.screen, InstallationActScreen) and bool(pilo...",
+        workers=False,
     )
     screen = pilot.app.screen
     assert isinstance(screen, InstallationActScreen)
@@ -130,13 +132,14 @@ async def _enrolling(pilot: Pilot[None], area: InstallationScreen, served: _Serv
 
 
 async def _code_screen(pilot: Pilot[None]) -> RecoveryCodeScreen:
-    await until(
+    await settle_until(
         pilot,
         lambda: (
             isinstance(pilot.app.screen, RecoveryCodeScreen)
             and bool(pilot.app.screen.query("#field-recovery-verification"))
         ),
-        seconds=40,
+        "( isinstance(pilot.app.screen, RecoveryCodeScreen) and bool(pilot.a...",
+        workers=False,
     )
     screen = pilot.app.screen
     assert isinstance(screen, RecoveryCodeScreen)
@@ -148,7 +151,7 @@ async def _settled(pilot: Pilot[None], screen: InstallationActScreen) -> None:
         worker = screen._act_worker
         return worker is not None and worker.is_finished and not screen._busy
 
-    await until(pilot, done, seconds=40)
+    await settle_until(pilot, done, "done", workers=False)
 
 
 def _status(screen: InstallationActScreen) -> PinnedStatusBar:
@@ -170,7 +173,9 @@ async def test_the_code_is_shown_once_typed_back_and_only_then_installed(
 
             code = str(handover.query_one("#code-value", Static).content)
             assert code
-            await until(pilot, lambda: code in screen_text(app, *_SIZE))
+            await settle_until(
+                pilot, lambda: code in screen_text(app, *_SIZE), "code in screen_text(app, *_SIZE)", workers=False
+            )
             # The passphrase is already gone from the form, and nothing is installed while the code waits.
             assert enrolling.query_one("#installation-passphrase", Input).value == ""
             assert PROFILE_INPUT not in _shown(app)
@@ -179,7 +184,7 @@ async def test_the_code_is_shown_once_typed_back_and_only_then_installed(
             typed = handover.query_one("#field-recovery-verification", Input)
             typed.value = "not the code that was shown"
             handover.query_one("#btn-confirm-code", Button).press()
-            await until(pilot, lambda: typed.value == "")
+            await settle_until(pilot, lambda: typed.value == "", "typed.value == ''", workers=False)
             assert app.screen is handover and not served.enrolled()
 
             typed.value = code.lower()
@@ -189,7 +194,10 @@ async def test_the_code_is_shown_once_typed_back_and_only_then_installed(
             assert app.screen is enrolling
             assert _status(enrolling).tone == "success"
             result = str(enrolling.query_one("#installation-act-result", Static).content)
-            assert f"enrolled    {yes_no(True)}" in result and f"changed     {yes_no(True)}" in result
+            assert (
+                f"enrolled    {tr('flows.confirm.yes')}" in result
+                and f"changed     {tr('flows.confirm.yes')}" in result
+            )
             assert served.enrolled()
             # The code the person copied down is the one the installed wrapper opens under.
             unlock_profile_custody_recovery(
@@ -236,18 +244,22 @@ async def test_a_wrong_passphrase_is_refused_before_any_code_is_shown(tmp_path: 
         app = ScreenHostApp(area)
         async with app.run_test(size=_SIZE) as pilot:
             area.open_act(InstallationAct.RECOVERY_ENROLL)
-            await until(
+            await settle_until(
                 pilot,
                 lambda: (
                     isinstance(app.screen, InstallationActScreen) and bool(app.screen.query("#installation-act-result"))
                 ),
+                "( isinstance(app.screen, InstallationActScreen) and bool(app.screen...",
+                workers=False,
             )
             enrolling = app.screen
             assert isinstance(enrolling, InstallationActScreen)
             enrolling.query_one("#installation-field-profile_id", Input).value = str(served.profile_id)
             enrolling.query_one("#installation-passphrase", Input).value = "not-the-profile-wording"
             enrolling.query_one("#installation-act-run", Button).press()
-            await until(pilot, lambda: enrolling._act_worker is not None)
+            await settle_until(
+                pilot, lambda: enrolling._act_worker is not None, "enrolling._act_worker is not None", workers=False
+            )
             await _settled(pilot, enrolling)
 
             assert app.screen is enrolling and _status(enrolling).tone == "error"

@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--irpf-income-categories",
         "actividad_economica",
         "--irpf-estimation-regime",
@@ -41,7 +40,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:7a828de5\nactivities.description\t<unset>\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -92,12 +91,14 @@
             "iva_regime": "GENERAL",
             "legal_entity_form": "",
             "monedas_virtuales_extranjero_above_threshold": "",
+            "patrimonio_declaration_threshold_met": "",
             "pays_capital_income_with_retencion": false,
+            "pays_non_resident_income_with_retencion": "",
             "pays_professionals_with_retencion": false,
             "pays_rent_with_retencion": false,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
-            "tax_id": "sha256:1c9f9632",
+            "tax_id": "sha256:7a828de5",
             "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica.",
@@ -164,7 +165,7 @@
           }
         ],
         "result": {
-          "authority_generation": "2335acc8e590e225dec9982c94622d73dfd811eb0ace4b631847b1f06a5fff5a",
+          "authority_generation": "b949ea7daf1c9deea56764b8aa0904d3976175807b672b0381f0b6a1a49eea6c",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

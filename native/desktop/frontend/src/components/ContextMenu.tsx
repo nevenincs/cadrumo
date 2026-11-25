@@ -7,31 +7,47 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type {
-  ContextMenuAction,
-  ContextMenuItem,
-  ContextMenuSeparator,
-} from "../ipc/contract";
+import type { IconName } from "@/components/ui/icon";
+import type { ChordKeys } from "@/shared/chords";
 
 /** Where a menu opens: a point, or with a height the edge of a row, which the
  * menu then opens under or over and never across. */
 export type MenuAnchor = { x: number; y: number; height?: number };
 
-/** A menu item with what choosing it does. */
-export type MenuEntry =
-  (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
+/** One choice of a menu. */
+export type MenuAction = {
+  /** What `choose` is given when this item is chosen. */
+  id: string;
+  label: string;
+  /** A disabled item is shown but can never be chosen. */
+  enabled: boolean;
+  /** What the item says under its label: for a disabled one, why it
+   * cannot be chosen. */
+  description?: string;
+  icon?: IconName;
+  /** The chord that does the same, taken from the declaration that binds it,
+   * the registry's or the page's own, so that a shortcut shown is one a key
+   * runs. */
+  chord?: ChordKeys;
+  /** What choosing it does, for a menu that settles its choice by id. */
+  run?: () => void;
+};
 
-/** Opens a menu: at the pointer when `pointer`, else at the anchor. */
+export type MenuSeparator = { separator: true };
+
+export type MenuEntry = MenuAction | MenuSeparator;
+
+/** Opens a menu at the anchor; `closed` runs once it is no longer shown, so
+ * a control that opened it can say whether it is expanded. */
 export type OpenMenu = (
   items: MenuEntry[],
   at: MenuAnchor,
-  pointer: boolean,
+  closed?: () => void,
 ) => void;
 
-// The shell's own drawing of a context menu, for where the host cannot show a
-// native one. In the desktop application the host draws the same item list
-// with the operating system's menu. It opens at a point, not from a control,
-// so its anchor is an empty element placed there.
+// The shell's own drawing of every context menu, the same in the desktop
+// application and the browser. It opens at a point, not from a control, so
+// its anchor is an empty element placed there.
 export function ContextMenu({
   label,
   items,
@@ -40,7 +56,7 @@ export function ContextMenu({
 }: {
   /** The menu's accessible name: it has no visible control to take one from. */
   label: string;
-  items: ContextMenuItem[];
+  items: MenuEntry[];
   at: MenuAnchor;
   choose: (id: string | null) => void;
 }) {
@@ -49,6 +65,7 @@ export function ContextMenu({
   // A press elsewhere closes the menu and keeps what it pressed: focus is
   // not taken back from it.
   const pressedElsewhere = useRef(false);
+  const content = useRef<HTMLDivElement>(null);
   return (
     <DropdownMenu
       open
@@ -67,6 +84,7 @@ export function ContextMenu({
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent
+        ref={content}
         aria-label={label}
         align="start"
         sideOffset={0}
@@ -77,9 +95,15 @@ export function ContextMenu({
           event.preventDefault();
           // A press in the documentation frame closes the menu without
           // being reported as a press outside; the frame has focus by then.
+          // A choice that opened a view has sent focus there: it is kept.
+          const active = document.activeElement;
+          const sentElsewhere =
+            active instanceof HTMLElement &&
+            active !== document.body &&
+            !content.current?.contains(active);
           if (
             !pressedElsewhere.current &&
-            !(document.activeElement instanceof HTMLIFrameElement) &&
+            !sentElsewhere &&
             returnTo instanceof HTMLElement
           )
             returnTo.focus();
@@ -91,15 +115,26 @@ export function ContextMenu({
           ) : (
             <DropdownMenuItem
               key={item.id}
+              icon={item.icon}
               disabled={!item.enabled}
+              title={item.description}
+              aria-description={item.description}
               onSelect={() => choose(item.id)}
             >
-              {item.label}
-              {item.shortcut && (
-                <DropdownMenuShortcut aria-hidden="true">
-                  {item.shortcut}
-                </DropdownMenuShortcut>
+              {item.description ? (
+                <span className="grid min-w-0">
+                  <span>{item.label}</span>
+                  <span
+                    data-description
+                    className="text-xs whitespace-normal text-muted-foreground"
+                  >
+                    {item.description}
+                  </span>
+                </span>
+              ) : (
+                item.label
               )}
+              {item.chord && <DropdownMenuShortcut chord={item.chord} />}
             </DropdownMenuItem>
           ),
         )}

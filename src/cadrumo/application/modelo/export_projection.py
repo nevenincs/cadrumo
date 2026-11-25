@@ -23,10 +23,12 @@ from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
 from ...domain.filing.schema import ModeloCasillaProvenance
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
+from ...domain.modelos.calculation_revision_sources import RecordedCalculationNote
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
 from .calculation_report_export import ModeloCalculationReportResult
-from .export import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from .export_contracts import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from .export_disclosure import ModeloExportDisclosure
 
 
 class ModeloPriorDomiciliationPublicProvenance(BaseModel):
@@ -114,7 +116,7 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     bucket_id: BucketId
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: PublicPeriod
     output_path: str = Field(min_length=1)
@@ -135,7 +137,9 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
     official_evidence_message: str = Field(min_length=1)
     domiciliation_cutoff_unverified: bool = False
     completeness_unverified: bool
+    trabajo_deductions_not_computed: bool = False
     software_identity_grade: AeatSoftwareIdentityGrade | None
+    calculation_notes: tuple[RecordedCalculationNote, ...] = ()
 
     @classmethod
     def from_result(cls, result: ModeloExportResult) -> Self:
@@ -171,7 +175,9 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             official_evidence_message=result.official_evidence_message,
             domiciliation_cutoff_unverified=result.domiciliation_cutoff_unverified,
             completeness_unverified=result.completeness_unverified,
+            trabajo_deductions_not_computed=result.trabajo_deductions_not_computed,
             software_identity_grade=result.software_identity_grade,
+            calculation_notes=result.calculation_notes,
         )
 
     def to_result(self) -> ModeloExportResult:
@@ -205,7 +211,9 @@ class ModeloFicheroBoePublicReceipt(BaseModel):
             official_evidence_message=self.official_evidence_message,
             domiciliation_cutoff_unverified=self.domiciliation_cutoff_unverified,
             completeness_unverified=self.completeness_unverified,
+            trabajo_deductions_not_computed=self.trabajo_deductions_not_computed,
             software_identity_grade=self.software_identity_grade,
+            calculation_notes=self.calculation_notes,
         )
 
 
@@ -218,7 +226,7 @@ class ModeloCalculationReportPublicReceipt(BaseModel):
     work_unit_id: WorkUnitId
     verification_report_id: str | None
     filing_record_id: FilingRecordId | None
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     filing_year: FilingYear
     period: PublicPeriod
     document_format: CalculationReportDocumentFormat
@@ -356,6 +364,9 @@ class ModeloExportPublicResultV3(BaseModel):
     fichero_boe: ModeloFicheroBoePublicReceipt | None = None
     calculation_report: ModeloCalculationReportPublicReceipt | None = None
     handoff_required: bool = True
+    #: The limits the exported calculation's verification disclosed, worded in the request's language; ``None`` when
+    #: it states none. A frontend renders these sentences and authors none of its own.
+    disclosure: ModeloExportDisclosure | None = None
 
     @model_validator(mode="after")
     def _receipt_matches_artefact(self) -> Self:

@@ -19,9 +19,9 @@ grade is an EFFECT of carrying a layout, not a licence to omit it, so excusing
 an entry by its grade is circular.
 
 WHY THE CASILLA KIND CANNOT EITHER. Modelo 840's ``2003-y-siguientes`` revision
-is all-informational too -- 121 of 121 -- and is a genuine filing gap the
-worklist correctly reports as authorable. An all-informational casilla set is
-therefore not a parser fingerprint.
+is all-informational too, and it files: its export layout is authored from the
+official design. An all-informational casilla set is therefore not a parser
+fingerprint.
 
 This module holds no opinion about whether Modelo 390's 2021 layout should be
 authored. It fixes only that the two cheap arguments for not authoring it do
@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import pytest
 
+from .authored_editions import authored_revisions, open_ended_revision
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -90,8 +91,9 @@ def test_every_revision_carrying_a_layout_is_not_thereby_filing_grade_only() -> 
 def test_an_all_informational_casilla_set_is_not_a_parser_fingerprint() -> None:
     """Modelo 840 is the counterexample, and it is named because it is the load-bearing one.
 
-    If it ever stopped being all-informational, the argument this module refutes
-    would need re-measuring rather than assuming, so its absence fails here.
+    It is all-informational and still carries the export layout its official
+    design defines. If it ever stopped being either, the argument this module
+    refutes would need re-measuring rather than assuming, so that fails here.
     """
     all_informational = {
         f"{modelo}/{revision_id}"
@@ -99,11 +101,14 @@ def test_an_all_informational_casilla_set_is_not_a_parser_fingerprint() -> None:
         if revision.casillas and all(str(getattr(c, "input_kind", "")) == "informational" for c in revision.casillas)
     }
 
-    assert "840/2003-y-siguientes" in all_informational, sorted(all_informational)
-    assert "390/2021" in all_informational, sorted(all_informational)
+    open_ended_840 = str(open_ended_revision("840").id)
+    oldest_390 = str(authored_revisions("390")[0].id)
+    assert f"840/{open_ended_840}" in all_informational, sorted(all_informational)
+    assert f"390/{oldest_390}" in all_informational, sorted(all_informational)
 
     modelo_840 = next(m for m in bundled_registry_tree()[0] if m.id == "840")
-    revision = modelo_840.revisions["2003-y-siguientes"]
+    revision = modelo_840.revisions[open_ended_840]
 
-    assert not revision.export_layouts, "modelo 840 now carries a layout, so it is no longer the counterexample"
-    assert len(revision.casillas) > 100, len(revision.casillas)
+    assert revision.export_layouts, "modelo 840 lost its layout, so it no longer shows an all-informational set files"
+    # 94 once the rows the design reserves for the Administracion became fillers.
+    assert len(revision.casillas) >= 90, len(revision.casillas)

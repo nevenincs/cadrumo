@@ -2103,8 +2103,8 @@ ordinal = '1'
 
 [[entries]]
 export_field_id = 'modelo-322-page-02-12'
-kind = 'header'
-producer_key = 'amendment_evidence.is_complementaria'
+kind = 'computed'
+computed_key = 'continuation_page_marker'
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-92',
@@ -2630,8 +2630,8 @@ ordinal = '1'
 
 [[entries]]
 export_field_id = 'modelo-322-page-03-12'
-kind = 'header'
-producer_key = 'amendment_evidence.is_complementaria'
+kind = 'computed'
+computed_key = 'continuation_page_marker'
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-92',
@@ -3364,8 +3364,8 @@ ordinal = '1'
 
 [[entries]]
 export_field_id = 'modelo-322-page-04-12'
-kind = 'header'
-producer_key = 'amendment_evidence.is_complementaria'
+kind = 'computed'
+computed_key = 'continuation_page_marker'
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-92',
@@ -4722,14 +4722,14 @@ ordinal = '13'
 sheet = 'DR32200'
 source_row = 19
 source_cell = 'A19'
-ordinal = 14
+ordinal = "14"
 record_identity = 'DR32200'
 
 [variable_envelopes.closer_anchor]
 sheet = 'DR32200'
 source_row = 20
 source_cell = 'A20'
-ordinal = 15
+ordinal = "15"
 record_identity = 'DR32200'
 
 [variable_envelopes.total_anchor]

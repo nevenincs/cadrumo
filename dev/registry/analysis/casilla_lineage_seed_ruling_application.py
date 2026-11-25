@@ -10,17 +10,17 @@ from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageO
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from .casilla_lineage_seed_chain_state import _ChainState
+from .casilla_lineage_seed_chain_state import ChainState
 from .casilla_lineage_seed_chain_writing import write_chain
 from .casilla_lineage_seed_design import (
     DesignInventory,
     DesignOracle,
-    _cite,
-    _grounded_evidence,
-    _ruled_new_evidence,
+    cite,
+    grounded_evidence,
     printed_box,
+    ruled_new_evidence,
 )
-from .casilla_lineage_seed_rules import _PARTIAL_STAMP
+from .casilla_lineage_seed_rules import PARTIAL_STAMP
 from .casilla_lineage_seed_types import LineagePlan, LineageRefusalCategory, Ruling
 
 
@@ -31,7 +31,7 @@ class _PlannerContext(Protocol):
     forbidden: frozenset[str]
     oracle: DesignOracle
     plan: LineagePlan
-    state: _ChainState
+    state: ChainState
 
     def _new_chain_id(
         self, previous: CasillaDefinition, successor: CasillaDefinition, pair: tuple[str, str]
@@ -121,10 +121,10 @@ def _apply_grounded_entries(
             continue
         if previous_id in planner.forbidden or successor_id in planner.forbidden:
             planner.plan.refuse(
-                pair[1], successor_id, LineageRefusalCategory.PARTIAL_STAMP, _PARTIAL_STAMP, predecessor=previous_id
+                pair[1], successor_id, LineageRefusalCategory.PARTIAL_STAMP, PARTIAL_STAMP, predecessor=previous_id
             )
             continue
-        evidence = _grounded_evidence(previous_row, successor_row, previous_design, successor_design, ruling.rationale)
+        evidence = grounded_evidence(previous_row, successor_row, previous_design, successor_design, ruling.rationale)
         if evidence is None:
             planner.plan.refuse(
                 pair[1],
@@ -255,7 +255,7 @@ def _apply_new_on_form_entry(
     handled.add(casilla.id)
     if planner._already_disposed(casilla):
         return
-    evidence = _ruled_new_evidence(casilla, previous_design, successor_design, ruling.rationale)
+    evidence = ruled_new_evidence(casilla, previous_design, successor_design, ruling.rationale)
     if evidence is None:
         planner.plan.refuse(
             successor.id,
@@ -282,7 +282,7 @@ def _apply_not_on_form_entry(
     if printed_box(casilla) is not None:
         raise ValueError(f"modelo {planner.modelo_id}: not_on_form row {casilla.id!r} states a printed box")
     design = successor_design if isinstance(successor_design, DesignInventory) else None
-    where = _cite(design, None) if design is not None else f"the {successor.id} record design"
+    where = cite(design, None) if design is not None else f"the {successor.id} record design"
     planner._write_absence(
         successor.id,
         casilla,

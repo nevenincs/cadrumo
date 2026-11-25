@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, filing_year_envelope
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..resolution import ChunkHit, TargetResolver
@@ -84,7 +85,8 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
     from ..resolution import GroundingSurface, ResolvedTarget
 
-    path = "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2022/casillas/0001-declarations.toml"
+    oldest = authored_revisions("303")[0].id
+    path = f"src/cadrumo/_data/registry/aeat/modelos/303/revisions/{oldest}/casillas/0001-declarations.toml"
     line_start, line_end = _declaration_span(path, 'id = "iva.repercutido.general"')
     out = resolver.resolve(_hit(path, line_start=line_start, line_end=line_end))
     assert isinstance(out, ResolvedTarget)
@@ -100,10 +102,19 @@ def test_model_only_diseno_source_is_dropped_without_casilla_locator(
     """A model-only Diseño workbook hit fails closed without a casilla locator."""
     from ..resolution import DroppedHit, DropReason
 
-    path = (
-        "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
-        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
+    files = (
+        REPO_ROOT
+        / "src"
+        / "cadrumo"
+        / "_data"
+        / "corpus"
+        / "aeat_official"
+        / "disenos_registro"
+        / "modelo_036"
+        / "files"
     )
+    (workbook,) = files.glob("01-036-*-xlsx.xlsx")
+    path = workbook.relative_to(REPO_ROOT).as_posix()
     out = resolver.resolve(_hit(path))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
@@ -290,9 +301,9 @@ def _cli_reference_source(relpath: str) -> Path:
     reader rather than naming the tree that was never generated or how to
     generate it. This refuses once, at the read, with both.
     """
-    from ..resolution import _require_built_cli_reference
+    from ..resolution import require_built_cli_reference
 
-    _require_built_cli_reference(REPO_ROOT)
+    require_built_cli_reference(REPO_ROOT)
     path = Path(relpath)
     if not path.is_file():
         pytest.fail(
@@ -512,9 +523,9 @@ def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> 
     (rather than a hardcoded page name) so this probe survives a future
     re-split.
     """
-    from ..resolution import DroppedHit, DropReason, _require_built_cli_reference
+    from ..resolution import DroppedHit, DropReason, require_built_cli_reference
 
-    _require_built_cli_reference(REPO_ROOT)
+    require_built_cli_reference(REPO_ROOT)
     pages = tuple((REPO_ROOT / "docs" / "cli").rglob("*.rst"))
     assert pages, "the generated CLI reference tree must hold at least one page"
     longest_page = max(pages, key=lambda page: len(page.read_text(encoding="utf-8").splitlines()))
@@ -630,7 +641,8 @@ def test_casilla_for_unknown_modelo_is_dropped(resolver: TargetResolver) -> None
     """
     from ..resolution import DroppedHit, DropReason
 
-    path = "src/cadrumo/_data/registry/aeat/modelos/999/revisions/2099/casillas/0001-casillas.toml"
+    unauthored = filing_year_envelope().horizon + 1
+    path = f"src/cadrumo/_data/registry/aeat/modelos/999/revisions/{unauthored}/casillas/0001-casillas.toml"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
@@ -689,10 +701,10 @@ def test_absent_generated_cli_reference_tree_is_refused_not_dropped(tmp_path: Pa
     reported as an ordinary unresolvable hit -- an absent input laundered into
     a corpus finding, which is the failure this gate exists to make impossible.
     """
-    from ..resolution import UnbuiltGeneratedInputError, _require_built_cli_reference
+    from ..resolution import UnbuiltGeneratedInputError, require_built_cli_reference
 
     with pytest.raises(UnbuiltGeneratedInputError) as refusal:
-        _require_built_cli_reference(tmp_path)
+        require_built_cli_reference(tmp_path)
     message = str(refusal.value)
     assert "docs/cli" in message, "the refusal must name the root that is missing"
     assert "just docs-build" in message, "the refusal must name the remedy that writes it"
@@ -706,20 +718,20 @@ def test_short_generated_cli_reference_tree_is_refused_like_an_absent_one(tmp_pa
     the single emitted page still drops. Short and absent fail the same way and
     are refused the same way.
     """
-    from ..resolution import UnbuiltGeneratedInputError, _require_built_cli_reference
+    from ..resolution import UnbuiltGeneratedInputError, require_built_cli_reference
 
     _write_cli_pages(tmp_path, 1)
     with pytest.raises(UnbuiltGeneratedInputError) as refusal:
-        _require_built_cli_reference(tmp_path)
+        require_built_cli_reference(tmp_path)
     assert "1 page(s)" in str(refusal.value)
 
 
 def test_a_complete_generated_cli_reference_tree_is_accepted(tmp_path: Path) -> None:
     """The refusal has to let a real generator run through, or it proves nothing."""
-    from ..resolution import _MIN_CLI_REFERENCE_PAGES, _require_built_cli_reference
+    from ..resolution import MIN_CLI_REFERENCE_PAGES, require_built_cli_reference
 
-    _write_cli_pages(tmp_path, _MIN_CLI_REFERENCE_PAGES)
-    _require_built_cli_reference(tmp_path)
+    _write_cli_pages(tmp_path, MIN_CLI_REFERENCE_PAGES)
+    require_built_cli_reference(tmp_path)
 
 
 def test_chunk_hit_and_resolved_target_are_frozen() -> None:

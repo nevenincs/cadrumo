@@ -13,6 +13,7 @@ record_identity = "T3690 Estruc. gral"
 prefix_extent = 328
 closer_derivation = "relative-closer-v1"
 total_derivation = "emitted-byte-total-v1"
+scheme_period_form = "bare_quarter"
 body_record_ids = [
     "modelo-369-union-info-adicional",
     "modelo-369-union-t36904",
@@ -21,6 +22,24 @@ body_record_ids = [
     "modelo-369-union-t36907",
     "modelo-369-union-t36908",
     "modelo-369-union-t36909",
+]
+period_tokens = [
+    "1T",
+    "2T",
+    "3T",
+    "4T",
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "09",
+    "10",
+    "11",
+    "12",
 ]
 
 [[revisions.esquema-union.export_layouts.filing_envelope.prefix_fields]]

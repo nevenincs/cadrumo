@@ -7,6 +7,7 @@ every account number is a synthetic published example.
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextvars import Context
 from typing import get_args
 from uuid import UUID
 
@@ -15,8 +16,10 @@ import pytest
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import profile_operation_subject
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.transactions.own_accounts import (
     OwnAccountHolding,
     OwnAccountRegister,
@@ -44,7 +47,8 @@ from ...operations.access_resolution import (
     resolve_operation_access,
 )
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ..m360_solicitud_input import Modelo360ProfileInput
 from ..m360_solicitud_operation import (
     Modelo360RepresentanteAccountInput,
     Modelo360SolicitudAction,
@@ -59,6 +63,7 @@ from ..m360_solicitud_operation import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
+_YEAR = filing_year_envelope().horizon
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000ab")
 _ES_IBAN = "ES9121000418450200051332"
@@ -90,17 +95,17 @@ def _own_accounts(*, bic: str = "CAIXESBBXXX", closed: bool = False) -> Callable
     if closed:
         from datetime import date
 
-        register = register.with_closed_account("acc-01", date(2026, 6, 30))
+        register = register.with_closed_account("acc-01", date(_YEAR, 6, 30))
     return lambda: register
 
 
-def _facts(holder: M360TitularEnCalidadDe) -> Modelo360ProfileFacts:
+def _facts(holder: M360TitularEnCalidadDe) -> Modelo360ProfileInput:
     representante = (
         Modelo360RepresentanteFacts(tax_id="00000000T", full_name="ASESORES PRUEBA SL")
         if holder is M360TitularEnCalidadDe.REPRESENTANTE
         else None
     )
-    return Modelo360ProfileFacts(
+    facts = Modelo360ProfileFacts(
         solicitud=Modelo360SolicitudFacts(
             nivel_calidad_datos=M360NivelCalidadDatos.MAXIMA,
             pais_destino="FR",
@@ -113,9 +118,10 @@ def _facts(holder: M360TitularEnCalidadDe) -> Modelo360ProfileFacts:
         representante=representante,
         cuenta=Modelo360CuentaTitularFacts(titular_nombre="TITULAR PRUEBA", titular_en_calidad_de=holder, divisa="EUR"),
     )
+    return Modelo360ProfileInput.model_validate(facts.model_dump())
 
 
-def _declare_own(year: int = 2025) -> Modelo360SolicitudRequest:
+def _declare_own(year: int = _YEAR) -> Modelo360SolicitudRequest:
     return Modelo360SolicitudRequest(
         profile_id=_PROFILE,
         action="declare",
@@ -125,18 +131,29 @@ def _declare_own(year: int = 2025) -> Modelo360SolicitudRequest:
     )
 
 
+def test_the_public_request_parses_and_composes_without_an_authority_scope() -> None:
+    encoded = _declare_own().model_dump_json()
+
+    def unscoped() -> Modelo360SolicitudRequest:
+        definition = build_modelo_360_solicitud_definition(_unused_solicitudes, _unused_own_accounts)
+        build_modelo_360_solicitud_registration(definition)
+        return Modelo360SolicitudRequest.model_validate_json(encoded)
+
+    assert Context().run(unscoped).model_dump_json() == encoded
+
+
 def test_a_solicitante_solicitud_references_its_own_account_and_lists_masked() -> None:
     solicitudes = _Solicitudes()
 
     declared = apply_solicitud_request(_declare_own(), repository=solicitudes, own_accounts=_own_accounts())
 
     assert declared.changed is True
-    entry = solicitudes.register.entry_for(solicitud_period(2025))
+    entry = solicitudes.register.entry_for(solicitud_period(_YEAR))
     assert entry is not None
     assert entry.account == Modelo360OwnAccountChoice(own_account_id="acc-01")
     (row,) = declared.solicitudes
     assert (row.filing_year, row.account_kind, row.own_account_id, row.masked_iban) == (
-        2025,
+        _YEAR,
         "own_account",
         "acc-01",
         None,
@@ -157,7 +174,7 @@ def test_a_representante_account_is_embedded_and_shown_only_by_its_mask() -> Non
     request = Modelo360SolicitudRequest(
         profile_id=_PROFILE,
         action="declare",
-        filing_year=2025,
+        filing_year=_YEAR,
         facts=_facts(M360TitularEnCalidadDe.REPRESENTANTE),
         representante_account=Modelo360RepresentanteAccountInput(iban=_DE_IBAN, swift_bic="COBADEFFXXX"),
     )
@@ -168,6 +185,30 @@ def test_a_representante_account_is_embedded_and_shown_only_by_its_mask() -> Non
     assert (row.account_kind, row.masked_iban, row.has_representante) == ("representante", "DE ···· 3000", True)
     assert _DE_IBAN not in result.model_dump_json()
     assert "ASESORES" not in result.model_dump_json()
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "value"),
+    [
+        ("solicitud", "nivel_calidad_datos", "unknown-quality"),
+        ("solicitud", "pais_destino", "GR"),
+        ("solicitante", "email", "invalid-email"),
+        ("cuenta", "titular_en_calidad_de", "unknown-holder"),
+    ],
+)
+def test_public_input_is_validated_as_governed_facts_before_writing(section: str, field: str, value: str) -> None:
+    request = _declare_own()
+    document = request.model_dump()
+    document["facts"][section][field] = value
+    entered = Modelo360SolicitudRequest.model_validate(document)
+    solicitudes = _Solicitudes()
+
+    with pytest.raises(Modelo360SolicitudRefusedError) as refused:
+        apply_solicitud_request(entered, repository=solicitudes, own_accounts=_own_accounts())
+
+    assert refused.value.translated_message == "errors.refused.refused_modelo_360_solicitud"
+    assert value not in str(refused.value)
+    assert solicitudes.register == Modelo360SolicitudRegister()
 
 
 @pytest.mark.parametrize(
@@ -195,7 +236,7 @@ def test_facts_that_name_the_other_holder_and_an_invalid_account_are_refused() -
     mismatched = Modelo360SolicitudRequest(
         profile_id=_PROFILE,
         action="declare",
-        filing_year=2025,
+        filing_year=_YEAR,
         facts=_facts(M360TitularEnCalidadDe.REPRESENTANTE),
         own_account_id="acc-01",
     )
@@ -206,7 +247,7 @@ def test_facts_that_name_the_other_holder_and_an_invalid_account_are_refused() -
     broken = Modelo360SolicitudRequest(
         profile_id=_PROFILE,
         action="declare",
-        filing_year=2025,
+        filing_year=_YEAR,
         facts=_facts(M360TitularEnCalidadDe.REPRESENTANTE),
         representante_account=Modelo360RepresentanteAccountInput(iban=_DE_IBAN[:-1] + "1", swift_bic="COBADEFFXXX"),
     )
@@ -218,20 +259,20 @@ def test_facts_that_name_the_other_holder_and_an_invalid_account_are_refused() -
 
 def test_removal_drops_only_its_year_and_refuses_an_undeclared_one() -> None:
     solicitudes = _Solicitudes()
-    for year in (2024, 2025):
+    for year in (_YEAR - 1, _YEAR):
         apply_solicitud_request(_declare_own(year), repository=solicitudes, own_accounts=_own_accounts())
 
     removed = apply_solicitud_request(
-        Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=2024),
+        Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=_YEAR - 1),
         repository=solicitudes,
         own_accounts=_own_accounts(),
     )
 
     assert removed.changed is True
-    assert [row.filing_year for row in removed.solicitudes] == [2025]
+    assert [row.filing_year for row in removed.solicitudes] == [_YEAR]
     with pytest.raises(Modelo360SolicitudRefusedError) as raised:
         apply_solicitud_request(
-            Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=2024),
+            Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=_YEAR - 1),
             repository=solicitudes,
             own_accounts=_own_accounts(),
         )
@@ -240,12 +281,12 @@ def test_removal_drops_only_its_year_and_refuses_an_undeclared_one() -> None:
 
 def test_the_request_takes_exactly_the_fields_its_action_needs() -> None:
     with pytest.raises(pydantic.ValidationError):
-        Modelo360SolicitudRequest(profile_id=_PROFILE, action="list", filing_year=2025)
+        Modelo360SolicitudRequest(profile_id=_PROFILE, action="list", filing_year=_YEAR)
     with pytest.raises(pydantic.ValidationError):
         Modelo360SolicitudRequest(
             profile_id=_PROFILE,
             action="declare",
-            filing_year=2025,
+            filing_year=_YEAR,
             facts=_facts(M360TitularEnCalidadDe.SOLICITANTE),
             own_account_id="acc-01",
             representante_account=Modelo360RepresentanteAccountInput(iban=_DE_IBAN, swift_bic="COBADEFFXXX"),
@@ -254,8 +295,8 @@ def test_the_request_takes_exactly_the_fields_its_action_needs() -> None:
         Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove")
 
 
-@pytest.mark.parametrize("year", [1999, 2100])
-def test_a_solicitud_cannot_select_a_year_outside_the_shared_filing_window(year: int) -> None:
+@pytest.mark.parametrize("year", [FOUR_DIGIT_YEAR_FIRST - 1, FOUR_DIGIT_YEAR_LAST + 1])
+def test_a_solicitud_cannot_select_a_value_not_written_as_a_year(year: int) -> None:
     """The request cannot accept a year that its persisted period refuses."""
     with pytest.raises(pydantic.ValidationError):
         Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=year)
@@ -276,7 +317,7 @@ def _action_request(action: str) -> Modelo360SolicitudRequest:
     if action == "declare":
         return _declare_own()
     if action == "remove":
-        return Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=2025)
+        return Modelo360SolicitudRequest(profile_id=_PROFILE, action="remove", filing_year=_YEAR)
     return Modelo360SolicitudRequest(profile_id=_PROFILE, action="list")
 
 

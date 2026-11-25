@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -9,6 +10,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE, profile_root
+from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo.core.time.clock import wall_now
+from cadrumo.core.time.fixed_clock import FIXED_CLOCK_INSTANT_VARIABLE, FIXED_CLOCK_ROOT_VARIABLE, FixedClock
 
 from .. import profile_worker
 from ..worker_environment import worker_path_environment_names
@@ -19,30 +23,23 @@ _PROFILE = UUID("7f5b1a6d-0c9e-4d8f-9a3b-2c1d0e9f8a7b")
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
-def test_linux_worker_receives_only_declared_storage_controls_and_managed_temp(
+def test_linux_worker_receives_the_pinned_storage_root_and_managed_temp(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform="linux"))
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "configured"))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "local"))
-    monkeypatch.setenv("CADRUMO_TEMP_DIR", "worker-temp")
-    monkeypatch.setenv("CADRUMO_OLLAMA_MODELS_DIR", "models/ollama-test")
     monkeypatch.setenv("CADRUMO_LLM_OPENAI_API_KEY", "must-not-cross-worker-boundary")
     monkeypatch.setenv("PYTHONPATH", "must-not-cross-worker-boundary")
 
     storage_root = tmp_path / "worker-storage"
-    environment = profile_worker._worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
+    environment = profile_worker.worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
 
-    temporary_root = storage_root / "worker-temp"
+    temporary_root = storage_root / "tmp"
     assert environment["PATH"] == "/usr/bin:/bin"
     assert environment["LANG"] == "C" and environment["LC_ALL"] == "C"
-    # The development root variable is not a product control; the pinned root replaces it.
-    assert "CADRUMO_STORAGE_ROOT" not in environment
     # The worker inherits the root it serves; it never re-resolves the parent's override.
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
-    assert environment["CADRUMO_TEMP_DIR"] == "worker-temp"
-    assert environment["CADRUMO_OLLAMA_MODELS_DIR"] == "models/ollama-test"
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(storage_root.resolve())
     assert not any("OPENAI_API_KEY" in name or name == "PYTHONPATH" for name in environment)
     assert {environment[name] for name in ("TEMP", "TMP", "TMPDIR")} == {str(temporary_root.resolve())}
     assert temporary_root.is_dir()
@@ -62,12 +59,12 @@ def test_windows_worker_keeps_the_packaged_cache_pin_and_drops_credentials(
 
     storage_root = tmp_path / "worker-storage"
     monkeypatch.setenv(PROFILE_ROOT_VARIABLE, str(tmp_path / "another-profiles-folder"))
-    environment = profile_worker._worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
+    environment = profile_worker.worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
 
     assert environment[PROFILE_ROOT_VARIABLE] == str(profile_root(storage_root.resolve(), _PROFILE))
     assert environment["XDG_CACHE_HOME"] == str(tmp_path / "pinned-cache")
     assert environment["CADRUMO_AUTHORITY_ROOT"] == str(tmp_path / "authority")
-    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str(storage_root.resolve())
     assert not any("OPENAI_API_KEY" in name for name in environment)
     # A setting of this command line that is not a location stays with the runtime.
     assert "CADRUMO_LOG_LEVEL" not in environment
@@ -81,7 +78,7 @@ def test_worker_drops_service_agent_executable_from_operator_environment(
     image = tmp_path / "package" / "bin" / "agent-image"
     monkeypatch.setenv(_PACKAGE_AGENT_VARIABLE, str(image))
 
-    environment = profile_worker._worker_launch_environment(
+    environment = profile_worker.worker_launch_environment(
         storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
     )
 
@@ -89,6 +86,59 @@ def test_worker_drops_service_agent_executable_from_operator_environment(
     # Service executable locations are not part of the operator worker path allowlist.
     assert _PACKAGE_AGENT_VARIABLE not in worker_path_environment_names()
     monkeypatch.delenv(_PACKAGE_AGENT_VARIABLE)
-    assert _PACKAGE_AGENT_VARIABLE not in profile_worker._worker_launch_environment(
+    assert _PACKAGE_AGENT_VARIABLE not in profile_worker.worker_launch_environment(
         storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
     )
+
+
+@pytest.mark.parametrize("platform", ["linux", "darwin"])
+def test_the_launch_environment_of_a_profile_worker_passes_its_isolated_scope(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    from ..macos_worker_process import validated_environment
+
+    monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform=platform))
+    environment = profile_worker.worker_launch_environment(
+        storage_root=tmp_path / "worker-storage", profile_id=_PROFILE
+    )
+    environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
+    assert PROFILE_ROOT_VARIABLE in environment
+    assert validated_environment(environment) == environment
+
+
+def _inherited_fixed_clock(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Put a fixed clock in the runtime's own environment, which no child may relay."""
+    monkeypatch.setenv(FIXED_CLOCK_INSTANT_VARIABLE, (wall_now() - timedelta(days=30)).isoformat())
+    monkeypatch.setenv(FIXED_CLOCK_ROOT_VARIABLE, str(tmp_path / "inherited-root"))
+
+
+@pytest.mark.parametrize("platform", ["linux", "win32"])
+def test_worker_is_told_the_admitted_fixed_clock_and_never_the_inherited_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    monkeypatch.setattr(profile_worker, "sys", SimpleNamespace(platform=platform))
+    _inherited_fixed_clock(monkeypatch, tmp_path)
+    storage_root = tmp_path / "worker-storage"
+    admitted = FixedClock(instant=(wall_now() - timedelta(days=400)).replace(microsecond=0), root=storage_root)
+
+    relayed = profile_worker.worker_launch_environment(
+        storage_root=storage_root, profile_id=_PROFILE, fixed_clock=admitted
+    )
+    unfixed = profile_worker.worker_launch_environment(storage_root=storage_root, profile_id=_PROFILE)
+
+    assert relayed[FIXED_CLOCK_INSTANT_VARIABLE] == admitted.instant.isoformat()
+    assert relayed[FIXED_CLOCK_ROOT_VARIABLE] == str(storage_root)
+    assert FIXED_CLOCK_INSTANT_VARIABLE not in unfixed
+    assert FIXED_CLOCK_ROOT_VARIABLE not in unfixed
+
+
+@pytest.mark.parametrize("platform", ["linux", "win32"])
+def test_an_operator_child_never_carries_the_fixed_clock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    _inherited_fixed_clock(monkeypatch, tmp_path)
+
+    environment = child_environment(ChildEnvironmentProfile.OPERATOR, tmp_path / "child-storage", sys_platform=platform)
+
+    assert FIXED_CLOCK_INSTANT_VARIABLE not in environment
+    assert FIXED_CLOCK_ROOT_VARIABLE not in environment

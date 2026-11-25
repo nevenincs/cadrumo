@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, contextmanager
-from datetime import UTC, datetime, timedelta
+from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -15,11 +15,10 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live.notification_ports import (
     NotificationsPorts,
@@ -38,7 +37,7 @@ from ...application.live.notifications_capture_operation import (
     resolve_notifications_capture_access,
 )
 from ...application.live.snapshot_base import SnapshotRepository
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -46,23 +45,29 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...tests.aeat_literal_fixtures import (
     SEDE_NOTIFICATIONS_URL_FIXTURE,
 )
+from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+
+_NOW = datetime(_YEAR, 9, 29, 12, tzinfo=UTC)
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 
 
@@ -116,44 +121,6 @@ class _Cancellation:
             self.events.append("guard-exit")
 
 
-class _ExecutionAuthority:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.events.append("guard-enter")
-        try:
-            yield
-        finally:
-            self.events.append("guard-exit")
-
-
-class _Resources:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        self.events.append("resources-activate")
-        try:
-            yield
-        finally:
-            self.events.append("resources-deactivate")
-
-    async def close(self) -> None:
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("resources-close")
-
-
 class _Operands:
     def __init__(self, events: list[str]) -> None:
         self.events = events
@@ -194,9 +161,9 @@ def _snapshot() -> NotificationsSnapshot:
         certificado_id="1234567890",
         tipo=NotificationType.NOTIFICACION,
         concepto="Notificación sintética",
-        titular_nif="X1234567L",
+        titular_nif="X0001500M",
         titular_nombre="Titular sintético",
-        destinatario_nif="X1234567L",
+        destinatario_nif="X0001500M",
         destinatario_nombre="Titular sintético",
         fecha_emision=_NOW.date(),
         fecha_notificacion=None,
@@ -212,11 +179,6 @@ def _snapshot() -> NotificationsSnapshot:
     )
 
 
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -229,7 +191,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
     class Query:
         async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
             del settings
-            assert cast(Any, session).identity_nif == "X1234567L"
+            assert cast(Any, session).identity_nif == "X0001500M"
             events.append("remote-fetch")
             return _snapshot()
 
@@ -243,7 +205,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
         browser_session_factory=object(),
         operator_scope_ports=object(),
     )
-    resources = _Resources(events)
+    resources = RecordingResources(events)
 
     with bundled_indexed_authority().operation() as authority:
         context = _Context(events, authority=authority)
@@ -253,7 +215,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
             assert kwargs["authority_operation"] is authority
             assert kwargs["operation"] == "live-notifications-pull"
             events.append("authenticated-session")
-            return SimpleNamespace(identity_nif="X1234567L"), object()
+            return SimpleNamespace(identity_nif="X0001500M"), object()
 
         monkeypatch.setattr(notifications_module, "active_verified_session", active_session)
 
@@ -314,102 +276,119 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
     }
 
 
+def _supervised_capture(
+    *,
+    profile: Any,
+    authority: Any,
+    query: object,
+    repository: _SnapshotRepository,
+    events: list[str],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[
+    OperationSupervisor,
+    OperationRegistry,
+    OperationRequest[NotificationsCaptureRequest],
+    OperationJournalRepository,
+    Any,
+    list[RecordingResources],
+]:
+    """Compose the registered capture under a real supervisor with the given snapshot query."""
+    from ...application.live import notifications as notifications_module
+    from ...application.live import notifications_capture_operation as capture_module
+
+    profile_id = UUID(profile.bucket_id)
+    ports = NotificationsPorts(
+        snapshot_query=cast(Any, query),
+        snapshot_repository_factory=lambda _bucket_id: cast(SnapshotRepository[Any], repository),
+    )
+    composition = SimpleNamespace(
+        notifications_ports=ports,
+        certificate_secret_backend_factory=object(),
+        browser_session_factory=object(),
+        operator_scope_ports=object(),
+    )
+    resources: list[RecordingResources] = []
+    monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
+
+    async def active_session(**kwargs: object) -> tuple[object, object]:
+        assert kwargs["authority_operation"] is authority
+        assert kwargs["operation"] == "live-notifications-pull"
+        events.append("authenticated-session")
+        return SimpleNamespace(identity_nif="X0001500M"), object()
+
+    monkeypatch.setattr(notifications_module, "active_verified_session", active_session)
+
+    def provider_preflight(profile_id_arg: UUID, pinned_authority: object) -> None:
+        assert profile_id_arg == profile_id
+        assert pinned_authority is authority
+        events.append("provider-preflight")
+
+    def resources_factory() -> RecordingResources:
+        resource = RecordingResources(events)
+        resources.append(resource)
+        return resource
+
+    definition = build_notifications_capture_definition(
+        composition_factory=lambda *, operation: cast(Any, composition),
+        browser_resources_factory=resources_factory,
+        provider_preflight=provider_preflight,
+    )
+    registration = build_notifications_capture_registration(definition)
+    registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
+    request = OperationRequest(
+        definition_id=NOTIFICATIONS_CAPTURE_DEFINITION_ID,
+        subject_ref=profile_operation_subject(profile.bucket_id),
+        payload=NotificationsCaptureRequest(profile_id=profile_id),
+    )
+    access_context = operation_access_context(
+        registration.contract, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
+    )
+    admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
+    assert admitted.request.period_independent
+    assert admitted.policy.requires_all_periods
+    assert AccessAction.COMMIT in admitted.policy.actions
+
+    journal, _, operands, supervisor, _ = build_supervised_operation(
+        tmp_path=tmp_path,
+        objects=profile.repository,
+        authority=authority,
+        registry=registry,
+        now=_NOW,
+        execution_authority=RecordingExecutionAuthority(events),
+    )
+    return supervisor, registry, request, journal, operands, resources
+
+
 def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from ...application.live import notifications as notifications_module
-    from ...application.live import notifications_capture_operation as capture_module
-
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
-        profile_id = UUID(profile.bucket_id)
         events: list[str] = []
         repository = _SnapshotRepository(events, bucket_id=profile.bucket_id)
 
         class Query:
             async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
                 del settings
-                assert cast(Any, session).identity_nif == "X1234567L"
+                assert cast(Any, session).identity_nif == "X0001500M"
                 events.append("remote-fetch")
                 return _snapshot()
 
-        ports = NotificationsPorts(
-            snapshot_query=cast(Any, Query()),
-            snapshot_repository_factory=lambda _bucket_id: cast(SnapshotRepository[Any], repository),
-        )
-        composition = SimpleNamespace(
-            notifications_ports=ports,
-            certificate_secret_backend_factory=object(),
-            browser_session_factory=object(),
-            operator_scope_ports=object(),
-        )
-        resources: list[_Resources] = []
-        monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
-
-        async def active_session(**kwargs: object) -> tuple[object, object]:
-            assert kwargs["authority_operation"] is authority
-            assert kwargs["operation"] == "live-notifications-pull"
-            events.append("authenticated-session")
-            return SimpleNamespace(identity_nif="X1234567L"), object()
-
-        monkeypatch.setattr(notifications_module, "active_verified_session", active_session)
-
-        def provider_preflight(profile_id_arg: UUID, pinned_authority: object) -> None:
-            assert profile_id_arg == profile_id
-            assert pinned_authority is authority
-            events.append("provider-preflight")
-
-        def resources_factory() -> _Resources:
-            resource = _Resources(events)
-            resources.append(resource)
-            return resource
-
-        definition = build_notifications_capture_definition(
-            composition_factory=lambda *, operation: cast(Any, composition),
-            browser_resources_factory=resources_factory,
-            provider_preflight=provider_preflight,
-        )
-        registration = build_notifications_capture_registration(definition)
-        registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-        request = OperationRequest(
-            definition_id=NOTIFICATIONS_CAPTURE_DEFINITION_ID,
-            subject_ref=profile_operation_subject(profile.bucket_id),
-            payload=NotificationsCaptureRequest(profile_id=profile_id),
-        )
-        access_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-        )
-        admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
-        assert admitted.request.period_independent
-        assert admitted.policy.requires_all_periods
-        assert AccessAction.COMMIT in admitted.policy.actions
-
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
-            execution_authority=_ExecutionAuthority(events),
+        supervisor, registry, request, journal, operands, resources = _supervised_capture(
+            profile=profile,
+            authority=authority,
+            query=Query(),
+            repository=repository,
+            events=events,
+            tmp_path=tmp_path,
+            monkeypatch=monkeypatch,
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(NOTIFICATIONS_CAPTURE_DEFINITION_ID)
             assert contract.result_schema is not None
             projected = await result_service.resolve(
@@ -451,6 +430,64 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
     assert all(resource.closed and resource.close_calls == 1 for resource in resources)
 
 
+@pytest.mark.parametrize(
+    ("failure_mode", "condition", "refusal"),
+    [
+        (
+            SedeFailureMode.SESSION_ENDED,
+            OperationTerminalCondition.REFUSED,
+            "REFUSED_APPLICATION_LIVE_AEAT_SESSION_ENDED",
+        ),
+        (SedeFailureMode.LIVE_NAVIGATION_FAILED, OperationTerminalCondition.FAILED, None),
+    ],
+)
+def test_an_ended_aeat_session_during_the_notifications_query_settles_as_its_own_refusal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    failure_mode: SedeFailureMode,
+    condition: OperationTerminalCondition,
+    refusal: str | None,
+) -> None:
+    """The composed Sede query lifts an ended session to its own refusal; other navigation failures stay generic."""
+    from .. import live_state_composition
+
+    async def failing_query(session: object, *, settings: object) -> object:
+        del session, settings
+        raise SedeNavigationError(
+            "notifications query did not load",
+            failure_mode=failure_mode,
+            translated_message="adapters.sede.errors.session_expired_nav_failed",
+        )
+
+    monkeypatch.setattr(live_state_composition, "fetch_notifications_query", failing_query)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
+        events: list[str] = []
+        repository = _SnapshotRepository(events, bucket_id=profile.bucket_id)
+        query = live_state_composition.compose_notifications_ports(settings=profile.settings).snapshot_query
+        supervisor, _registry, request, _journal, _operands, _resources = _supervised_capture(
+            profile=profile,
+            authority=authority,
+            query=query,
+            repository=repository,
+            events=events,
+            tmp_path=tmp_path,
+            monkeypatch=monkeypatch,
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            submitted_id = await supervisor.submit(request, operation_id="5" * 64)
+            return await run_to_terminal(supervisor, submitted_id)
+
+        terminal = asyncio.run(run())
+
+    assert terminal.terminal_condition is condition
+    assert terminal.effect is OperationEffect.NONE
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.refusal_ref == refusal
+    assert repository.snapshots == {}
+
+
 def test_capture_access_is_whole_profile_and_requires_commit() -> None:
     definition = build_notifications_capture_definition(
         composition_factory=lambda *, operation: cast(Any, object()),
@@ -463,14 +500,7 @@ def test_capture_access_is_whole_profile_and_requires_commit() -> None:
         subject_ref=profile_operation_subject(str(_PROFILE_ID)),
         payload=NotificationsCaptureRequest(profile_id=_PROFILE_ID),
     )
-    context = OperationAccessContext(
-        profile_id=_PROFILE_ID,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    context = operation_access_context(registration.contract, profile_id=_PROFILE_ID)
 
     access = resolve_notifications_capture_access(request, context)
 

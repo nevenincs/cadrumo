@@ -6,7 +6,6 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.first_party_source import (
     DEPENDENCY_DECLARATION_ROOTS,
     FIRST_PARTY_ROOTS,
@@ -18,6 +17,7 @@ from dev.first_party_source import (
     is_test_source,
     production_exclusion_globs,
 )
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

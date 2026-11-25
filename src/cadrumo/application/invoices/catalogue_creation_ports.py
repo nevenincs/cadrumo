@@ -18,7 +18,8 @@ from ...core.errors.hierarchy import CadrumoError
 from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.models import EurRateLookup
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from .catalogue_reads_ports import InvoiceDocumentManifestReader
 
 
 class CatalogueInvoicePersistenceError(CadrumoError):
@@ -50,7 +51,7 @@ class CatalogueInvoiceRepositoryPort(Protocol):
         """Apply ``mutation`` as one revision-guarded catalogue write.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 
@@ -74,7 +75,7 @@ class CatalogueInvoiceAuditCommitPort(Protocol):
         """Commit ``mutation`` and ``event`` atomically under both revisions.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 
@@ -113,6 +114,8 @@ class CatalogueCreationPorts:
     event_repository: CatalogueInvoiceEventRepositoryPort
     audit_commit: CatalogueInvoiceAuditCommitPort
     rate_provider: CatalogueInvoiceRateProviderPort
+    #: The profile's document manifests, so a created invoice is served with any document already kept for it.
+    documents: InvoiceDocumentManifestReader
 
 
 class CatalogueCreationPortsFactory(Protocol):

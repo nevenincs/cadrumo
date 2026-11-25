@@ -5,15 +5,18 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REVISION = str(open_ended_revision("349").id)
+
 
 def test_only_summary_boxes_have_official_numbers() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/349")).revisions["2020-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/349")).revisions[_REVISION]
     (layout,) = revision.form_layouts
     assert form_layout_failures(revision) == ()
     assert layout.seed_source == "authored" and layout.review.state == "generated"
@@ -30,7 +33,7 @@ def test_only_summary_boxes_have_official_numbers() -> None:
 
 
 def test_corrections_keep_operator_identity_period_and_both_amounts() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/349")).revisions["2020-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/349")).revisions[_REVISION]
     (layout,) = revision.form_layouts
     assert len(layout.pages) == 3
     operator = layout.pages[1].sections[0].blocks[0]
@@ -56,7 +59,7 @@ def test_corrections_keep_operator_identity_period_and_both_amounts() -> None:
 
 
 def test_summary_exposes_exact_taxpayer_period_and_contact_owners() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/349")).revisions["2020-y-siguientes"]
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/349")).revisions[_REVISION]
     sections = {s.id: s for s in revision.form_layouts[0].pages[0].sections}
     assert set(sections) == {"identificacion", "periodo", "contacto", "resumen-importes", "declaracion"}
     context = {

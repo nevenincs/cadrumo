@@ -15,7 +15,7 @@ cannot be unlinked is reproducible on every platform. The payload-side failure
 is not — a filesystem that refuses one unlink and permits its sibling needs a
 platform-specific mechanism (an open handle on Windows, a mode bit that POSIX
 ignores for unlink) — so its rollback is exercised against the real filesystem
-through ``_restore_sidecar`` directly rather than through a mechanism that
+through ``restore_sidecar`` directly rather than through a mechanism that
 would only fire on one operating system.
 """
 
@@ -174,7 +174,7 @@ def test_the_sidecar_restore_puts_back_byte_identical_metadata(provider: LocalFi
     original = sidecar.read_text(encoding="utf-8")
     sidecar.unlink()
 
-    LocalFileSystemProvider._restore_sidecar(sidecar, original)
+    LocalFileSystemProvider.restore_sidecar(sidecar, original)
 
     assert sidecar.read_text(encoding="utf-8") == original
     assert json.loads(sidecar.read_text(encoding="utf-8"))["object_key_hmac"] == _HMAC
@@ -190,6 +190,6 @@ def test_the_sidecar_restore_is_a_no_op_when_there_was_nothing_to_restore(
     _, sidecar = _store(provider)
     sidecar.unlink()
 
-    LocalFileSystemProvider._restore_sidecar(sidecar, None)
+    LocalFileSystemProvider.restore_sidecar(sidecar, None)
 
     assert not sidecar.exists()

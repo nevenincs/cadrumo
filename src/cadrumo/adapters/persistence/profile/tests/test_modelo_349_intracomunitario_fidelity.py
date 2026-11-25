@@ -44,13 +44,19 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
+from cadrumo.adapters.persistence.profile.tests.multi_year_roundtrip_support import (
+    assert_omitted_casilla_is_detected,
+    assert_two_ejercicio_round_trip,
+)
+from cadrumo.adapters.persistence.profile.tests.observation_lookup_support import (
+    find_observation,
+    save_app_filing_observation,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
-    revision_id_for_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -127,14 +133,7 @@ def test_year_n_observation_persists_and_reloads_strictly(tmp_path: Path) -> Non
     obs_n = _year_n_observation()
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
+        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
         assert loaded is not None
         assert loaded.observation == obs_n
@@ -147,14 +146,7 @@ def test_year_n_plus_1_observation_persists_and_reloads_strictly(tmp_path: Path)
     obs_n1 = _year_n_plus_1_observation()
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
+        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
         assert loaded is not None
         assert loaded.observation == obs_n1
@@ -167,22 +159,8 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
     obs_n1 = _year_n_plus_1_observation()
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
+        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
+        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
         loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
 
@@ -206,29 +184,9 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
 
 def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: Path) -> None:
     """Anti-tautology: a missing casilla in the reloaded observation is detectable."""
-    obs_n = _year_n_observation()
-    obs_n_missing = RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=_YEAR_N,
-        period=_PERIOD,
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != _OP_BASE_IMPONIBLE_CASILLA),
+    assert_omitted_casilla_is_detected(
+        tmp_path, _year_n_observation(), omitted=(_OP_BASE_IMPONIBLE_CASILLA,), captured_at=_CLOCK_N
     )
-    assert obs_n != obs_n_missing
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
-        assert loaded is not None
-        assert loaded.observation != obs_n_missing
-        assert loaded.observation == obs_n
 
 
 def test_modelo_349_intracomunitario_fidelity_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -239,31 +197,15 @@ def test_modelo_349_intracomunitario_fidelity_enrolls_two_renta_years(tmp_path: 
     record_context_year, and calls the cross-year behavior assertion. Manifest
     must declare renta_years = [2024, 2025] in the same commit.
     """
-    obs_n = _year_n_observation()
-    obs_n1 = _year_n_plus_1_observation()
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N,
-                stamped_revision_id=revision_id_for_observation(obs_n),
-            )
-        )
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
-        assert loaded_n is not None and loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        repo.save(
-            repo.prepare_observation_envelope(
-                obs_n1,
-                source_kind="app_filing",
-                captured_at=_CLOCK_N_PLUS_1,
-                stamped_revision_id=revision_id_for_observation(obs_n1),
-            )
-        )
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
-        assert loaded_n1 is not None and loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period=_PERIOD,
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )

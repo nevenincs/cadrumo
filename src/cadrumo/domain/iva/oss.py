@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Final
 
-from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     required_mapping_entry,
@@ -60,12 +60,21 @@ class OssIossRegimeDefinition:
 
 
 @dataclass(frozen=True, slots=True)
+class OssIossNoActivityDeclaration:
+    """Which header row of each regime's return says the period had no activity, and the value saying so."""
+
+    binding_suffix: str
+    declared_value: str
+
+
+@dataclass(frozen=True, slots=True)
 class OssIossRegimeCatalogue:
     """Typed projection of the dated Modelo 369 OSS/IOSS mapping fact."""
 
     definitions: tuple[OssIossRegimeDefinition, ...]
     common_semantics: str
     selector_key: str
+    no_activity: OssIossNoActivityDeclaration | None = None
 
     @property
     def all_regimes(self) -> frozenset[OssIossRegime]:
@@ -98,26 +107,24 @@ class OssIossRegimeCatalogue:
         """Return transaction-kind values admitted by one registry regime."""
         return frozenset(self.definition(value).transaction_kinds)
 
-    def regime_for_transaction_kind(self, transaction_kind: str) -> OssIossRegime:
-        """Return the unique registry regime admitting a transaction kind."""
-        matches = tuple(
-            definition.token for definition in self.definitions if transaction_kind in definition.transaction_kinds
-        )
-        if len(matches) != 1:
-            raise RegistryValidationError(
-                f"transaction kind {transaction_kind!r} must map to exactly one OSS/IOSS regime",
-            )
-        return matches[0]
-
 
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 _ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.TRANSACTION_DATE, policy=_ENTRIES_POLICY)
 
 
+def _no_activity_declaration(entries: Mapping[str, str]) -> OssIossNoActivityDeclaration | None:
+    if "no_activity.binding_suffix" not in entries:
+        return None
+    return OssIossNoActivityDeclaration(
+        binding_suffix=entries["no_activity.binding_suffix"],
+        declared_value=required_mapping_entry(entries, "no_activity.declared_value", subject=_ENTRY_SUBJECT),
+    )
+
+
 def resolve_oss_ioss_regime_catalogue(
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> OssIossRegimeCatalogue:
     """Resolve the complete OSS / IOSS regime catalogue through facts authority."""
@@ -126,7 +133,7 @@ def resolve_oss_ioss_regime_catalogue(
         raise RegistryValidationError(
             "OSS/IOSS regime catalogue requires an explicit authority operation or scope",
         )
-    entries = _ENTRIES_FACT.resolve_entries(authority, effective_date=effective_date or today_madrid())
+    entries = _ENTRIES_FACT.resolve_entries(authority, effective_date=effective_date)
     ordered_tokens = unique_mapping_tokens(
         entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
     )
@@ -153,13 +160,14 @@ def resolve_oss_ioss_regime_catalogue(
         definitions=tuple(definitions),
         common_semantics=required_mapping_entry(entries, _COMMON_SEMANTICS_KEY, subject=_ENTRY_SUBJECT),
         selector_key=required_mapping_entry(entries, _SELECTOR_KEY, subject=_ENTRY_SUBJECT),
+        no_activity=_no_activity_declaration(entries),
     )
 
 
 def require_oss_ioss_regime(
     value: object,
     *,
-    effective_date: date | None = None,
+    effective_date: date,
     authority: GovernedFactSource | None = None,
 ) -> OssIossRegime:
     """Return one registry-declared OSS/IOSS token or refuse it."""

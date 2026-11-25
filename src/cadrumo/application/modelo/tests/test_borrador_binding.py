@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Generator, Iterator
+from collections.abc import Generator
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -13,36 +13,43 @@ from pydantic import ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
+from ....domain.modelos.source_disagreement import SourceDisagreementRole
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ...aggregation.source_mesh import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ...aggregation.source_resolution_operations import PrecedenceTier, merge_source_resolutions_by_precedence
 from ...live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     BorradorSnapshotNotFoundError,
 )
 from ...live.snapshot_base import SnapshotLifecycleState
-from .._registry_helpers import validate_casilla_input_ids
 from ..borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorSourceResolver,
-    _decimal_value,
+    decimal_value,
     resolve_modelo_100_borrador_bindings,
 )
+from ..registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_YEAR = 2025
+_YEAR = newest_authored_edition("100")
+_HORIZON = filing_year_envelope().horizon
 _PERIOD = "0A"
-_DECIMAL_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
+_DECIMAL_BINDING: BindingId = "renta-retencion-soportada-trabajo"
+"""A credit binding: a snapshot holds its value only to compare it, never to supply it."""
 _ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _UNMARKED_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
@@ -90,6 +97,9 @@ class _InMemoryBorradorSnapshotRepository:
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(self._snapshots[snapshot_id] for snapshot_id in sorted(self._snapshots))
 
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        return self.list_snapshots(), 0
+
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         trimmed_snapshot_id = snapshot_id.strip()
         matches = tuple(
@@ -116,13 +126,6 @@ class _InMemoryBorradorSnapshotRepository:
 @pytest.fixture
 def snapshot_repository() -> Generator[Borrador100SnapshotRepository]:
     yield _InMemoryBorradorSnapshotRepository(bucket_id=_BUCKET_ID)
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Lease one indexed authority generation for each binding-resolution test."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
@@ -171,7 +174,7 @@ def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_fa
 
 
 def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> None:
-    snapshot = published_snapshot("303", filing_year=2025, period="1T")
+    snapshot = published_snapshot("303", filing_year=_HORIZON, period="1T")
     result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)
     assert result_casilla.number == "69"
     assert result_casilla.id != result_casilla.number
@@ -194,7 +197,7 @@ def _casillas_printing(revision: ModeloRevision, number: str) -> tuple[CasillaId
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
-    snapshot = published_snapshot("200", filing_year=2025, period="0A")
+    snapshot = published_snapshot("200", filing_year=_HORIZON, period="0A")
 
     with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
@@ -242,6 +245,17 @@ def test_validate_casilla_input_ids_rejects_non_decimal_numeric_value() -> None:
     }
 
 
+def _assert_refusal_door(error: Modelo100BorradorBindingError, scenario: str, outcome: NoRecoveryOutcome) -> None:
+    """The refusal carries a declared verdict that names no action and says why none exists."""
+    failure = error.precondition_failure
+    assert failure is not None
+    assert failure.subject_leaf_key == "modelo.work.calculate"
+    assert failure.scenario_id == f"modelo.work.calculate.borrador_snapshot.{scenario}"
+    assert failure.verdict.action is None
+    assert failure.verdict.no_recovery_outcome is outcome
+    assert error.terminal_precondition_verdict == failure.verdict
+
+
 def _save_snapshot(
     repository: Borrador100SnapshotRepository,
     values: dict[str, Decimal | str],
@@ -257,12 +271,12 @@ def _save_snapshot(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         registry_snapshot_ref=_modelo_100_registry_snapshot().snapshot_ref,
-        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
+        captured_at=datetime(1980, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_R210_SIMULATOR_URL,
         state=state,
         binding_values=values,
         superseded_by_snapshot_id=superseded_by_snapshot_id,
-        discarded_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC) if state is SnapshotLifecycleState.DISCARDED else None,
+        discarded_at=datetime(1980, 4, 4, 10, 0, tzinfo=UTC) if state is SnapshotLifecycleState.DISCARDED else None,
         discarded_by=discarded_by,
         discard_reason="refetched" if state is SnapshotLifecycleState.DISCARDED else "",
     )
@@ -275,8 +289,6 @@ def _command(
     borrador_snapshot_id: str | None,
     modelo: str = "100",
     bucket_id: str = _BUCKET_ID,
-    caller_binding_values: dict[BindingId, Decimal] | None = None,
-    caller_enum_binding_values: dict[BindingId, str] | None = None,
     filing_year: int = _YEAR,
     period: str = _PERIOD,
 ) -> Modelo100BorradorBindingCommand:
@@ -287,8 +299,6 @@ def _command(
         filing_year=filing_year,
         period=typed_period,
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values or {},
-        caller_enum_binding_values=caller_enum_binding_values or {},
     )
 
 
@@ -326,20 +336,6 @@ def test_borrador_binding_command_carries_structured_period() -> None:
     assert command.model_dump(mode="json")["period"] == {"filing_year": _YEAR, "code": _PERIOD}
 
 
-def test_borrador_binding_command_rejects_noncanonical_caller_binding_keys() -> None:
-    with pytest.raises(ValidationError) as decimal_exc:
-        _command(borrador_snapshot_id="snap-1", caller_binding_values={"Bad Binding": Decimal("1")})
-    assert decimal_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
-
-    with pytest.raises(ValidationError) as enum_exc:
-        _command(borrador_snapshot_id="snap-1", caller_enum_binding_values={"Bad Binding": "madrid"})
-    assert enum_exc.value.errors()[0]["loc"][0] == "caller_enum_binding_values"
-
-    with pytest.raises(ValidationError) as blank_exc:
-        _command(borrador_snapshot_id="snap-1", caller_binding_values={" ": Decimal("1")})
-    assert blank_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
-
-
 def test_borrador_resolution_is_inert_without_named_snapshot(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
@@ -360,21 +356,23 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
     bindings = {binding.id: binding for binding in _modelo_100_registry_snapshot().revision.bindings}
 
     assert bindings[_DECIMAL_BINDING].aeat_prefilled is True
+    assert bindings[_DECIMAL_BINDING].borrador_supplies_value is False
     assert bindings[_ENUM_BINDING].aeat_prefilled is True
+    assert bindings[_ENUM_BINDING].borrador_supplies_value is True
 
 
 def test_borrador_resolution_rejects_registry_without_borrador_capability(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    registry_snapshot = published_snapshot("303", filing_year=2026, period="2T")
+    registry_snapshot = published_snapshot("303", filing_year=_HORIZON, period="2T")
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
             _command(
                 borrador_snapshot_id="snapshot-does-not-need-loading",
                 modelo="303",
-                filing_year=2026,
+                filing_year=_HORIZON,
                 period="2T",
             ),
             registry_snapshot=registry_snapshot,
@@ -384,9 +382,10 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.unsupported_modelo"
     assert exc_info.value.context == {"modelo": "303"}
+    _assert_refusal_door(exc_info.value, "modelo_unsupported", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
-def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
+def test_borrador_resolution_supplies_precedence_bindings_and_holds_a_credit_only_for_comparison(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -407,9 +406,10 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
 
     assert result.borrador_provenance is not None
     assert result.borrador_provenance.snapshot_id == snapshot_id
-    assert result.binding_values == {_DECIMAL_BINDING: Decimal("125.50")}
+    # The credit's borrador figure never enters the tier: a missing certificate is not filled by the prefill.
+    assert result.binding_values == {}
     assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
-    assert result.borrador_provenance.bindings_sourced == (_DECIMAL_BINDING, _ENUM_BINDING)
+    assert result.borrador_provenance.bindings_sourced == (_ENUM_BINDING,)
 
 
 def test_borrador_source_resolver_matches_application_binding_resolution(
@@ -433,8 +433,6 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
 
     resolution = Modelo100BorradorSourceResolver(
         borrador_snapshot_id=snapshot_id,
-        caller_binding_values={},
-        caller_enum_binding_values={},
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
         operation=authority_operation,
@@ -452,12 +450,40 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
     assert resolution.enum_binding_values == expected.enum_binding_values
     assert resolution.owned_sources == (BindingSourceKind.BORRADOR,)
     assert {item.contributor_source_kind for item in resolution.provenance} == {"borrador"}
-    assert {item.source_ref for item in resolution.provenance} == {
-        f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",
-        f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}",
-    }
+    assert {item.source_ref for item in resolution.provenance} == {f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}"}
     expected_fingerprint = f"sha256:{hashlib.sha256(snapshot_id.encode('utf-8')).hexdigest()}"
     assert {item.fingerprint for item in resolution.provenance} == {expected_fingerprint}
+    assert {item.terminal_origin for item in resolution.provenance} == {TerminalOriginClass.AEAT_THIRD_PARTY_DATA}
+
+
+@pytest.mark.parametrize(
+    "stored_key",
+    [
+        pytest.param("casilla.0596", id="free-casilla-key"),
+        pytest.param("renta-retencion-trabajo-retirada", id="binding-the-revision-does-not-declare"),
+    ],
+)
+def test_borrador_resolution_refuses_a_snapshot_keyed_outside_the_revision_without_reading_any_value(
+    snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
+    stored_key: str,
+) -> None:
+    snapshot_id = _save_snapshot(
+        snapshot_repository,
+        {stored_key: Decimal("700.00"), _DECIMAL_BINDING: Decimal("125.50")},
+    )
+
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+        resolve_modelo_100_borrador_bindings(
+            _command(borrador_snapshot_id=snapshot_id),
+            registry_snapshot=_modelo_100_registry_snapshot(),
+            snapshot_repository=snapshot_repository,
+            operation=authority_operation,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
+    assert exc_info.value.context == {"bindings": [stored_key]}
+    _assert_refusal_door(exc_info.value, "bindings_forbidden", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_binding_error_has_stable_service_error_code() -> None:
@@ -493,7 +519,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
     assert first != second
 
 
-def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
+def test_borrador_states_every_value_it_supplies_and_the_overlay_keeps_the_callers_beside_it(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -506,20 +532,36 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
     )
 
     result = resolve_modelo_100_borrador_bindings(
-        _command(
-            borrador_snapshot_id=snapshot_id,
-            caller_binding_values={_DECIMAL_BINDING: Decimal("0")},
-            caller_enum_binding_values={_ENUM_BINDING: "cataluna"},
-        ),
+        _command(borrador_snapshot_id=snapshot_id),
         registry_snapshot=_modelo_100_registry_snapshot(),
         snapshot_repository=snapshot_repository,
         operation=authority_operation,
     )
+    caller = CalculationSourceResolution(
+        resolver_id="calculate_caller_bindings",
+        binding_values={_DECIMAL_BINDING: Decimal("0")},
+        enum_binding_values={_ENUM_BINDING: "cataluna"},
+    )
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(role=SourceDisagreementRole.BORRADOR, resolution=result, source_family="borrador"),
+            PrecedenceTier(role=SourceDisagreementRole.CALLER, resolution=caller, source_family="operator_input"),
+        )
+    )
 
+    # The withholding credit is held for comparison only, so the borrador never states it in the ladder;
+    # the residence CCAA it does supply, even though the operator also set one.
     assert result.binding_values == {}
-    assert result.enum_binding_values == {}
-    assert result.borrador_provenance is not None
-    assert result.borrador_provenance.bindings_sourced == ()
+    assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
+    assert overlay.resolution.binding_values == {_DECIMAL_BINDING: Decimal("0")}
+    assert overlay.resolution.enum_binding_values == {_ENUM_BINDING: "cataluna"}
+    (divergence,) = overlay.divergences
+    assert (divergence.key, divergence.value_channel) == (_ENUM_BINDING, "enum")
+    assert divergence.selected_role is SourceDisagreementRole.CALLER
+    assert [source.role for source in divergence.sources] == [
+        SourceDisagreementRole.BORRADOR,
+        SourceDisagreementRole.CALLER,
+    ]
 
 
 def test_borrador_resolution_rejects_registry_unmarked_binding_values(
@@ -538,6 +580,7 @@ def test_borrador_resolution_rejects_registry_unmarked_binding_values(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.forbidden_bindings"
     assert exc_info.value.context == {"bindings": [_UNMARKED_BINDING]}
+    _assert_refusal_door(exc_info.value, "bindings_forbidden", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
@@ -556,6 +599,7 @@ def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
+    _assert_refusal_door(exc_info.value, "value_invalid", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 @pytest.mark.parametrize(
@@ -569,7 +613,7 @@ def test_borrador_resolution_accepts_finite_string_and_decimal_values(
     raw_value: Decimal | str,
     expected: Decimal,
 ) -> None:
-    assert _decimal_value(_DECIMAL_BINDING, raw_value) == expected
+    assert decimal_value(_DECIMAL_BINDING, raw_value) == expected
 
 
 @pytest.mark.parametrize(
@@ -587,10 +631,11 @@ def test_borrador_resolution_rejects_non_finite_string_and_decimal_values(
     raw_value: Decimal | str,
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
-        _decimal_value(_DECIMAL_BINDING, raw_value)
+        decimal_value(_DECIMAL_BINDING, raw_value)
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
+    _assert_refusal_door(exc_info.value, "value_invalid", NoRecoveryOutcome.OPERATOR_DECISION)
 
 
 def test_borrador_resolution_rejects_missing_snapshot_with_live_list_pointer(
@@ -629,6 +674,7 @@ def test_borrador_resolution_rejects_non_modelo_100_consumers(
         == "application.modelo.borrador_binding.errors.registry_snapshot_modelo_mismatch"
     )
     assert exc_info.value.context == {"snapshot_modelo": "100", "command_modelo": "303"}
+    _assert_refusal_door(exc_info.value, "registry_modelo_mismatch", NoRecoveryOutcome.TERMINAL)
 
 
 def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
@@ -637,7 +683,7 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
 ) -> None:
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:
         resolve_modelo_100_borrador_bindings(
-            _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=2024),
+            _command(borrador_snapshot_id="snapshot-does-not-need-loading", filing_year=_YEAR - 1),
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
             operation=authority_operation,
@@ -650,9 +696,10 @@ def test_borrador_resolution_rejects_registry_snapshot_axis_mismatch(
     assert exc_info.value.context == {
         "snapshot_year": _YEAR,
         "snapshot_period": _PERIOD,
-        "filing_year": 2024,
+        "filing_year": _YEAR - 1,
         "period": _PERIOD,
     }
+    _assert_refusal_door(exc_info.value, "registry_axis_mismatch", NoRecoveryOutcome.TERMINAL)
 
 
 def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
@@ -719,3 +766,24 @@ def test_borrador_resolution_rejects_bucket_or_axis_mismatch(
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_bucket_mismatch"
     assert exc_info.value.context is None
+    _assert_refusal_door(exc_info.value, "bucket_mismatch", NoRecoveryOutcome.OPERATOR_DECISION)
+
+
+def test_borrador_resolution_rejects_a_snapshot_of_another_filing_year_with_a_door(
+    snapshot_repository: Borrador100SnapshotRepository,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot_id = _save_snapshot(snapshot_repository, {_DECIMAL_BINDING: Decimal("1")})
+
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+        resolve_modelo_100_borrador_bindings(
+            _command(borrador_snapshot_id=snapshot_id, filing_year=_YEAR - 1),
+            registry_snapshot=published_snapshot("100", filing_year=_YEAR - 1, period=_PERIOD),
+            snapshot_repository=snapshot_repository,
+            operation=authority_operation,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.snapshot_axis_mismatch"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["snapshot_year"] == _YEAR
+    _assert_refusal_door(exc_info.value, "axis_mismatch", NoRecoveryOutcome.OPERATOR_DECISION)

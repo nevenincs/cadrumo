@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-07-01'
-modified: '2026-07-17'
-body_hash: 'sha256:5ff371de4036ba74a02d891d8712670d5a3e63f8572abe59f0a50b7982924815'
+modified: '2026-11-11'
+body_hash: 'sha256:cf96aa2097f9541cf6bb15eb279200c68f9f111b07d3d2cdd29e9ee26c33078f'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-research]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'
@@ -20,7 +20,7 @@ leaves a box blank or over-enters a value is mis-taxed with zero operator signal
 (no-silent-under-declaration):
 
 - Casilla 0019, the art. 19.2.f LIRPF automatic EUR 2.000 "otros gastos" deduction, is a
-  bare MANUAL input in every revision 2021-2025. A blank 0019 OVER-taxes by omitting a
+  bare MANUAL input in every revision that carries it. A blank 0019 OVER-taxes by omitting a
   determinable EUR 2.000 deduction (issue #568).
 - The net-trabajo formula 0022 = sum(0018, -0019, -0020, -0021) has no max(0,...) clamp,
   and the art. 19.2.f letter-f cap (the sum of 0019/0020/0021 limited to the rendimiento
@@ -60,7 +60,7 @@ not a single readable casilla; only the ABSENCE of the plan-de-empleo/employer b
 its own sub-table (the cuadro of worker-contribution proportions).
 
 The two sibling increment boxes 0020 (mobility) and 0021 (disability) are genuinely
-conditional on taxpayer facts the engine cannot assert and MUST stay MANUAL. The schedule
+conditional on taxpayer facts the engine cannot assert and MUST stay MANUAL. An unstated 0021 is a blocking finding when the profile states a taxpayer disability (`2026-11-11-export-parity-work-income-sourcing-adr`). The schedule
 figures ride the registry per revision, not Python literals (aeat-schema-central-config).
 
 ## Considered options
@@ -131,20 +131,21 @@ semantic_role (never hard-coded numbers) and grounding each finding with legal_r
   ley-35-2006:art-52.
 
 All three are ADVISORY / WARNING severity; a legitimately-zero or legitimately-employer-backed
-case must remain permissible. The EUR 2.000 and EUR 1.500 figures ride external_constants
-(e.g. MODELO_100_ART_19_2F_OTROS_GASTOS_EUR, MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR),
+case must remain permissible. The EUR 2.000 figure is the dated registry parameter of `2026-11-11-export-parity-work-income-sourcing-adr`; the EUR 1.500 figure rides the registry per revision,
 grounded on arts. 19.2.f / 52, never inline literals.
 
 **Phase 2a (compute - the no-cross-section pieces, Gaps A and B).**
 
-- Flip 0019 to COMPUTED with formula 0019 = min(EUR 2.000, max(0, 0018)) per revision,
+- Flip 0019 to COMPUTED with formula 0019 = min(the dated art. 19.2.f parameter, max(0, 0018)) per revision,
   grounded ley-35-2006:art-19, applying the same Diseño-de-Registros parity-gate treatment
   art-20 used for a computed casilla AEAT lists as input. (The exact interaction with 0020 /
   0021 under the joint letter-f cap is confirmed against a manual worked example at plan time;
   the base case is min(2.000, rendimiento).)
 - Wrap the 0022 formula in max(0, ...): 0022 = max(0, 0018 - 0019 - 0020 - 0021), which
   enforces both the missing clamp and the art. 19.2.f letter-f joint cap in one expression,
-  grounded ley-35-2006:art-19. Applied across revisions 2021-2025.
+  grounded ley-35-2006:art-19. Applied across every revision that carries it.
+
+Both Phase 2a formulas are delivered by `2026-11-11-export-parity-work-income-sourcing-adr`.
 
 **Phase 2b (compute - the data-gated piece, Gap C).** Once the individual/employer
 contribution split is modelled (distinguishing individual aportaciones from the
@@ -231,9 +232,9 @@ máxima de reducción por aplicación de los incrementos previstos en los númer
 anteriores será de 8.500 euros anuales"). A purely-0499-backed filer was therefore silently
 granted up to EUR 8.500 of increment capacity when only EUR 4.250 is legally available — an
 over-reduction / under-tax. The formula was corrected to split the two sub-tiers
-(`min(0426+0427+0438, 8500)` plus `min(0499, 4250)`, jointly re-capped at `8500`) in both the
-2024 and 2025 revisions, and the `_art52_reduccion_advisory_finding` defense-in-depth advisory
-(2021-2023, where 0468 stays MANUAL) was extended to resolve casilla 0499 so it no longer
+(`min(0426+0427+0438, 8500)` plus `min(0499, 4250)`, jointly re-capped at `8500`) in every revision
+that computes it, and the `_art52_reduccion_advisory_finding` defense-in-depth advisory
+(the older editions, where 0468 stays MANUAL) was extended to resolve casilla 0499 so it no longer
 false-positives on a legitimate 0499-only reducción above EUR 1.500.
 
 Both fixes are grounded in the bundled `ley-35-2006` art. 52 corpus text (arts. 52.1.b, 52.1.1.º,

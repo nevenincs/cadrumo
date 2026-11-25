@@ -18,37 +18,34 @@ from rich.style import Style
 from textual.app import App, ComposeResult
 from textual.widgets import Static
 
-from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_field_vocabulary import (
+    NEEDS_ATTENTION,
+    ORIGIN_STANDINGS,
     ModeloFormBlocker,
     ModeloFormEditability,
+    ModeloFormOrigin,
+    ModeloFormScalar,
+    ModeloFormStanding,
+    address_key,
+)
+from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
     ModeloFormGridCell,
-    ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormRepeatingRow,
-    ModeloFormScalar,
     ModeloWorkForm,
-    address_key,
-)
-from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
+    revised_field,
 )
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind
-from ......domain.modelos.codes import ModeloCode
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
+from ....tests.settling import settle
 from ..casilla_list import (
     CasillaList,
 )
@@ -69,14 +66,11 @@ from ..vocabulary import (
     ATTENTION_GLYPHS,
     BLOCKS_MARK,
     MISSING_MARK,
-    NEEDS_ATTENTION,
     NOT_CALCULATED_MARK,
     NOT_IMPORTED_MARK,
-    ORIGIN_STANDINGS,
     Attention,
-    Standing,
 )
-from .workbench_fixture import FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeReader, form_field, registry_form_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -97,33 +91,13 @@ _PRORRATAS_PAGE: Final[str] = "dp30305"
 def _form(
     operation: PinnedAuthorityOperation, modelo: str = "303", year: int = 2026, code: str = "1T"
 ) -> ModeloWorkForm:
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000457",
+    return registry_form_of(
+        operation,
         modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
+        year=year,
+        code=code,
+        bucket_id="13000000-0000-4000-8000-000000000457",
         work_unit_id="f" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
     )
 
 
@@ -147,7 +121,7 @@ def _with_field(form: ModeloWorkForm, box: str, update: Mapping[str, object]) ->
     """The form with one box's field changed, everything else as the read model built it."""
 
     def changed(field: ModeloFormField) -> ModeloFormField:
-        return field.model_copy(update=dict(update)) if field.box == box else field
+        return revised_field(field, **update) if field.box == box else field
 
     pages = []
     for page in form.pages:
@@ -197,7 +171,7 @@ async def _drawn(items: tuple[CasillaListItem, ...], width: int) -> list[str]:
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(width, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             return [widget.render_line(y).text for y in range(widget.size.height)]
 
@@ -208,7 +182,7 @@ async def _walk(items: tuple[CasillaListItem, ...], width: int, keys: tuple[str,
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(width, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             first = next(
                 item
@@ -219,6 +193,7 @@ async def _walk(items: tuple[CasillaListItem, ...], width: int, keys: tuple[str,
             assert widget.focus_address(address_key(first.field.address))
             for key in keys:
                 await pilot.press(key)
+                await settle(pilot)
                 entry = widget.highlighted
                 visited.append(None if entry is None else entry.field.box)
     return visited
@@ -377,16 +352,19 @@ async def test_past_the_last_row_the_cursor_leaves_the_table_and_side_arrows_are
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(120, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             assert widget.focus_address(("casilla", "26"))
             on_grid = widget.on_grid_row
             await pilot.press("down")
+            await settle(pilot)
             after = widget.highlighted
             left_taken = widget.check_action("cell", (-1,))
             await pilot.press("left")
+            await settle(pilot)
             still = widget.highlighted
             await pilot.press("up")
+            await settle(pilot)
             back = widget.highlighted
 
     assert on_grid
@@ -417,7 +395,7 @@ async def test_n_walks_the_boxes_needing_the_filer_row_by_row(operation: PinnedA
         cell.field.box
         for row in grid.rows
         for cell in row.cells
-        if cell.field is not None and ORIGIN_STANDINGS[cell.field.origin] is Standing.WAITING
+        if cell.field is not None and ORIGIN_STANDINGS[cell.field.origin] is ModeloFormStanding.WAITING
     }
     visited = await _walk(page_items(page, staged={}), 120, ("n",) * (len(expected) + 1))
 
@@ -433,19 +411,22 @@ async def test_a_side_arrow_moves_between_cells_in_the_workbench_and_folds_elsew
     with override_settings(cadrumo_output_language="es"):
         screen = ModeloWorkbenchScreen(FakeReader())
         async with ScreenHostApp(screen).run_test(size=(140, 40)) as pilot:
-            for _ in range(3):
-                await pilot.pause()
+            await settle(pilot)
             casilla_list = screen.query_one(CasillaList)
-            await pilot.press("g", *"07", "enter")
-            for _ in range(4):
-                await pilot.pause()
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*"07", "enter")
+            await settle(pilot)
             on_grid = casilla_list.on_grid_row
             await pilot.press("right")
+            await settle(pilot)
             moved = casilla_list.highlighted
-            await pilot.press("g", *"01", "enter")
-            for _ in range(4):
-                await pilot.pause()
+            await pilot.press("g")
+            await settle(pilot)
+            await pilot.press(*"01", "enter")
+            await settle(pilot)
             await pilot.press("left")
+            await settle(pilot)
             kept = casilla_list.highlighted
             off_grid = casilla_list.on_grid_row
 
@@ -485,7 +466,9 @@ async def test_a_rows_left_edge_carries_its_most_severe_cell_and_a_cell_its_own_
     }
     assert _line_with(lines, "153")[1] == NOT_IMPORTED_MARK.glyph
     assert _line_with(lines, "10")[1] == NOT_CALCULATED_MARK.glyph
-    assert _line_with(lines, "14")[1] == " ", "a row with nothing to do and nothing waiting has no mark"
+    # The modification row reads the period's facturas rectificativas, so before a calculation it waits on one.
+    assert _line_with(lines, "14")[1] == NOT_CALCULATED_MARK.glyph
+    assert _line_with(lines, "16")[1] == " ", "a row with nothing to do and nothing waiting has no mark"
 
 
 def test_a_grid_cell_is_named_by_its_row_its_column_and_its_own_label(operation: PinnedAuthorityOperation) -> None:
@@ -507,7 +490,7 @@ async def test_section_headings_take_the_colour_of_their_most_severe_level(opera
     with override_settings(cadrumo_output_language="en"):
         app = _ListHarness(items)
         async with app.run_test(size=(120, 300)) as pilot:
-            await pilot.pause()
+            await settle(pilot)
             widget = app.query_one(CasillaList)
             styles: dict[str, Style | None] = {}
             for y in range(widget.size.height):
@@ -562,8 +545,9 @@ def test_a_box_the_form_sets_shows_its_figure_or_a_dot_and_never_a_word(operatio
 async def test_a_box_the_design_fixes_without_a_figure_reads_as_a_dot_in_a_grid(width: int) -> None:
     form = synthetic_form()
     page = workbench_pages(form)[0]
-    fixed_box = form_field("98", "Clave fija", ModeloFormOrigin.INFORMATIONAL, None).model_copy(
-        update={"editability": ModeloFormEditability.DESIGN_CONSTANT}
+    fixed_box = revised_field(
+        form_field("98", "Clave fija", ModeloFormOrigin.INFORMATIONAL, None),
+        editability=ModeloFormEditability.DESIGN_CONSTANT,
     )
     grid_section = page.sections[1]
     grid = grid_section.blocks[0]
@@ -656,8 +640,8 @@ _RECORDS: Final[tuple[tuple[int, Mapping[str | None, ModeloFormScalar]], ...]] =
 async def test_records_whose_number_is_not_known_are_never_counted_as_none(operation: PinnedAuthorityOperation) -> None:
     form = _form(operation, "349", 2026, "1T")
     lines = await _drawn(page_items(_records_page(form, None), staged={}), 120)
-    unknown = lookup_translation("tui.modelo.workbench.grid.records_unknown", locale="en")
-    counted = lookup_translation("tui.modelo.workbench.repeating", locale="en")
+    unknown = lookup_translation("workspace.modelo.grid.records_unknown", locale="en")
+    counted = lookup_translation("workspace.modelo.repeating", locale="en")
 
     assert unknown is not None and counted is not None
     assert any(unknown in line for line in lines), lines
@@ -670,15 +654,14 @@ async def test_an_unknown_record_source_is_visible_content_in_the_screen_header_
 ) -> None:
     screen = ModeloWorkbenchScreen(FakeReader(form=_form(operation, "349", 2026, "1T")))
     async with ScreenHostApp(screen).run_test(size=(80, 24)) as pilot:
-        for _ in range(3):
-            await pilot.pause()
+        await settle(pilot)
         await pilot.press("]")
-        await pilot.pause()
+        await settle(pilot)
         help_text = str(screen.query_one("#wb-help", Static).render())
         heading = str(screen.query_one("#wb-page", Static).render())
-        unknown = lookup_translation("tui.modelo.workbench.grid.records_unknown", locale="en")
-        empty_help = lookup_translation("tui.modelo.workbench.help.empty", locale="en")
-        empty_page = lookup_translation("tui.modelo.workbench.filter.empty", locale="en")
+        unknown = lookup_translation("workspace.modelo.grid.records_unknown", locale="en")
+        empty_help = lookup_translation("workspace.modelo.help.empty", locale="en")
+        empty_page = lookup_translation("workspace.modelo.filter.empty", locale="en")
         assert unknown is not None and unknown in help_text
         assert empty_help is not None and empty_help not in help_text
         assert empty_page is not None and empty_page not in heading
@@ -700,7 +683,7 @@ async def test_known_records_are_a_read_only_table_with_an_index_column(
     )
 
     assert "Detail rows: 2" in text
-    read_only = lookup_translation("tui.modelo.workbench.grid.records_read_only", locale="en")
+    read_only = lookup_translation("workspace.modelo.grid.records_read_only", locale="en")
     assert read_only is not None and read_only in text
     first = next(line for line in lines if "1,500.00" in line)
     second = next(line for line in lines if "250.50" in line)

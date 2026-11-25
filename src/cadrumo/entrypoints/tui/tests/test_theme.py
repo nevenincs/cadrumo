@@ -46,6 +46,7 @@ from ..components.theme import (
     tokenised,
 )
 from ..secret.registration import RegistrationAttempt, RegistrationScreen
+from .settling import settle
 
 pytestmark = [
     pytest.mark.unit,
@@ -241,7 +242,7 @@ async def test_the_content_column_consumes_the_available_terminal(
     surface = build()
     app = ScreenHostApp(surface) if isinstance(surface, Screen) else surface
     async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         left, right = _gutters(pilot.app.screen)
         assert left == 0, f"left gutter at {width}x{height}: {left}"
         assert 0 <= right <= 1, f"unused width at {width}x{height}: left={left} right={right}"
@@ -253,14 +254,14 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
     """Only overflow may consume the single scrollbar cell.
 
     Read off a MOUNTED scroll container rather than the stylesheet text. The
-    measures now resolve from design tokens, so asserting a literal spelling
+    measures resolve from design tokens, so asserting a literal spelling
     would prove which token was named and not the width the operator gets --
     and it would break on every token rename while a genuinely reserved
     gutter slipped through.
     """
     app = ScreenHostApp(_registration_screen())
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         scroll = pilot.app.screen.query_one(".cadrumo-scroll")
         assert scroll.styles.scrollbar_size_vertical == 1
         assert scroll.styles.scrollbar_gutter != "stable", "a stable gutter reserves the cell even with no overflow"
@@ -284,21 +285,16 @@ _SLAB_GLYPHS = frozenset("▄▀█▌▐")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("term_program", ["cadrumo", "WindowsTerminal"])
-async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
-    monkeypatch: pytest.MonkeyPatch,
-    term_program: str,
-) -> None:
+async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(monkeypatch: pytest.MonkeyPatch) -> None:
     """Without colour a block edge prints as a solid ink frame, so it is not drawn.
 
     Read off the composited strips the terminal receives, since the defect is
     in what the colour filter leaves behind rather than in any declared style.
     """
-    monkeypatch.setenv("TERM_PROGRAM", term_program)
     monkeypatch.setenv("NO_COLOR", "1")
     app = ScreenHostApp(_ActionRow())
     async with app.run_test(size=(40, 8)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         strips = pilot.app.screen._compositor.render_strips()
         cells = [segment for strip in strips for segment in strip]
         assert not _SLAB_GLYPHS & set("".join(segment.text for segment in cells))
@@ -311,7 +307,7 @@ async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
         pilot.app.exit(None)
 
 
-async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color]]:
+async def _button_states(theme_name: str) -> dict[str, tuple[Color, Color]]:
     """Drive a real action row through each button state and read its fill and label colour."""
     states: dict[str, tuple[Color, Color]] = {}
 
@@ -320,18 +316,17 @@ async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color
 
     app = ScreenHostApp(_ActionRow())
     async with app.run_test(size=(40, 8)) as pilot:
-        if theme_name is not None:
-            pilot.app.theme = theme_name
-        await pilot.pause()
+        pilot.app.theme = theme_name
+        await settle(pilot)
         previous = pilot.app.screen.query_one("#previous", Button)
         start = pilot.app.screen.query_one("#start", Button)
         record("focus", start)
         record("rest", previous)
         await pilot.hover("#previous")
-        await pilot.pause()
+        await settle(pilot)
         record("hover", previous)
         pilot.app.set_focus(previous)
-        await pilot.pause()
+        await settle(pilot)
         record("primary", start)
         pilot.app.exit(None)
     return states
@@ -340,13 +335,7 @@ async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color
 @pytest.mark.asyncio
 @pytest.mark.parametrize("theme_name", [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME])
 async def test_every_button_state_has_its_own_legible_fill(monkeypatch: pytest.MonkeyPatch, theme_name: str) -> None:
-    """Focus must not look like the primary action, and no state may lose its fill.
-
-    A focused button once took the primary blue, so a focused secondary
-    button read as the recommended one, and the dark primary label resolved to
-    white on light blue.
-    """
-    monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")
+    """Focus must not look like the primary action, and no state may lose its fill."""
     monkeypatch.delenv("NO_COLOR", raising=False)
     states = await _button_states(theme_name)
     fills = {state: fill for state, (fill, _) in states.items()}
@@ -354,23 +343,6 @@ async def test_every_button_state_has_its_own_legible_fill(monkeypatch: pytest.M
     for state, (fill, label) in states.items():
         assert fill.a == 1 and label.a == 1, state
         assert _contrast(label.hex, fill.hex) >= _WCAG_AA_BODY_TEXT, state
-
-
-@pytest.mark.asyncio
-async def test_every_desktop_button_state_paints_its_own_palette_slot(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The desktop palette has no derived shades, so each state must name a slot.
-
-    Focus is the ink slot under the paper slot, the pair the desktop maps to
-    its foreground and background.
-    """
-    monkeypatch.setenv("TERM_PROGRAM", "cadrumo")
-    monkeypatch.delenv("NO_COLOR", raising=False)
-    states = await _button_states(None)
-    slots = {state: fill.ansi for state, (fill, _) in states.items()}
-    assert all(slot is not None and slot >= 0 for slot in slots.values()), slots
-    assert len(set(slots.values())) == len(slots), slots
-    focus_fill, focus_label = states["focus"]
-    assert (focus_fill.ansi, focus_label.ansi) == (7, 0)
 
 
 def test_no_stylesheet_carries_an_unsubstituted_token() -> None:
@@ -388,19 +360,7 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
     and ``width: 60%`` both waste or clip available terminal space; only a
     full ``100%`` declaration is admitted for percentage widths.
 
-    RECURSIVE, which it was not. `scan_directory` defaults `recursive` to
-    False, so this had only ever read the eight top-level modules and never
-    looked inside `ledger`, `declarations`, `aeat_sync`, `modelo`, `profile`,
-    `secret`, `components` or `operations` -- the two `max-width: 78` caps that
-    caused the table truncation sat outside its reach entirely, and the single
-    offender it did report was the one that was not real.
-
-    Turned on only after enumerating what it surfaces, because a population
-    discovered as a wall of failures is a population nobody measures. Measured
-    across the whole tree at the time: ZERO offenders. The caps are gone (S413
-    removed them rather than tokenising them) and the literal measures are on
-    the token table (S414), so recursion costs nothing today and holds every
-    subdirectory from here.
+    The scan is recursive, so every subdirectory is held to the same rule.
     """
     import re
     from pathlib import Path
@@ -412,7 +372,7 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
         # The lookbehind matters: without it `min-width: 0` matches as
         # `width: 0` and is reported as a pinned width, which is the opposite
         # of what it means -- `min-width: 0` REMOVES a floor rather than
-        # imposing a cap, and the false report buried the real offenders.
+        # imposing a cap.
         for match in re.finditer(r"(?<![-\w])(max-)?width:\s*(\d+)\s*;", source):
             offenders.append(f"{module.name}: {match.group(0)}")
         for match in re.finditer(r"(?<![-\w])(max-)?width:\s*(\d+)%\s*;", source):
@@ -432,22 +392,16 @@ _CSS_DECLARATION = re.compile(
 )
 """Every declaration that spends a measure the token table should own.
 
-The directional forms are named explicitly. Matching only the shorthands let
-`margin-top: 1` and `margin-bottom: 1` through, which is the exact form the
-heading-spacing drift took -- so this gate stayed green on a defect an operator
-later found by looking at rendered frames. The lookbehind stops `min-width: 0`
-matching as `width: 0`.
+Matching only the shorthands would let `margin-top: 1` and `margin-bottom: 1`
+through, so the directional forms are named explicitly. The lookbehind stops
+`min-width: 0` matching as `width: 0`.
 """
 _TUI_ROOT = Path(__file__).resolve().parents[1]
 
 _STRUCTURAL_VALUES = frozenset({"auto", "100%", "none", "hidden", "initial", "0"})
 
 _FRACTION = re.compile(r"^\d+fr$")
-"""Any ``Nfr`` is a proportion, not a measure.
-
-Pinning the whitelist to ``1fr`` alone reported ``2fr``/``3fr``/``4fr`` as
-drift and buried the real offenders under false ones.
-"""
+"""Any ``Nfr`` is a proportion, not a measure."""
 
 
 def _is_structural(word: str) -> bool:
@@ -496,9 +450,9 @@ def _stylesheets() -> list[tuple[Path, str]]:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             # AnnAssign as well as Assign: `BASE_CSS: Final[str] = ...` is how
-            # the design system itself declares every stylesheet, so a
-            # collector that only matched bare assignment skipped the one file
-            # that matters most and passed vacuously.
+            # the design system declares every stylesheet, so a collector that
+            # only matched bare assignment would skip the one file that matters
+            # most.
             target = _css_target(node)
             if target is None or not isinstance(node, ast.AnnAssign | ast.Assign) or node.value is None:
                 continue

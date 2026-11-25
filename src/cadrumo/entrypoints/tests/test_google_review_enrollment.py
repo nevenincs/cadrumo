@@ -3,13 +3,13 @@
 import pytest
 
 from ...application.export.google_review_operation_contracts import GOOGLE_REVIEW_OPERATION_DEFINITION_ID
-from ..operation_composition import build_production_operation_registry
+from .production_operation_registry import production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_production_publication_has_authority_and_review_contracts() -> None:
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     registration = registry.lookup_public_registration(GOOGLE_REVIEW_OPERATION_DEFINITION_ID)
     assert registration.access_resolver is not None
     assert registration.contract.review_projection_schema is not None

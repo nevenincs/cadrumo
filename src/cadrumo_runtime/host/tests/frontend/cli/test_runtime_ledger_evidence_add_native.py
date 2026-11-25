@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from hashlib import sha256
 from pathlib import Path
 
 import pytest
-from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
@@ -19,13 +17,14 @@ from cadrumo.application.user_profile.login_session import authenticate_profile_
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.cli_envelope import unwrap_cli_result
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
-    NativeCliProfileFixture,
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
 
-from .cli_runner import invoke_cached_cli
+from ...native_profile_facts import native_general_iva_facts
+from .profile_cli_support import invoke_native_profile
 
 pytestmark = [
     pytest.mark.integration,
@@ -35,31 +34,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
-    "identity.name": "Native",
-    "identity.surnames": "Evidence",
-    "activities.description": "design",
-    "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-}
-
-
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
-    assert profile.label is not None
-    close_active_bucket_session()
-    result = invoke_cached_cli(
-        ("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command),
-        input=json.dumps({"profile_passphrase": profile.passphrase}),
-    )
-    assert profile.passphrase not in result.output
-    return result
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def test_native_exact_profile_evidence_add_replay_and_readback(
@@ -72,7 +47,7 @@ def test_native_exact_profile_evidence_add_replay_and_readback(
     (caller / "invoices").mkdir(parents=True)
     source_path = "invoices/native-invoice.pdf"
     invoice = caller / source_path
-    invoice_bytes = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
+    invoice_bytes = text_pdf_bytes(("Factura native-invoice",))
     invoice.write_bytes(invoice_bytes)
     expected_digest = sha256(invoice_bytes).hexdigest()
     monkeypatch.chdir(caller)
@@ -99,7 +74,7 @@ def test_native_exact_profile_evidence_add_replay_and_readback(
             "native-evidence-add-once",
         )
 
-        first = _invoke(profile, *command)
+        first = invoke_native_profile(profile, *command)
         assert first.exit_code == 0, (first.output, failures)
         created = unwrap_cli_result(first)
         evidence_id = created["evidence_id"]
@@ -108,7 +83,7 @@ def test_native_exact_profile_evidence_add_replay_and_readback(
         assert created["source_sha256"] == created["attachment_id"] == expected_digest
         assert len(created["bucket_event_ids"]) == 1
 
-        replay = _invoke(profile, *command)
+        replay = invoke_native_profile(profile, *command)
         assert replay.exit_code == 0, (replay.output, failures)
         repeated = unwrap_cli_result(replay)
         assert repeated["evidence_id"] == evidence_id
@@ -117,7 +92,7 @@ def test_native_exact_profile_evidence_add_replay_and_readback(
         assert repeated["bucket_event_ids"] == []
 
         invoice.unlink()
-        viewed = _invoke(profile, "app", "ledger", "evidence", "view", evidence_id)
+        viewed = invoke_native_profile(profile, "app", "ledger", "evidence", "view", evidence_id)
         assert viewed.exit_code == 0, (viewed.output, failures)
         readback = unwrap_cli_result(viewed)
         assert readback["bucket_id"] == expected_cli_bucket_id

@@ -10,57 +10,36 @@ the whole registry candidate and republishes the runtime authority artifact.
 from __future__ import annotations
 
 import re
-import shutil
 import tempfile
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass, replace
-from enum import StrEnum
-from functools import cache
 from pathlib import Path
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 
 import typer
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.i18n.render import locale_map, override_locales_root
-from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
-from cadrumo.domain.calculations.registry.modelo_localization import (
-    ModeloLocalizationFieldKind,
-    casilla_occurrence_locale_key,
-)
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError, RegistryValidationError
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
-from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
-from ._export_tree import render_complete_export_tree
-from ._form_layout_companion import prepare_generated_form_layout_companion
-from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
-from ._tree_publication import publish_validated_generated_export_tree
-from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from ..compiler.revision_export_projection import UndeclaredExportTargetError, undeclared_export_targets
 from .authored_form_bridge import AuthoredFormBridge, prepare_authored_form_bridge
-from .authority_publication import (
-    authority_database_currency,
-    authority_publication_destination,
-    publish_sqlite_authority_candidate,
-)
+from .authority_cli import publish_authority
 from .bootstrap_supersession import (
     bootstrap_layout_supersession_fingerprint,
     bootstrap_manual_source_revision_root,
     validate_bootstrap_manual_export_layout_supersession,
 )
 from .bootstrap_targets import GeneratedExportBootstrapTarget, generated_export_bootstrap_target
-from .candidate_source_chain import requires_source_chain, stage_source_chain
-from .candidate_staging import stage_attested_inherited_modelo, stage_generated_export_candidate
-from .edition_candidate_staging import (
-    drop_cross_edition_evolutions,
-    edition_requires_detachment,
-    write_complete_edition,
-)
+from .candidate_source_chain import requires_source_chain
+from .candidate_staging import stage_generated_export_candidate
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
+from .export_tree import render_complete_export_tree
 from .export_tree_models import RenderedExportTree
+from .form_layout_companion import prepare_generated_form_layout_companion
 from .generated_export_inheritance import (
     generated_export_source_chain_fingerprint,
     select_generated_export_inheritance,
@@ -69,11 +48,13 @@ from .generated_export_inheritance_model import GeneratedExportInheritanceContex
 from .generated_form_bridge import (
     GeneratedFormBridge,
     generated_form_companion_changed,
+    is_reviewed_generated_form_repair,
     prepare_generated_form_bridge,
 )
 from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .historical_static_repair import validated_historical_repair_source
-from .legacy_publication_recovery import retire_completed_legacy_publication
+from .published_edition_staging import stage_published_modelo, supporting_modelos
+from .rename_set_static_repair import validated_rename_repair_source
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -83,12 +64,24 @@ from .render_check import (
     select_revision_record_design_source,
 )
 from .source_defects import source_defects_for
+from .target_currentness_fact import (
+    TargetCurrentnessFact,
+    TargetCurrentnessState,
+    target_currentness_comparison_fact,
+)
+from .tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
+from .tree_publication import (
+    GeneratedExportSetMember,
+    publish_validated_generated_export_tree,
+    publish_validated_generated_export_tree_set,
+)
 from .tree_publication_contracts import (
     GeneratedExportSupersession,
     GeneratedExportTreePublicationContext,
     GeneratedExportTreeTargetStateReceipt,
 )
 from .tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
+from .tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 
 app = typer.Typer(
     name="pipeline",
@@ -99,103 +92,8 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-_SOURCE_MODELO_RE = re.compile(r'^\s*source_modelo\s*=\s*"(?P<modelo>[^"]+)"', re.MULTILINE)
 
-
-@app.command("publish-authority")
-def publish_authority(
-    registry_root: Annotated[
-        Path | None,
-        typer.Option("--registry-root", help="Registry tree to publish; defaults to the bundled registry."),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
-    ] = None,
-    destination: Annotated[
-        Path | None,
-        typer.Option(
-            "--destination",
-            help="Authority directory to update; defaults to the configured authority root.",
-        ),
-    ] = None,
-    profile_schema: Annotated[
-        Path | None,
-        typer.Option(
-            "--profile-schema",
-            help="Profile declaration captured with the candidate; required for custom source sets.",
-        ),
-    ] = None,
-    eager_baseline: Annotated[
-        Path | None,
-        typer.Option(
-            "--eager-baseline",
-            help="Write the development benchmark baseline from the same validated artifact.",
-        ),
-    ] = None,
-    if_stale: Annotated[
-        bool,
-        typer.Option(
-            "--if-stale",
-            help="Publish only when the existing artifact no longer records the live sources.",
-        ),
-    ] = False,
-) -> None:
-    """Validate the registry candidate and atomically republish the runtime authority artifact.
-
-    A refused validation, or a candidate that changes while it is validated,
-    leaves the previous artifact byte-for-byte in place.
-
-    ``--if-stale`` asks the currency reader first and returns without
-    publishing when the recorded generation still matches a fresh receipt over
-    the same trees. That question is a content read with no compilation, so it
-    costs seconds against a publication's minutes, and it makes repeated
-    invocation cheap enough for a lifecycle step to run unconditionally. The
-    recorded identity names the legal sources only, so a compiler change
-    reaches the artifact through a publication without ``--if-stale``.
-    """
-    if profile_schema is None and (registry_root is not None or source_root is not None):
-        raise typer.BadParameter(
-            "custom authority candidates require an explicit --profile-schema source",
-            param_hint="--profile-schema",
-        )
-    destination_path = destination or authority_publication_destination()
-    resolved_registry_root = registry_root or bundled_path("registry", "aeat")
-    resolved_source_root = source_root or bundled_path()
-    resolved_profile_schema = profile_schema or bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
-    if if_stale:
-        currency = authority_database_currency(
-            destination_path / "authority.current.json",
-            registry_root=resolved_registry_root,
-            source_root=resolved_source_root,
-            profile_schema_path=resolved_profile_schema,
-        )
-        if currency.is_current:
-            typer.echo(
-                "publish-authority"
-                f"	descriptor={currency.descriptor_path}"
-                f"	identity_digest={currency.recorded_identity_digest}"
-                "	published=skipped-current",
-            )
-            return
-    descriptor = publish_sqlite_authority_candidate(
-        registry_root=resolved_registry_root,
-        source_root=resolved_source_root,
-        destination=destination_path,
-        profile_schema_path=resolved_profile_schema,
-        eager_baseline_path=eager_baseline,
-    )
-    typer.echo(
-        "publish-authority"
-        f"\tdescriptor={destination_path / 'authority.current.json'}"
-        f"\tidentity_digest={descriptor.logical_generation}"
-        f"\tdatabase={descriptor.database}",
-    )
-    # Named recipes, not prose: an operator is expected to run these verbatim.
-    # Target publication stays explicit and per-target because the guidance for a
-    # drifted target is to investigate the record bytes rather than republish, so
-    # there is deliberately no publish-every-stale-target verb to point at.
-    typer.echo("next\tcurrentness=check-registry\tpublication=registry-publish-target")
+app.command("publish-authority")(publish_authority)
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,46 +141,18 @@ def reviewed_bootstrap_target(
     return target
 
 
-def prepare_generated_tree_invocation(
+def _bootstrap_selection(
     invocation: GeneratedTreeInvocation,
-    root: Path,
-    *,
-    authority: ValidatedRegistryAuthority | None = None,
-) -> PreparedGeneratedTreeInvocation:
-    """Stage one narrow candidate and derive its render inputs from authority."""
-    target_root = bundled_path("registry", "aeat")
-    if authority is None:
-        recover_interrupted_supersession_bundle(
-            target_root=target_root,
-            modelo=invocation.modelo,
-            revision=invocation.revision,
-        )
-        try:
-            authority = compiled_bundled_authority()
-        except RegistryValidationError:
-            # The exact reviewed historical target may itself be the one stale
-            # export preventing whole-source compilation. Its structural render
-            # is admitted only after a one-target whole-registry overlay passes
-            # complete validation; every other compile refusal remains closed.
-            authority = validated_historical_repair_source(
-                modelo=invocation.modelo,
-                revision=invocation.revision,
-                source_ref=invocation.source_ref,
-                filing_year=invocation.filing_year,
-                period=invocation.period,
-                expected_manifest_sha256=invocation.expected_manifest_sha256,
-            )
-    target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
+    authority: ValidatedRegistryAuthority,
+    target_root: Path,
+    target_export_root: Path,
+    inheritance: GeneratedExportInheritanceContext | None,
+) -> tuple[
+    GeneratedExportBootstrapTransport | None, GeneratedExportBootstrapTarget | None, GeneratedExportSupersession | None
+]:
     source = next(
         (item for ref, item in authority.catalogues.sources.items() if str(ref) == invocation.source_ref),
         None,
-    )
-    inheritance = select_generated_export_inheritance(
-        authority,
-        target_root,
-        modelo=invocation.modelo,
-        revision=invocation.revision,
-        retain_source_chain=True,
     )
     bootstrap = None
     bootstrap_target: GeneratedExportBootstrapTarget | None = None
@@ -326,20 +196,15 @@ def prepare_generated_tree_invocation(
             source_sha256=bootstrap_target.source_sha256,
             supersedes_layout_id=bootstrap_target.supersedes_layout_id,
         )
-    try:
-        inputs = revision_render_inputs(
-            authority,
-            modelo=invocation.modelo,
-            revision=invocation.revision,
-            source_ref=invocation.source_ref,
-            bootstrap_transport=bootstrap,
-            filing_year=invocation.filing_year,
-            period=invocation.period,
-        )
-    except (RegistryError, ValueError) as error:
-        raise ValueError(str(error)) from error
+    return bootstrap, bootstrap_target, supersession
 
-    candidate_root = root / "candidate" / "registry" / "aeat"
+
+def _source_chain_receipts(
+    invocation: GeneratedTreeInvocation,
+    authority: ValidatedRegistryAuthority,
+    target_root: Path,
+    inheritance: GeneratedExportInheritanceContext | None,
+) -> tuple[bool, str | None, str | None]:
     source_modelo = authority.modelo(invocation.modelo)
     inherited_revisions = () if inheritance is None else tuple(item[0] for item in inheritance.pinned_ancestors)
     retain_source_chain = requires_source_chain(source_modelo.revisions[invocation.revision]) or (
@@ -358,8 +223,77 @@ def prepare_generated_tree_invocation(
         source_chain_non_export_sha256 = generated_export_source_chain_fingerprint(
             target_root, modelo=invocation.modelo, revision=invocation.revision, omit_target_export=True
         )
+    return retain_source_chain, source_chain_sha256, source_chain_non_export_sha256
+
+
+def prepare_generated_tree_invocation(
+    invocation: GeneratedTreeInvocation,
+    root: Path,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+    staging_root: Path | None = None,
+) -> PreparedGeneratedTreeInvocation:
+    """Stage one narrow candidate and derive its render inputs from authority.
+
+    ``staging_root`` is the validated overlay of a reviewed repair set. Its
+    members' committed exports cannot load, so the candidate and the inherited
+    baseline are read from the overlay that authority was validated from, and
+    no published witness is staged; publication still targets the live tree.
+    """
+    target_root = bundled_path("registry", "aeat")
+    source_registry_root = target_root if staging_root is None else staging_root
+    if authority is None:
+        recover_interrupted_supersession_bundle(
+            target_root=target_root,
+            modelo=invocation.modelo,
+            revision=invocation.revision,
+        )
+        try:
+            authority = compiled_bundled_authority()
+        except RegistryValidationError:
+            # The exact reviewed historical target may itself be the one stale
+            # export preventing whole-source compilation. Its structural render
+            # is admitted only after a one-target whole-registry overlay passes
+            # complete validation; every other compile refusal remains closed.
+            authority = validated_historical_repair_source(
+                modelo=invocation.modelo,
+                revision=invocation.revision,
+                source_ref=invocation.source_ref,
+                filing_year=invocation.filing_year,
+                period=invocation.period,
+                expected_manifest_sha256=invocation.expected_manifest_sha256,
+            )
+    target_export_root = target_root / "modelos" / invocation.modelo / "revisions" / invocation.revision / "export"
+    inheritance = select_generated_export_inheritance(
+        authority,
+        source_registry_root,
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+        retain_source_chain=True,
+    )
+    bootstrap, bootstrap_target, supersession = _bootstrap_selection(
+        invocation, authority, target_root, target_export_root, inheritance
+    )
+    try:
+        inputs = revision_render_inputs(
+            authority,
+            modelo=invocation.modelo,
+            revision=invocation.revision,
+            source_ref=invocation.source_ref,
+            bootstrap_transport=bootstrap,
+            filing_year=invocation.filing_year,
+            period=invocation.period,
+        )
+    except (RegistryError, ValueError) as error:
+        raise ValueError(str(error)) from error
+
+    candidate_root = root / "candidate" / "registry" / "aeat"
+    source_modelo = authority.modelo(invocation.modelo)
+    retain_source_chain, source_chain_sha256, source_chain_non_export_sha256 = _source_chain_receipts(
+        invocation, authority, target_root, inheritance
+    )
     stage_generated_export_candidate(
-        target_root,
+        source_registry_root,
         candidate_root,
         modelo=invocation.modelo,
         revision=invocation.revision,
@@ -402,175 +336,23 @@ def prepare_generated_tree_invocation(
         candidate_root=candidate_root,
         target_root=target_root,
         target_export_root=target_export_root,
-        published_modelo_root=stage_published_modelo(
-            root,
-            modelo=invocation.modelo,
-            revision=invocation.revision,
-            inheritance=inheritance,
-            retain_source_chain=retain_source_chain,
+        published_modelo_root=(
+            stage_published_modelo(
+                root,
+                modelo=invocation.modelo,
+                revision=invocation.revision,
+                inheritance=inheritance,
+                retain_source_chain=retain_source_chain,
+            )
+            if staging_root is None
+            else None
         ),
         supersession=supersession,
         inheritance=inheritance,
     )
 
 
-@cache
-def supporting_modelos(modelo: str) -> frozenset[str]:
-    """Return declared cross-modelo dependencies that isolated validation needs."""
-    modelos_root = bundled_path("registry", "aeat", "modelos")
-    source_modelo_root = modelos_root / modelo
-    referenced = {
-        str(match.group("modelo"))
-        for path in source_modelo_root.rglob("*.toml")
-        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8"))
-    }
-    return frozenset(item for item in referenced - {modelo} if (modelos_root / item).is_dir())
-
-
-def stage_published_modelo(
-    root: Path,
-    *,
-    modelo: str,
-    revision: str,
-    inheritance: GeneratedExportInheritanceContext | None = None,
-    retain_source_chain: bool = False,
-) -> Path | None:
-    """Stage a one-revision published modelo only when check needs the witness.
-
-    The witness is staged in registry shape with the published authored facts
-    and shared legal catalogues beside it, because loading a modelo validates
-    its bindings against the governed facts and filing-year envelope of the
-    registry that holds it and refuses without them.
-    """
-    source_registry_root = bundled_path("registry", "aeat")
-    source_modelo_root = source_registry_root / "modelos" / modelo
-    revisions = tuple((source_modelo_root / "revisions").iterdir())
-    if len(revisions) == 1:
-        return None
-    staged_registry_root = root / "published-registry" / "aeat"
-    shutil.copytree(source_registry_root / "facts", staged_registry_root / "facts")
-    shutil.copytree(source_registry_root / "legal", staged_registry_root / "legal")
-    if retain_source_chain:
-        return stage_source_chain(
-            source_modelo_root,
-            staged_registry_root / "modelos" / modelo,
-            revision=revision,
-            include_target_export=True,
-        )
-    if inheritance is not None:
-        return stage_attested_inherited_modelo(
-            source_modelo_root,
-            staged_registry_root / "modelos" / modelo,
-            revision=revision,
-            inheritance=inheritance,
-            include_target_export=True,
-        )
-    staged = stage_isolated_edition(
-        source_modelo_root,
-        staged_registry_root / "modelos" / modelo,
-        revision=revision,
-        source_locales_root=bundled_path().parent / "locales",
-        staged_locales_root=root / "published-locales",
-    )
-    return staged.modelo_root
-
-
-@dataclass(frozen=True, slots=True)
-class _StagedEdition:
-    """An isolated edition and the catalogue its casilla labels resolve from."""
-
-    modelo_root: Path
-    locales_root: Path
-
-
-def stage_isolated_edition(
-    source_modelo_root: Path,
-    staged_root: Path,
-    *,
-    revision: str,
-    source_locales_root: Path,
-    staged_locales_root: Path,
-) -> _StagedEdition:
-    """Stage ``revision`` as the only edition of a copy of its modelo, complete by construction.
-
-    Pruning the sibling editions is what isolates the target, and it is exactly
-    what an edition inheriting from a predecessor cannot survive: its chain
-    would be deleted with them. Such an edition is therefore resolved first and
-    written back as the full-copy edition it stands for, naming no predecessor,
-    so the staged tree never presents the rows it states as the whole edition.
-    An edition whose named predecessor is absent from the source is refused by
-    that resolution rather than staged thin. An edition stating every row is
-    copied unchanged and keeps resolving its labels from the source catalogue.
-
-    The labels travel with the rows. Casilla labels are catalogued per edition,
-    so an inherited row's text lives under the key of the edition that last
-    stated it, and a full copy names no predecessor through which to reach it.
-    The staged catalogue is a copy of the source catalogue in which each
-    inherited row's own occurrence key carries its origin's text, in each
-    locale where the row has no text of its own, so every staged label resolves
-    to exactly what the live edition resolves.
-    """
-    from dev.locales.locale_yaml import discover_locale_codes
-    from dev.locales.manager import LocaleManager
-
-    edition = materialise_edition(source_modelo_root, revision)
-    shutil.copytree(source_modelo_root, staged_root)
-    revisions_root = staged_root / "revisions"
-    for entry in revisions_root.iterdir():
-        if entry.name != revision:
-            shutil.rmtree(entry)
-    if not edition_requires_detachment(edition):
-        drop_cross_edition_evolutions(revisions_root / revision)
-        return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
-    write_complete_edition(revisions_root / revision, edition)
-    drop_cross_edition_evolutions(revisions_root / revision)
-    if edition.inherits_from is None:
-        # A storage-baseline edition restates rows under its own keys; only a
-        # predecessor chain moves label text onto inherited occurrences.
-        return _StagedEdition(modelo_root=staged_root, locales_root=source_locales_root)
-    shutil.copytree(source_locales_root, staged_locales_root)
-    manager = LocaleManager(src_dir=staged_locales_root, locales_dir=staged_locales_root)
-    for locale in sorted(discover_locale_codes(staged_locales_root)):
-        carried = _inherited_labels(edition, source_locales_root, locale=locale)
-        if carried:
-            manager.set_locale_values(locale, carried)
-    return _StagedEdition(modelo_root=staged_root, locales_root=staged_locales_root)
-
-
-def _inherited_labels(edition: MaterialisedEdition, source_locales_root: Path, *, locale: str) -> dict[str, str | None]:
-    """Return the origin text each inherited row needs under its own occurrence key in ``locale``."""
-    rows = edition.table.get("casillas")
-    origins = edition.label_origins
-    if origins is None or not isinstance(rows, tuple) or len(cast(tuple[object, ...], rows)) != len(origins):
-        raise ValueError(
-            f"edition {edition.revision_id!r} of modelo {edition.modelo_id!r} carries no label origin per casilla",
-        )
-    with override_locales_root(source_locales_root):
-        catalogue = locale_map(locale)
-    carried: dict[str, str | None] = {}
-    for row, origin in zip(cast(tuple[object, ...], rows), origins, strict=True):
-        casilla_id = cast(Mapping[str, object], row).get("id") if isinstance(row, Mapping) else None
-        if origin is None or not isinstance(casilla_id, str):
-            continue
-        own_key = casilla_occurrence_locale_key(
-            edition.modelo_id, edition.revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
-        )
-        origin_key = casilla_occurrence_locale_key(
-            edition.modelo_id, origin, casilla_id, ModeloLocalizationFieldKind.LABEL
-        )
-        origin_text = _authored_text(catalogue, origin_key)
-        if origin_text is not None and _authored_text(catalogue, own_key) is None:
-            carried[own_key] = origin_text
-    return carried
-
-
-def _authored_text(catalogue: Mapping[str, str | None], key: str) -> str | None:
-    """Apply the catalogue's miss rule: an absent key, a null and a key echo all carry no text."""
-    value = catalogue.get(key)
-    return None if value is None or value == key else value
-
-
-def _render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExportTree:
+def render_candidate(prepared: PreparedGeneratedTreeInvocation) -> RenderedExportTree:
     """Render one candidate export tree into the staged revision."""
     candidate_export_root = (
         prepared.candidate_root
@@ -613,7 +395,7 @@ def check_prepared_invocation(
         ),
     )
     if not prepared.target_export_root.exists():
-        rendered = _render_candidate(prepared)
+        rendered = render_candidate(prepared)
         validate_generated_export_tree(
             context=prepared.validation,
             joined=prepared.inputs.joined,
@@ -660,7 +442,7 @@ def publish_prepared_invocation(
             final_live_validator=(
                 (lambda: generated_form_bridge.require_export_cutover(prepared.target_root))
                 if generated_form_bridge is not None
-                else (lambda: _validate_final_live_target(prepared))
+                else (lambda: validate_final_live_target(prepared))
             ),
         ),
         joined=prepared.inputs.joined,
@@ -671,7 +453,7 @@ def publish_prepared_invocation(
     )
 
 
-def _validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
+def validate_final_live_target(prepared: PreparedGeneratedTreeInvocation) -> None:
     """Compile the complete live registry with the installed export before commit.
 
     The publisher has already proved the live export is byte-identical to the
@@ -778,6 +560,16 @@ def _require_republication_record_disposition(
             "declare a disposition row stating why the shipped records differ from what the "
             "current inputs produce, with its source pin and reconsideration condition",
         )
+    _validate_record_disposition(invocation, comparison, disposition, subject, source_sha256)
+
+
+def _validate_record_disposition(
+    invocation: GeneratedTreeInvocation,
+    comparison: RenderComparison,
+    disposition: GeneratedTreeRecordDriftDisposition,
+    subject: str,
+    source_sha256: str | None,
+) -> None:
     if disposition.remedy != "republish":
         # A row saying the SHIPPED bytes are right must never be read as
         # permission to overwrite them. Both directions produce identical record
@@ -802,7 +594,7 @@ def _require_republication_record_disposition(
 
 def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: GeneratedExportTreeTargetStateReceipt) -> None:
     """Replace one stale manifest only after an exact target-bound safety proof."""
-    rendered = _render_candidate(prepared)
+    rendered = render_candidate(prepared)
     candidate_export_root = (
         prepared.candidate_root
         / "modelos"
@@ -822,7 +614,7 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
     # any cutover; the eligibility proof below needs only the byte comparison.
     generated_form_bridge = None
     if prepared.inheritance is not None and comparison.disposition_class == "record_drift":
-        _require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
+        require_storage_equivalent_republication(prepared, rendered, target_state, comparison)
     else:
         require_republication_eligibility(
             prepared.invocation,
@@ -830,14 +622,9 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
             comparison,
             source_sha256=str(prepared.inputs.transport_profile.source_sha256),
         )
-    if (prepared.invocation.modelo, prepared.invocation.revision) in {
-        ("232", "2016-2017"),
-        ("232", "2018-y-siguientes"),
-        ("190", "2025-y-siguientes"),
-        ("347", "2011-2024"),
-        ("347", "2025-y-siguientes"),
-        ("720", "2013-y-siguientes"),
-    } and generated_form_companion_changed(
+    if is_reviewed_generated_form_repair(
+        prepared.invocation.modelo, prepared.invocation.revision, prepared.invocation.source_ref
+    ) and generated_form_companion_changed(
         prepared.target_root,
         prepared.candidate_root,
         prepared.invocation.modelo,
@@ -854,14 +641,89 @@ def _republish(prepared: PreparedGeneratedTreeInvocation, target_state: Generate
         )
     publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=generated_form_bridge)
     if generated_form_bridge is not None:
-        _finish_form_republication(
+        finish_form_republication(
             prepared.target_root,
             generated_form_bridge,
-            final_live_validator=lambda: _validate_final_live_target(prepared),
+            final_live_validator=lambda: validate_final_live_target(prepared),
         )
 
 
-def _finish_form_republication(
+def republish_rename_set(invocation: GeneratedTreeInvocation, refusal: UndeclaredExportTargetError, root: Path) -> None:
+    """Republish every member of the reviewed rename set as one set transaction.
+
+    Each member is prepared from the validated overlay, must pass the ordinary
+    digest-bound republication proof against its live tree, and carries the
+    form fragment the overlay's form owner generated for it.
+    """
+    repair = validated_rename_repair_source(
+        refusal=refusal,
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+        source_ref=invocation.source_ref,
+        filing_year=invocation.filing_year,
+        period=invocation.period,
+        expected_manifest_sha256=invocation.expected_manifest_sha256,
+        overlay_parent=root / "rename-repair-overlay",
+    )
+    members: list[GeneratedExportSetMember] = []
+    for target in repair.targets:
+        member = GeneratedTreeInvocation(
+            invocation.modelo,
+            target.revision,
+            target.source_ref,
+            target.filing_year,
+            target.period,
+            target.expected_manifest_sha256,
+        )
+        prepared = prepare_generated_tree_invocation(
+            member,
+            root / "rename-repair-members" / target.revision,
+            authority=repair.authority,
+            staging_root=repair.overlay_root,
+        )
+        target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+        rendered = render_candidate(prepared)
+        candidate_revision_root = prepared.candidate_root / "modelos" / member.modelo / "revisions" / member.revision
+        comparison = compare_export_tree_roots(
+            modelo=member.modelo,
+            revision=member.revision,
+            layout_id=prepared.inputs.layout_id,
+            committed_root=prepared.target_export_root,
+            rendered_root=candidate_revision_root / "export",
+        )
+        require_republication_eligibility(
+            member, target_state, comparison, source_sha256=str(prepared.inputs.transport_profile.source_sha256)
+        )
+        members.append(
+            GeneratedExportSetMember(
+                context=GeneratedExportTreePublicationContext(
+                    validation=prepared.validation,
+                    temporary_root=prepared.candidate_root.parents[2],
+                    target_root=prepared.target_root,
+                    target_export_root=prepared.target_export_root,
+                    expected_target_state=target_state,
+                ),
+                joined=prepared.inputs.joined,
+                semantic_map=prepared.inputs.semantic_map,
+                rendered=rendered,
+                render_profile=prepared.inputs.render_profile,
+                render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+                form_fragment=repair.form_fragments[target.revision],
+            )
+        )
+    publish_validated_generated_export_tree_set(members=members, final_live_validator=_compile_live_registry)
+    for target in repair.targets:
+        typer.echo(
+            f"republished-set-member\tmodelo={invocation.modelo}\trevision={target.revision}\tsource={target.source_ref}"
+        )
+
+
+def _compile_live_registry() -> None:
+    """Compile the complete live registry once every set member is installed."""
+    compile_validated_authority(bundled_path("registry", "aeat"), bundled_path(), verify_evidence_bytes=True)
+
+
+def finish_form_republication(
     registry_root: Path,
     bridge: GeneratedFormBridge | AuthoredFormBridge,
     *,
@@ -878,7 +740,7 @@ def _finish_form_republication(
         ) from error
 
 
-def _require_storage_equivalent_republication(
+def require_storage_equivalent_republication(
     prepared: PreparedGeneratedTreeInvocation,
     rendered: RenderedExportTree,
     target_state: GeneratedExportTreeTargetStateReceipt,
@@ -920,7 +782,103 @@ def _require_storage_equivalent_republication(
         )
 
 
-def _run(
+def _validate_reconciliation(
+    prepared: PreparedGeneratedTreeInvocation,
+    action: Literal["check", "publish", "republish"],
+    reconcile_authored_form: bool,
+    reconcile_casilla_splits: bool,
+    reconcile_row_bindings: bool,
+    reconcile_scalar_sources: bool,
+) -> bool:
+    if (
+        sum(
+            (
+                reconcile_authored_form,
+                reconcile_casilla_splits,
+                reconcile_row_bindings,
+                reconcile_scalar_sources,
+            )
+        )
+        > 1
+    ):
+        raise ValueError("choose one authored form reconciliation mode")
+    if (reconcile_casilla_splits or reconcile_row_bindings or reconcile_scalar_sources) and action != "republish":
+        raise ValueError("field reconciliation requires exclusive republication")
+    return _validate_reconciliation_target(prepared, action)
+
+
+def _validate_reconciliation_target(
+    prepared: PreparedGeneratedTreeInvocation, action: Literal["check", "publish", "republish"]
+) -> bool:
+    correcting_producers = action == "republish"
+    if not correcting_producers and (
+        action != "publish" or prepared.target_export_root.exists() or prepared.supersession is not None
+    ):
+        raise ValueError("authored form reconciliation requires a first export publication")
+    if correcting_producers and (prepared.inheritance is not None or prepared.supersession is not None):
+        raise ValueError("authored producer reconciliation refuses inherited or superseded export targets")
+    return correcting_producers
+
+
+def _reconcile_authored_form(
+    invocation: GeneratedTreeInvocation,
+    prepared: PreparedGeneratedTreeInvocation,
+    root: Path,
+    action: Literal["check", "publish", "republish"],
+    reconcile_authored_form: bool,
+    reconcile_casilla_splits: bool,
+    reconcile_row_bindings: bool,
+    reconcile_scalar_sources: bool,
+) -> None:
+    correcting_producers = _validate_reconciliation(
+        prepared,
+        action,
+        reconcile_authored_form,
+        reconcile_casilla_splits,
+        reconcile_row_bindings,
+        reconcile_scalar_sources,
+    )
+    target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+    rendered = render_candidate(prepared)
+    if correcting_producers:
+        comparison = compare_export_tree_roots(
+            modelo=invocation.modelo,
+            revision=invocation.revision,
+            layout_id=prepared.inputs.layout_id,
+            committed_root=prepared.target_export_root,
+            rendered_root=prepared.candidate_root
+            / "modelos"
+            / invocation.modelo
+            / "revisions"
+            / invocation.revision
+            / "export",
+        )
+        require_republication_eligibility(
+            invocation,
+            target_state,
+            comparison,
+            source_sha256=str(prepared.inputs.transport_profile.source_sha256),
+        )
+    bridge = prepare_authored_form_bridge(
+        registry_root=prepared.target_root,
+        candidate_root=prepared.candidate_root,
+        source_root=prepared.validation.source_root,
+        temporary_root=root,
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+        unreferenced_producers=correcting_producers
+        and not (reconcile_casilla_splits or reconcile_row_bindings or reconcile_scalar_sources),
+        casilla_splits=reconcile_casilla_splits,
+        row_bindings=reconcile_row_bindings,
+        scalar_sources=reconcile_scalar_sources,
+    )
+    publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=bridge)
+    finish_form_republication(
+        prepared.target_root, bridge, final_live_validator=lambda: validate_final_live_target(prepared)
+    )
+
+
+def run(
     invocation: GeneratedTreeInvocation,
     *,
     action: Literal["check", "publish", "republish"],
@@ -934,15 +892,16 @@ def _run(
     try:
         with temporary_directory(prefix="cadrumo-generated-export-") as temporary_name:
             root = Path(temporary_name)
-            prepared = prepare_generated_tree_invocation(invocation, root)
-            if (
-                reconcile_authored_form
-                or reconcile_casilla_splits
-                or reconcile_row_bindings
-                or reconcile_scalar_sources
-            ):
+            try:
+                prepared = prepare_generated_tree_invocation(invocation, root)
+            except RegistryLoadError as load_refusal:
+                # Only the typed stale-export refusal of a reviewed rename reaches
+                # the set repair; every other load refusal stays closed.
+                refusal = undeclared_export_targets(load_refusal)
                 if (
-                    sum(
+                    refusal is None
+                    or action != "republish"
+                    or any(
                         (
                             reconcile_authored_form,
                             reconcile_casilla_splits,
@@ -950,57 +909,22 @@ def _run(
                             reconcile_scalar_sources,
                         )
                     )
-                    > 1
                 ):
-                    raise ValueError("choose one authored form reconciliation mode")
-                if (
-                    reconcile_casilla_splits or reconcile_row_bindings or reconcile_scalar_sources
-                ) and action != "republish":
-                    raise ValueError("field reconciliation requires exclusive republication")
-                correcting_producers = action == "republish"
-                if not correcting_producers and (
-                    action != "publish" or prepared.target_export_root.exists() or prepared.supersession is not None
-                ):
-                    raise ValueError("authored form reconciliation requires a first export publication")
-                if correcting_producers and (prepared.inheritance is not None or prepared.supersession is not None):
-                    raise ValueError("authored producer reconciliation refuses inherited or superseded export targets")
-                target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
-                rendered = _render_candidate(prepared)
-                if correcting_producers:
-                    comparison = compare_export_tree_roots(
-                        modelo=invocation.modelo,
-                        revision=invocation.revision,
-                        layout_id=prepared.inputs.layout_id,
-                        committed_root=prepared.target_export_root,
-                        rendered_root=prepared.candidate_root
-                        / "modelos"
-                        / invocation.modelo
-                        / "revisions"
-                        / invocation.revision
-                        / "export",
-                    )
-                    require_republication_eligibility(
-                        invocation,
-                        target_state,
-                        comparison,
-                        source_sha256=str(prepared.inputs.transport_profile.source_sha256),
-                    )
-                bridge = prepare_authored_form_bridge(
-                    registry_root=prepared.target_root,
-                    candidate_root=prepared.candidate_root,
-                    source_root=prepared.validation.source_root,
-                    temporary_root=root,
-                    modelo=invocation.modelo,
-                    revision=invocation.revision,
-                    unreferenced_producers=correcting_producers
-                    and not (reconcile_casilla_splits or reconcile_row_bindings or reconcile_scalar_sources),
-                    casilla_splits=reconcile_casilla_splits,
-                    row_bindings=reconcile_row_bindings,
-                    scalar_sources=reconcile_scalar_sources,
-                )
-                publish_prepared_invocation(prepared, rendered, target_state, generated_form_bridge=bridge)
-                _finish_form_republication(
-                    prepared.target_root, bridge, final_live_validator=lambda: _validate_final_live_target(prepared)
+                    raise
+                republish_rename_set(invocation, refusal, root)
+                return
+            if any(
+                (reconcile_authored_form, reconcile_casilla_splits, reconcile_row_bindings, reconcile_scalar_sources)
+            ):
+                _reconcile_authored_form(
+                    invocation,
+                    prepared,
+                    root,
+                    action,
+                    reconcile_authored_form,
+                    reconcile_casilla_splits,
+                    reconcile_row_bindings,
+                    reconcile_scalar_sources,
                 )
             elif action == "check":
                 result, _rendered, _target_state = check_prepared_invocation(prepared)
@@ -1020,30 +944,6 @@ def _run(
     except (RegistryError, ValueError) as error:
         typer.echo(f"refused: {error}", err=True)
         raise typer.Exit(code=1) from error
-
-
-class TargetCurrentnessState(StrEnum):
-    """Read-only state of one named generated export target."""
-
-    CURRENT = "current"
-    STALE = "stale"
-    DRIFTED = "drifted"
-    NEVER_COMMITTED = "never-committed"
-
-
-@dataclass(frozen=True, slots=True)
-class TargetCurrentnessFact:
-    """Canonical generated-tree currentness fact and its comparison evidence."""
-
-    modelo: str
-    revision: str
-    state: TargetCurrentnessState
-    differing: tuple[str, ...] = ()
-    only_committed: tuple[str, ...] = ()
-    only_rendered: tuple[str, ...] = ()
-    serialization_only: tuple[str, ...] = ()
-    provenance_fields: tuple[str, ...] = ()
-    detail: str = ""
 
 
 def at_edition_grade(
@@ -1098,7 +998,7 @@ def target_currentness(
         effective_period,
     )
     with tempfile.TemporaryDirectory(
-        prefix="cadrumo-generated-export-currentness-", dir=prepare_temporary_directory()
+        prefix="cadrumo-generated-export-currentness-", dir=prepare_temp_root()
     ) as temporary_name:
         prepared = at_edition_grade(
             prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority),
@@ -1142,7 +1042,7 @@ def _classify_target_currentness_failure(
     comparison: RenderComparison | None = None
     try:
         if not candidate_export_root.exists():
-            _render_candidate(prepared)
+            render_candidate(prepared)
         comparison = compare_export_tree_roots(
             modelo=modelo,
             revision=revision,
@@ -1159,32 +1059,7 @@ def _classify_target_currentness_failure(
             state=TargetCurrentnessState.DRIFTED,
             detail=str(error),
         )
-    return _target_currentness_comparison_fact(modelo, revision, comparison, error)
-
-
-def _target_currentness_comparison_fact(
-    modelo: str,
-    revision: str,
-    comparison: RenderComparison,
-    error: OSError | RegistryError | ValueError,
-) -> TargetCurrentnessFact:
-    state = TargetCurrentnessState.STALE if comparison.provenance_only else TargetCurrentnessState.DRIFTED
-    # A stale manifest's refusal names the digest that failed; the members that
-    # differ from a fresh render say which input moved.
-    detail = str(error)
-    if comparison.provenance_fields:
-        detail = f"{detail}; manifest members differing from a fresh render: " + ", ".join(comparison.provenance_fields)
-    return TargetCurrentnessFact(
-        modelo=modelo,
-        revision=revision,
-        state=state,
-        differing=comparison.differing,
-        only_committed=comparison.only_committed,
-        only_rendered=comparison.only_rendered,
-        serialization_only=comparison.serialization_only,
-        provenance_fields=comparison.provenance_fields,
-        detail=detail,
-    )
+    return target_currentness_comparison_fact(modelo, revision, comparison, error)
 
 
 _MODELO = Annotated[str, typer.Argument(help="Three-digit AEAT modelo identifier.")]
@@ -1232,7 +1107,7 @@ def publish_target_command(
     ] = False,
 ) -> None:
     """Check, then transactionally publish one named static target tree."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period),
         action="publish",
         reconcile_authored_form=reconcile_authored_form,
@@ -1241,49 +1116,6 @@ def publish_target_command(
     typer.echo(
         "next\tcurrentness=check-registry-target-current\tpublication=registry-publish-authority-if-authority-stale"
     )
-
-
-@app.command("recover-completed-legacy-target")
-def recover_completed_legacy_target_command(
-    modelo: _MODELO,
-    revision: _REVISION,
-    source_ref: _SOURCE,
-    filing_year: _FILING_YEAR,
-    period: _PERIOD,
-    expected_manifest_sha256: Annotated[str, typer.Option("--expected-manifest-sha256")],
-) -> None:
-    """Retire a completed legacy journal after digest-bound current record equivalence."""
-    invocation = GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256)
-    try:
-        if re.fullmatch(SHA256_PATTERN, expected_manifest_sha256) is None:
-            raise ValueError("legacy recovery requires an exact lowercase target manifest sha256")
-        authority = compiled_bundled_authority()
-        with tempfile.TemporaryDirectory(
-            prefix="cadrumo-legacy-export-recovery-", dir=prepare_temporary_directory()
-        ) as directory:
-            prepared = prepare_generated_tree_invocation(invocation, Path(directory), authority=authority)
-            rendered = _render_candidate(prepared)
-            receipt = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
-            if receipt.manifest_sha256 != expected_manifest_sha256:
-                raise ValueError("legacy recovery target manifest differs from the explicitly reviewed digest")
-            retire_completed_legacy_publication(
-                context=GeneratedExportTreePublicationContext(
-                    validation=prepared.validation,
-                    temporary_root=prepared.candidate_root.parents[2],
-                    target_root=prepared.target_root,
-                    target_export_root=prepared.target_export_root,
-                    expected_target_state=receipt,
-                ),
-                joined=prepared.inputs.joined,
-                semantic_map=prepared.inputs.semantic_map,
-                rendered=rendered,
-                render_profile=prepared.inputs.render_profile,
-                render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
-            )
-    except (RegistryError, LockAcquisitionError, OSError, ValueError) as error:
-        typer.echo(f"refused: {error}", err=True)
-        raise typer.Exit(1) from error
-    typer.echo(f"recovered-completed-legacy-target\tmodelo={modelo}\trevision={revision}")
 
 
 @app.command("republish-target")
@@ -1325,7 +1157,7 @@ def republish_target_command(
     ] = False,
 ) -> None:
     """Digest-bound republish of one named target after its exact state was reviewed."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="republish",
         reconcile_authored_form=reconcile_unreferenced_producers,
@@ -1352,7 +1184,7 @@ def check_command(
     ] = None,
 ) -> None:
     """Regenerate and validate one target without changing the published registry."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="check",
     )
@@ -1367,7 +1199,7 @@ def publish_command(
     period: _PERIOD,
 ) -> None:
     """Check, then transactionally publish one target through the canonical authority."""
-    _run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="publish")
+    run(GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period), action="publish")
     typer.echo(f"published modelo={modelo} revision={revision} source={source_ref}")
 
 
@@ -1384,7 +1216,7 @@ def republish_command(
     ],
 ) -> None:
     """Replace one digest-pinned tree only when its records reproduce semantically."""
-    _run(
+    run(
         GeneratedTreeInvocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
         action="republish",
     )
@@ -1392,11 +1224,7 @@ def republish_command(
 
 
 __all__ = [
-    "TargetCurrentnessFact",
-    "TargetCurrentnessState",
     "app",
     "at_edition_grade",
-    "stage_isolated_edition",
-    "supporting_modelos",
     "target_currentness",
 ]

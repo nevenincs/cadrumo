@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from importlib.util import resolve_name
 from pathlib import Path
 from tokenize import open as open_python
+from typing import cast
 
 from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE
 from dev.registry.compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
@@ -18,7 +19,7 @@ _TOOL_PACKAGE_ROOTS = (
 )
 _TOOL_ENTRYPOINT = Path("dev/registry/registry_collapse_verification.py")
 _SNAPSHOT_SOURCE = Path("src/cadrumo/domain/calculations/registry/snapshot.py")
-_SNAPSHOT_DYNAMIC_PROVIDERS = "_CROSS_DOMAIN_CHECK_MODULES"
+_SNAPSHOT_DYNAMIC_PROVIDERS = "CROSS_DOMAIN_CHECK_MODULES"
 
 
 def _local_module_path(repo_root: Path, module: str) -> Path | None:
@@ -49,23 +50,10 @@ def _snapshot_dynamic_modules(repo_root: Path, path: Path, tree: ast.Module) -> 
     """Read the snapshot's own literal provider declaration without importing it."""
     if path != repo_root / _SNAPSHOT_SOURCE:
         return set()
-    declarations: list[ast.expr] = []
-    for node in tree.body:
-        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            if node.target.id == _SNAPSHOT_DYNAMIC_PROVIDERS and node.value is not None:
-                declarations.append(node.value)
-        elif isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == _SNAPSHOT_DYNAMIC_PROVIDERS for target in node.targets
-        ):
-            declarations.append(node.value)
+    declarations = _dynamic_provider_declarations(tree)
     if len(declarations) != 1:
         raise ValueError(f"snapshot must declare one literal {_SNAPSHOT_DYNAMIC_PROVIDERS}")
-    try:
-        declared = ast.literal_eval(declarations[0])
-    except (ValueError, TypeError, SyntaxError) as exc:
-        raise ValueError(f"snapshot {_SNAPSHOT_DYNAMIC_PROVIDERS} must be a literal list or tuple") from exc
-    if not isinstance(declared, list | tuple) or not declared or not all(isinstance(item, str) for item in declared):
-        raise ValueError(f"snapshot {_SNAPSHOT_DYNAMIC_PROVIDERS} must contain module names")
+    declared = _literal_provider_names(declarations[0])
     package = ".".join(_module_package(repo_root, path))
     modules = {resolve_name(name, package) for name in declared}
     if len(modules) != len(declared):
@@ -76,21 +64,39 @@ def _snapshot_dynamic_modules(repo_root: Path, path: Path, tree: ast.Module) -> 
     return modules
 
 
+def _literal_provider_names(declaration: ast.expr) -> tuple[str, ...]:
+    try:
+        declared = ast.literal_eval(declaration)
+    except (ValueError, TypeError, SyntaxError) as exc:
+        raise ValueError(f"snapshot {_SNAPSHOT_DYNAMIC_PROVIDERS} must be a literal list or tuple") from exc
+    if (
+        not isinstance(declared, list | tuple)
+        or not declared
+        or not all(isinstance(item, str) for item in cast("list[object] | tuple[object, ...]", declared))
+    ):
+        raise ValueError(f"snapshot {_SNAPSHOT_DYNAMIC_PROVIDERS} must contain module names")
+    return tuple(cast("list[str] | tuple[str, ...]", declared))
+
+
+def _dynamic_provider_declarations(tree: ast.Module) -> list[ast.expr]:
+    declarations: list[ast.expr] = []
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            if node.target.id == _SNAPSHOT_DYNAMIC_PROVIDERS and node.value is not None:
+                declarations.append(node.value)
+        elif isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == _SNAPSHOT_DYNAMIC_PROVIDERS for target in node.targets
+        ):
+            declarations.append(node.value)
+    return declarations
+
+
 def _imported_local_paths(repo_root: Path, path: Path, module_cache: dict[str, Path | None]) -> set[Path]:
     """Follow local static imports, including package initializers."""
     package = _module_package(repo_root, path)
     with open_python(path) as handle:
         tree = ast.parse(handle.read(), filename=str(path))
-    modules: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            modules.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            prefix = package[: len(package) - node.level + 1] if node.level else ()
-            base = ".".join((*prefix, *(node.module.split(".") if (node.module is not None and node.module) else ())))
-            if base:
-                modules.add(base)
-                modules.update(f"{base}.{alias.name}" for alias in node.names if alias.name != "*")
+    modules = _static_import_modules(tree, package)
     modules.update(_snapshot_dynamic_modules(repo_root, path, tree))
     imports: set[Path] = set()
     for module in modules:
@@ -105,7 +111,25 @@ def _imported_local_paths(repo_root: Path, path: Path, module_cache: dict[str, P
     return imports
 
 
-def _tool_input_paths(repo_root: Path) -> tuple[Path, ...]:
+def _static_import_modules(tree: ast.Module, package: tuple[str, ...]) -> set[str]:
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            base = _import_from_base(node, package)
+            if base:
+                modules.add(base)
+                modules.update(f"{base}.{alias.name}" for alias in node.names if alias.name != "*")
+    return modules
+
+
+def _import_from_base(node: ast.ImportFrom, package: tuple[str, ...]) -> str:
+    prefix = package[: len(package) - node.level + 1] if node.level else ()
+    return ".".join((*prefix, *(node.module.split(".") if (node.module is not None and node.module) else ())))
+
+
+def tool_input_paths(repo_root: Path) -> tuple[Path, ...]:
     """Rediscover registry interpreters and their local import closure.
 
     The package census catches new or removed helpers, including dynamically
@@ -133,7 +157,7 @@ def _tool_input_paths(repo_root: Path) -> tuple[Path, ...]:
     return tuple(sorted(paths))
 
 
-def _source_dependency_paths(source_root: Path) -> tuple[Path, ...]:
+def source_dependency_paths(source_root: Path) -> tuple[Path, ...]:
     """Enumerate every non-registry compiler input that must be isolated."""
     evidence = tuple(
         Path(path) for path, _size, _modified_ns in collect_source_evidence_fingerprints(source_root, use_cache=False)
@@ -143,7 +167,7 @@ def _source_dependency_paths(source_root: Path) -> tuple[Path, ...]:
     return tuple(sorted(set((*evidence, *profiles))))
 
 
-def _copy_source_dependencies(paths: Iterable[Path], *, source_root: Path, destination: Path) -> None:
+def copy_source_dependencies(paths: Iterable[Path], *, source_root: Path, destination: Path) -> None:
     """Copy exact compiler inputs while retaining source-root-relative paths."""
     resolved_root = source_root.resolve(strict=True)
     for source in paths:

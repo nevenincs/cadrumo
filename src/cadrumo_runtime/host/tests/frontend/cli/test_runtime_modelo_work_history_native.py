@@ -25,12 +25,14 @@ from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.adapter_composition import build_modelo_history_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_modelo_history_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.cli.modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -74,20 +76,7 @@ def test_native_work_history_matches_pinned_encrypted_oracle_including_discard(
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
             label=_LABEL,
-            facts={
-                "taxpayer_type.entity_type": "natural_person",
-                "identity.name": "Native",
-                "identity.surnames": "History",
-                "activities.description": "consulting",
-                "censo.activity_start_date": "2025-01-01",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
-            },
+            facts=native_general_iva_facts(),
         )
         bucket_id = resolve_login_target(_LABEL).bucket_id
         revision_id, report_id = modelo_operation_test_support.seeded_modelo_verification_report(

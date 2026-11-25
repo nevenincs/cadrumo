@@ -31,7 +31,7 @@ A fourth site (``test_s423_selected_language_cli.py``) sets real
 of using the ContextVar override, and stays on its own harness source. The
 two mechanisms are not interchangeable: the ContextVar override freezes one
 ``Settings`` instance for the whole child process, while the real-environment
-route flows through ``cadrumo.core.config._constructed_settings``, an
+route flows through ``cadrumo.core.config.constructed_settings``, an
 ``lru_cache`` keyed on the active-profile pointer's fingerprint -- if the
 command under test rewrites the pointer file mid-invocation (a profile
 create, login, or logout), the real-environment route re-derives ``Settings``

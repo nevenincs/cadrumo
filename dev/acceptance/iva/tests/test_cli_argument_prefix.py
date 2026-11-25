@@ -12,6 +12,7 @@ import pytest
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from .. import cli_journey
+from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -29,7 +30,7 @@ def test_bootstrap_prefix_survives_both_reopens_without_accepting_incomplete_ver
     clients: list[InstalledCli] = []
     receipts: list[cli_journey.SanitizedCommandReceipt] = []
     invocations: list[tuple[list[str], dict[str, object]]] = []
-    make_receipt = cli_journey._command_receipt
+    make_receipt = cli_journey.command_receipt
 
     def record_receipt(
         *,
@@ -105,7 +106,7 @@ def test_bootstrap_prefix_survives_both_reopens_without_accepting_incomplete_ver
         return subprocess.CompletedProcess(argv, 0, json.dumps({"status": "ok", "result": result}), "")
 
     monkeypatch.setattr(cli_journey, "InstalledCli", open_cli)
-    monkeypatch.setattr(cli_journey, "_command_receipt", record_receipt)
+    monkeypatch.setattr(cli_journey, "command_receipt", record_receipt)
     monkeypatch.setattr(subprocess, "run", execute)
     authority_root = Path(__file__).resolve().parents[4] / ".authority"
     with pytest.raises(cli_journey.IvaCliJourneyError, match="did not grant complete verification"):
@@ -114,7 +115,7 @@ def test_bootstrap_prefix_survives_both_reopens_without_accepting_incomplete_ver
             authority_root=authority_root,
             storage_root=tmp_path / "storage",
             artifact_root=tmp_path / "artifacts",
-            year=2025,
+            year=newest_fully_authored_journey_year(authority_root),
             cli_argument_prefix=prefix,
         )
 

@@ -22,7 +22,7 @@ from ...core.identity.profile import canonical_profile_bucket_id
 from ...core.operations import OperationEffect
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.notifications.sancion import SancionLiquidacion
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_exact_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -386,13 +386,7 @@ def _resolve_read_access(
     request_type: type[BaseModel],
     categories: frozenset[DisclosureCategory],
 ) -> ResolvedOperationAccess:
-    if request.definition_id != definition_id or type(request.payload) is not request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    if not isinstance(payload, (NotificationDocumentViewRequest, NotificationDocumentHistoryRequest)):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = payload.profile_id
-    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
+    resolved = resolve_ledger_exact_request_access(request, context, request_types={definition_id: request_type})
     if context.action is not AccessAction.RESULT:
         return resolved
     schema = context.contract.result_schema

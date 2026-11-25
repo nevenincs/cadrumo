@@ -30,27 +30,26 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.registry_token import StrictRegistryToken
 from ...core.time.utc import UtcInstant
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_collection
 from ..calculations.registry.renta_codes_catalogue import (
+    EnvelopeMembership,
     fiscal_residency_requires_country,
-)
-from ..calculations.registry.renta_codes_catalogue import (
-    is_ue_eea_country_code as _registry_is_ue_eea_country_code,
+    is_ue_eea_country_code,
+    ue_eea_membership_across_envelope,
 )
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
 from .errors import DeadlineValidationError
 from .fact_context import DeadlineFactResolutionContext
-from .festivos import CalendarCCAA
+from .festivos import DeadlineHolidayCoverage, HolidayJurisdiction
 
 
 class IVARegime(str):
@@ -113,7 +112,9 @@ class ObligationStatus(StrEnum):
     :attr:`UPCOMING` and :attr:`DUE_SOON` are differentiated by the engine's
     ``due_soon_days`` window (default 14 days).
     :attr:`FILED` and :attr:`NOT_APPLICABLE` are reserved for downstream
-    consumers — the engine never produces them.
+    consumers — the engine never produces them. :attr:`UNKNOWN` is produced
+    only for a projected window whose close is unknown, and is never derived
+    from a date.
 
     Attributes:
         UPCOMING: Window opens in the future or is open but more than
@@ -125,6 +126,10 @@ class ObligationStatus(StrEnum):
         FILED: Downstream marker for filings already submitted.
         NOT_APPLICABLE: Downstream marker for obligations the profile
             no longer triggers.
+        UNKNOWN: The window's close is unknown because a holiday calendar
+            its inhábil-day shift needs is not published; the obligation is
+            neither open-ended nor overdue, and is not classified against
+            its nominal close.
     """
 
     UPCOMING = "UPCOMING"
@@ -133,14 +138,28 @@ class ObligationStatus(StrEnum):
     OVERDUE = "OVERDUE"
     FILED = "FILED"
     NOT_APPLICABLE = "NOT_APPLICABLE"
+    UNKNOWN = "UNKNOWN"
 
 
 class ModeloEnrollment(BaseModel):
-    """AEAT enrollment facts used by registry filing schedules."""
+    """AEAT enrollment facts used by registry filing schedules.
 
-    model_config = _STRICT_FROZEN
+    Attributes:
+        large_company: Whether the volumen de operaciones of the immediately
+            prior calendar year exceeded the LIVA art. 121 threshold, which
+            RIVA art. 71 answers with monthly IVA liquidation. ``None`` when
+            unanswered: the condition decides the filing cadence of Modelos
+            111, 115, 123, 216 and 303 and whether Modelo 347 is owed at all,
+            and neither cadence may be guessed from silence, so no filing
+            schedule matches until the taxpayer has stated it.
+        public_administration_budget_gt_6000000: Whether the declarante is a
+            public administration whose annual budget exceeds the Modelo 111
+            monthly-cadence threshold.
+    """
 
-    large_company: bool = False
+    model_config = STRICT_FROZEN_CONFIG
+
+    large_company: bool | None = None
     public_administration_budget_gt_6000000: bool = False
 
 
@@ -335,9 +354,15 @@ class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
     Attributes:
+        regime_composition: How the general and simplified regimes combine in
+            Modelo 303. ``None`` for a taxpayer whose only IVA regime is the
+            recargo de equivalencia: the supplier charges the recargo and the
+            retailer files no Modelo 303 for those activities (LIVA arts.
+            154-163), so there is no composition to state.
         roi_enrolled: Registered on the Registro de Operadores
             Intracomunitarios (ROI / VIES).
-        oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime.
+        oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime;
+            this is the Modelo 369 role.
         group_member_enrolled: Enrolled as a member entity in the IVA
             group-of-entities special regime; this is the Modelo 322
             role.
@@ -355,22 +380,36 @@ class ModeloIVAProfile(BaseModel):
             status, not by voluntary SII alone.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
+
+    Every enrolment above is three-state: ``None`` when the taxpayer has not
+    answered, ``False`` when they have stated they are not enrolled. Each
+    selects an obligation of its own, so reading an unanswered enrolment as a
+    no would rule a taxpayer out of Modelo 322, 353, 369 or the Modelo 349
+    monthly cadence without their ever having been asked.
+
+    ``redeme_enrolled``, ``cash_accounting_regime_enrolled``,
+    ``voluntary_sii_enrolled`` and
+    ``hydrocarbon_deposit_advance_payment_deduction_entitled`` are required
+    of a claimed block: the projection that feeds calculation and filing
+    refuses the block while any of them is ``None``. Only a read projection
+    that names them in :attr:`TaxpayerProfile.iva_block_unanswered_paths`
+    carries one unanswered.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_territory: M303TaxTerritory
-    regime_composition: M303RegimeComposition
-    roi_enrolled: bool = False
-    oss_enrolled: bool = False
-    group_member_enrolled: bool = False
-    group_dominant_entity_enrolled: bool = False
-    intracommunity_operations_exceed_50000_eur: bool = False
-    sii_enrolled: bool = False
-    redeme_enrolled: bool
-    cash_accounting_regime_enrolled: bool
-    voluntary_sii_enrolled: bool
-    hydrocarbon_deposit_advance_payment_deduction_entitled: bool
+    regime_composition: M303RegimeComposition | None = None
+    roi_enrolled: bool | None = None
+    oss_enrolled: bool | None = None
+    group_member_enrolled: bool | None = None
+    group_dominant_entity_enrolled: bool | None = None
+    intracommunity_operations_exceed_50000_eur: bool | None = None
+    sii_enrolled: bool | None = None
+    redeme_enrolled: bool | None = None
+    cash_accounting_regime_enrolled: bool | None = None
+    voluntary_sii_enrolled: bool | None = None
+    hydrocarbon_deposit_advance_payment_deduction_entitled: bool | None = None
 
     @field_validator("tax_territory", "regime_composition", mode="before")
     @classmethod
@@ -402,7 +441,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     filing was reconciled and accepted.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo("322")
     filing_year: FilingYear
@@ -447,14 +486,26 @@ class CrossPeriodGroupMemberRoster(BaseModel):
         return self
 
 
-def is_ue_eee_country_code(country_code: str | None) -> bool:
-    """Return True when ``country_code`` is in the EU + EEA country set."""
-    return _registry_is_ue_eea_country_code(country_code)
+def is_ue_eee_country_code(country_code: str | None, *, effective_date: date) -> bool:
+    """Return True when ``country_code`` is in the EU + EEA country set on ``effective_date``."""
+    return is_ue_eea_country_code(country_code, effective_date=effective_date)
 
 
-def irnr_representante_fiscal_required(country_code: str | None) -> bool:
-    """Return True when an IRNR fiscal residence country requires representante fiscal."""
-    return country_code is not None and not is_ue_eee_country_code(country_code)
+def irnr_representante_fiscal_required_on_every_date(country_code: str | None) -> bool | None:
+    """Return the representante fiscal requirement when the registry gives one answer for every date.
+
+    A country that is outside the EU/EEA on every date of the support envelope
+    requires a representante fiscal whatever date a caller later holds, and one
+    inside it on every date never does. Where the editions differ the answer
+    belongs to the date of the fact being decided, so this returns ``None``
+    rather than choosing a date.
+    """
+    membership = ue_eea_membership_across_envelope(country_code)
+    if membership is None or membership is EnvelopeMembership.EVERY_EDITION:
+        return False
+    if membership is EnvelopeMembership.NO_EDITION:
+        return True
+    return None
 
 
 class TaxpayerProfile(BaseModel):
@@ -473,11 +524,6 @@ class TaxpayerProfile(BaseModel):
         entity_type: The taxpayer's entity type (natural person, legal
             entity, or attribution entity). ``None`` when the operator
             has not yet declared it.
-        holiday_territory: The autonomous community whose holidays extend
-            this taxpayer's filing deadlines (Ley 39/2015 art. 30.6).
-            ``None`` when the territory is not established from a declared
-            residence; deadlines then shift for national holidays only and
-            say so.
         declaration_roles: The filer's :class:`~core.aggregation.ThirdPartyDeclarationRole`
             memberships -- orthogonal to ``entity_type`` and independent of
             it. Drives Modelo 347 claves C, D and E; empty when the operator
@@ -506,18 +552,22 @@ class TaxpayerProfile(BaseModel):
             the operator's behalf.
         pays_professionals_with_retencion: Whether the taxpayer pays
             professional fees subject to retención.
-        professional_income_withholding_ge_70pct: Whether at least 70%
-            of the taxpayer's prior-year professional income was
-            already subject to withholding.
         art109_activity_income_withholding_ge_70pct: Whether the Art. 109
             RIRPF 70% income-coverage exception is met for covered
             professional, agricultural, livestock, or forestry activity
             income. For activity-start cases this is the current payment
-            period coverage fact rather than a prior-year fact.
+            period coverage fact rather than a prior-year fact. ``None``
+            when unanswered, which keeps Modelo 130 incomplete: a stored
+            ``False`` is the taxpayer's own statement that the exception
+            does not hold, and only that statement puts the pago
+            fraccionado beyond doubt.
         pays_rent_with_retencion: Whether the taxpayer pays alquiler de
             local with retención.
         pays_capital_income_with_retencion: Whether the taxpayer pays
-            capital-income rents subject to withholding.
+            capital-income rents subject to withholding. ``None`` when
+            unanswered, which keeps Modelos 117, 123, 126, 128, 187, 188,
+            193 and 194 incomplete; a stored ``False`` is the taxpayer's
+            own no and rules those modelos out.
         member_of_large_multinational_group: Whether the entity is the
             reporting parent of a multinational group above the
             country-by-country reporting threshold (Modelo 231).
@@ -543,6 +593,10 @@ class TaxpayerProfile(BaseModel):
         monedas_virtuales_extranjero_above_threshold: Whether the
             taxpayer holds virtual currencies abroad above the Modelo
             721 threshold; ``None`` when unanswered.
+        patrimonio_declaration_threshold_met: Whether the Impuesto sobre
+            el Patrimonio cuota is payable or, failing that, the assets
+            and rights exceed 2.000.000 euros (Ley 19/1991 art. 37,
+            Modelo 714); ``None`` when unanswered.
         premio_loteria_gravamen_especial_sin_retencion: Whether the
             taxpayer obtained a lottery or betting prize subject to the
             gravamen especial that was not subject to retención or
@@ -551,13 +605,18 @@ class TaxpayerProfile(BaseModel):
             quarters in which such prizes were cashed; ``None`` when
             undeclared.
         iva: IVA-specific filing facts that can change filing cadence.
+        iva_block_unanswered_paths: The required Modelo IVA block paths a
+            read projection found unanswered, in their declared order. Empty
+            for every projection that refuses an incomplete block. When the
+            unanswered paths include the territory or the composition the
+            block cannot be built and ``iva`` is ``None``; otherwise the block
+            carries each unanswered yes/no fact as ``None``. Either way every
+            obligation such a fact decides is undetermined, never read as "no".
         cross_period_group_member_rosters: Expected group-member rosters
             keyed by upstream modelo, filing year, and period. These
             rosters let cross-period aggregate modelos prove complete
             member fan-in before verification, filing, or export.
         enrollment: AEAT enrollment facts that can change filing cadence.
-        notes: Free-form notes for the user. Never consumed by the
-            engine.
         irpf_special_regime: The IRPF special regime in effect for
             this taxpayer. ``None`` when undeclared (treated as
             ``GENERAL`` by engine consumers). ``IMPATRIADO`` activates
@@ -568,8 +627,10 @@ class TaxpayerProfile(BaseModel):
             the special regime. Required to compute the six-year window
             for ``IMPATRIADO`` (RIRPF Art. 116). ``None`` when
             undeclared or when ``irpf_special_regime`` is ``GENERAL``.
-        fiscal_residency: Fiscal residency category. ``None`` treated as
-            ``RESIDENT_IRPF`` by engine consumers. ``NON_RESIDENT_IRNR``
+        fiscal_residency: Fiscal residency category. ``None`` when
+            unanswered, which leaves every residency-gated modelo
+            incomplete rather than reading as residence in Spain.
+            ``NON_RESIDENT_IRNR``
             routes the taxpayer to IRNR (TRLIRNR RDLeg 5/2004 Art. 2):
             the engine suppresses IRPF-resident deadlines and will
             activate IRNR obligations (Modelos 210/216/247) when
@@ -578,17 +639,6 @@ class TaxpayerProfile(BaseModel):
         country of fiscal residence. Required when
         ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
         valid only for IRPF residents.
-        ley_49_2002_special_regime_option_declared: Whether the entity
-            has declared the Modelo 036 option for the Title II Ley
-            49/2002 special fiscal regime. ``None`` means undeclared.
-        ley_49_2002_special_regime_option_date: Date declared for that
-            option on Modelo 036. ``None`` means undeclared.
-        ley_49_2002_special_regime_renunciation_declared: Whether the
-            entity has declared renunciation of the Title II Ley
-            49/2002 special regime. ``None`` means undeclared.
-        ley_49_2002_special_regime_renunciation_date: Date declared
-            for that renunciation on Modelo 036. ``None`` means
-            undeclared.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -601,52 +651,43 @@ class TaxpayerProfile(BaseModel):
     irpf_estimation_regime: IrpfEstimationRegime | None = None
     irpf_activity_kind: IrpfActivityKind | None = None
     iva_regime: IVARegime
-    has_employees: bool = False
+    has_employees: bool | None = None
     colegio_concertado: bool | None = None
-    pays_professionals_with_retencion: bool = False
-    professional_income_withholding_ge_70pct: bool = False
-    art109_activity_income_withholding_ge_70pct: bool = False
-    pays_rent_with_retencion: bool = False
-    pays_capital_income_with_retencion: bool = False
+    pays_professionals_with_retencion: bool | None = None
+    art109_activity_income_withholding_ge_70pct: bool | None = None
+    pays_rent_with_retencion: bool | None = None
+    pays_capital_income_with_retencion: bool | None = None
+    pays_non_resident_income_with_retencion: bool | None = None
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
     objective_estimation_prior_year_purchases_eur: Decimal | None = None
-    objective_estimation_modulos_iae_epigraph: str = ""
-    objective_estimation_modulos_module_1_units: Decimal | None = None
-    objective_estimation_modulos_module_2_units: Decimal | None = None
-    objective_estimation_modulos_module_3_units: Decimal | None = None
-    objective_estimation_modulos_module_4_units: Decimal | None = None
-    objective_estimation_modulos_module_5_units: Decimal | None = None
-    objective_estimation_modulos_module_6_units: Decimal | None = None
-    objective_estimation_modulos_module_7_units: Decimal | None = None
-    does_intracomunitario: bool = False
+    does_intracomunitario: bool | None = None
     third_party_transactions_above_347_threshold: bool | None = None
     bienes_extranjero_above_threshold: bool | None = None
     monedas_virtuales_extranjero_above_threshold: bool | None = None
+    patrimonio_declaration_threshold_met: bool | None = None
     premio_loteria_gravamen_especial_sin_retencion: bool | None = None
     premio_loteria_gravamen_especial_trimestres: frozenset[str] | None = None
     iva: ModeloIVAProfile | None = None
+    iva_block_unanswered_paths: tuple[str, ...] = ()
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
-    fiscal_address_cadastral_reference: str = ""
-    fiscal_address_is_habitual_vivienda: bool = False
-    holiday_territory: CalendarCCAA | None = None
     activity_start_date: date | None = None
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
-    new_entity_first_two_profit_periods: bool | None = None
-    ley_49_2002_special_regime_option_declared: bool | None = None
-    ley_49_2002_special_regime_option_date: date | None = None
-    ley_49_2002_special_regime_renunciation_declared: bool | None = None
-    ley_49_2002_special_regime_renunciation_date: date | None = None
-    tributacion_estado_porcentaje: Decimal | None = None
-    establecimiento_type: str = ""
-    elected_withholding_pct: str = ""
-    vivienda_office_total_m2: Decimal | None = None
-    vivienda_office_office_m2: Decimal | None = None
+    regimen_entidades_navieras_tonelaje: bool | None = None
     iae_epigraph: str = ""
-    notes: str = ""
+    activity_iae_epigraphs: tuple[str | None, ...] = ()
+    """Every declared activity's IAE epigraph, in declaration order.
+
+    One entry per activity row the profile declares, ``None`` where that row
+    records no epigraph, and an empty tuple where the profile declares no
+    activity at all. ``iae_epigraph`` carries the unindexed row's value only, so
+    a rule asking whether ANY activity is classified in some group has to read
+    this field: a profile whose activities live in indexed rows leaves the
+    scalar blank, which is not the same as having no classified activity.
+    """
     irpf_special_regime: IrpfSpecialRegime | None = None
     special_regime_start_date: date | None = None
     fiscal_residency: FiscalResidency | None = None
@@ -661,33 +702,6 @@ class TaxpayerProfile(BaseModel):
     """Full name of the fiscal representative in Spain.
 
     Required together with ``representante_fiscal_nif`` for the same cases.
-    """
-    sal_socios_trabajadores_count: int | None = None
-    sal_reserva_especial_dotada: Decimal | None = None
-    sal_capital_social: Decimal | None = None
-    irpf_pagadores_count: int | None = None
-    """Number of pagadores (income payers) the taxpayer received income from.
-
-    When ``>= 2`` and ``irpf_pagadores_secondary_income > 1500``, filing
-    Modelo 100 is mandatory under Art. 96.3 LIRPF regardless of the total
-    income threshold. ``None`` when not declared (treated as "not known").
-    """
-    irpf_pagadores_secondary_income: Decimal | None = None
-    """Sum of income received from the 2nd and subsequent pagadores.
-
-    Art. 96.3 LIRPF: when ``irpf_pagadores_count >= 2`` and this value
-    exceeds €1,500, the work-income filing-exemption limit drops from the
-    general €22,000 to the per-year reduced limit. Only meaningful when
-    ``irpf_pagadores_count >= 2``; ``None`` when not declared.
-    """
-    irpf_pagadores_total_work_income: Decimal | None = None
-    """Total rendimientos íntegros del trabajo for the year (all pagadores).
-
-    Art. 96.2.a)/96.3 LIRPF: a Modelo 100 filing obligation arises when this
-    total exceeds the applicable exemption limit — the general €22,000, or the
-    per-year reduced limit (€15,876 for 2024 onward) when the multiple-pagadores
-    condition is met. ``None`` when not declared, in which case a triggered
-    multiple-pagadores condition surfaces a conservative advisory.
     """
 
     @field_validator(
@@ -714,6 +728,18 @@ class TaxpayerProfile(BaseModel):
         from ..calculations.registry.iva_regime_vocabulary import require_iva_regime
 
         require_iva_regime(self.iva_regime)
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _check_unanswered_iva_block_paths(self) -> Self:
+        """Reject a built IVA block that answers a path the profile names as unanswered."""
+        if self.iva is None:
+            return self
+        for path in self.iva_block_unanswered_paths:
+            field = path.removeprefix("iva.")
+            if field not in ModeloIVAProfile.model_fields or getattr(self.iva, field) is not None:
+                raise DeadlineValidationError(f"the IVA block answers {path}, which the profile names as unanswered")
         return self
 
     @model_validator(mode="after")
@@ -759,8 +785,12 @@ class TaxpayerProfile(BaseModel):
         representative in Spain. Both NIF and name are required together;
         partial declaration is rejected.
         """
-        if fiscal_residency_requires_country(self.fiscal_residency) and irnr_representante_fiscal_required(
-            self.country_of_fiscal_residence
+        # A profile carries no date, so only a country whose membership is the
+        # same on every date is decided here; one that differs between
+        # editions is decided where the date of the fact is held.
+        if (
+            fiscal_residency_requires_country(self.fiscal_residency)
+            and irnr_representante_fiscal_required_on_every_date(self.country_of_fiscal_residence) is True
         ):
             nif_missing = self.representante_fiscal_nif is None
             nombre_missing = self.representante_fiscal_nombre is None
@@ -788,17 +818,17 @@ class TaxpayerProfile(BaseModel):
         window_years = irpf_special_regime_impatriado_window_years()
         return self.special_regime_start_date.year <= today.year < self.special_regime_start_date.year + window_years
 
-    @property
-    def ue_eee_status(self) -> bool:
-        """True when ``country_of_fiscal_residence`` is in the EU + EEA (post-Brexit).
+    def ue_eee_status_on(self, effective_date: date) -> bool:
+        """True when ``country_of_fiscal_residence`` is in the EU + EEA on ``effective_date``.
 
-        ``GB`` is excluded from 2021-01-01 (Brexit transition end).
-        Returns ``False`` when ``country_of_fiscal_residence`` is ``None``
-        (i.e., for IRPF-resident profiles).
+        The registry's membership edition for that date decides (``GB`` leaves
+        from 2021-01-01, the end of the Brexit transition). Returns ``False``
+        when ``country_of_fiscal_residence`` is ``None`` (i.e., for
+        IRPF-resident profiles).
         """
         if self.country_of_fiscal_residence is None:
             return False
-        return is_ue_eee_country_code(self.country_of_fiscal_residence)
+        return is_ue_eee_country_code(self.country_of_fiscal_residence, effective_date=effective_date)
 
 
 def resolve_multiple_pagadores_reduced_limit(
@@ -894,7 +924,7 @@ class RecargoBand(BaseModel):
         legal_ref: Stable corpus reference (``ley-58-2003:art-27.2``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str = Field(min_length=1, max_length=64)
     min_completed_months: NonNegativeInt
@@ -937,7 +967,7 @@ class Recovery(BaseModel):
             disagree.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     still_filable: bool = True
     recargo_band: RecargoBand
@@ -967,15 +997,30 @@ class ModeloDeadline(BaseModel):
             (e.g. ``Period.from_year_and_code(2026, "1T")``).
         opens_on: The first day the AEAT filing window accepts the
             modelo for this period.
-        closes_on: The last day the AEAT filing window accepts the
-            modelo for this period.
+        closes_on: The close AEAT publishes for this window, on the national
+            basis. The nominal date, which is not the last day the filer has
+            when it falls on a non-business day.
+        adjusted_closes_on: The last day the filer actually has: ``closes_on``
+            moved to the next business day when it is a Saturday, Sunday or
+            national inhábil (Ley 39/2015 art. 30.5, applied through Ley
+            58/2003 art. 7.2). Equal to ``closes_on`` when no shift applies,
+            and never earlier than it. Every date comparison that decides
+            whether filing is still timely reads this one.
+        holiday_coverage: Which holidays ``adjusted_closes_on`` accounts for.
+            ``CALENDAR_UNAVAILABLE`` means the shift's calendar could not be
+            resolved, so the effective close is unknown and the obligation's
+            ``status`` is ``UNKNOWN`` rather than a classification against the
+            nominal date.
+        shift_reason: Stable token for why the close moved, or did not.
+        shift_jurisdictions: The holiday jurisdictions that moved the close.
+        shift_holiday_refs: The holidays that moved the close. These three
+            travel with the shifted date so a surface renders the provenance it
+            was given rather than resolving the shift a second time.
         payment_cutoff_on: The cutoff for direct-debit payment, if
             applicable. ``None`` when there is no payment leg.
         status: The :class:`ObligationStatus` against the reference
-            ``today`` used by :meth:`DeadlineEngine.compute`.
-        applies_because: Human-readable explanation of why the profile
-            is obliged to file this modelo, resolved from the registry
-            deadline applicability rule.
+            ``today`` used by :meth:`DeadlineEngine.compute`, classified
+            against ``adjusted_closes_on``.
         boe_references: Tuple of opaque BOE / Manual práctico citation
             keys. Stable identifiers, never URLs.
         recovery: Resolved :class:`Recovery` payload when ``status`` is
@@ -984,15 +1029,19 @@ class ModeloDeadline(BaseModel):
             registry's recargo bracket table.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
     period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
     opens_on: date
     closes_on: date
+    adjusted_closes_on: date
+    holiday_coverage: DeadlineHolidayCoverage
+    shift_reason: str
+    shift_jurisdictions: tuple[HolidayJurisdiction, ...] = ()
+    shift_holiday_refs: tuple[str, ...] = ()
     payment_cutoff_on: date | None = None
     status: ObligationStatus
-    applies_because: str = Field(min_length=1)
     boe_references: tuple[str, ...] = Field(default_factory=tuple)
     recovery: Recovery | None = None
 
@@ -1002,10 +1051,65 @@ class ModeloDeadline(BaseModel):
         """Reject obligations whose ``opens_on`` is after ``closes_on``."""
         if self.opens_on > self.closes_on:
             raise DeadlineValidationError(f"opens_on ({self.opens_on}) is after closes_on ({self.closes_on})")
+        if self.adjusted_closes_on < self.closes_on:
+            raise DeadlineValidationError(
+                f"adjusted_closes_on ({self.adjusted_closes_on}) precedes closes_on ({self.closes_on})",
+            )
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
             raise DeadlineValidationError(
                 f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})",
             )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _check_unknown_close(self) -> ModeloDeadline:
+        """Keep an unknown effective close from carrying a judgement made after it.
+
+        An obligation whose shift calendar could not be resolved knows only its
+        nominal close, as a lower bound. Nothing is judged past it: no lateness,
+        no recargo and no payment cutoff.
+        """
+        if self.status is not ObligationStatus.UNKNOWN:
+            return self
+        if self.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+            raise DeadlineValidationError("an unknown-close obligation must report the calendar as unavailable")
+        if self.adjusted_closes_on != self.closes_on:
+            raise DeadlineValidationError("an unknown-close obligation keeps only its nominal close")
+        if self.payment_cutoff_on is not None or self.recovery is not None:
+            raise DeadlineValidationError("an unknown-close obligation carries no payment cutoff or recovery")
+        return self
+
+
+class UndeterminedObligation(BaseModel):
+    """A filing window whose obligation turns on a Modelo IVA fact the profile has not answered.
+
+    The window is owed for some answers of ``deciding_paths`` and not for
+    others, so it is neither a deadline nor an exclusion until they are given.
+
+    Attributes:
+        modelo: The modelo the window belongs to.
+        period: The period the window covers.
+        opens_on: The first day the window accepts the filing.
+        closes_on: The close the registry publishes for the window, on the
+            national calendar; no holiday shift is resolved for a window
+            that may not be owed.
+        deciding_paths: The unanswered profile paths that decide it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
+    period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
+    opens_on: date
+    closes_on: date
+    deciding_paths: tuple[str, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _window_is_ordered(self) -> Self:
+        if self.opens_on > self.closes_on:
+            raise DeadlineValidationError("an undetermined filing window closes before it opens")
         return self
 
 
@@ -1018,6 +1122,8 @@ class Schedule(BaseModel):
         year: The target year.
         obligations: Tuple of :class:`ModeloDeadline` ordered by
             ``(closes_on, modelo, period)``.
+        undetermined: The windows an unanswered Modelo IVA fact leaves
+            undecided, in window order; never part of ``obligations``.
         generated_at: UTC timestamp of when :meth:`DeadlineEngine.compute`
             built this schedule. The only non-deterministic field, and
             validated as UTC-aware rather than merely documented as such:
@@ -1028,6 +1134,7 @@ class Schedule(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile: TaxpayerProfile
-    year: int = Field(ge=1900, le=2999)
+    year: FourDigitYear
     obligations: tuple[ModeloDeadline, ...]
+    undetermined: tuple[UndeterminedObligation, ...] = ()
     generated_at: UtcInstant

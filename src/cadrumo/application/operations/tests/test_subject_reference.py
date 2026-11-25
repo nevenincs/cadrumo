@@ -107,10 +107,10 @@ def test_each_constructor_declares_only_what_its_kind_reads() -> None:
         "payload_path": ["calculation_revision_id"],
         "literal": None,
     }
-    assert OperationSubjectReferenceV1.fixed("local-reader:runtime").model_dump(mode="json") == {
+    assert OperationSubjectReferenceV1.fixed("machine:runtime").model_dump(mode="json") == {
         "kind": "fixed",
         "payload_path": [],
-        "literal": "local-reader:runtime",
+        "literal": "machine:runtime",
     }
 
 
@@ -150,7 +150,7 @@ def test_a_declaration_has_no_defaults_to_fall_back_on() -> None:
     ("reference", "expected"),
     [
         (OperationSubjectReferenceV1.profile(), _PROFILE_SUBJECT),
-        (OperationSubjectReferenceV1.fixed("local-reader:runtime"), "local-reader:runtime"),
+        (OperationSubjectReferenceV1.fixed("machine:runtime"), "machine:runtime"),
         (OperationSubjectReferenceV1.payload_field("work_unit_id"), _WORK_UNIT),
         (OperationSubjectReferenceV1.payload_field("baseline", "work_unit_id"), _NESTED_WORK_UNIT),
         (OperationSubjectReferenceV1.payload_field("baseline", "profile_id"), "5aa00000-0000-4000-8000-0000000000aa"),
@@ -204,7 +204,7 @@ def test_a_payload_that_does_not_carry_its_subject_field_is_refused(
     "reference",
     [
         OperationSubjectReferenceV1.profile(),
-        OperationSubjectReferenceV1.fixed("local-reader:runtime"),
+        OperationSubjectReferenceV1.fixed("machine:runtime"),
         OperationSubjectReferenceV1.payload_field("work_unit_id"),
         OperationSubjectReferenceV1.payload_field("baseline", "profile_id"),
         OperationSubjectReferenceV1.payload_field_or_profile("selected_work_unit_id"),

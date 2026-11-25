@@ -10,6 +10,51 @@ line_ending = "none"
 required = true
 
 [[revisions.esquema-exterior.export_layouts.records.fields]]
+id = "m369-exterior-01-809-3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-15"
+offset = 809
+length = 2
+kind = "binding"
+binding = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-15"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = "m369-exterior-01-811-3-prestaciones-de-servicios-tipo-de-iva-15"
+offset = 811
+length = 5
+kind = "binding"
+binding = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-de-iva-15"
+data_type = "decimal"
+required = false
+padding = "left_zero"
+justification = "right"
+decimals = 2
+signed = false
+design_type = "Num"
+absent_fill = "spaces"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
+id = "m369-exterior-01-816-3-prestaciones-de-servicios-tipo-iva-15"
+offset = 816
+length = 1
+kind = "binding"
+binding = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-tipo-iva-15"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions.esquema-exterior.export_layouts.records.fields]]
 id = "m369-exterior-01-817-3-prestaciones-de-servicios-base-imponible-15"
 offset = 817
 length = 17
@@ -22,6 +67,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -38,6 +84,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -68,6 +115,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -98,6 +146,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -114,6 +163,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -144,6 +194,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -174,6 +225,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -190,6 +242,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -220,6 +273,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -250,6 +304,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -266,6 +321,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -296,6 +352,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -326,6 +383,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -342,6 +400,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -372,6 +431,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -402,6 +462,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -418,6 +479,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -448,6 +510,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -478,6 +541,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -494,6 +558,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -524,6 +589,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -554,6 +620,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -570,6 +637,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -600,6 +668,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -630,6 +699,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -646,6 +716,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -676,6 +747,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -706,6 +778,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -722,6 +795,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -752,6 +826,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -782,6 +857,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -798,6 +874,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -828,6 +905,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -858,6 +936,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -874,6 +953,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -904,6 +984,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -934,6 +1015,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -950,6 +1032,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -980,6 +1063,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1010,6 +1094,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -1026,6 +1111,7 @@ justification = "right"
 decimals = 2
 signed = false
 design_type = "Num"
+absent_fill = "spaces"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 

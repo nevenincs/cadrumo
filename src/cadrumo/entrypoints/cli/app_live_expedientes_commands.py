@@ -13,7 +13,7 @@ from uuid import UUID
 import typer
 
 from ...application.live.capture_mode import LiveCaptureMode
-from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
+from .app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 from .operation_expedientes_capture import (
     read_expedientes_bulk_capture_for_cli,

@@ -151,14 +151,14 @@ record_identity = "M11100"
 sheet = "M11100"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "M11100"
 
 [variable_envelopes.closer_anchor]
 sheet = "M11100"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "M11100"
 
 [variable_envelopes.total_anchor]

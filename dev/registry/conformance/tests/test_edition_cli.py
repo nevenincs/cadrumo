@@ -36,6 +36,7 @@ import pytest
 from typer.testing import CliRunner, Result
 
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..cli import app
 from ..loader_directory_mode_support import write_standard_manifest
@@ -43,8 +44,10 @@ from ..loader_directory_mode_support import write_standard_manifest
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _MODELO = "999"
-_PREDECESSOR = "2024"
-_SUCCESSOR = "2025"
+_SUCCESSOR_YEAR = filing_year_envelope().horizon
+_PREDECESSOR_YEAR = _SUCCESSOR_YEAR - 1
+_PREDECESSOR = str(_PREDECESSOR_YEAR)
+_SUCCESSOR = str(_SUCCESSOR_YEAR)
 _REFUSED_EXIT_CODE = 2
 _REVIEW_STATUS = "agent_reviewed"
 _EXCLUDED_EDITION_KEYS = frozenset({"predecessor", "reviewed_against"})
@@ -123,11 +126,11 @@ def _write_registry(root: Path, *, delta: bool) -> Path:
     modelo_dir = root / "modelos" / _MODELO
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Test")
-    _write_edition(modelo_dir, _PREDECESSOR, year=2024, fragments=_predecessor_fragments(), extra="")
+    _write_edition(modelo_dir, _PREDECESSOR, year=_PREDECESSOR_YEAR, fragments=_predecessor_fragments(), extra="")
     _write_edition(
         modelo_dir,
         _SUCCESSOR,
-        year=2025,
+        year=_SUCCESSOR_YEAR,
         fragments=_delta_fragments() if delta else _full_copy_fragments(),
         extra=f'predecessor = "{_PREDECESSOR}"\nreviewed_against = "{_PREDECESSOR}"\n' if delta else "",
     )

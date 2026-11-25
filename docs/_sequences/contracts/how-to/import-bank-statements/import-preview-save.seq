@@ -3,5 +3,5 @@ aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv --
 @step Save the rows by repeating the command without --dry-run.
 aeat app ledger import --file fixtures/movimientos-2026-1t.csv --provider csv
 @step Confirm an imported row is now in the records.
-@result aeat --format json app ledger view 71a5db2b
-@expect result.transaction.description == "Cobro factura F-2026-001 servicios de consultoria"
+@result aeat --format json app ledger view 21853f4f
+@expect result.transaction.description == "Cobro factura limpieza de oficinas enero"

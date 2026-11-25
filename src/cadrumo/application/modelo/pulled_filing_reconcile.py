@@ -20,7 +20,7 @@ nearly everywhere, so comparing every pulled figure against it would raise a
 mismatch on essentially every reconciled casilla — the alert fatigue that trains
 an operator to ignore a channel. The comparison is therefore restricted to the
 casillas the local revision supplied independent evidence for, resolved by
-:func:`~application.modelo._reconcile_population.resolve_casilla_population_scope`. An untouched bucket
+:func:`~application.modelo.reconcile_population.resolve_casilla_population_scope`. An untouched bucket
 produces no findings at all, which is the intended behaviour and not a failure
 to detect.
 
@@ -45,7 +45,7 @@ under-declaration this channel exists to surface.
 See Also:
     :func:`~application.modelo.reconcile_casilla.detect_casilla_divergences`
         The pure comparison this delegates to.
-    :func:`~application.modelo._reconcile_population.resolve_casilla_population_scope`
+    :func:`~application.modelo.reconcile_population.resolve_casilla_population_scope`
         Supplies the casilla scope that keeps an empty bucket silent.
     :class:`~CalculationRevision`
         The local side of the comparison.
@@ -70,13 +70,14 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-from ._reconcile_population import resolve_casilla_population_scope
-from .reconcile_casilla import detect_casilla_divergences
+from .reconcile_casilla import CasillaDivergence, detect_casilla_divergences
+from .reconcile_population import resolve_casilla_population_scope
+from .refusal_door_verdicts import stored_defect_verdict
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit
@@ -109,7 +110,10 @@ def _pulled_filed_values(
     ):
         from ...domain.calculations.registry.errors import RegistrySnapshotError
 
-        raise RegistrySnapshotError("pulled filing does not belong to the selected work-unit registry coordinate")
+        raise RegistrySnapshotError(
+            "pulled filing does not belong to the selected work-unit registry coordinate",
+            precondition_verdict=stored_defect_verdict("pulled_filing_coordinate"),
+        )
     return dict(stored.observation.casilla_values)
 
 
@@ -126,12 +130,45 @@ def _law_resolved_snapshot(work_unit: WorkUnit, *, operation: PinnedAuthorityOpe
     on the revision.
     """
     from ...core.errors.hierarchy import CadrumoError
-    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     try:
         return resolve_registry_snapshot_for_work_unit(work_unit, operation=operation)
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return None
+
+
+def _divergence_findings(
+    divergences: tuple[CasillaDivergence, ...],
+    registry_revision: ModeloRevision,
+    work_unit: WorkUnit,
+) -> list[ModeloVerificationFinding]:
+    casillas_by_id: dict[CasillaId, CasillaDefinition] = {casilla.id: casilla for casilla in registry_revision.casillas}
+    findings: list[ModeloVerificationFinding] = []
+    for divergence in divergences:
+        casilla = casillas_by_id.get(divergence.casilla_id)
+        if casilla is None:
+            continue
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
+                severity=ModeloVerificationFindingSeverity.WARNING,
+                # The subject rides a field, never a locale-rendered message.
+                casilla_id=divergence.casilla_id,
+                message_locale_key="application.modelo.findings.pulled_filing_casilla_mismatch",
+                message_facts={
+                    "casilla_number": casilla.number,
+                    "period_code": work_unit.period.registry_token,
+                    "filing_year": work_unit.filing_year,
+                    "computed_value": divergence.computed_value if divergence.computed_value is not None else "absent",
+                    "filed_value": divergence.filed_value if divergence.filed_value is not None else "absent",
+                    "mismatch_kind": divergence.kind.value,
+                },
+                legal_refs=casilla.legal_refs,
+                source_refs=casilla.source_refs,
+            ),
+        )
+    return findings
 
 
 def pulled_filing_divergence_findings(
@@ -182,32 +219,7 @@ def pulled_filing_divergence_findings(
     if not divergences:
         return []
 
-    casillas_by_id: dict[CasillaId, CasillaDefinition] = {casilla.id: casilla for casilla in registry_revision.casillas}
-    findings: list[ModeloVerificationFinding] = []
-    for divergence in divergences:
-        casilla = casillas_by_id.get(divergence.casilla_id)
-        if casilla is None:
-            continue
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                # The subject rides a field, never a locale-rendered message.
-                casilla_id=divergence.casilla_id,
-                message_locale_key="application.modelo.findings.pulled_filing_casilla_mismatch",
-                message_facts={
-                    "casilla_number": casilla.number,
-                    "period_code": work_unit.period.registry_token,
-                    "filing_year": work_unit.filing_year,
-                    "computed_value": divergence.computed_value if divergence.computed_value is not None else "absent",
-                    "filed_value": divergence.filed_value if divergence.filed_value is not None else "absent",
-                    "mismatch_kind": divergence.kind.value,
-                },
-                legal_refs=casilla.legal_refs,
-                source_refs=casilla.source_refs,
-            ),
-        )
-    return findings
+    return _divergence_findings(divergences, registry_revision, work_unit)
 
 
 __all__ = ["pulled_filing_divergence_findings"]

@@ -58,7 +58,8 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
     ),
     "iva.regime": (
         _Cause.CONDITIONAL_RESCUE,
-        "Raised to required by iva_regime_required(values) in the keys validator: a filer with no "
+        "Owed only where schema_requirement_applies(path, values) says so, which the wizard status reads as its "
+        "enrolment gap: a filer with no "
         "IVA obligation legitimately declares none, so an unconditional wizard requirement would "
         "refuse them.",
     ),
@@ -71,6 +72,27 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
     ),
     "attribution_entity_socios.participe_clave": (_Cause.REPEATABLE_ROW, "One column of a declared socio row."),
     "attribution_entity_socios.clave": (_Cause.REPEATABLE_ROW, "One column of a declared socio row."),
+    "renta_inmueble.situacion": (_Cause.REPEATABLE_ROW, "One column of a declared property row."),
+    "renta_arrendamiento.inmueble": (_Cause.REPEATABLE_ROW, "One column of a declared lease row."),
+    "renta_arrendamiento.fecha_contrato": (_Cause.REPEATABLE_ROW, "One column of a declared lease row."),
+    "renta_arrendamiento.fecha_inicio": (_Cause.REPEATABLE_ROW, "One column of a declared lease row."),
+    "iae_local.actividad": (_Cause.REPEATABLE_ROW, "One column of a declared IAE premises row."),
+    "iae_local.afectacion": (_Cause.REPEATABLE_ROW, "One column of a declared IAE premises row."),
+    "iae_local_superficie.local": (_Cause.REPEATABLE_ROW, "One column of a declared premises surface row."),
+    "iae_local_superficie.clase": (_Cause.REPEATABLE_ROW, "One column of a declared premises surface row."),
+    "iae_elemento_tributario.actividad": (_Cause.REPEATABLE_ROW, "One column of a declared IAE tax element row."),
+    "iae_elemento_tributario.linea": (_Cause.REPEATABLE_ROW, "One column of a declared IAE tax element row."),
+    "iae_elemento_tributario.code": (_Cause.REPEATABLE_ROW, "One column of a declared IAE tax element row."),
+    "iae_elemento_tributario.numero": (_Cause.REPEATABLE_ROW, "One column of a declared IAE tax element row."),
+    "inversiones_posicion.tipo": (_Cause.REPEATABLE_ROW, "One column of a declared savings position row."),
+    "inversiones_posicion.pagador_nif": (_Cause.REPEATABLE_ROW, "One column of a declared savings position row."),
+    "inversiones_posicion.pagador_nombre": (_Cause.REPEATABLE_ROW, "One column of a declared savings position row."),
+    "inversiones_posicion.pais_origen": (_Cause.REPEATABLE_ROW, "One column of a declared savings position row."),
+    "inversiones_posicion.porcentaje_titularidad": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared savings position row.",
+    ),
+    "inversiones_posicion.fecha_inicio": (_Cause.REPEATABLE_ROW, "One column of a declared savings position row."),
     "attribution_received.entity_nif": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
     "attribution_received.entity_name": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
     "attribution_received.share_pct": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
@@ -79,8 +101,98 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
         "One column of a received-attribution row.",
     ),
     "attribution_received.filing_year": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
-    "usage_ratios.category_id": (_Cause.REPEATABLE_ROW, "One column of a declared usage-ratio row."),
-    "usage_ratios.business_ratio": (_Cause.REPEATABLE_ROW, "One column of a declared usage-ratio row."),
+    "m200_administrador.apellidos_nombre_razon_social": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_administrador.forma_juridica": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_administrador.nif": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_entidad_menor_dependiente.nif": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_entidad_menor_dependiente.nombre_o_razon_social": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_establecimiento_permanente.identificacion": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_establecimiento_permanente.pais_residencia_fiscal": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_establecimiento_permanente.volumen_operaciones": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_directa.codigo_provincia_pais": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_directa.ingresos_por_dividendos": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_directa.nif": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_participacion_directa.nombre_o_razon_social": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_directa.porcentaje_participacion": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_directa.valor_en_libros": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_directa.valor_nominal_total": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_socio.apellidos_nombre_razon_social": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_socio.codigo_provincia_pais": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_socio.forma_juridica": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_participacion_socio.nif": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_participacion_socio.nominal": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_participacion_socio.porcentaje_participacion": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_representante_legal.apellidos_y_nombre": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_representante_legal.fecha_poder": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_representante_legal.nif": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_representante_legal.notaria_otros": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_secretario_consejo.apellidos_y_nombre": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_secretario_consejo.nif": (_Cause.REPEATABLE_ROW, "One column of a declared Modelo 200 page 002 row."),
+    "m200_socio_sicav_disolucion.nif_iic_reinversion": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
+    "m200_socio_sicav_disolucion.nif_sociedad_disuelta": (
+        _Cause.REPEATABLE_ROW,
+        "One column of a declared Modelo 200 page 002 row.",
+    ),
 }
 """Schema-required fields the wizard key space does not require, and why.
 

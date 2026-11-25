@@ -22,6 +22,7 @@ from decimal import Decimal
 
 import pytest
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..schema import ProfileFieldDefinition, ProfileFieldType, numeric_value_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -95,7 +96,7 @@ def test_a_boolean_is_refused_despite_being_an_integer() -> None:
 
 def test_a_date_is_refused() -> None:
     """A date-shaped fact reaching a numeric field is not silently ordered."""
-    assert numeric_value_refusal(_field(), date(2026, 1, 1)) is not None
+    assert numeric_value_refusal(_field(), date(filing_year_envelope().horizon, 1, 1)) is not None
 
 
 @pytest.mark.parametrize("value", [Decimal("50"), 50])

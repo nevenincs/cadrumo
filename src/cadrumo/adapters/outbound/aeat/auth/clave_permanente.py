@@ -69,7 +69,7 @@ from .....application.auth.session_types import (
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.bucket_pointer import require_active_bucket_id
-from .....core.config import Settings as _Settings
+from .....core.config import Settings as ConfigSettings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
@@ -78,27 +78,28 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
-from .._playwright import PlaywrightTimeoutError
-from . import session_store as session_store
-from ._clave_provider_common import (
+from ..playwright import PlaywrightTimeoutError
+from . import session_store
+from .authenticator import AEAT_SESSION_IDLE_TTL
+from .browser_lifecycle import CloseIntentBarrier
+from .clave_movil_support import classify_identity
+from .clave_permanente_metadata import ClavePermanenteSessionMetadata
+from .clave_permanente_support import (
+    ClavePermanenteFailureMode,
+    clave_permanente_auth_browser_action_policy,
+    clave_permanente_configuration_error,
+    clave_permanente_login_error,
+)
+from .clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,
     default_sede_target_url,
     is_authenticated_clave_landing,
     verification_probe_url,
 )
-from ._session_probe import run_authenticated_landing_probe
-from .authenticator import AEAT_SESSION_IDLE_TTL
-from .browser_lifecycle import CloseIntentBarrier
-from .clave_movil_support import classify_identity as _classify_identity
-from .clave_permanente_metadata import ClavePermanenteSessionMetadata
-from .clave_permanente_support import ClavePermanenteFailureMode
-from .clave_permanente_support import (
-    clave_permanente_auth_browser_action_policy as _browser_action_policy,
-)
-from .clave_permanente_support import clave_permanente_configuration_error as _configuration_error
-from .clave_permanente_support import clave_permanente_login_error as _login_error
 from .errors import AuthConfigurationError, AuthProviderCleanupError
+from .session_probe import run_authenticated_landing_probe
+from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -107,7 +108,7 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
-    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+    ConfigSettings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
 )
 # Environment variable names referenced in operator-facing error messages.
 # Named constants so grepping for the env-var name surfaces every usage site.
@@ -178,7 +179,7 @@ class ClavePermanenteAuthProvider:
             resume_path = self._storage_state_path()
             if session_store.exists(resume_path):
                 try:
-                    return await self._resume_locked(
+                    session, _assertion = await self._resume_locked(
                         resume_path,
                         target_url=target_url,
                     )
@@ -188,12 +189,76 @@ class ClavePermanenteAuthProvider:
                         exc,
                     )
                     self._invalidate_persisted(resume_path)
+                else:
+                    return session
 
             return await self._fresh_login_locked(
                 dni_nie=dni_nie,
                 password=password,
                 storage_state_path=resume_path,
                 target_url=target_url,
+            )
+
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
+        """Resume the stored Cl@ve Permanente session and prove it, with no fresh-login fallback.
+
+        The stored record passes the same deadline and digest gates as
+        :meth:`authenticate`, then the landing probe. A valid probe refreshes
+        the record; a refusal raises :class:`AeatLoginAssertionError` and
+        deletes nothing.
+        """
+        async with self._lifecycle.work():
+            self._require_idle()
+            return await self._resume_locked(self._storage_state_path(), target_url=target_url)
+
+    async def adopt_view_capture(self, storage_state: Mapping[str, object]) -> AeatSession:
+        """Record a Sede view's captured state as this identity's session and prove it.
+
+        The person signed in inside the view by hand; Cadrumo never submits the
+        Cl@ve Permanente form there. The capture is written with the configured
+        DNI/NIE and the default authenticated Sede page as its landing, anchored
+        at the capture instant, and then resumed exactly as a stored session is,
+        in a browser of this provider's own. The taxpayer AEAT shows to the
+        capture must then be the configured DNI/NIE. The caller stages the writes and
+        publishes them only after this returns; a refusal raises
+        :class:`AeatLoginAssertionError`.
+        """
+        async with self._lifecycle.work():
+            self._require_idle()
+            dni_nie = self._require_identity()
+            path = self._storage_state_path()
+            captured_at = now()
+            self._persist_session(
+                path,
+                storage_state=storage_state,
+                metadata=ClavePermanenteSessionMetadata(
+                    identity_nif=dni_nie,
+                    authenticated_at=captured_at,
+                    idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
+                    storage_state_sha256=session_store.storage_state_sha256(storage_state),
+                    landing_url=self._default_target_url(),
+                ),
+            )
+            session, _assertion = await self._resume_locked(path, target_url=None)
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError("a resumed view capture left no context to read its taxpayer in")
+            await require_signed_in_taxpayer(context, expected_nif=dni_nie)
+            return session
+
+    def _require_idle(self) -> None:
+        if self.active_session is not None:
+            raise AeatLoginAssertionError(
+                "ClavePermanenteAuthProvider already has an active session; call close() first",
+            )
+        if self._context is not None or self._browser_session is not None:
+            raise AuthProviderCleanupError(
+                "ClavePermanenteAuthProvider retained browser resources after close",
+                translated_message="errors.auth.auth_auth_provider_cleanup",
             )
 
     async def verify(self, session: AeatSession) -> AeatLoginAssertion:
@@ -305,7 +370,7 @@ class ClavePermanenteAuthProvider:
                 health_summary="No DNI/NIE and password have been configured for Cl@ve Permanente.",
             )
         try:
-            _classify_identity(dni_nie)
+            classify_identity(dni_nie)
         except AuthConfigurationError as exc:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -345,18 +410,18 @@ class ClavePermanenteAuthProvider:
     def _require_identity(self) -> str:
         raw = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_dni_nie)
         if not raw:
-            raise _configuration_error(
+            raise clave_permanente_configuration_error(
                 f"{_CLAVE_PERMANENTE_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
                 "before running `cadrumo-runtime config auth configure --provider clave_permanente`.",
                 failure_mode=ClavePermanenteFailureMode.INVALID_CREDENTIALS,
             )
-        _classify_identity(raw)
+        classify_identity(raw)
         return raw.strip().upper()
 
     def _require_password(self) -> str:
         raw = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_password)
         if not raw:
-            raise _configuration_error(
+            raise clave_permanente_configuration_error(
                 f"{_CLAVE_PERMANENTE_PASSWORD_ENV} is not set; set it to your Cl@ve "
                 "Permanente password before running "
                 "`cadrumo-runtime config auth configure --provider clave_permanente`.",
@@ -516,7 +581,7 @@ class ClavePermanenteAuthProvider:
         before returning control for the post-auth landing wait.
         """
         surface = self._clave_surface()
-        action_policy = _browser_action_policy(self._settings)
+        action_policy = clave_permanente_auth_browser_action_policy(self._settings)
         fill = getattr(page, "fill", None)
         click = getattr(page, "click", None)
         content = getattr(page, "content", None)
@@ -552,23 +617,23 @@ class ClavePermanenteAuthProvider:
         html = content_value if isinstance(content_value, str) else ""
         normalized = html.casefold()
         if surface.elevation_sms_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "AEAT requested SMS-OTP elevation, which the read-path Cl@ve "
                 "Permanente flow cannot satisfy headlessly.",
                 failure_mode=ClavePermanenteFailureMode.ELEVATION_REQUIRED,
             )
         if surface.account_locked_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "Cl@ve reports the account is locked.",
                 failure_mode=ClavePermanenteFailureMode.ACCOUNT_LOCKED,
             )
         if surface.password_expired_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "Cl@ve reports the password has expired (Cl@ve enforces a maximum password age).",
                 failure_mode=ClavePermanenteFailureMode.PASSWORD_EXPIRED,
             )
         if surface.invalid_credentials_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "Cl@ve rejected the configured DNI/NIE + password combination.",
                 failure_mode=ClavePermanenteFailureMode.INVALID_CREDENTIALS,
             )
@@ -654,7 +719,7 @@ class ClavePermanenteAuthProvider:
             try:
                 await page.goto(selector_url, timeout=self._navigation_timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:
-                raise _login_error(
+                raise clave_permanente_login_error(
                     f"Cl@ve Permanente initial navigation did not reach the AEAT selector "
                     f"within {self._navigation_timeout_ms // 1000} seconds.",
                     failure_mode=ClavePermanenteFailureMode.INITIAL_NAVIGATION_TIMEOUT,
@@ -669,7 +734,7 @@ class ClavePermanenteAuthProvider:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:
                 current_url = getattr(page, "url", "") or ""
-                raise _login_error(
+                raise clave_permanente_login_error(
                     f"Cl@ve Permanente login did not reach the expected AEAT page after {timeout_ms // 1000} seconds.",
                     failure_mode=ClavePermanenteFailureMode.POST_AUTH_LANDING_TIMEOUT,
                     context={"timeout_ms": timeout_ms, "current_url": current_url, "target_path": target_path},
@@ -728,7 +793,7 @@ class ClavePermanenteAuthProvider:
         storage_state_path: Path,
         *,
         target_url: str | None,
-    ) -> AeatSession:
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
         if metadata.idle_deadline <= now():
@@ -793,7 +858,7 @@ class ClavePermanenteAuthProvider:
                 if isinstance(assertion.assertion_detail, ClavePermanenteLoginAssertionDetail)
                 else None,
             )
-            return refreshed
+            return refreshed, assertion
         except Exception:
             context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None

@@ -69,21 +69,17 @@ from typing import Any
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.tests.authored_editions import manual_editions_printing
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .authored_edition_support import manual_oracle_payloads
-from .ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import general_settlement_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -120,36 +116,13 @@ _RECONCILIATION_BINDING_IDS = (
 
 def _calculate() -> object:
     snapshot = compiled_bundled_authority().snapshot("353", filing_year=_MANUAL_EXERCISE, period=_PERIOD)
-    observations = (
-        IvaLedgerObservation(
-            ledger_id="grupo-devengado-general",
-            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
-            category=IvaCategory("domestic_general"),
-            rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection.from_registry("repercutido"),
-            base_amount=Decimal("0"),
-            # OMEGA 6.000 + DELTA 1.000 (manual's own printed per-member
-            # "IVA devengado" figures, pag. 199).
-            iva_amount=Decimal("7000.00"),
-            observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        ),
-        IvaLedgerObservation(
-            ledger_id="grupo-deducible-general",
-            transaction_date=date(_MANUAL_EXERCISE, 3, 15),
-            category=IvaCategory("domestic_general"),
-            rate_kind=IvaRateKind("general"),
-            flow_direction=IvaFlowDirection.from_registry("soportado"),
-            base_amount=Decimal("0"),
-            # OMEGA 2.000 + DELTA 2.000 (manual's own printed per-member
-            # "IVA deducible" figures, pag. 199).
-            iva_amount=Decimal("4000.00"),
-            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-            deduction_provenance=_deduction_provenance(
-                IvaDeductionFactKind.from_registry("domestic_current"),
-                source_locator="invoice:grupo-deducible-general",
-            ),
-            observation_role=IvaLedgerObservationRole.SETTLEMENT,
-        ),
+    # Devengado: OMEGA 6.000 + DELTA 1.000, deducible: OMEGA 2.000 + DELTA 2.000 (the
+    # manual's own printed per-member "IVA devengado" and "IVA deducible" figures, pag. 199).
+    observations = general_settlement_observations(
+        exercise=_MANUAL_EXERCISE,
+        devengado=Decimal("7000.00"),
+        deducible=Decimal("4000.00"),
+        ledger_id_prefix="grupo-",
     )
     binding_values: dict[str, Decimal] = {binding_id: Decimal("0") for binding_id in _RECONCILIATION_BINDING_IDS}
     binding_values.update(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations))

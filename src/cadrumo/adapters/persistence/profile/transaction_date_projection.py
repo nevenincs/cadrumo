@@ -11,13 +11,10 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ....domain.transactions.date_partition import OutOfWindowTransactionIndexEntry
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.errors import TransactionValidationError
-from ....domain.transactions.models import (
-    OutOfWindowTransactionIndexEntry,
-    Transaction,
-    TransactionCatalogue,
-)
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     pass
@@ -50,7 +47,7 @@ def catalogue_from_loaded_transactions(transactions: Iterable[Transaction]) -> T
 
 @dataclass(frozen=True, slots=True)
 class IndexedTransactionDates:
-    """The plaintext routing dates one :class:`TransactionDateIndexRow` records.
+    """The plaintext routing dates one ``transaction_date_index`` row records.
 
     Groups the filing date with the inclusive eligible-observation span so a
     row's index state is compared and written as one value: a change to

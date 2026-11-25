@@ -15,6 +15,7 @@ their full digit width.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -26,6 +27,7 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import RefundAccount
 from ....domain.filing.protocols import ModeloInputValue
 from ....domain.submission.models import ModeloDraftStatus
@@ -62,12 +64,12 @@ from ..projection import FilingRecordRenderContext
 from ..record_field_renderer import continuation_page_marker, format_field, render_record
 from ..record_renderer import record_render_rows
 from ..runtime import ModeloOperatorProfile
-from .export_support import _schema_provider
+from .export_support import export_schema_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_YEAR = 2025
-_PERIOD_CODE = "AD-HOC"
+_YEAR = filing_year_envelope().horizon
+_PERIOD_CODE = "0A"
 _TAX_ID = "12345678Z"
 _REPRESENTANTE_TAX_ID = "00000000T"
 #: DR360 página 1, "TOTAL 3400 Posiciones".
@@ -168,7 +170,7 @@ def _blank(campo: int) -> str:
 
 def _pagina_1(snapshot: FilingProducerSnapshot, *, extra_inputs: dict[str, ModeloInputValue] | None = None) -> str:
     """Render the published página 1 record for ``snapshot`` and return its 3400 characters."""
-    provider = _schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
+    provider = export_schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
     registry_snapshot = provider.get_snapshot("360")
     (layout,) = registry_snapshot.revision.export_layouts
     (record,) = (record for record in layout.records if str(record.id) == "m360-solicitud")
@@ -222,7 +224,7 @@ def test_pagina_2_campo_2_marks_a_continuation_page_never_an_amendment(occurrenc
     van más de una página del mismo tipo". Modelo 360 has no complementaria declaration,
     so the slot follows the page occurrence and nothing else.
     """
-    provider = _schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
+    provider = export_schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
     registry_snapshot = provider.get_snapshot("360")
     (layout,) = registry_snapshot.revision.export_layouts
     (record,) = (record for record in layout.records if str(record.id) == "m360-operaciones")
@@ -543,15 +545,21 @@ def test_the_refund_period_dates_reach_the_draft_as_dates_and_render_ddmmaaaa() 
     """DR360 campos 107-108 are dates; an ISO date input is a date, never a Decimal."""
     pagina_1 = _pagina_1(
         _snapshot(_minimal_profile()),
-        extra_inputs={"devolucion.periodo-fecha-inicio": "2025-01-01", "devolucion.periodo-fecha-fin": "2025-06-30"},
+        extra_inputs={
+            "devolucion.periodo-fecha-inicio": date(_YEAR, 1, 1).isoformat(),
+            "devolucion.periodo-fecha-fin": date(_YEAR, 6, 30).isoformat(),
+        },
     )
 
-    assert (_campo(pagina_1, 107), _campo(pagina_1, 108)) == ("01012025", "30062025")
+    assert (_campo(pagina_1, 107), _campo(pagina_1, 108)) == (f"0101{_YEAR}", f"3006{_YEAR}")
 
 
 def test_a_refund_period_date_that_is_not_iso_is_refused() -> None:
     with pytest.raises(ModeloApplicationError) as exc_info:
-        _pagina_1(_snapshot(_minimal_profile()), extra_inputs={"devolucion.periodo-fecha-inicio": "01/01/2025"})
+        _pagina_1(
+            _snapshot(_minimal_profile()),
+            extra_inputs={"devolucion.periodo-fecha-inicio": date(_YEAR, 1, 1).strftime("%d/%m/%Y")},
+        )
 
     assert exc_info.value.translated_message == "application.filing.build_draft.errors.date_binding_not_iso"
 

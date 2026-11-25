@@ -51,7 +51,7 @@ from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost
 from cadrumo_runtime.host.profile_login import ProfileWorkerHumanLogin
 root = Path(sys.argv[1])
 identity = ProfileWorkerIdentity.model_validate_json(Path(sys.argv[2]).read_text(encoding="utf-8"))
-with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
+with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
     with worker.installed_profile_worker_composition():
         custody = ProfileWorkerCustody(identity, storage_root=root)
         host = ProfileWorkerOperationHost(custody, authorization=object())

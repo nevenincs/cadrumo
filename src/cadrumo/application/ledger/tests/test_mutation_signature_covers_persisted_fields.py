@@ -20,17 +20,14 @@ from __future__ import annotations
 
 import ast
 import inspect
-from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .. import actions_common
 from ..actions_common import mutation_signature
+from .transaction_row_support import outgoing_manual_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -41,34 +38,8 @@ _DELIBERATE_EXCLUSIONS = frozenset({"classified_by"})
 
 
 def _transaction() -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id="p1",
-        booked_date=date(2026, 3, 1),
-        value_date=None,
-        amount=Decimal("100.00"),
-        currency="EUR",
-        counterparty="Proveedor SL",
-        description="compra",
-        provenance=RawProvenance(
-            source_path=Path("x"),
-            source_sha256="a" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 3, 1, tzinfo=UTC),
-            provider_name="t",
-        ),
-        raw_fields={},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-            "created_at": datetime(2026, 3, 1, tzinfo=UTC),
-            "modified_at": datetime(2026, 3, 1, tzinfo=UTC),
-        },
+    return outgoing_manual_row(
+        "p1", amount=Decimal("100.00"), currency="EUR", counterparty="Proveedor SL", description="compra"
     )
 
 
@@ -83,7 +54,7 @@ def _signature_fields() -> set[str]:
 
 def _persisted_fields() -> set[str]:
     """The keys of the sibling full-field projection over the same record."""
-    tree = ast.parse(inspect.getsource(actions_common._transaction_idempotency_fields).lstrip())
+    tree = ast.parse(inspect.getsource(actions_common.transaction_idempotency_fields).lstrip())
     for node in ast.walk(tree):
         if isinstance(node, ast.Return) and isinstance(node.value, ast.Dict):
             # The value check is not ceremony: `ast.Constant.value` spans str,
@@ -94,7 +65,7 @@ def _persisted_fields() -> set[str]:
             return {
                 key.value for key in node.value.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
             }
-    raise AssertionError("_transaction_idempotency_fields no longer returns a dict literal")
+    raise AssertionError("transaction_idempotency_fields no longer returns a dict literal")
 
 
 def test_no_persisted_field_is_invisible_to_the_no_op_guard() -> None:

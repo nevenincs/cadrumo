@@ -17,8 +17,9 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerStorageError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...storage.sql import orm as _orm
+from .....tests.log_records import delivered_records
 from ...storage.sql.session import session_scope
+from ...storage.sql.tables import transaction_date_index_table
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..transaction_iva_migration import MigratedIvaDeductionFact, migrated_iva_rate_kind
@@ -106,7 +107,9 @@ def test_transaction_repository_logs_bucket_fields(
     with caplog.at_level("INFO", logger="cadrumo.adapters.persistence.profile.transactions"):
         repo.save(repo.load())
 
-    messages = [record.getMessage() for record in caplog.records]
+    messages = [
+        record.getMessage() for record in delivered_records(caplog, "cadrumo.adapters.persistence.profile.transactions")
+    ]
     # Per-row catalogue: the save log carries the bucket id and the diff counts
     # (rewritten / deleted rows) rather than a single catalogue object_key.
     assert any(
@@ -131,16 +134,16 @@ def test_partition_fallback_matches_complete_index_partition(runtime_profile: Te
     engine = runtime_profile.repository.engine
     with session_scope(engine) as session:
         session.execute(
-            delete(_orm.TransactionDateIndexRow).where(
-                _orm.TransactionDateIndexRow.bucket_id == runtime_profile.bucket_id,
-                _orm.TransactionDateIndexRow.transaction_id == q2.transaction_id,
+            delete(transaction_date_index_table).where(
+                transaction_date_index_table.c.bucket_id == runtime_profile.bucket_id,
+                transaction_date_index_table.c.transaction_id == q2.transaction_id,
             ),
         )
     with session_scope(engine) as session:
         remaining = (
             session.execute(
-                select(_orm.TransactionDateIndexRow.transaction_id).where(
-                    _orm.TransactionDateIndexRow.bucket_id == runtime_profile.bucket_id,
+                select(transaction_date_index_table.c.transaction_id).where(
+                    transaction_date_index_table.c.bucket_id == runtime_profile.bucket_id,
                 ),
             )
             .scalars()

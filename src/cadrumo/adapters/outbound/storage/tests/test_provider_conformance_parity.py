@@ -39,9 +39,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .....tests.google_credentials import unused_google_credentials
-from .._google_drive import GoogleDriveProvider
-from .._key_validation import assert_admissible_object_key_hmac
 from ..errors import OutboundStorageValidationError
+from ..google_drive import GoogleDriveProvider
+from ..key_validation import assert_admissible_object_key_hmac
 from ..local import LocalFileSystemProvider
 from ..protocol import StorageProvider
 
@@ -364,10 +364,10 @@ def test_the_namespace_divergence_stays_permitted_and_stated() -> None:
     are answering different questions -- unlike the object key, which is one
     contract-level value both were answering differently.
     """
-    from .._google_drive import _validate_namespace as drive_namespace
-    from ..local import _validate_namespace as local_namespace
+    from ..google_drive_validation import validate_namespace as drive_namespace
+    from ..local import validate_namespace
 
     with pytest.raises(OutboundStorageValidationError):
-        local_namespace(".hidden")
+        validate_namespace(".hidden")
 
     assert drive_namespace(".hidden") == ".hidden"

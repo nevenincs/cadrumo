@@ -81,3 +81,11 @@ def test_hu_error_strings_render_with_diacritics() -> None:
             assert fragment in rendered, f"{key}: missing accented fragment {fragment!r} in {rendered!r}"
         for fragment in must_not_contain:
             assert fragment not in rendered, f"{key}: ASCII-folded fragment {fragment!r} re-appeared in {rendered!r}"
+
+
+def test_hu_auth_session_error_uses_hungarian_storage_term() -> None:
+    with override_settings(cadrumo_output_language="hu"):
+        rendered = tr("adapters.sede.errors.no_auth_session")
+
+    assert "tartósan tárolva" in rendered
+    assert "perzisztálva" not in rendered

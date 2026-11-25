@@ -17,8 +17,8 @@ from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
 )
 
-from .iva_tui_contracts import _SOURCE_MODULES, AuthorityIdentity, IvaInstalledTuiError, SourceIdentity
-from .iva_tui_projection import _required_text
+from .iva_tui_contracts import SOURCE_MODULES, AuthorityIdentity, IvaInstalledTuiError, SourceIdentity
+from .iva_tui_projection import required_text
 
 
 def _require_reopened_product_identity(
@@ -38,11 +38,11 @@ def _require_reopened_product_identity(
         raise IvaInstalledTuiError("fresh installed TUI child package versions differ")
 
 
-def _source_identity(workspace_root: Path) -> SourceIdentity:
+def source_identity(workspace_root: Path) -> SourceIdentity:
     """Hash the exact critical source members before the supported wheel build."""
     root = workspace_root.resolve(strict=True)
     rows: list[tuple[str, str]] = []
-    for module_name, relative_path in _SOURCE_MODULES:
+    for module_name, relative_path in SOURCE_MODULES:
         source = root / relative_path
         if not source.is_file():
             raise IvaInstalledTuiError("critical installed-TUI source member is absent")
@@ -52,7 +52,7 @@ def _source_identity(workspace_root: Path) -> SourceIdentity:
     return SourceIdentity(manifest_sha256=sha256_hex(payload), module_sha256s=tuple(rows))
 
 
-def _authority_identity(authority_root: Path) -> AuthorityIdentity:
+def authority_identity(authority_root: Path) -> AuthorityIdentity:
     """Read and verify the one published authority pair supplied to the run."""
     root = authority_root.resolve(strict=True)
     descriptor_path = root / AUTHORITY_DESCRIPTOR_FILENAME
@@ -75,7 +75,7 @@ def _authority_identity(authority_root: Path) -> AuthorityIdentity:
     )
 
 
-def _assert_bundled_authority(expected: AuthorityIdentity) -> None:
+def assert_bundled_authority(expected: AuthorityIdentity) -> None:
     """Require the installed wheel to carry the same descriptor and database."""
     authority = resources.files("cadrumo").joinpath("_data", "registry", "authority")
     descriptor_resource = authority.joinpath(AUTHORITY_DESCRIPTOR_FILENAME)
@@ -99,7 +99,7 @@ def _assert_bundled_authority(expected: AuthorityIdentity) -> None:
         raise InstalledTuiChildError("installed wheel authority database differs from the supplied authority")
 
 
-def _module_hash_arguments(source: SourceIdentity) -> tuple[str, ...]:
+def module_hash_arguments(source: SourceIdentity) -> tuple[str, ...]:
     """Render only module names and digests for the isolated child process."""
     arguments: list[str] = []
     for module_name, digest in source.module_sha256s:
@@ -107,7 +107,7 @@ def _module_hash_arguments(source: SourceIdentity) -> tuple[str, ...]:
     return tuple(arguments)
 
 
-def _parse_module_hashes(items: Sequence[str]) -> tuple[tuple[str, str], ...]:
+def parse_module_hashes(items: Sequence[str]) -> tuple[tuple[str, str], ...]:
     """Validate source-module attestations passed by the parent driver."""
     parsed: list[tuple[str, str]] = []
     for item in items:
@@ -120,7 +120,7 @@ def _parse_module_hashes(items: Sequence[str]) -> tuple[tuple[str, str], ...]:
     return tuple(sorted(parsed))
 
 
-def _assert_installed_source_modules(
+def assert_installed_source_modules(
     *, expected_manifest_sha256: str, expected_modules: tuple[tuple[str, str], ...]
 ) -> None:
     """Prove the critical modules' installed distribution bytes are the source selected for this run.
@@ -144,7 +144,7 @@ def _assert_installed_source_modules(
         raise InstalledTuiChildError("installed critical-source manifest differs from the parent attestation")
 
 
-def _assert_child_identity(
+def assert_child_identity(
     document: Mapping[str, object],
     *,
     source: SourceIdentity,
@@ -154,9 +154,9 @@ def _assert_child_identity(
     package_version: str | None = None,
 ) -> tuple[str, str, str]:
     """Require both child processes to attest one installed source/package/authority."""
-    observed_origin = _required_text(document, "product_origin")
-    observed_init = _required_text(document, "product_init_sha256")
-    observed_version = _required_text(document, "package_version")
+    observed_origin = required_text(document, "product_origin")
+    observed_init = required_text(document, "product_init_sha256")
+    observed_version = required_text(document, "package_version")
     if observed_origin != "site-packages":
         raise IvaInstalledTuiError("installed TUI child did not attest a site-packages product origin")
     if document.get("source_manifest_sha256") != source.manifest_sha256:

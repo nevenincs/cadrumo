@@ -180,7 +180,7 @@ def _append_route(
     inputs: SignalInputs,
     results: ConsumerSignals,
 ) -> None:
-    route_registration = registration.get("route") if (registration is not None and registration) else None
+    route_registration = _registration_value(registration, "route")
     resolver_id = route_registration.get("resolver_id") if isinstance(route_registration, Mapping) else None
     binding_id = str(binding["binding_id"])
     results.routes.append(
@@ -202,23 +202,23 @@ def _append_route(
                 "kind": binding.get("provider_kind"),
                 "payload": binding.get("provider"),
                 "registered": registration is not None,
-                "disposition": registration.get("disposition") if (registration is not None and registration) else None,
-                "provider_model": registration.get("provider_model")
-                if (registration is not None and registration)
-                else None,
+                "disposition": _registration_value(registration, "disposition"),
+                "provider_model": _registration_value(registration, "provider_model"),
                 "value_contract": binding.get("value"),
             },
             "resolution_mechanism": {
                 "registration": route_registration,
                 "executable": inputs.runtime_resolvers.get(str(resolver_id)) if resolver_id else None,
             },
-            "terminal_origin_contract": registration.get("permitted_terminal_origins", ())
-            if (registration is not None and registration)
-            else (),
+            "terminal_origin_contract": _registration_value(registration, "permitted_terminal_origins", ()),
             "closure": {"status": status, "failures": list(failures), "authority": "static_binding_contract"},
         }
     )
     _record_open_route(binding, status, failures, results)
+
+
+def _registration_value(registration: dict[str, object] | None, key: str, default: object = None) -> object:
+    return registration.get(key, default) if registration is not None and bool(registration) else default
 
 
 def _record_open_route(

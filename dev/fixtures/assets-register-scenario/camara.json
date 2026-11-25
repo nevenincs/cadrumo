@@ -1,0 +1,121 @@
+{
+  "asset_id": "camara",
+  "purchase": {
+    "booked_date": "2021-01-01",
+    "taxable_base": "6000.00",
+    "iva_amount": "1260.00"
+  },
+  "steps": [
+    {
+      "recorded_at": "2022-01-15T09:30:00Z",
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "f8bf606a87dc03c248703a5af696ede7c572af8f384ea189707a4d1d5395e9e1",
+          "evidence_fingerprint": "271cdd9faf7033f7c4cfc48e9aee4b7886369330518f1ee90eadbd7d5c1fd4f9"
+        },
+        "acquisition_shape": "primary_purchase",
+        "asset_kind": "material",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "6000.00"
+          },
+          "non_deductible_iva": {
+            "decimal": "0.00"
+          },
+          "is_property": false,
+          "construction_cost": null,
+          "land_cost": null,
+          "ownership_mode": null,
+          "ownership_share": null,
+          "office_area": null,
+          "total_area": null,
+          "business_use_share": null,
+          "prior_allocation_provenance": "Asignación contabilizada en el libro"
+        },
+        "residual_value": {
+          "decimal": "0"
+        },
+        "in_service_date": "2021-01-01",
+        "out_of_service_date": "2025-07-01",
+        "disposal": {
+          "disposal_date": "2025-06-30",
+          "reason": "sale",
+          "proceeds": {
+            "decimal": "1500.00"
+          },
+          "transmission_costs": {
+            "decimal": "0.00"
+          },
+          "market_value": null,
+          "prior_free_depreciation_regime": null,
+          "later_affectation_on": null
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0.00"
+          },
+          "amortization_method": null,
+          "covered_through_tax_year": null
+        },
+        "acquired_condition": "new",
+        "building_construction_date": null,
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria",
+          "linear_coefficient": {
+            "decimal": "0.12"
+          },
+          "shift_hours_per_day": null,
+          "sum_of_digits_period_years": null,
+          "digit_order": null,
+          "approved_plan": null,
+          "useful_life": null,
+          "small_enterprise": null,
+          "low_value": null,
+          "research_development_evidence_reference": null,
+          "charging_infrastructure": null,
+          "renewable_self_consumption": null,
+          "used_original_price": null
+        },
+        "vehicle_affectation": null
+      },
+      "create": {
+        "name": "Cámara de revelado",
+        "serial_number": "CR-3312"
+      }
+    },
+    {
+      "recorded_at": "2022-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2022-01-01",
+        "covered_through": "2022-12-31"
+      }
+    },
+    {
+      "recorded_at": "2023-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2023-01-01",
+        "covered_through": "2023-12-31"
+      }
+    },
+    {
+      "recorded_at": "2024-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2024-01-01",
+        "covered_through": "2024-12-31"
+      }
+    },
+    {
+      "recorded_at": "2025-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2025-01-01",
+        "covered_through": "2025-06-30"
+      }
+    }
+  ]
+}

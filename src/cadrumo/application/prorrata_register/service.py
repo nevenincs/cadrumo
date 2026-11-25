@@ -27,7 +27,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal
@@ -36,9 +36,13 @@ from ...core.prorrata_register import (
     ProrrataProvisionalProvenance,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.prorrata_register_catalogue import carried_prior_definitiva_prorrata_provenance
+from ...domain.calculations.registry.prorrata_register_catalogue import (
+    carried_prior_definitiva_prorrata_provenance,
+    operator_stated_prior_definitiva_prorrata_provenance,
+)
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -57,8 +61,11 @@ from .seed import (
     ProrrataPriorDefinitivaSeedEvaluation,
     ProrrataSeedFinding,
     cross_check_prorrata_entry_against_observations,
+    differentiated_sector_seed_finding,
     evaluate_carried_prior_definitiva_seed_from_observations,
 )
+
+_LAST_SEED_ATTEMPT = 3
 
 ProrrataWholeSeedUnavailableReason = Literal[
     "source_absent", "source_blocked", "existing_blocked", "regulated_override_standing"
@@ -196,14 +203,34 @@ class ProrrataRegisterService:
         ejercicio: int,
         *,
         observation_repository: ProrrataPriorSettlementSnapshotRepositoryProtocol,
+        stated_percentage: Decimal | None = None,
     ) -> ProrrataWholeSeedCommit:
-        """Carry the prior 303 definitive under source and register revision fences."""
-        for attempt in range(4):
+        """Carry the prior definitive under source and register revision fences.
+
+        The held prior 390 or final-period 303 is the source; ``stated_percentage``
+        is the taxpayer's statement, carried only when neither return is held.
+        A register partitioned into differentiated sectors takes no whole-entity
+        carry. An unsettled carried or stated entry that the held return
+        contradicts is replaced, because re-seeding is how that contradiction
+        is resolved.
+        """
+        for attempt in range(_LAST_SEED_ATTEMPT + 1):
             current, register_revision = self._repository.load_revisioned()
+            if current.sector_definitions:
+                raise ProrrataWholeSeedUnavailableError(
+                    "source_blocked",
+                    findings=(
+                        differentiated_sector_seed_finding(
+                            ejercicio=ejercicio,
+                            sector_ids=tuple(item.sector_id for item in current.sector_definitions),
+                        ),
+                    ),
+                )
             source, evaluation = _load_whole_seed_evaluation(
                 ejercicio=ejercicio,
                 observation_repository=observation_repository,
                 operation=self._operation,
+                stated_percentage=stated_percentage,
             )
             seed = _require_available_whole_seed(evaluation)
             findings = _whole_seed_findings_for_register(
@@ -245,6 +272,18 @@ class ProrrataRegisterService:
             producing_snapshot_ref=producing_snapshot_ref,
             validate_entry=lambda entry: require_prorrata_entry_coordinates_current(entry, operation=self._operation),
         )
+
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        """Commit operator gross declarations derived from the latest register candidate.
+
+        ``rewrite`` decides the duplicate, replacement, removal and sector
+        questions against each compare-and-swap candidate and may raise to
+        refuse; the register's own invariants are re-validated on the rebuild.
+        """
+        return self._repository.rewrite_gross_declarations(rewrite)
 
     def list_all(self) -> ProrrataRegister:
         """Return the full active-profile register.
@@ -308,12 +347,14 @@ def _load_whole_seed_evaluation(
     ejercicio: int,
     observation_repository: ProrrataPriorSettlementSnapshotRepositoryProtocol,
     operation: PinnedAuthorityOperation,
+    stated_percentage: Decimal | None,
 ) -> tuple[ProrrataPriorSettlementSourceSnapshot, ProrrataPriorDefinitivaSeedEvaluation]:
-    source = observation_repository.load_prior_m303_settlement_snapshot(ejercicio - 1)
+    source = observation_repository.load_prior_definitiva_source_snapshot(ejercicio - 1)
     evaluation = evaluate_carried_prior_definitiva_seed_from_observations(
         ejercicio=ejercicio,
         observations=source.observations,
         operation=operation,
+        stated_percentage=stated_percentage,
     )
     return source, evaluation
 
@@ -344,17 +385,23 @@ def _whole_seed_findings_for_register(
         observations=source.observations,
         operation=operation,
     )
-    if any(finding.blocking for finding in cross_findings):
-        raise ProrrataWholeSeedUnavailableError("existing_blocked", findings=cross_findings)
-    if (
-        existing.provisional_provenance is not None
-        and existing.provisional_provenance != carried_prior_definitiva_prorrata_provenance()
+    if existing.provisional_provenance is not None and existing.provisional_provenance not in (
+        carried_prior_definitiva_prorrata_provenance(),
+        operator_stated_prior_definitiva_prorrata_provenance(),
     ):
+        if any(finding.blocking for finding in cross_findings):
+            raise ProrrataWholeSeedUnavailableError("existing_blocked", findings=cross_findings)
         raise ProrrataWholeSeedUnavailableError(
             "regulated_override_standing",
             findings=cross_findings,
             existing_provenance=existing.provisional_provenance,
         )
+    if any(finding.blocking for finding in cross_findings):
+        # A settled year's provisional already fed its art. 105.Cuatro regularisation;
+        # replacing it here would rewrite that settlement, so only an unsettled entry is re-seeded.
+        if existing.definitive_percentage is not None:
+            raise ProrrataWholeSeedUnavailableError("existing_blocked", findings=cross_findings)
+        return evaluation.findings
     return (*evaluation.findings, *cross_findings)
 
 
@@ -369,6 +416,7 @@ def _register_with_whole_seed(
         entries=(*retained, seed.entry),
         sector_definitions=current.sector_definitions,
         activity_rows=current.activity_rows,
+        gross_declarations=current.gross_declarations,
     )
 
 
@@ -389,7 +437,7 @@ def _commit_whole_seed_candidate(
             source_snapshot=source,
         )
     except LedgerPersistenceConflictError:
-        if attempt == 3:
+        if attempt == _LAST_SEED_ATTEMPT:
             raise
         return False
     return True

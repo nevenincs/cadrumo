@@ -1,17 +1,16 @@
 """Real-behavior tests for the shipped Handbook reader's structural refusals.
 
-The unshipped authoring compiler validates
-every concept fragment against a strict, frozen, ``extra="forbid"`` schema
-before it can ever be curated. This lean, shipped product reader walks the
-same TOML by hand for a small locale/search projection and historically
-tolerated shapes the authoring schema refuses outright -- a malformed
-``concept_id``, a fragment with no ``[language.*]`` section at all -- by
-silently synthesizing an empty, near-useless search hit rather than
-refusing. These tests bind the shared refusal in both directions: the
+The unshipped authoring compiler validates every concept fragment against a
+strict, frozen, ``extra="forbid"`` schema before it can ever be curated. This
+lean, shipped product reader walks the same TOML by hand for a small
+locale/search projection. Shapes the authoring schema refuses outright -- a
+malformed ``concept_id``, a fragment with no ``[language.*]`` section at all --
+must be refused here too, not silently synthesized into an empty, near-useless
+search hit. These tests bind the shared refusal in both directions: the
 canonical ``concept_id`` shape lives in this package
 (:data:`~cadrumo.application.corpus_search.CONCEPT_ID_PATTERN`) and the
-dev-only schema imports it, so a malformed id is refused identically on
-both sides of the shipping boundary.
+dev-only schema imports it, so a malformed id is refused identically on both
+sides of the shipping boundary.
 """
 
 from __future__ import annotations
@@ -22,7 +21,7 @@ import pytest
 
 from ....core.toml import parse_toml
 from ..errors import CorpusSearchInputError
-from ..terminology import CONCEPT_ID_MAX_LENGTH, CONCEPT_ID_MIN_LENGTH, CONCEPT_ID_PATTERN, _project_concept
+from ..terminology import CONCEPT_ID_MAX_LENGTH, CONCEPT_ID_MIN_LENGTH, CONCEPT_ID_PATTERN, project_concept
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,12 +48,11 @@ label = "placeholder"
 term_status = "preferred"
 """
 
-# The exact combined-defect shape the audit demonstrated: a malformed
-# concept_id, an unrecognised domain, an unrecognised term_status, and no
-# [language.*] section reachable for the requested locale (the section is
-# entirely absent). Before the fix this produced a searchable hit with
-# preferred_label "A" and empty text; it must now be refused outright.
-_AUDIT_DEMONSTRATED_MALFORMED_FRAGMENT = """
+# A combined-defect shape: a malformed concept_id, an unrecognised domain,
+# an unrecognised term_status, and no [language.*] section reachable for the
+# requested locale (the section is entirely absent). It must be refused
+# outright, not projected into a searchable hit.
+_MALFORMED_FRAGMENT = """
 [concept]
 concept_id = "A"
 domain = "not-a-domain"
@@ -86,15 +84,10 @@ def test_concept_id_pattern_matches_the_canonical_kebab_case_shape() -> None:
 
 
 def test_a_fragment_with_no_language_section_is_refused() -> None:
-    """A fragment with no [language.*] table at all is refused, not fabricated.
-
-    Before the fix this produced a searchable hit whose preferred_label
-    fell back to its own concept_id and whose text was entirely empty --
-    real, demonstrated search-index pollution.
-    """
+    """A fragment with no [language.*] table at all is refused, not fabricated."""
     payload = parse_toml(_MISSING_LANGUAGE_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as raised:
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
 
     assert raised.value.reason == "concept_declares_no_language_sections"
 
@@ -103,30 +96,28 @@ def test_a_malformed_concept_id_is_refused() -> None:
     """A concept_id outside the canonical kebab-case shape is refused."""
     payload = parse_toml(_MALFORMED_CONCEPT_ID_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as excinfo:
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
     assert excinfo.value.context is not None
     assert excinfo.value.context["concept_id"] == "A"
 
 
-def test_the_audit_demonstrated_malformed_fragment_is_refused_not_fabricated() -> None:
-    """The exact multi-defect shape from the audit finding is refused outright.
+def test_malformed_fragment_is_refused_not_fabricated() -> None:
+    """A multi-defect shape is refused outright.
 
-    Reproduces the audit's own probe: previously this produced a
-    "searchable product concept with fallback label 'A' and empty text"
-    despite the dev authoring compiler raising seven schema errors on the
-    identical shape. It must now refuse rather than fabricate.
+    The dev authoring compiler refuses this identical shape, so the reader
+    refuses it too rather than fabricating a searchable concept.
     """
-    payload = parse_toml(_AUDIT_DEMONSTRATED_MALFORMED_FRAGMENT)
+    payload = parse_toml(_MALFORMED_FRAGMENT)
 
     with pytest.raises(CorpusSearchInputError):
-        _project_concept(payload, locale="es")
+        project_concept(payload, locale="es")
 
 
 def test_a_well_formed_fragment_still_projects_cleanly() -> None:
-    """The tightened validation does not reject a genuinely well-formed concept."""
+    """The validation does not reject a genuinely well-formed concept."""
     payload = parse_toml(_WELL_FORMED_FRAGMENT)
 
-    projected = _project_concept(payload, locale="es")
+    projected = project_concept(payload, locale="es")
 
     assert projected is not None
     assert projected.concept_id == "prorrata-especial"

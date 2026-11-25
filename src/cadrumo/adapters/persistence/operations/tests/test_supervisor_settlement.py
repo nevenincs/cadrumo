@@ -52,9 +52,10 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     CancellableResourceExecutor,
     CleanupDeadlineExecutor,
     DeadlineAcknowledgingExecutor,
@@ -65,16 +66,16 @@ from .supervisor_test_support import (
     UnacknowledgedCancellationExecutor,
     UndeclaredPhaseExecutor,
     WaitingExecutor,
-    _admission_supervisor,
-    _capabilities,
-    _close_host_over_live_executor,
-    _failure_logged,
-    _registry,
-    _repositories,
-    _request,
-    _response,
-    _start_and_walk_away,
-    _supervisor,
+    admission_supervisor,
+    close_host_over_live_executor,
+    failure_logged,
+    operation_repositories,
+    operation_supervisor,
+    start_and_walk_away,
+    supervisor_capabilities,
+    supervisor_registry,
+    supervisor_request,
+    supervisor_response,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -84,14 +85,14 @@ def test_host_close_cancels_a_detachable_operation_without_false_terminal_artifa
     """Abandoning a wait leaves the operation running; closing the host cancels it, settling nothing."""
     executor = CancellableResourceExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=CancellableResourceExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                 ),
             ),
@@ -103,7 +104,7 @@ def test_host_close_cancels_a_detachable_operation_without_false_terminal_artifa
         )
 
         async def cancel_then_settle() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             start_task.cancel()
@@ -129,7 +130,7 @@ def test_host_close_cancels_a_detachable_operation_without_false_terminal_artifa
                     revision=running.revision + 1,
                     condition=OperationTerminalCondition.FAILED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                 ),
             )
             return running, settled
@@ -148,15 +149,15 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
 ) -> None:
     """Apply and reject both consume one persisted checkpoint once across restart."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -164,12 +165,12 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(supervisor, operation_id))
         assert waiting.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION
         assert waiting.pending_interaction is not None
 
-        restarted = _supervisor(
+        restarted = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -177,7 +178,7 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
             owner_id="1" * 64,
             token="2" * 64,
         )
-        response = _response(intent=intent, operation_id=operation_id, revision=waiting.revision)
+        response = supervisor_response(intent=intent, operation_id=operation_id, revision=waiting.revision)
         if isinstance(response, OperationApplyResponse):
             consumed = asyncio.run(restarted.respond(response))
         else:
@@ -188,7 +189,7 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
         assert persisted.consumed_interactions == (consumed,)
         assert persisted.lifecycle is OperationLifecycle.RUNNING
 
-        duplicate = _supervisor(
+        duplicate = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -207,19 +208,19 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
 def test_await_terminal_waits_for_a_real_durable_settlement(tmp_path: Path) -> None:
     """Awaiting a live operation reloads until its terminal journal record exists."""
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         pending = asyncio.run(journal.load(operation_id))
 
         async def await_after_settlement() -> OperationPersistedSnapshot:
@@ -233,7 +234,7 @@ def test_await_terminal_waits_for_a_real_durable_settlement(tmp_path: Path) -> N
                     revision=pending.revision + 1,
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                     result_ref="result:awaited-settlement",
                 ),
             )
@@ -247,19 +248,19 @@ def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path:
     """A non-terminal durable wait backs off instead of repeatedly opening its real journal file."""
     with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
         storage_root = tmp_path / "durable-state"
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=storage_root,
             profile_objects=SecureObjectRepository(namespace_registry=STORAGE_NAMESPACE_REGISTRY),
         )
-        supervisor = _supervisor(
-            registry=_registry(executor_type=IdleExecutor, build=IdleExecutor),
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=IdleExecutor, build=IdleExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         journal_path = (storage_root / "operation-journals" / f"{operation_id}.json").resolve()
         journal_opens = [0]
         # An audit hook cannot be removed, so it outlives this test in the worker.
@@ -300,15 +301,15 @@ def test_await_terminal_sustained_wait_uses_bounded_real_journal_reads(tmp_path:
 def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path: Path) -> None:
     """An equal owner ID cannot adopt another supervisor's different lease token."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=ReviewExecutor,
             build=ReviewExecutor,
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
         )
-        owner = _supervisor(
+        owner = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -316,9 +317,9 @@ def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        intruder = _supervisor(
+        intruder = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -326,7 +327,7 @@ def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path
             owner_id="1" * 64,
             token="4" * 64,
         )
-        response = _response(intent="apply", operation_id=operation_id, revision=waiting.revision)
+        response = supervisor_response(intent="apply", operation_id=operation_id, revision=waiting.revision)
 
         with pytest.raises(ValueError, match="not owned"):
             asyncio.run(intruder.respond(response))
@@ -338,16 +339,16 @@ def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path
 def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event(tmp_path: Path) -> None:
     """Cancellation retains prior history without inventing a lifecycle event."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         executor = UnacknowledgedCancellationExecutor()
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=UnacknowledgedCancellationExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+            capabilities=supervisor_capabilities(cancellation=OperationCancellation.COOPERATIVE),
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -355,7 +356,7 @@ def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
 
         async def cancel_live_executor() -> tuple[
             OperationPersistedSnapshot, OperationPersistedSnapshot, OperationPersistedSnapshot
@@ -386,7 +387,7 @@ def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event
                     revision=cancellation.revision + 1,
                     condition=OperationTerminalCondition.FAILED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                 ),
             )
         )
@@ -401,14 +402,14 @@ def test_aggregate_deadline_requests_cooperative_stop_before_timed_out_cleanup_s
     """A real deadline acknowledgement settles as timed out after owned cleanup."""
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=DeadlineAcknowledgingExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     cancellation=OperationCancellation.COOPERATIVE,
                     deadline=OperationDeadline.COOPERATIVE,
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
@@ -425,7 +426,7 @@ def test_aggregate_deadline_requests_cooperative_stop_before_timed_out_cleanup_s
         )
 
         async def run_deadline_controlled_operation() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             return await start_task
@@ -447,14 +448,14 @@ def test_cancelled_terminal_refuses_an_executor_that_stopped_without_acknowledgi
     """Returning from work is not interchangeable with the executor's durable safe-stop fact."""
     executor = UnacknowledgedCancellationExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=UnacknowledgedCancellationExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+                capabilities=supervisor_capabilities(cancellation=OperationCancellation.COOPERATIVE),
             ),
             journal=journal,
             leases=leases,
@@ -464,7 +465,7 @@ def test_cancelled_terminal_refuses_an_executor_that_stopped_without_acknowledgi
         )
 
         async def stop_without_acknowledgement() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.started.wait()
             requested = await supervisor.request_cancel(operation_id)
@@ -479,7 +480,7 @@ def test_cancelled_terminal_refuses_an_executor_that_stopped_without_acknowledgi
                         revision=stopped.revision + 1,
                         condition=OperationTerminalCondition.CANCELLED,
                         effect=OperationEffect.NONE,
-                        settled_at=_NOW,
+                        settled_at=SUPERVISOR_NOW,
                     ),
                 )
             return await supervisor.inspect(operation_id)
@@ -494,15 +495,15 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
     """An unsafe mutation completes before its executor can acknowledge a cooperative stop."""
     executor = IrreversibleSectionExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry = supervisor_registry(
             executor_type=IrreversibleSectionExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+            capabilities=supervisor_capabilities(cancellation=OperationCancellation.COOPERATIVE),
         )
-        supervisor = _supervisor(
+        supervisor = operation_supervisor(
             registry=registry,
             journal=journal,
             leases=leases,
@@ -512,7 +513,7 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
         )
 
         async def request_during_irreversible_section() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.entered.wait()
             observation = await OperationObservationService(reader=journal, registry=registry).observe(
@@ -545,14 +546,14 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
     """A cooperative executor still running beyond cleanup grace leaves durable uncertainty open."""
     executor = CleanupDeadlineExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=CleanupDeadlineExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     cancellation=OperationCancellation.COOPERATIVE,
                     deadline=OperationDeadline.COOPERATIVE,
                 ),
@@ -568,7 +569,7 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
         )
 
         async def let_cleanup_deadline_elapse() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await executor.cancellation_observed.wait()
             # Wait for the escalation itself rather than a fixed interval: under
@@ -594,15 +595,15 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
 def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mutation(tmp_path: Path) -> None:
     """Terminal effects use the same definition capability boundary as executor facts."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
         executor = DeclaredResourceExecutor()
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=DeclaredResourceExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
+                capabilities=supervisor_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
             ),
             journal=journal,
             leases=leases,
@@ -610,8 +611,8 @@ def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mu
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
-        running = asyncio.run(_close_host_over_live_executor(supervisor, operation_id, executor.started))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
+        running = asyncio.run(close_host_over_live_executor(supervisor, operation_id, executor.started))
 
         assert running.lifecycle is OperationLifecycle.RUNNING
         with pytest.raises(OperationDeclarationError, match="terminal receipt effect is not declared"):
@@ -623,7 +624,7 @@ def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mu
                         revision=running.revision + 1,
                         condition=OperationTerminalCondition.SUCCEEDED,
                         effect=OperationEffect.UPDATED,
-                        settled_at=_NOW,
+                        settled_at=SUPERVISOR_NOW,
                         result_ref="result:complete",
                     ),
                 )
@@ -640,12 +641,12 @@ def test_start_returns_the_admitted_running_state_while_the_executor_still_works
     release = asyncio.Event()
     executor = WaitingExecutor(started=started, release=release)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, journal = _admission_supervisor(
+        supervisor, journal = admission_supervisor(
             tmp_path, profile.repository, executor_type=WaitingExecutor, build=lambda: executor
         )
 
         async def admit_then_settle() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot, bool]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             admitted = await supervisor.start(operation_id)
             observed = await journal.load(operation_id)
             await started.wait()
@@ -666,12 +667,12 @@ def test_start_returns_the_admitted_running_state_while_the_executor_still_works
 def test_settled_raises_the_journal_state_when_the_task_stops_without_settling(tmp_path: Path) -> None:
     """A declaration breach is never settled; the waiter receives the durable state and the cause."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, _journal = _admission_supervisor(
+        supervisor, _journal = admission_supervisor(
             tmp_path, profile.repository, executor_type=UndeclaredPhaseExecutor, build=UndeclaredPhaseExecutor
         )
 
         async def start_then_wait() -> OperationUnsettledError:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             await supervisor.start(operation_id)
             with pytest.raises(OperationUnsettledError) as unsettled:
                 await supervisor.settled(operation_id)
@@ -689,24 +690,24 @@ def test_a_task_failure_nobody_awaits_is_logged_and_never_orphaned(
 ) -> None:
     """No 'exception was never retrieved': the supervisor retrieves and logs the failure itself."""
     with caplog.at_level(logging.ERROR):
-        left_running = _start_and_walk_away(tmp_path, caplog)
+        left_running = start_and_walk_away(tmp_path, caplog)
         gc.collect()
 
-    assert _failure_logged(caplog)
+    assert failure_logged(caplog)
     assert left_running.lifecycle is OperationLifecycle.RUNNING
-    assert not any("never retrieved" in record.getMessage() for record in caplog.records)
+    assert not any("never retrieved" in record.getMessage() for record in delivered_records(caplog))
 
 
 def test_host_close_asks_a_cancellable_operation_to_stop_and_settles_it(tmp_path: Path) -> None:
     """A non-detachable operation is cancelled cooperatively within its cleanup window, then settled."""
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, journal = _admission_supervisor(
+        supervisor, journal = admission_supervisor(
             tmp_path,
             profile.repository,
             executor_type=DeadlineAcknowledgingExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 cancellation=OperationCancellation.COOPERATIVE,
                 owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                 close_policy=OperationClosePolicy.REQUEST_CANCEL,
@@ -714,7 +715,7 @@ def test_host_close_asks_a_cancellable_operation_to_stop_and_settles_it(tmp_path
         )
 
         async def start_then_close() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             await supervisor.start(operation_id)
             await executor.started.wait()
             await supervisor.shutdown()

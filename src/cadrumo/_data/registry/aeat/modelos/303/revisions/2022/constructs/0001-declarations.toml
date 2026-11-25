@@ -48,6 +48,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-303-2022",
     "aeat-modelo-303-procedure",
+    "aeat-modelo-303-instructions-20261106",
     "boe-modelo-303-2008-form",
     "aeat-calendario-contribuyente-2022",
     "aeat-calendario-contribuyente-2023",
@@ -63,6 +64,7 @@ casilla_ids = [
     "iva.autorepercutido.intracomunitaria.devengado.base",
     "iva.autorepercutido.intracomunitaria.deducible",
     "iva.autorepercutido.interior.devengado",
+    "iva.autorepercutido.interior.devengado.base",
     "iva.autorepercutido.interior.deducible",
     "iva.autoconsumo.promotor.base",
     "iva.repercutido.super-reducido.base",
@@ -106,8 +108,14 @@ casilla_ids = [
     "68",
     "70",
     "71",
+    "iva.modificacion-bases-cuotas.base",
+    "iva.modificacion-bases-cuotas",
+    "iva.modificacion-bases-cuotas.operador.base",
+    "iva.modificacion-bases-cuotas.operador",
+    "iva.modificacion-recargo",
+    "iva.modificacion-recargo.operador",
 ]
-formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-iva-devengado-super-reducido-base", "modelo-303-iva-cuota-devengada-super-reducido", "modelo-303-iva-devengado-reducido-base", "modelo-303-iva-cuota-devengada-reducido", "modelo-303-iva-devengado-general-base", "modelo-303-iva-cuota-devengada-general", "modelo-303-autoconsumo-promotor-base-por-tipo", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje", "modelo-303-dr303-10-projection", "modelo-303-dr303-11-projection", "modelo-303-dr303-13-projection", "modelo-303-iva-resultado-final", "modelo-303-iva-deducible-interiores-corrientes-base", "modelo-303-dr303-29-projection", "modelo-303-iva-deducible-interiores-bienes-inversion-base", "modelo-303-iva-deducible-interiores-bienes-inversion-cuota", "modelo-303-dr303-33-projection", "modelo-303-dr303-37-projection", "modelo-303-iva-rectificacion-deducciones-base", "modelo-303-iva-rectificacion-deducciones-cuota", "modelo-303-dr303-45-projection", "modelo-303-dr303-27-projection", "modelo-303-iva-suma-resultados", "modelo-303-iva-atribuible-estado"]
+formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-iva-devengado-super-reducido-base", "modelo-303-iva-cuota-devengada-super-reducido", "modelo-303-iva-devengado-reducido-base", "modelo-303-iva-cuota-devengada-reducido", "modelo-303-iva-devengado-general-base", "modelo-303-iva-cuota-devengada-general", "modelo-303-autoconsumo-promotor-base-por-tipo", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje", "modelo-303-dr303-09-projection", "modelo-303-dr303-06-projection", "modelo-303-dr303-03-projection", "modelo-303-dr303-10-projection", "modelo-303-dr303-11-projection", "modelo-303-dr303-12-projection", "modelo-303-dr303-13-projection", "modelo-303-iva-resultado-final", "modelo-303-iva-deducible-interiores-corrientes-base", "modelo-303-dr303-29-projection", "modelo-303-iva-deducible-interiores-bienes-inversion-base", "modelo-303-iva-deducible-interiores-bienes-inversion-cuota", "modelo-303-dr303-33-projection", "modelo-303-dr303-37-projection", "modelo-303-iva-rectificacion-deducciones-base", "modelo-303-iva-rectificacion-deducciones-cuota", "modelo-303-dr303-45-projection", "modelo-303-dr303-27-projection", "modelo-303-iva-suma-resultados", "modelo-303-iva-atribuible-estado", "modelo-303-dr303-14-projection", "modelo-303-dr303-15-projection", "modelo-303-dr303-26-projection"]
 bindings = [
     "modelo-303-iva-repercutido-general-cuota",
     "modelo-303-iva-repercutido-reducido-cuota",
@@ -119,6 +127,7 @@ bindings = [
     "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base",
     "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
     "modelo-303-iva-autorepercutido-interior-devengado-cuota",
+    "modelo-303-iva-autorepercutido-interior-devengado-base",
     "modelo-303-iva-autorepercutido-interior-deducible-cuota",
     "modelo-303-compensacion-pendiente-anteriores",
     "modelo-303-autoconsumo-promotor-base",
@@ -137,6 +146,9 @@ bindings = [
     "modelo-303-bienes-inversion-regularizacion-casilla-43",
     "modelo-303-prorrata-regularizacion-casilla-44",
     "modelo-303-recargo-equivalencia-super-reducido-cuota",
+    "modelo-303-iva-modificacion-bases-cuotas-base",
+    "modelo-303-iva-modificacion-bases-cuotas-cuota",
+    "modelo-303-iva-modificacion-recargo-cuota",
 ]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr"]

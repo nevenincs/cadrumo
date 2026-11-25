@@ -13,12 +13,11 @@ from typing import Any
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from ..lane_reachability import declared_lanes
 from ..lane_recipe_commands import resolved_recipe_commands
-from ..workflow_job_gates import dispatch_input_defaults
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -109,14 +108,8 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
         "cannot be proven to match the gate a developer can run"
     )
 
-    # The three properties this job used to assert INLINE - every workflow is
-    # read, the archive is pinned by content, and the digest is checked before
-    # the binary is executed - did not stop being required when the download
-    # moved into `dev/actionlint.py`. They moved with it, so they are asserted
-    # at their new home rather than deleted along with the shell that carried
-    # them. This repository previously kept its own copy of that download,
-    # already at a different version from vaultspec-dashboard's copy of the
-    # same thirty lines.
+    # The provisioner must read every workflow, pin the archive by content and
+    # check its digest before the binary is executed.
     from dev import actionlint
 
     assert actionlint.VERSION.replace(".", "").isdigit() and actionlint.VERSION.count(".") >= 2, (
@@ -381,7 +374,7 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
     assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
     assert (
         "-m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service"
-        " and not private_ingest_corpus'"
+        " and not private_ingest_corpus and not google_publisher_client'"
     ) in body
     assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
 
@@ -438,34 +431,33 @@ def test_product_integration_parallel_recipe_carries_the_canonical_selection() -
     assert "not perf and not external_tool and not os_keychain" in body
 
 
-def test_the_merge_gate_runs_the_goldens_gate_as_its_own_step_with_a_persistent_verdict_cache() -> None:
-    """The goldens gate reaches pull requests, in a step of its own, keeping its verdicts.
+def test_the_merge_gate_runs_the_goldens_gate_in_a_job_of_its_own_and_keeps_no_verdict() -> None:
+    """The goldens gate reaches pull requests in its own job, and no run can clear a later one.
 
-    Inside the scoped-tests step a cache miss would share that step's budget.
-    Without a runner-persistent cache root every run starts from a wiped
-    `.cache`, so the verdict cache could never reuse anything and every
-    selected pull request would pay the full execution.
+    Inside a test shard a selected change would share that shard's budget. The
+    hosted runner starts empty, and the job restores no verdict record: a
+    record a pull request could write would let it clear its own later run.
     """
-    job = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))["jobs"]["gate"]
+    document = yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))
+    job = document["jobs"]["goldens"]
     names = [step.get("name") for step in job["steps"]]
     step = next((step for step in job["steps"] if step.get("name") == "Committed sequence goldens"), None)
     assert step is not None, "the merge gate no longer runs the committed-goldens gate"
 
     assert 'just test-sequence-goldens-gate --changed-files "$CHANGED_FILES"' in step["run"]
-    scoped = next(item for item in job["steps"] if item.get("name") == "Scoped tests")
-    assert step["env"]["CHANGED_FILES"] == scoped["env"]["CHANGED_FILES"]
     assert "else" in step["run"] and "just test-sequence-goldens-gate\n" in step["run"]
+    assert "var/ci/changed-paths.txt" in step["env"]["CHANGED_FILES"], (
+        "the goldens gate must read the changed paths the plan was made from"
+    )
     assert names.index("Set up toolchain") < names.index("Committed sequence goldens"), (
         "the goldens gate reads the published authority the setup step provides"
     )
-    assert "steps.setup.outcome == 'success'" in step["if"]
     assert step.get("continue-on-error") is not True
-    assert step["env"]["CADRUMO_DEV_CACHE_ROOT"].startswith("${{ runner.tool_cache }}/"), (
-        "the verdict cache must live in runner-owned storage that survives the checkout"
+    assert "goldens" in document["jobs"]["verdict"]["needs"]
+    assert not any("actions/cache" in str(item.get("uses", "")) for item in job["steps"]), (
+        "a verdict cache on a hosted runner is written by the pull request it would later clear"
     )
-    assert "CADRUMO_DEV_CACHE_ROOT" not in job.get("env", {}), (
-        "the persistent root is scoped to the goldens step, not every cache the job's other steps keep"
-    )
+    assert "CADRUMO_DEV_CACHE_ROOT" not in yaml.safe_dump(job)
 
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-sequence-goldens-gate")
     assert any("python -m dev.ci.sequence_goldens_gate" in command for command in commands), (
@@ -615,17 +607,23 @@ def _dispatched_fields(workflow_name: str, documents: tuple[tuple[Path, dict[str
     return dispatches
 
 
-def test_the_merge_gate_dispatch_passes_only_declared_inputs() -> None:
-    """An undeclared input makes the dispatch fail, and the release pull request then never reports the gate."""
-    declared = set(dispatch_input_defaults(yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))))
-    dispatches = _dispatched_fields(_MERGE_GATE.name, _lane_documents((_WORKFLOWS_DIR / "release-please.yml",)))
-    assert dispatches, "release-please no longer dispatches the merge gate"
-    assert [set(fields) - declared for fields in dispatches] == [set()] * len(dispatches)
+def test_nothing_dispatches_the_merge_gate() -> None:
+    """The release pull request reports the gate from its own events, never from a dispatch.
+
+    A dispatched run's checks attach to no pull request, so the required check
+    stays expected while the dispatch looks like proof. The release App writes
+    the release pull request, whose events run the gate like any other.
+
+    Proved able to fail: restoring a `gh workflow run merge-gate.yml --ref
+    "${HEAD_BRANCH}"` step in `release-please.yml` and running this test alone
+    failed on its assertion; removing the step made it pass.
+    """
+    assert _dispatched_fields(_MERGE_GATE.name, _lane_documents()) == [], "a lane dispatches the merge gate"
 
 
-def test_the_dispatch_field_reader_sees_every_passed_input() -> None:
-    """Teeth: a passed input field is read by name, so an undeclared one cannot hide."""
-    document = {"jobs": {"lane": {"steps": [{"run": 'gh workflow run merge-gate.yml --ref "$B" -f "ref=$B"'}]}}}
+def test_the_dispatch_reader_sees_every_merge_gate_dispatch() -> None:
+    """Teeth: a dispatch is read with its passed fields, so it cannot hide behind a continuation."""
+    document = {"jobs": {"lane": {"steps": [{"run": 'gh workflow run merge-gate.yml \\\n --ref "$B" -f "ref=$B"'}]}}}
     assert _dispatched_fields("merge-gate.yml", ((Path("fixture.yml"), document),)) == [("ref",)]
 
 
@@ -687,7 +685,7 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
         ("import aeat", "python-import"),
         ("import aeat.core", "python-import"),
         ('python -c "import os, aeat as retired"', "python-import"),
-        ("python -m aeat config check", "python-module"),
+        ("python -m aeat config profile list", "python-module"),
         ("python -m aeat.cli check", "python-module"),
         ("uv pip install aeat", "distribution-install"),
         ('uv pip install "aeat"', "distribution-install"),

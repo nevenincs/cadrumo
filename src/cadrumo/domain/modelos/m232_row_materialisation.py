@@ -61,7 +61,9 @@ def _resolve_m232_registry_declarations(
 def _row_capacity(entries: Mapping[str, str], slot_ids: tuple[str, ...]) -> int:
     raw = required_mapping_entry(entries, "row.capacity", subject=_SUBJECT)
     if not raw.isdigit() or int(raw) != len(slot_ids):
-        raise RegistryValidationError(f"{_SUBJECT} 'row.capacity' must equal the number of declared row slots")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            f"{_SUBJECT} 'row.capacity' must equal the number of declared row slots", declaration="m232_row_mapping"
+        )
     return int(raw)
 
 
@@ -98,12 +100,17 @@ def m232_related_party_row_casilla_values(
     field_ids = unique_mapping_tokens(entries, "row.field_ids", subject=_SUBJECT)
     capacity = _row_capacity(entries, slot_ids)
     if len(rows) > capacity:
-        raise RegistryValidationError(
+        raise RegistryValidationError.for_rows_over_declared_capacity(
             f"Modelo 232 declares at most {capacity} related-party rows; got {len(rows)}",
+            rows="m232_related_party",
+            capacity=capacity,
+            supplied=len(rows),
         )
     unknown = [field_id for field_id in field_ids if field_id not in _ROW_FIELD_READERS]
     if unknown:
-        raise RegistryValidationError(f"{_SUBJECT} declares unsupported row fields: {unknown}")
+        raise RegistryValidationError.for_inconsistent_declaration(
+            f"{_SUBJECT} declares unsupported row fields: {unknown}", declaration="m232_row_mapping"
+        )
     template = required_mapping_entry(entries, "row.field_id_template", subject=_SUBJECT)
     revision = operation.revision(
         required_mapping_entry(entries, "modelo", subject=_SUBJECT),
@@ -134,8 +141,9 @@ def _materialise_declared_rows(
         for field_id in field_ids:
             casilla_id = template.format(slot=slot_id, field=field_id)
             if casilla_id not in declared:
-                raise RegistryValidationError(
+                raise RegistryValidationError.for_inconsistent_declaration(
                     f"{_SUBJECT} names casilla {casilla_id!r}, which revision {revision_id} does not declare",
+                    declaration="m232_row_mapping",
                 )
             values[casilla_id] = _ROW_FIELD_READERS[field_id](row)
     return values

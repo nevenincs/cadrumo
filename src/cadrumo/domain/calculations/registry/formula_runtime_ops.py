@@ -23,29 +23,30 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal
+from decimal import ROUND_CEILING, ROUND_DOWN, ROUND_HALF_UP, Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
-from ....core.money.rounding import round_to_cents as _round_to_cents
-from ._formula_operator_contracts import require_formula_operator_arity
+from ....core.money.rounding import round_to_cents
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .formula_input_keys import canonicalize_formula_input_keys
-from .ids import RevisionId
+from .formula_operator_contracts import require_formula_operator_arity
+from .ids import ParameterId, RevisionId
 from .schema_base import NUMERIC_CASILLA_DATA_TYPES
-from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
+from .schema_formula import BracketEntry, DatedValue, FormulaExpression, ParameterDefinition
 from .schema_rounding import RegistryRoundingCode
 
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
     from .authority import PinnedAuthorityOperation
-    from .formula_runtime import EvalContext as _EvalContext
+    from .formula_expression import EvalContext
     from .schema import ModeloRevision
 
+_CENTS: Final = Decimal("0.01")
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
 _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
 
@@ -55,7 +56,7 @@ class UnresolvedFormulaDependencyError(RegistrySnapshotError):
 
     Shared between :mod:`~domain.calculations.registry.formula_runtime`
     and its per-family op-evaluator siblings (e.g.
-    :mod:`~domain.calculations.registry._formula_runtime_irnr`) so a
+    :mod:`~domain.calculations.registry.formula_runtime_irnr`) so a
     family module can signal a deferred dependency without importing back
     into the dispatcher module.
     """
@@ -71,6 +72,18 @@ class RegistryUnresolvedOutcomeReason(StrEnum):
 
     M210_BASELINE_TIPO_DEFERRED = "m210-baseline-tipo-deferred"
     M210_CONVENIO_RATE_MISSING = "m210-convenio-rate-missing"
+    WAIVED_REFUND_RESULT_UNSUPPORTED = "waived-refund-result-unsupported"
+    INCOME_FAMILY_CONTRADICTS_PROFILE = "income-family-contradicts-profile"
+    AUTONOMIC_DEDUCTION_OTHER_COMUNIDAD = "autonomic-deduction-other-comunidad"
+    AUTONOMIC_DEDUCTION_UNSUMMED_BOX = "autonomic-deduction-unsummed-box"
+    JOINT_RETURN_MEMBER_INCOME_UNAVAILABLE = "joint-return-member-income-unavailable"
+    M200_TAX_REGIME_UNSUPPORTED = "m200-tax-regime-unsupported"
+    M200_EXTINCION_ENTIDAD_UNSUPPORTED = "m200-extincion-entidad-unsupported"
+    M200_CUOTA_LIQUIDA_MINIMA_UNSTATED = "m200-cuota-liquida-minima-unstated"
+
+
+OPERATOR_BOX_CONTEXT_KEY: Final = "operator_box"
+"""The context key of an unresolved outcome that names the box the operator states in its place."""
 
 
 class UnresolvedFormulaOutcomeError(RegistrySnapshotError):
@@ -88,7 +101,7 @@ class UnresolvedFormulaOutcomeError(RegistrySnapshotError):
         self.context = dict(context)
 
 
-def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+def numeric_casilla_value(casilla_id: CasillaId, ctx: EvalContext) -> Decimal:
     """Read a resolved numeric casilla value from the evaluation context.
 
     Generic accessor shared by the M210/IRNR, M131 módulos, and M303 módulos
@@ -119,7 +132,29 @@ def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     return value
 
 
-def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+def require_casilla_leaf(expression: FormulaExpression, *, op: str, position: int) -> CasillaId:
+    """Return the casilla id a dispatch argument must carry, refusing any other leaf kind."""
+    if expression.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
+        )
+    return expression.casilla_id
+
+
+def require_parameter_leaf(expression: FormulaExpression, *, op: str, position: int) -> ParameterId:
+    """Return the parameter id a dispatch argument must carry, refusing any other leaf kind."""
+    if expression.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "parameter"},
+        )
+    return expression.parameter
+
+
+def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: EvalContext) -> Decimal:
     """Read a casilla whose official record design declares either a text or a decimal type.
 
     Some official record designs declare a rate-like casilla as text (``X``)
@@ -344,7 +379,7 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
     return resolve_dated_value(parameter, date_context).value
 
 
-def resolve_scalar_parameter(parameter_id: str, ctx: _EvalContext, *, op: str) -> Decimal:
+def resolve_scalar_parameter(parameter_id: str, ctx: EvalContext, *, op: str) -> Decimal:
     """Resolve a scalar parameter and record its runtime provenance.
 
     Formula-operation families share the same scalar type contract and must
@@ -431,21 +466,32 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
     (``sign = "non_negative"``, ``min_value = "0"``), so the two readings
     coincide; a future negative-capable target must state which reading
     its provision means before enrolling here.
+
+    ``decimal-2-truncated`` quantizes to two decimals with
+    :data:`decimal.ROUND_DOWN` (toward zero) for the figures the law
+    expresses "con dos decimales sin redondeo" (LIRPF art. 63.2 and
+    74.2, the tipo medio de gravamen general). It never carries a
+    fraction up, so 9,235 stays 9,23; for the non-negative results of its
+    enrolled targets toward zero and downward coincide.
     """
     if rounding is None:
         return value
     if rounding == RegistryRoundingCode.MONEY_2:
-        return _round_to_cents(value)
+        return round_to_cents(value)
     if rounding == RegistryRoundingCode.INTEGER:
         return value.quantize(ONE, rounding=ROUND_HALF_UP)
     if rounding == RegistryRoundingCode.INTEGER_CEILING:
         return value.quantize(ONE, rounding=ROUND_CEILING)
+    if rounding == RegistryRoundingCode.DECIMAL_2_TRUNCATED:
+        return value.quantize(_CENTS, rounding=ROUND_DOWN)
     raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")
 
 
 def reject_non_decimal[Key](items: Mapping[Key, Decimal], label: str) -> None:
     """Reject non-decimal values before formula runtime consumption."""
-    del items, label
+    for key, value in items.items():
+        if isinstance(value, bool) or not isinstance(value, Decimal) or not value.is_finite():
+            raise RegistryValidationError(f"{label} {key!r} must be a finite Decimal")
 
 
 def validated_decimal_input_casilla_ids[InputKey, InputValue](
@@ -481,7 +527,7 @@ def _validated_decimal_inputs[InputValue](
 def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
     """Reject empty or non-string external values before registry validation."""
     for key, value in values.items():
-        if not value:
+        if not isinstance(value, str) or not value:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 

@@ -184,13 +184,13 @@ def _read_with_replacement(
     contract: OperationPublicDefinitionContractV1,
     *,
     replacement: bytearray,
-    fresh_client: Callable[[], FrontendClient],
+    fresh_client: Callable[[float], FrontendClient],
     original_session: UUID,
     deadline: float,
 ) -> ProfilePassphraseRotationOutcome:
+    retry_delay = 0.05
     while True:
-        remaining_budget(deadline)
-        reader = fresh_client()
+        reader = fresh_client(remaining_budget(deadline))
         if reader is original:
             raise FrontendRefusedError(AccessDenialCode.CONNECTION_MISMATCH.value)
         with reader:
@@ -207,7 +207,8 @@ def _read_with_replacement(
                 if reader.session_id == original_session:
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 return _fresh_result(reader, operation_id, contract, deadline=deadline)
-        time.sleep(min(0.05, remaining_budget(deadline)))
+        time.sleep(min(retry_delay, remaining_budget(deadline)))
+        retry_delay = min(retry_delay * 2, 1.0)
 
 
 def run_profile_password_rotation(
@@ -216,7 +217,7 @@ def run_profile_password_rotation(
     current_passphrase: bytearray,
     new_passphrase: bytearray,
     new_passphrase_confirmation: bytearray,
-    fresh_client: Callable[[], FrontendClient],
+    fresh_client: Callable[[float], FrontendClient],
     timeout: float = 60,
 ) -> ProfileRotationCompletion:
     """Consume proofs, then confirm the exact result using fresh human admission.

@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Informativa anual de operaciones con terceras personas."
-definition = "Declaracion informativa anual de las operaciones con terceras personas cuyo importe conjunto supera 3.005,06 euros en el ejercicio."
+definition = "Declaración informativa anual de las operaciones con terceras personas cuyo importe conjunto supera 3.005,06 euros en el ejercicio."
 
 [language.es.source]
 citation = "Orden EHA/3012/2008."

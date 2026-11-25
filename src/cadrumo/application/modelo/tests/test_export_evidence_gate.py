@@ -19,16 +19,18 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
-from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
+from ..export_contracts import ModeloExportEvidenceMissingError
+from ..export_preparation import raise_if_ledger_export_evidence_missing
 from ..verification_iva_evidence import (
     iva_compensation_annual_source_evidence_finding,
     iva_selected_scope_evidence_finding,
@@ -36,7 +38,8 @@ from ..verification_iva_evidence import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
+_NOW = datetime(1980, 6, 3, 16, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _TX_ID = "a" * 64
 _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
 _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
@@ -54,12 +57,12 @@ def _revision(
     work_unit_id = derive_work_unit_id(
         bucket_id="bucket-operator",
         modelo=modelo,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, period),
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, period),
         revision_id="gate",
     )
     filing_instance_evidence = general_m303_filing_evidence(
-        Period.from_year_and_code(2026, "1T"), reference="test:export-evidence-gate", operation=operation
+        Period.from_year_and_code(_FILING_YEAR, "1T"), reference="test:export-evidence-gate", operation=operation
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -77,7 +80,7 @@ def _revision(
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo=modelo,
             revision_id="gate",
-            modelo_year=2026,
+            modelo_year=_FILING_YEAR,
             period=period,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -109,13 +112,13 @@ def test_export_refuses_ledger_revision_without_bundled_evidence_or_reference(
     revision = _revision(source_transaction_ids=(_TX_ID,), operation=operation)
 
     with pytest.raises(ModeloExportEvidenceMissingError):
-        _raise_if_ledger_export_evidence_missing(revision)
+        raise_if_ledger_export_evidence_missing(revision)
 
 
 def test_export_allows_non_ledger_revision_without_evidence(*, operation: PinnedAuthorityOperation) -> None:
     revision = _revision(source_transaction_ids=(), operation=operation)
 
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
 
 
 def test_export_allows_ledger_revision_with_snapshot_reference(*, operation: PinnedAuthorityOperation) -> None:
@@ -128,7 +131,7 @@ def test_export_allows_ledger_revision_with_snapshot_reference(*, operation: Pin
         operation=operation,
     )
 
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
 
 
 def test_export_refuses_a_revision_with_unresolved_selected_scope_iva_evidence(
@@ -149,7 +152,7 @@ def test_export_refuses_a_revision_with_unresolved_selected_scope_iva_evidence(
     )
 
     with pytest.raises(ModeloExportEvidenceMissingError):
-        _raise_if_ledger_export_evidence_missing(revision)
+        raise_if_ledger_export_evidence_missing(revision)
 
     reopened = CalculationRevision.model_validate_json(revision.model_dump_json())
     assert reopened.source_issues == revision.source_issues
@@ -172,7 +175,7 @@ def test_export_allows_a_revision_with_an_unrouted_non_iva_source_issue(*, opera
         operation=operation,
     )
 
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
     assert iva_selected_scope_evidence_finding(revision) is None
 
 
@@ -195,7 +198,7 @@ def test_export_refuses_m390_when_required_annual_partition_evidence_is_unresolv
     )
 
     with pytest.raises(ModeloExportEvidenceMissingError):
-        _raise_if_ledger_export_evidence_missing(revision)
+        raise_if_ledger_export_evidence_missing(revision)
 
     finding = iva_compensation_annual_source_evidence_finding(revision)
     assert finding is not None

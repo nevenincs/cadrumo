@@ -20,9 +20,13 @@ from typing import Any
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.json_contract import Notice
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -39,9 +43,18 @@ _DECLARANTE_NAME = "DP_APENOM_D"
 _MARITAL_STATUS = "ECIVIL"
 _DECLARATION_TYPE = "TIPOTRIBUTACION"
 _CALCULATE_FLAGS: tuple[str, ...] = (
-    "--casilla", "0003=24000",
-    "--binding", "renta-certificado-trabajo-retenciones=2400",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )  # fmt: skip
 
 
@@ -60,28 +73,34 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile, *identity: UserP
     record = create_user_profile_record(
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            *identity,
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="activities.description", value="salaried employment"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("1")),
-            UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+        facts=persona_facts_beneath(
+            (
+                *identity,
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                UserProfileFact(path="activities.description", value="salaried employment"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
+                UserProfileFact(path="renta_taxpayer.sex", value="H"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("1")),
+                UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+            ),
+            # The persona's own name is left out, so only ``identity`` declares one.
+            without=("irpf.estimation_regime", "censo.activity_start_date", "identity.name", "identity.surnames"),
         ),
         context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label=_LABEL)
+    # Only salary income is declared: the one payer certificate credits 0596 and the other two
+    # credit classes are proven zero by the declared categories.
+    seed_payer_certificate(
+        operation=published_authority_operation(),
+        taxpayer_tax_id="12345678Z",
+        ejercicio=2025,
+        payer_tax_id="B00010082",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=Decimal("2400"),
+        importe_integro_dinerario=Decimal("24000"),
+    )
 
 
 def _calculate_m100_2025() -> tuple[dict[str, Any], list[dict[str, Any]]]:

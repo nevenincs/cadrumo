@@ -1,0 +1,284 @@
+format = 1
+persona = "minorista-recargo"
+
+[[obligations]]
+modelo = "303"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = false
+reason = "Recargo de equivalencia: the retailer does not liquidate IVA for the regime's operations (LIVA art. 154) and has no other activity."
+legal_ref = ["ley-37-1992:art-154"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "390"
+periods = ["0A"]
+year = "horizon-1"
+applicable = false
+reason = "No Modelo 303 obligation, so no annual summary."
+legal_ref = ["ley-37-1992:art-154", "rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "130"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Actividad empresarial en estimación directa simplificada sin retención sobre sus ingresos."
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "347"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Purchases from the wholesaler exceed 3005.06 euros; retail sales to consumers are excluded because no identifying invoice is due (RGAT art. 33.2.a)."
+legal_ref = ["rd-1065-2007:art-31", "rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "100"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Titular de rendimientos de actividades económicas."
+legal_ref = ["ley-35-2006:art-96"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "2T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 7, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "3T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 10, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 2, day = "last" }
+legal_ref = ["rd-1065-2007:art-35"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 6, day = 30 }
+legal_ref = ["ley-35-2006:art-97"]
+grounding = "cited"
+note = "The annual order sets the campaign window; 30 June is the end it has fixed in recent campaigns."
+
+[[values]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+casillas = { "01" = "14300.00", "02" = "10554.82", "03" = "3745.18", "04" = "749.04", "05" = "0.00", "06" = "0.00", "07" = "749.04" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+Under recargo de equivalencia the IVA charged to customers is not liquidated, so sales enter income at the till amount and IVA plus recargo paid enter cost.
+01 = MIN-TPV-01..03 4850.00 + 4120.00 + 5330.00 = 14300.00.
+Gastos = MIN-COM-1 8581.60 (6800.00 + IVA 1428.00 + recargo 353.60) + RETA 3 x 294.00 + MIN-LUZ-1 254.10 + MIN-IBI-1 640.00 = 10357.70.
+MIN-IBI-1 640.00 is the IBI of the shop, a deductible tributo of the activity; under the devengo criterion the persona
+elects it is imputed on its accrual date, the first day of its período impositivo, the calendar year (TRLRHL art. 75,
+BOE-A-2004-4214; LIRPF art. 14.1.b), so it enters the cumulative gastos from the first quarter, not on its 15 September payment.
+Assumes opening and closing stock are equal, so purchases are the cost of goods sold.
+Provisión = 5 % of 3942.30 = 197.12 (half-up from 197.115); 02 = 10554.82; 03 = 3745.18; 04 = 749.04 (half-up from 749.036); 05 = 0.00; 07 = 749.04.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+[[values]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+governed_by = "ley-35-2006:da-56"
+casillas = { "01" = "14300.00", "02" = "10633.66", "03" = "3666.34", "04" = "733.27", "05" = "0.00", "06" = "0.00", "07" = "733.27" }
+parameters = { provision_rate = "0.07", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+The same income and gastos as the value above; only the provision differs. LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage
+to 7 % for the one período impositivo it names, so in a year that provision governs:
+provisión = 7 % of (14300.00 - 10357.70) = 7 % of 3942.30 = 275.96 (half-up from 275.961);
+02 = 10633.66; 03 = 3666.34; 04 = 733.27 (half-up from 733.268); 05 = 0.00 (first quarter); 06 = 0.00; 07 = 733.27.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+[[values]]
+modelo = "130"
+period = "2T"
+year = "horizon-1"
+casillas = { "01" = "28580.00", "02" = "18822.17", "03" = "9757.83", "04" = "1951.57", "05" = "749.04", "06" = "0.00", "07" = "1202.53" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+01 = 14300.00 + 4680 + 5210 + 4390 = 28580.00; gastos = 10357.70 + MIN-COM-2 6814.80 + 882.00 + MIN-LUZ-2 254.10 = 18308.60 (MIN-IBI-1 from 1T);
+provisión = 5 % of 10271.40 = 513.57; 02 = 18822.17; 03 = 9757.83; 04 = 1951.57 (half-up from 1951.566); 05 = 749.04; 07 = 1202.53.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+[[values]]
+modelo = "130"
+period = "2T"
+year = "horizon-1"
+governed_by = "ley-35-2006:da-56"
+casillas = { "01" = "28580.00", "02" = "19027.60", "03" = "9552.40", "04" = "1910.48", "05" = "733.27", "06" = "0.00", "07" = "1177.21" }
+parameters = { provision_rate = "0.07", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+The same income and gastos as the value above; only the provision differs. LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage
+to 7 % for the one período impositivo it names, so in a year that provision governs:
+provisión = 7 % of (28580.00 - 18308.60) = 7 % of 10271.40 = 719.00 (half-up from 718.998);
+02 = 19027.60; 03 = 9552.40; 04 = 1910.48; 05 = 733.27; 06 = 0.00; 07 = 1177.21.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+
+[[values]]
+modelo = "130"
+period = "3T"
+year = "horizon-1"
+casillas = { "01" = "40060.00", "02" = "26350.08", "03" = "13709.92", "04" = "2741.98", "05" = "1951.57", "06" = "0.00", "07" = "790.41" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+01 = 28580.00 + 3870 + 3150 + 4460 = 40060.00; gastos = 18308.60 + MIN-COM-3 6183.80 + 882.00 + MIN-LUZ-3 254.10 = 25628.50;
+provisión = 5 % of 14431.50 = 721.58; 02 = 26350.08; 03 = 13709.92; 04 = 2741.98; 05 = 749.04 + 1202.53 = 1951.57; 07 = 790.41.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+[[values]]
+modelo = "130"
+period = "3T"
+year = "horizon-1"
+governed_by = "ley-35-2006:da-56"
+casillas = { "01" = "40060.00", "02" = "26638.71", "03" = "13421.29", "04" = "2684.26", "05" = "1910.48", "06" = "0.00", "07" = "773.78" }
+parameters = { provision_rate = "0.07", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+The same income and gastos as the value above; only the provision differs. LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage
+to 7 % for the one período impositivo it names, so in a year that provision governs:
+provisión = 7 % of (40060.00 - 25628.50) = 7 % of 14431.50 = 1010.21 (half-up from 1010.205);
+02 = 26638.71; 03 = 13421.29; 04 = 2684.26; 05 = 733.27 + 1177.21 = 1910.48; 06 = 0.00; 07 = 773.78.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+
+[[values]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+casillas = { "01" = "58000.00", "02" = "37438.01", "03" = "20561.99", "04" = "4112.40", "05" = "2741.98", "06" = "0.00", "07" = "1370.42" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+01 = 40060.00 + 4920 + 5640 + 7380 = 58000.00; gastos = 25628.50 + MIN-COM-4 9591.20 + 882.00 + MIN-LUZ-4 254.10 = 36355.80;
+provisión = 5 % of 21644.20 = 1082.21; 02 = 37438.01; 03 = 20561.99; 04 = 4112.40 (half-up from 4112.398); 05 = 1951.57 + 790.41 = 2741.98; 07 = 1370.42.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-37-1992:art-154", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+[[values]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+governed_by = "ley-35-2006:da-56"
+casillas = { "01" = "58000.00", "02" = "37870.89", "03" = "20129.11", "04" = "4025.82", "05" = "2684.26", "06" = "0.00", "07" = "1341.56" }
+parameters = { provision_rate = "0.07", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+The same income and gastos as the value above; only the provision differs. LIRPF disposición adicional quincuagésima sexta (Ley 31/2022, art. 60.2) raises the RIRPF art. 30.2.4.ª percentage
+to 7 % for the one período impositivo it names, so in a year that provision governs:
+provisión = 7 % of (58000.00 - 36355.80) = 7 % of 21644.20 = 1515.09 (half-up from 1515.094);
+02 = 37870.89; 03 = 20129.11; 04 = 4025.82; 05 = 1910.48 + 773.78 = 2684.26; 06 = 0.00; 07 = 1341.56.
+05 = the pagos fraccionados the earlier quarters of the same year would have paid (RIRPF art. 110.1.a,
+second paragraph), the sum of their casilla 07, which the chain files before this quarter calculates.
+"""
+legal_ref = ["ley-35-2006:art-14", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "cited"
+
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "minorista.mayorista"
+concepts = { clave = "A", importe_anual = "31171.40" }
+derivation = "MIN-COM-1..4 including IVA and recargo: 8581.60 + 6814.80 + 6183.80 + 9591.20 = 31171.40."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "cited"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+casillas = { "0599" = "0.00", "0604" = "4112.40", "0177" = "0.00", "0181" = "31171.40", "0182" = "0.00", "0183" = "0.00", "0218" = "36355.80" }
+roles = { "irpf_ed_total_ingresos_computables" = "58000.00", "irpf_ed_suma_gastos_previos" = "36355.80", "irpf_ed_provisiones_gastos_dificil_justificacion" = "1082.21", "irpf_ed_rdto_neto_previo_reduccion" = "20561.99", "irpf_minimo_contribuyente_estatal" = "5550.00" }
+derivation = """
+Rendimiento neto = 58000.00 - 36355.80 - 1082.21 = 20561.99.
+0604 sums the pagos fraccionados of the year's filed Modelo 130 returns: 749.04 + 1202.53 + 790.41 + 1370.42 = 4112.40.
+0181 (compras de existencias) = MIN-COM-1..4 at acquisition cost: 8581.60 + 6814.80 + 6183.80 + 9591.20 = 31171.40.
+Under recargo de equivalencia she deducts no IVA soportado (LIVA art. 154.Dos), so the IVA and the recargo
+are part of the price (Manual Renta parte 1, compras de existencias: 2025 line 17591, 2024 line 17348,
+2023 line 16728, 2022 line 14543; IVA soportado no deducible as mayor coste: 2025 lines 17601-17604,
+2024 lines 17360-17361, 2023 lines 16735-16736, 2022 lines 14550-14551).
+Each purchase claims the ledger row that pays it, so the rows leave the ledger expenses: 0183 = 0.00.
+The closing equals the opening (7400.00), so 0177 = 0182 = 0.00. 0218 is the sum of casillas 0181 to 0217:
+0181 31171.40 + RETA 12 x 294.00 = 3528.00 + suministros del local 4 x 254.10 = 1016.40 + MIN-IBI-1 640.00 = 36355.80,
+the gastos_actividad above. MIN-IBI-1 is the IBI of the shop, a deductible tributo of the activity (casilla 0186), imputed
+on its accrual date, 1 January, the first day of its período impositivo (TRLRHL art. 75; LIRPF art. 14.1.b).
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
+"""
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "rd-439-2007:art-30", "rd-439-2007:art-110", "ley-37-1992:art-154", "ley-35-2006:art-14"]
+grounding = "cited"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+governed_by = "ley-35-2006:da-56"
+casillas = { "0599" = "0.00", "0604" = "4025.82", "0177" = "0.00", "0181" = "31171.40", "0182" = "0.00", "0183" = "0.00", "0218" = "36355.80" }
+roles = { "irpf_ed_total_ingresos_computables" = "58000.00", "irpf_ed_suma_gastos_previos" = "36355.80", "irpf_ed_provisiones_gastos_dificil_justificacion" = "1515.09", "irpf_ed_rdto_neto_previo_reduccion" = "20129.11", "irpf_minimo_contribuyente_estatal" = "5550.00" }
+derivation = """
+The same year as the value above where LIRPF disposición adicional quincuagésima sexta governs: provisión = 7 %
+of 21644.20 = 1515.09, so the rendimiento neto is 58000.00 - 36355.80 - 1515.09 = 20129.11.
+0604 sums the pagos fraccionados of the year's filed Modelo 130 returns under the same rate: 733.27 + 1177.21 + 773.78 + 1341.56 = 4025.82.
+The 0177, 0181, 0182, 0183 and 0218 figures do not depend on the provisión rate and are the value above.
+Roles are Modelo 100 registry semantic_roles, resolved to each edition's casilla (AEAT diseño de registro Modelo 100, casilla dictionary; Manual práctico de Renta): ingresos_actividad = irpf_ed_total_ingresos_computables (LIRPF art. 28); gastos_actividad = irpf_ed_suma_gastos_previos (LIRPF art. 28); provision_dificil_justificacion = irpf_ed_provisiones_gastos_dificil_justificacion (RIRPF art. 30.2.4); rendimiento_neto_previo_actividad = irpf_ed_rdto_neto_previo_reduccion (LIRPF art. 28); minimo_personal = irpf_minimo_contribuyente_estatal (LIRPF art. 57).
+"""
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "ley-35-2006:art-99", "ley-35-2006:da-56", "rd-439-2007:art-30", "rd-439-2007:art-110", "ley-37-1992:art-154", "ley-35-2006:art-14"]
+grounding = "cited"

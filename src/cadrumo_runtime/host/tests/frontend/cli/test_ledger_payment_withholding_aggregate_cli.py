@@ -34,7 +34,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave
 from cadrumo.core.period import Period
@@ -43,16 +43,11 @@ from cadrumo.domain.calculations.registry.withholding_bindings import Withholdin
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -63,7 +58,7 @@ pytestmark = [
 ]
 
 _PAID_ON = date(2025, 2, 28)
-_EMPLOYEE_NIF = "11111111H"
+_EMPLOYEE_NIF = "00001500M"
 _EMPLOYEE_NAME = "Empleada Sintetica"
 
 # One February 2025 payslip: 2400.00 gross, 15% IRPF (360.00), and the
@@ -75,60 +70,20 @@ _EMPLOYEE_SOCIAL_SECURITY = Decimal("152.40")
 _NET = Decimal("1887.60")
 
 
-_M111_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Employer"),
-    UserProfileFact(path="activities.description", value="withholding employer activity"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
-
-
-def _capture_scope(client_id: UUID) -> AccessScope:
-    return AccessScope(
-        operations=frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID}),
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=f"{MODELO_AGGREGATE_OPERATION_DEFINITION_ID}.result",
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
+_M111_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Employer"),
+        UserProfileFact(path="activities.description", value="withholding employer activity"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # A filer stated as neither a gran empresa nor a large public administration files quarterly.
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="censo.large_company", value=False),
+        UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=False),
     )
+)
 
 
 def _payroll_profile_preparer(
@@ -175,16 +130,7 @@ def _payroll_payload(transaction_id: str, *, idempotency_key: str = "payroll-cap
         clave=RetencionClave.from_registry("A"),
         percibido_dinerario=_GROSS,
         retencion_practicada=_IRPF,
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=_GROSS,
         porcentaje_retencion=Decimal("15"),
         gastos_deducibles=_EMPLOYEE_SOCIAL_SECURITY,
@@ -262,7 +208,7 @@ def test_ledger_payroll_payment_reaches_m111_work_casillas_and_replays_idempoten
     """A captured payslip moves casillas 01/02/03, and the identical replay changes nothing."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -304,7 +250,7 @@ def test_ledger_payroll_capture_refuses_an_unknown_transaction(
     """A transaction id the ledger does not hold writes nothing."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -321,7 +267,7 @@ def test_ledger_payroll_capture_refuses_a_second_transport_and_other_modelos(
     """The payroll flag cannot share a command with invoice evidence or a second payment, nor leave Modelo 111."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -365,7 +311,7 @@ def test_ledger_payroll_capture_refuses_a_large_company_whose_modelo_111_is_mont
     """The stored profile makes Modelo 111 monthly, so the quarterly capture is refused and writes nothing."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_payroll_profile_preparer(
             authority_operation,
             extra_facts=(UserProfileFact(path="censo.large_company", value=True),),

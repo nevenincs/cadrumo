@@ -6,15 +6,15 @@ Period codes represent the filing frequency and scheme for tax returns:
 - Annual: 0A
 - Monthly: 01-12 (calendar months)
 - OSS/IOSS: EXT-1T, EXT-2T, EXT-3T, EXT-4T (extra-Union scheme)
-- Ad-hoc/Event: AD-HOC, EVENT-N (event-driven filings)
+- Event: EVENT-N (event-driven filings)
 
 :class:`StandardPeriodCode` is the canonical :class:`~enum.StrEnum` for
 the closed standard vocabulary (1T-4T, 1P-4P, 0A, 01-12). It includes both
 calendar spans and instalment claves, so callers that need date boundaries
 must still check :meth:`Period.has_date_span`. :data:`RegistryPeriodCode`
 is the pydantic field annotation for the full registry union: standard
-members plus extended OSS/IOSS literals, ``AD-HOC``, the open-ended event
-shape, the administrative censo tokens, and the symbolic ``EVENT-N`` selector.
+members plus extended OSS/IOSS literals, the open-ended event shape, the
+administrative censo tokens, and the symbolic ``EVENT-N`` selector.
 :data:`FilingPeriodCode` is the narrower annotation for a period a taxpayer
 files in — the same union minus the administrative tokens and the symbolic
 selector, neither of which names one concrete filing period. Two boundaries
@@ -24,7 +24,7 @@ widening one to admit a registry coordinate must not widen the other.
 :class:`PeriodKind` classifies the resulting cadence.
 
 This module is the runtime counterpart to the registry
-:data:`domain.calculations.registry.schema_scalars.PeriodCode` alias and
+:func:`domain.calculations.registry.schema_scalars.validate_period_code` validator and
 :class:`domain.calculations.registry.schema_references.PeriodSelector` schema. Registry
 objects carry bare period tokens; application services that need a concrete
 filing window compose those tokens with a year into :class:`Period`.
@@ -41,9 +41,10 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, Final, override
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator
 
 from .errors.hierarchy import CadrumoError
+from .filing_year import FourDigitYear, is_four_digit_year
 from .models import STRICT_FROZEN_CONFIG
 
 
@@ -82,12 +83,12 @@ class StandardPeriodCode(StrEnum):
 
 
 _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
+INSTALMENT_PERIOD_CODES: frozenset[StandardPeriodCode] = frozenset(
+    (StandardPeriodCode.P1, StandardPeriodCode.P2, StandardPeriodCode.P3, StandardPeriodCode.P4),
+)
+#: The registry token of a period qualified by its special-regime scheme.
+_SCHEME_PERIOD_PREFIX = "EXT-"
 _EXTENDED_PERIOD_SET: frozenset[str] = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
-#: The filing-period token for a declaration whose obligation is an event rather
-#: than a settlement window. Public because consumers that must name the ad-hoc
-#: period -- the filing-envelope grammar, which prints a two-character period --
-#: would otherwise spell the token a second time.
-AD_HOC_PERIOD_CODE: Final = "AD-HOC"
 _ADMINISTRATIVE_PERIOD_SET: frozenset[str] = frozenset(
     ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"),
 )
@@ -111,9 +112,9 @@ def _validate_filing_period(value: str) -> str:
     """Validate and normalize a period code that a taxpayer can actually file.
 
     Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
-    the ad-hoc literal (AD-HOC), and event-driven forms carrying a concrete event
-    NUMBER (EVENT-3). It admits neither the administrative censo/comunicación
-    tokens nor the symbolic ``EVENT-N`` selector: an administrative token names a
+    and event-driven forms carrying a concrete event NUMBER (EVENT-3). It admits
+    neither the administrative censo/comunicación tokens nor the symbolic
+    ``EVENT-N`` selector: an administrative token names a
     registration event rather than a period, and ``EVENT-N`` is declared to COVER
     the concrete ``EVENT-1``/``EVENT-2`` scopes rather than to be one of them. A
     symbolic stand-in for a set is a type error at a boundary whose whole contract
@@ -127,8 +128,6 @@ def _validate_filing_period(value: str) -> str:
     if normalized in _STANDARD_PERIOD_SET:
         return normalized
     if normalized in _EXTENDED_PERIOD_SET:
-        return normalized
-    if normalized == AD_HOC_PERIOD_CODE:
         return normalized
     if _EVENT_NUMBER_PERIOD_RE.match(normalized):
         return normalized
@@ -221,7 +220,7 @@ def accepted_filing_period_codes() -> tuple[str, ...]:
     The administrative tokens are excluded — they address a registry revision,
     not a filing period — as is the infinite ``EVENT-<number>`` family.
     """
-    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {AD_HOC_PERIOD_CODE}))
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET))
 
 
 def _format_accepted_filing_period_set() -> str:
@@ -231,7 +230,6 @@ def _format_accepted_filing_period_set() -> str:
     lines = [
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
-        f"Ad-hoc: {AD_HOC_PERIOD_CODE}",
         "Event-driven: EVENT-N (where N is an event-number integer, e.g. EVENT-3)",
     ]
     return "; ".join(lines)
@@ -303,6 +301,30 @@ _QUARTER_ORDINALS: dict[StandardPeriodCode, int] = {
 }
 
 
+def quarter_code(ordinal: int) -> StandardPeriodCode:
+    """Return the standard quarterly token whose ordinal is ``ordinal`` (1 through 4).
+
+    Raises:
+        PeriodError: When ``ordinal`` names no standard quarter.
+    """
+    for code, known in _QUARTER_ORDINALS.items():
+        if known == ordinal:
+            return code
+    raise PeriodError(f"{ordinal} is not the ordinal of a standard quarter")
+
+
+_MONTHS_PER_YEAR: Final = 12
+_MONTHS_PER_QUARTER: Final = 3
+_QUARTERS_PER_YEAR: Final = 4
+#: The cadences whose periods are contiguous calendar spans, whole year first.
+#: This is the order a period picker lists them in: the year, its quarters, its months.
+CALENDAR_PERIOD_KINDS: Final[tuple[PeriodKind, ...]] = (
+    PeriodKind.ANNUAL,
+    PeriodKind.QUARTERLY,
+    PeriodKind.MONTHLY,
+)
+
+
 def _period_kind_for_code(code: str) -> PeriodKind:
     """Classify a normalised period code's cadence.
 
@@ -317,7 +339,7 @@ def _period_kind_for_code(code: str) -> PeriodKind:
         return PeriodKind.ANNUAL
     if len(code) == 2 and code.isdigit():
         return PeriodKind.MONTHLY
-    if len(code) == 2 and code.endswith("P") and code[0] in "1234":
+    if code in INSTALMENT_PERIOD_CODES:
         return PeriodKind.INSTALMENT
     return PeriodKind.EXTENDED
 
@@ -356,7 +378,7 @@ class Period(BaseModel):
     period" across the whole application. It composes exactly two authoritative
     fields — the :attr:`filing_year` and the registry period :attr:`code`
     (a :class:`StandardPeriodCode` member such as ``1T`` / ``0A`` / ``03``, or an
-    extended union member such as ``EXT-1T`` / ``AD-HOC`` / ``EVENT-3``) — and
+    extended union member such as ``EXT-1T`` / ``EVENT-3``) — and
     never a combined calendar string (``2026Q1`` / ``2026-03`` / ``2026``).
     Those calendar shapes are neither accepted inputs nor canonical outputs.
     The only display projection is the space-separated :meth:`__str__` form
@@ -377,8 +399,8 @@ class Period(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=1980, le=2200)
-    """Deliberately wider than the registry's authored filing-year window.
+    filing_year: FourDigitYear
+    """Any year written with four digits; the registry decides which ones it covers.
 
     A period is a calendar span, not a claim that a revision exists for it. It
     must be able to EXPRESS a year the registry cannot serve -- a pre-1995
@@ -396,8 +418,7 @@ class Period(BaseModel):
             year: The filing year (e.g. ``2026``).
             code: A bare filing period code — a :class:`StandardPeriodCode`
                 value (``1T``-``4T`` / ``1P``-``4P`` / ``0A`` / ``01``-``12``) or
-                an extended union member (``EXT-1T``-``EXT-4T`` / ``AD-HOC`` /
-                ``EVENT-3``). The code is validated against
+                an extended union member (``EXT-1T``-``EXT-4T`` / ``EVENT-3``). The code is validated against
                 :data:`FilingPeriodCode`; a combined calendar string, an
                 administrative censo token, and the symbolic ``EVENT-N``
                 selector are all refused.
@@ -443,7 +464,7 @@ class Period(BaseModel):
         """Return the bare registry period code as a string (e.g. ``"1T"``).
 
         Use this when calling registry APIs that expect the bare
-        :data:`domain.calculations.registry.schema_scalars.PeriodCode` token
+        :func:`domain.calculations.registry.schema_scalars.validate_period_code` token
         rather than a
         structured :class:`Period`.
         """
@@ -469,6 +490,20 @@ class Period(BaseModel):
         if standard_code is None:
             return None
         return _QUARTER_ORDINALS.get(standard_code)
+
+    @property
+    def scheme_quarter(self) -> StandardPeriodCode | None:
+        """Return the ordinary quarter a scheme-qualified period names, or ``None`` for any other period."""
+        token = self.registry_token
+        if token not in _EXTENDED_PERIOD_SET:
+            return None
+        return StandardPeriodCode(token.removeprefix(_SCHEME_PERIOD_PREFIX))
+
+    @property
+    def scheme_quarter_ordinal(self) -> int | None:
+        """Return the ordinal of :attr:`scheme_quarter`, or ``None`` for any other period."""
+        quarter = self.scheme_quarter
+        return None if quarter is None else _QUARTER_ORDINALS[quarter]
 
     @property
     def is_quarterly(self) -> bool:
@@ -526,6 +561,85 @@ class Period(BaseModel):
             return date(self.filing_year, month, calendar.monthrange(self.filing_year, month)[1])
         raise PeriodError(f"period {self!s} has no calendar date span; guard with has_date_span()")
 
+    @classmethod
+    def calendar_periods(cls, year: int) -> tuple[Period, ...]:
+        """Return every period of ``year`` that is a calendar span, whole year first, then quarters, then months.
+
+        Instalment claves and the extended scheme periods are filing events, not
+        spans, so they are not listed.
+
+        Raises:
+            PeriodError: When ``year`` is not written with four digits.
+        """
+        codes = (member.value for member in StandardPeriodCode)
+        periods = tuple(
+            cls.from_year_and_code(year, code) for code in codes if _period_kind_for_code(code) in CALENDAR_PERIOD_KINDS
+        )
+        return tuple(sorted(periods, key=lambda period: CALENDAR_PERIOD_KINDS.index(period.kind)))
+
+    @classmethod
+    def containing(cls, day: date, kind: PeriodKind) -> Period:
+        """Return the period of cadence ``kind`` whose span holds ``day``.
+
+        Raises:
+            PeriodError: When ``kind`` has no calendar span or ``day`` falls in a
+                year that is not written with four digits.
+        """
+        match kind:
+            case PeriodKind.ANNUAL:
+                code = StandardPeriodCode.ANNUAL.value
+            case PeriodKind.QUARTERLY:
+                code = quarter_code((day.month - 1) // _MONTHS_PER_QUARTER + 1).value
+            case PeriodKind.MONTHLY:
+                code = f"{day.month:02d}"
+            case _:
+                raise PeriodError(f"a {kind.value} period has no calendar date span")
+        return cls.from_year_and_code(day.year, code)
+
+    @classmethod
+    def covering(cls, first_day: date, last_day: date) -> Period | None:
+        """Return the shortest calendar period that holds every day from ``first_day`` to ``last_day``.
+
+        The month is tried first, then the quarter, then the year. ``None`` means
+        the span crosses a year end, which no single period holds.
+
+        Raises:
+            PeriodError: When ``last_day`` precedes ``first_day`` or a day falls in
+                a year that is not written with four digits.
+        """
+        if last_day < first_day:
+            raise PeriodError(f"the span {first_day.isoformat()}..{last_day.isoformat()} ends before it begins")
+        for kind in reversed(CALENDAR_PERIOD_KINDS):
+            first = cls.containing(first_day, kind)
+            if first == cls.containing(last_day, kind):
+                return first
+        return None
+
+    def shifted(self, steps: int) -> Period | None:
+        """Return the period ``steps`` periods of this cadence away, across year ends.
+
+        The quarter before ``1T`` 2026 is ``4T`` 2025 and the month after December
+        2025 is January 2026. ``None`` means the result would fall in a year that
+        is not written with four digits.
+
+        Raises:
+            PeriodError: When this period has no calendar span.
+        """
+        match self.kind:
+            case PeriodKind.ANNUAL:
+                year, code = self.filing_year + steps, StandardPeriodCode.ANNUAL.value
+            case PeriodKind.QUARTERLY:
+                ordinal = self.filing_year * _QUARTERS_PER_YEAR + int(self.code[0]) - 1 + steps
+                year, index = divmod(ordinal, _QUARTERS_PER_YEAR)
+                code = quarter_code(index + 1).value
+            case PeriodKind.MONTHLY:
+                ordinal = self.filing_year * _MONTHS_PER_YEAR + int(self.code) - 1 + steps
+                year, index = divmod(ordinal, _MONTHS_PER_YEAR)
+                code = f"{index + 1:02d}"
+            case _:
+                raise PeriodError(f"period {self!s} has no calendar date span; guard with has_date_span()")
+        return self.from_year_and_code(year, code) if is_four_digit_year(year) else None
+
     def contains(self, value: date) -> bool:
         """Return whether ``value`` falls within this period's inclusive span.
 
@@ -555,7 +669,7 @@ class Period(BaseModel):
 
 
 __all__ = [
-    "AD_HOC_PERIOD_CODE",
+    "CALENDAR_PERIOD_KINDS",
     "FilingPeriodCode",
     "Period",
     "PeriodError",

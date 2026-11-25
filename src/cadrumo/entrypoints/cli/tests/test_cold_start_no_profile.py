@@ -8,7 +8,7 @@ the raw internal ``cadrumo_database_url is empty`` config error or a
 low-level ``NoActiveBucketSession`` decryption failure.
 
 These tests invoke each cold-start verb against a fresh
-``CADRUMO_LOCAL_STORAGE_ROOT`` with no profile pointer and assert a clean,
+``CADRUMO_STORAGE_ROOT`` with no profile pointer and assert a clean,
 consistent refusal. The CLI is invoked in-process through the cached
 Click command, the same harness every other CLI test uses.
 """

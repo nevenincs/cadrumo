@@ -20,25 +20,59 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ._toml_helpers import as_toml_table as _as_toml_table
 from .loader_fields import (
-    _EXPORT_REFS_FIELD,
-    _INHERITED_SECTION,
+    EXPORT_REFS_FIELD,
+    INHERITED_SECTION,
 )
 from .loader_semantics import (
     compile_export_semantic_field,
     compile_projection_endpoint_declaration,
     passthrough_toml_row,
 )
+from .toml_helpers import as_toml_table
 
 
-def _refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
+class UndeclaredExportTargetError(Exception):
+    """A committed export names casillas its edition no longer declares.
+
+    A stale generated export after a reviewed casilla rename is refused as an
+    ordinary :class:`RegistryLoadError`, so every loader closes on it as on any
+    load refusal. This payload is that error's cause and keeps the exact
+    identities, so a reviewed repair can admit this refusal alone and nothing
+    broader. It is not a ``CadrumoError``: the declared error-code catalogue
+    holds production classes only, and a subclass created after it loads is
+    refused at class creation.
+    """
+
+    def __init__(self, source_path: Path, revision_id: str, casilla_ids: tuple[str, ...]) -> None:
+        """Keep the modelo, revision and unknown casilla ids beside the message."""
+        self.modelo_id = source_path.name
+        self.revision_id = revision_id
+        self.casilla_ids = casilla_ids
+        super().__init__(
+            f"{source_path}: invalid revision {revision_id!r}: export fields resolve to casillas "
+            f"{list(casilla_ids)!r}, which the edition does not declare",
+        )
+
+
+def undeclared_export_refusal(targets: UndeclaredExportTargetError) -> RegistryLoadError:
+    """The load refusal a stale export raises, with ``targets`` as its cause."""
+    refusal = RegistryLoadError(str(targets))
+    refusal.__cause__ = targets
+    return refusal
+
+
+def undeclared_export_targets(error: BaseException) -> UndeclaredExportTargetError | None:
+    """The stale-export identities ``error`` was raised for, or ``None`` for any other refusal."""
+    cause = error.__cause__
+    return cause if isinstance(cause, UndeclaredExportTargetError) else None
+
+
+def refuse_authored_export_refs(source_path: Path, revision_id: str, payload: Mapping[str, object]) -> None:
     """Refuse a casilla row that declares ``export_refs``, which the loader derives from the layouts."""
-    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    rows = as_toml_array(payload.get(INHERITED_SECTION, ())) or ()
     authored = sorted(
-        str(table.get("id"))
-        for row in rows
-        if (table := _as_toml_table(row)) is not None and _EXPORT_REFS_FIELD in table
+        str(table.get("id")) for row in rows if (table := as_toml_table(row)) is not None and EXPORT_REFS_FIELD in table
     )
     if authored:
         raise RegistryLoadError(
@@ -47,7 +81,7 @@ def _refuse_authored_export_refs(source_path: Path, revision_id: str, payload: M
         )
 
 
-def _with_derived_export_refs(
+def with_derived_export_refs(
     source_path: Path,
     revision: ModeloRevision,
     payload: Mapping[str, object],
@@ -68,7 +102,7 @@ def _with_derived_export_refs(
         return revision
     _require_declared_export_targets(source_path, revision, derived)
     casillas = _casillas_with_export_references(source_path, revision, payload, derived)
-    return revision.model_copy(update={_INHERITED_SECTION: casillas})
+    return revision.model_copy(update={INHERITED_SECTION: casillas})
 
 
 def _require_declared_export_targets(
@@ -79,10 +113,7 @@ def _require_declared_export_targets(
     declared = {casilla.id for casilla in revision.casillas}
     undeclared = sorted(casilla_id for casilla_id in derived if casilla_id not in declared)
     if undeclared:
-        raise RegistryLoadError(
-            f"{source_path}: invalid revision {revision.id!r}: export fields resolve to casillas {undeclared!r}, "
-            "which the edition does not declare",
-        )
+        raise undeclared_export_refusal(UndeclaredExportTargetError(source_path, str(revision.id), tuple(undeclared)))
 
 
 def _casillas_with_export_references(
@@ -91,23 +122,23 @@ def _casillas_with_export_references(
     payload: Mapping[str, object],
     derived: Mapping[str, object],
 ) -> tuple[CasillaDefinition, ...]:
-    rows = as_toml_array(payload.get(_INHERITED_SECTION, ())) or ()
+    rows = as_toml_array(payload.get(INHERITED_SECTION, ())) or ()
     casillas: list[CasillaDefinition] = []
     for casilla, row in zip(revision.casillas, rows, strict=True):
         refs = derived.get(casilla.id)
-        table = _as_toml_table(row)
+        table = as_toml_table(row)
         if refs is None or table is None:
             casillas.append(casilla)
             continue
         try:
-            casillas.append(CasillaDefinition.model_validate({**table, _EXPORT_REFS_FIELD: refs}))
+            casillas.append(CasillaDefinition.model_validate({**table, EXPORT_REFS_FIELD: refs}))
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision.id!r}: {exc}") from exc
     return tuple(casillas)
 
 
 def _compile_revision_projection_record(source_path: Path, raw_record: object) -> dict[str, object]:
-    record = _as_toml_table(raw_record)
+    record = as_toml_table(raw_record)
     if record is None:
         return passthrough_toml_row(raw_record)
     compiled = dict(record)
@@ -118,7 +149,7 @@ def _compile_revision_projection_record(source_path: Path, raw_record: object) -
 
 
 def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -> dict[str, object]:
-    layout = _as_toml_table(raw_layout)
+    layout = as_toml_table(raw_layout)
     if layout is None:
         return passthrough_toml_row(raw_layout)
     compiled = dict(layout)
@@ -130,7 +161,7 @@ def _compile_revision_projection_layout(source_path: Path, raw_layout: object) -
     return compiled
 
 
-def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
+def compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
     """Compile revision-owned typed tokens before schema construction."""
     compiled = dict(payload)
     declarations = as_toml_array(payload.get("projection_endpoints"))

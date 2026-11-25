@@ -33,9 +33,10 @@ from ...application.live.notification_document_read_operation import (
     NotificationDocumentSancionPublicV1,
     NotificationDocumentViewPublicResultV1,
 )
+from ...application.operator_output.text_transport import notice_lines
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._app_live_auth_preflight import emit_live_auth_preflight
+from .app_live_auth_preflight import emit_live_auth_preflight
 from .app_live_notifications_results import (
     NotificationDocumentHistoryEntry,
     NotificationDocumentHistoryResult,
@@ -50,7 +51,7 @@ from .app_live_notifications_results import (
     NotificationsViewResult,
     SancionReadingPayload,
 )
-from .common import active_bucket_id_or_refuse, emit_envelope, notice_lines
+from .common import active_bucket_id_or_refuse, emit_envelope
 from .operation_notification_document_capture import capture_notification_document_for_cli
 from .operation_notification_document_read import (
     read_notification_document_history_for_cli,

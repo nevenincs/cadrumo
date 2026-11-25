@@ -10,7 +10,14 @@ from pathlib import Path
 
 import pytest
 
-from dev.source_tree import content_digest, normalised_content, normalised_contents, repository_files, snapshot
+from dev.source_tree import (
+    byte_preserving_paths,
+    content_digest,
+    normalised_content,
+    normalised_contents,
+    repository_files,
+    snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -97,6 +104,18 @@ def test_under_narrows_to_the_named_paths_without_matching_a_mere_name_prefix(tm
     assert repository_files(tmp_path, under=("src", "top.py")) == ("src/a.py", "top.py")
 
 
+def test_a_missing_named_path_is_refused_only_when_it_must_exist(tmp_path: Path) -> None:
+    _write(tmp_path, "src/a.py", "x")
+    _write(tmp_path, ".gitignore", "ignored/\n")
+    _write(tmp_path, "ignored/b.py", "x")
+
+    assert repository_files(tmp_path, under=("src", "srcc")) == ("src/a.py",)
+    with pytest.raises(FileNotFoundError, match="srcc"):
+        repository_files(tmp_path, under=("src", "srcc"), must_exist=True)
+    # An ignored path exists: it contributes no file, and it is not a mistyped one.
+    assert repository_files(tmp_path, under=("src", "ignored"), must_exist=True) == ("src/a.py",)
+
+
 def test_text_content_is_named_as_the_repository_records_it_on_every_platform(tmp_path: Path) -> None:
     """The same committed content has the same digest whatever line endings the checkout has."""
     windows = tmp_path / "windows"
@@ -133,6 +152,16 @@ def test_a_path_marked_binary_or_minus_text_keeps_every_byte(tmp_path: Path) -> 
 
     assert normalised_content(tmp_path, "corpus/source.html") == b"<p>\r\n</p>\r\n"
     assert normalised_content(tmp_path, "form.pdf") == b"%PDF\r\n"
+    assert byte_preserving_paths(tmp_path, ("corpus/source.html", "form.pdf")) == ("corpus/source.html", "form.pdf")
+
+
+def test_byte_preservation_reports_nested_text_overrides_even_for_lf_input(tmp_path: Path) -> None:
+    _write(tmp_path, ".gitattributes", "* text=auto eol=lf\ncorpus/** -text\n")
+    _write(tmp_path, "corpus/.gitattributes", "sub/*.html text eol=lf\n")
+    _write(tmp_path, "corpus/safe.html", "already LF\n")
+    _write(tmp_path, "corpus/sub/unprotected.html", "also LF\n")
+
+    assert byte_preserving_paths(tmp_path, ("corpus/safe.html", "corpus/sub/unprotected.html")) == ("corpus/safe.html",)
 
 
 def test_auto_detection_leaves_a_file_with_a_nul_byte_untouched(tmp_path: Path) -> None:

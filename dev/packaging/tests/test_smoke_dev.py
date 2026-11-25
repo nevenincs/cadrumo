@@ -25,7 +25,7 @@ import sys
 import pytest
 
 from ..lane_verification_core import run_checked_marker
-from ..smoke_dev import _DEV_COMMANDS, _assert_dev_commands
+from ..smoke_dev import DEV_COMMANDS, assert_dev_commands
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -37,12 +37,12 @@ def test_an_empty_command_surface_refuses(tmp_path: pathlib.Path) -> None:
     reach it - which is also what makes it safe to keep.
     """
     with pytest.raises(SystemExit, match="would prove nothing"):
-        _assert_dev_commands(tmp_path, tmp_path, commands=())
+        assert_dev_commands(tmp_path, tmp_path, commands=())
 
 
 def test_the_declared_surface_is_not_empty() -> None:
     """The live list backs the lane's manifest claim, so it must carry entries."""
-    assert _DEV_COMMANDS
+    assert DEV_COMMANDS
 
 
 def test_every_declared_command_is_a_probe_with_an_argument() -> None:
@@ -51,7 +51,7 @@ def test_every_declared_command_is_a_probe_with_an_argument() -> None:
     A bare executable with no argument would run the tool's default action
     inside the smoke venv - for pytest that is a full collection and run.
     """
-    for command in _DEV_COMMANDS:
+    for command in DEV_COMMANDS:
         assert len(command) >= 2, command
         executable, *args = command
         assert executable
@@ -60,7 +60,7 @@ def test_every_declared_command_is_a_probe_with_an_argument() -> None:
 
 def test_no_tool_is_probed_twice() -> None:
     """A duplicate costs a venv invocation and proves nothing new."""
-    executables = [command[0] for command in _DEV_COMMANDS]
+    executables = [command[0] for command in DEV_COMMANDS]
 
     assert len(executables) == len(set(executables))
 
@@ -71,7 +71,7 @@ def test_the_surface_covers_the_gates_the_repository_actually_runs() -> None:
     Named individually rather than counted: a count would pass while a tool was
     swapped for another, which is the substitution this check exists to notice.
     """
-    executables = {command[0] for command in _DEV_COMMANDS}
+    executables = {command[0] for command in DEV_COMMANDS}
 
     assert {"ruff", "pytest", "ty", "pyrefly", "lint-imports", "deptry"} <= executables
 

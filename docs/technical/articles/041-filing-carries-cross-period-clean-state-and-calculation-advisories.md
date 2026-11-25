@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-041` · **Topic:** [Aggregation and calculation services](../topics/aggregation-and-calculation-services.md)
+**Topic:** [Aggregation and calculation services](../topics/aggregation-and-calculation-services.md)
 
 <!-- preserved:article -->
 ## Scope
@@ -42,7 +42,7 @@ The strongest controls are separation of prefill from filing-grade clean-state g
 ## Complete assigned-file coverage
 
 - __init__.py (9 lines) (`src/cadrumo/application/calculations/__init__.py`)
-- _per_grupo_member_keys.py (63 lines) (`src/cadrumo/application/calculations/_per_grupo_member_keys.py`)
+- per_grupo_member_keys.py (63 lines) (`src/cadrumo/application/calculations/per_grupo_member_keys.py`)
 - actividad_asset_schedule.py (110 lines) (`src/cadrumo/application/calculations/actividad_asset_schedule.py`)
 - attested_period_tokens.py (40 lines) (`src/cadrumo/application/calculations/attested_period_tokens.py`)
 - bienes_inversion_regularizacion.py (732 lines) (`src/cadrumo/application/calculations/bienes_inversion_regularizacion.py`)

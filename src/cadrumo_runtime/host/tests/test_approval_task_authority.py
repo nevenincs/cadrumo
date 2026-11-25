@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Event
 from typing import override
@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
@@ -27,7 +27,7 @@ from cadrumo.application.user_profile.automation_operations import (
     build_automation_operation_registrations,
 )
 from cadrumo.core.config import override_settings
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.audited_process import run_audited_process
@@ -38,9 +38,11 @@ from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicatio
 
 from ...adapters.tests.profile_worker_support import changed, lease, worker_profiles
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
+from ...adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ...application.approval_binding import RuntimeApprovalBinding
-from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from ..operation_authority import ProfileWorkerOperationAuthority
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,14 +53,12 @@ class HeldApprovalLease(WorkerAuthorizationLease):
     def __init__(
         self,
         *,
-        identity: ProfileWorkerIdentity,
-        root: Path,
-        parent_pid: int,
+        connections: WorkerAuthorizationConnections,
         request: WorkerAuthorityRequest,
         entered: Event,
         release_publication: Event,
     ) -> None:
-        super().__init__(identity=identity, root=root, parent_pid=parent_pid, request=request)
+        super().__init__(connections=connections, request=request)
         self.entered = entered
         self.release_publication = release_publication
         self.active = True
@@ -89,12 +89,16 @@ class HeldAuthorizationClient(WorkerAuthorizationClient):
         self.leases: list[HeldApprovalLease] = []
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[HeldApprovalLease]:
         held = HeldApprovalLease(
-            identity=self.identity,
-            root=self.root,
-            parent_pid=self.parent_pid,
+            connections=self.connections,
             request=request,
             entered=self.entered,
             release_publication=self.release_publication,
@@ -116,10 +120,10 @@ def _registry() -> OperationRegistry:
     )
 
 
-@contextmanager
-def _authority(
+@asynccontextmanager
+async def _authority(
     tmp_path: Path,
-) -> Generator[
+) -> AsyncGenerator[
     tuple[
         ProfileWorkerOperationAuthority,
         HeldAuthorizationClient,
@@ -130,7 +134,7 @@ def _authority(
 ]:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((worker, key), _) = profiles
-        with override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(worker.binding.profile_id)):
             custody = ProfileWorkerCustody(worker, storage_root=root)
             original = lease(worker)
             session = changed(
@@ -169,7 +173,7 @@ def _authority(
                     definition_id=request.definition_id,
                     subject_ref=request.subject_ref,
                 )
-                authority.bind(
+                await authority.bind(
                     identity.operation_id,
                     WorkerOperationBinding(
                         session_id=session.session_id, frontend=OperationFrontendProjection.CLI, request=request
@@ -193,12 +197,12 @@ def _authority(
 
 async def _establish_provenance(authority: ProfileWorkerOperationAuthority, identity: OperationIdentity) -> None:
     async with authority.guard(identity, AccessAction.SUBMIT):
-        provenance = authority.capture_provenance(identity)
+        provenance = await authority.capture_provenance(identity)
         assert provenance.identity == identity
 
 
 async def _exercise(tmp_path: Path) -> None:
-    with _authority(tmp_path) as (authority, client, identity, binding, custody):
+    async with _authority(tmp_path) as (authority, client, identity, binding, custody):
         await _establish_provenance(authority, identity)
         with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
             await authority.publish_approval(identity, binding, "commit_review")

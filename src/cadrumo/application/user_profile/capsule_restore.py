@@ -42,10 +42,7 @@ if TYPE_CHECKING:
 
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from .aggregate import CommittedProfileView
-    from .custody_ports import (
-        ProfileCustodyEnvelopePort,
-        ProfileCustodySentinelPort,
-    )
+    from .custody_record_ports import ProfileCustodyEnvelopePort, ProfileCustodySentinelPort
 
 
 class ProfileCapsuleSourceError(CadrumoError):

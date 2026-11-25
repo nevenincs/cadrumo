@@ -87,7 +87,7 @@ def test_a_date_field_gets_a_real_calendar_date_rather_than_the_sentinel() -> No
 
     refused = []
     for field in date_fields:
-        value = schema_valid_placeholder(field)
+        value = str(schema_valid_placeholder(field))
         try:
             date.fromisoformat(value)
         except ValueError:

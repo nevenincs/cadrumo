@@ -1,7 +1,8 @@
-import { openPanelTab } from "../support/panel";
+import { openLogFilters, openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 // The shell by keyboard alone: tab stops, arrow-key patterns, shortcuts, and
 // where focus goes when a surface opens and closes.
@@ -102,14 +103,19 @@ test("both splitters move by the arrow keys and report their position", async ({
 }) => {
   await seedLayout(target);
   await open(target);
-  // Each reports the share of the area it sizes: the documentation pane for
-  // the split, which the left arrow narrows, and the bottom panel for its
-  // own handle, which the down arrow lowers.
-  for (const [name, back] of [
-    [label("desktop.split.resize"), "ArrowLeft"],
-    [label("desktop.panel.resize"), "ArrowDown"],
-  ] as const) {
-    const handle = target.getByRole("separator", { name });
+  await showTui(target);
+  // Each docking separator reports its first branch's share and names
+  // the panes it separates, regardless of where the split is nested.
+  const handles = target.locator("[data-dock-divider]");
+  await expect(handles).toHaveCount(2);
+  for (const handle of await handles.all()) {
+    const back =
+      (await handle.getAttribute("aria-orientation")) === "vertical"
+        ? "ArrowLeft"
+        : "ArrowUp";
+    await expect(handle).toHaveAccessibleName(
+      new RegExp(label("desktop.split.resize")),
+    );
     await handle.focus();
     const before = Number(await handle.getAttribute("aria-valuenow"));
     await target.keyboard.press(back);
@@ -119,7 +125,7 @@ test("both splitters move by the arrow keys and report their position", async ({
     await expect(handle).toBeFocused();
     const smaller = Number(await handle.getAttribute("aria-valuenow"));
     await target.keyboard.press(
-      back === "ArrowLeft" ? "ArrowRight" : "ArrowUp",
+      back === "ArrowLeft" ? "ArrowRight" : "ArrowDown",
     );
     await expect
       .poll(async () => Number(await handle.getAttribute("aria-valuenow")))
@@ -204,16 +210,20 @@ test("an action run from the palette keeps the focus it takes", async ({
   await expect(
     target.locator('[data-terminal="python"] textarea'),
   ).toBeFocused();
-  // Chosen by name, a view is shown, not toggled: choosing it again keeps it.
+  // Shown, the tab's entry offers to hide it, as its chord would.
   await target.keyboard.press("Control+Shift+KeyK");
   await palette
     .getByRole("combobox", { name: label("desktop.palette.label") })
     .fill(label("desktop.rail.python"));
-  await target.keyboard.press("Enter");
-  await expect(target.locator('[data-terminal="python"]')).toBeVisible();
   await expect(
-    target.locator('[data-terminal="python"] textarea'),
-  ).toBeFocused();
+    palette.getByRole("listbox").getByRole("option").first(),
+  ).toContainText(
+    label("desktop.palette.hide_view", {
+      view: label("navigation.view.panel.python.label"),
+    }),
+  );
+  await target.keyboard.press("Enter");
+  await expect(target.locator('[data-terminal="python"]')).toBeHidden();
 });
 
 test("settings opened from the palette inside a terminal stays open", async ({
@@ -256,7 +266,8 @@ test("no chord reaches the shell from under the sign-in dialog", async ({
   await target.keyboard.press("F6");
   await expect(target.locator(".settings")).toHaveCount(0);
   await expect(target.locator(".palette")).toHaveCount(0);
-  await expect(target.locator(".pane-tui")).toBeVisible();
+  // The TUI's chord did not open it.
+  await expect(target.locator(".pane-tui")).toBeHidden();
   await expect(focusedWithin(dialog)).toHaveCount(1);
 });
 
@@ -317,6 +328,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
   // Short enough that the calendar has more than it can show at once.
   await target.setViewportSize({ width: 1280, height: 520 });
   await open(target);
+  await showTui(target);
   await rail(target)
     .getByRole("button", { name: label("desktop.calendar.title") })
     .click();
@@ -347,11 +359,21 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await target.keyboard.press("Shift+F6");
   await expect(page).toBeFocused();
   // Inside the page the keyboard reaches its controls in order: the choice
-  // of face, which is one stop, then the way back to today, then the fresh
+  // of face, which is one stop, then the two arrows that step the filing
+  // year (one stop each, the way back to the rolling view appearing only
+  // once a year is chosen), then the way back to today, then the fresh
   // read, then the obligations.
   await target.keyboard.press("Tab");
   await expect(
     page.getByRole("radio", { name: label("desktop.calendar.view_months") }),
+  ).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: label("desktop.calendar.year_previous") }),
+  ).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: label("desktop.calendar.year_next") }),
   ).toBeFocused();
   await target.keyboard.press("Tab");
   await expect(page.locator(".calendar-to-today")).toBeFocused();
@@ -359,6 +381,18 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await expect(
     page.getByRole("button", { name: label("desktop.calendar.refresh") }),
   ).toBeFocused();
+  // The profile notice sits between the refresh and the obligations: its
+  // details toggle, then the way to the profile.
+  const details = page.getByRole("button", {
+    name: label("desktop.profile.notice.show_details"),
+  });
+  const profile = page.getByRole("link", {
+    name: label("desktop.profile.notice.open_profile"),
+  });
+  await target.keyboard.press("Tab");
+  await expect(details).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(profile).toBeFocused();
   // Each obligation is one stop among the months, however many weeks it
   // crosses: the fixture's nine, and no more.
   await expect(page.locator(".calendar-bar:not([tabindex='-1'])")).toHaveCount(
@@ -372,9 +406,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await expect(first).toHaveAttribute("aria-pressed", "true");
   // The arrow keys move the choice of face, and the list comes with what
   // was chosen among the months marked in it.
-  await target.keyboard.press("Shift+Tab");
-  await target.keyboard.press("Shift+Tab");
-  await target.keyboard.press("Shift+Tab");
+  for (let back = 0; back < 7; back++) await target.keyboard.press("Shift+Tab");
   await target.keyboard.press("ArrowRight");
   await expect(
     page.getByRole("radio", { name: label("desktop.calendar.view_list") }),
@@ -390,6 +422,7 @@ test("the calendar's chord shows it from a terminal and puts it away again", asy
 }) => {
   await seedLayout(target);
   await open(target);
+  await showTui(target);
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
   await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
   await target.keyboard.press("ControlOrMeta+Shift+D");
@@ -425,6 +458,7 @@ test("F6 moves focus from area to area and back", async ({ page: target }) => {
   await seedLayout(target);
   await open(target);
   await expect(target.locator(".docs-frame")).toBeVisible();
+  await showTui(target);
   await rail(target).getByRole("button").first().focus();
   await target.keyboard.press("F6");
   await expect(target.locator(".docs-frame")).toBeFocused();
@@ -453,7 +487,7 @@ test("F6 keeps a terminal focus request while its fonts load", async ({
     waiting.push(() => route.continue());
   });
   await seedLayout(target, {
-    layout: { agentShown: false, docsShown: false, tuiShown: true },
+    layout: { agentShown: false, docsShown: false },
   });
   await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off", {
     waitUntil: "domcontentloaded",
@@ -464,6 +498,8 @@ test("F6 keeps a terminal focus request while its fonts load", async ({
       exact: true,
     }),
   ).not.toHaveAttribute("aria-disabled", "true");
+  // The TUI is opened, and its terminal waits for its fonts.
+  await showTui(target);
   await expect.poll(() => waiting.length).toBeGreaterThan(0);
   const input = target.locator('[data-terminal="tui"] textarea');
   await expect(input).toHaveCount(0);
@@ -548,6 +584,10 @@ test("the shell's chords reach their actions from the chrome", async ({
   await seedLayout(target);
   await open(target);
   await rail(target).getByRole("button").first().focus();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await target.keyboard.press("Control+Shift+KeyT");
+  await expect(target.locator(".pane-tui")).toBeVisible();
+  await rail(target).getByRole("button").first().focus();
   await target.keyboard.press("Control+Shift+KeyT");
   await expect(target.locator(".pane-tui")).toBeHidden();
   await target.keyboard.press("Control+Shift+KeyT");
@@ -597,12 +637,8 @@ test("the sign-in dialog keeps Tab inside it and Escape hands focus on", async (
   }
   await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
-  await expect(
-    target.locator(".pane-tui").getByRole("button", {
-      name: label("desktop.signin.submit"),
-      exact: true,
-    }),
-  ).toBeFocused();
+  // With no TUI opened to offer a way in, the pane that is shown takes it.
+  await expect(target.locator(".docs-frame")).toBeFocused();
 });
 
 test("the reveal control shows and hides the password by keyboard", async ({
@@ -719,7 +755,7 @@ test("Enter on a record opens its detail", async ({ page: target }) => {
   await expect(row.locator("pre")).toHaveCount(0);
 });
 
-test("the menu stand-in follows the arrow keys and closes on Escape", async ({
+test("a context menu follows the arrow keys and closes on Escape", async ({
   page: target,
 }) => {
   await open(target);
@@ -796,7 +832,8 @@ test("a chord sent from the documentation does not act under the sign-in dialog"
   await page.press("Control+Shift+KeyT");
   await target.waitForTimeout(300);
   await expect(target.locator(".settings")).toHaveCount(0);
-  await expect(target.locator(".pane-tui")).toBeVisible();
+  // The TUI's chord did not open it.
+  await expect(target.locator(".pane-tui")).toBeHidden();
 });
 
 test("a press outside a record's menu keeps what it pressed", async ({
@@ -922,4 +959,37 @@ test("a press in the documentation while a menu is open keeps focus there", asyn
   await expect(menu).toBeHidden();
   await target.waitForTimeout(200);
   await expect(target.locator(".docs-frame")).toBeFocused();
+});
+
+test("a menu opened just as a popover goes keeps focus and stays open", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=user-profile&latency=0&bar=off&logLevel=INFO",
+  );
+  await openPanelTab(target, "logs");
+  await openLogFilters(target);
+  const popover = target.locator('[data-slot="popover-content"]');
+  await expect(popover).toBeVisible();
+  // The popover gives focus back a task after it unmounts. A busy window can
+  // handle a right-click first, so the press comes in exactly that gap: after
+  // the popover has gone, before its focus return has run.
+  await target.evaluate(() => {
+    document.addEventListener("animationend", (event) => {
+      if ((event.target as HTMLElement).dataset.slot !== "popover-content")
+        return;
+      document
+        .querySelector('.record[data-seq="4"]')
+        ?.dispatchEvent(
+          new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
+        );
+    });
+  });
+  await target.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  // Queued behind the popover's own zero-delay focus return.
+  await target.evaluate(() => new Promise((done) => setTimeout(done)));
+  const menu = target.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await expect(menu).toBeFocused();
 });

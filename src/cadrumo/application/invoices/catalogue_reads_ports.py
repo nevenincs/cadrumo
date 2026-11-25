@@ -1,19 +1,22 @@
 """Application-owned read capabilities for invoice and transaction catalogues.
 
 Core types:
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 from typing import Protocol, runtime_checkable
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ...domain.attachments.models import Attachment
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.transactions.date_partition import LedgerDatePartition
+from ...domain.transactions.models import TransactionCatalogue
 
 
 class InvoiceCatalogueReadPersistenceError(CadrumoError):
@@ -45,6 +48,14 @@ class TransactionCatalogueReader(Protocol):
         ...
 
 
+class InvoiceDocumentManifestReader(Protocol):
+    """Read the profile's attachment manifests, which hold which document belongs to which invoice."""
+
+    def iter_manifests(self) -> Iterator[Attachment]:
+        """Iterate every stored attachment manifest of the composed profile."""
+        ...
+
+
 @runtime_checkable
 class BucketBoundCatalogueReader(Protocol):
     """A catalogue reader backed by one profile bucket's store."""
@@ -68,5 +79,6 @@ __all__ = [
     "InvoiceCatalogueReadPersistenceError",
     "InvoiceCatalogueReadPorts",
     "InvoiceCatalogueReader",
+    "InvoiceDocumentManifestReader",
     "TransactionCatalogueReader",
 ]

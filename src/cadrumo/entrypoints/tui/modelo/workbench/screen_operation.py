@@ -10,42 +10,42 @@ from typing import TYPE_CHECKING
 
 from .....application.export.calculation_review_xlsx_operation import CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
 from .....application.modelo.action_errors import ModeloEditBaselineStaleError
-from .....application.modelo.operation_definitions import (
+from .....application.modelo.operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
-from .....application.modelo.work_form_models import ModeloWorkForm
+from .....application.modelo.work_form_export_offer import (
+    ModeloFormUnavailable,
+    artefact_availability,
+    record_availability,
+)
+from .....application.modelo.work_form_header import ModeloFormExportHoldReason, export_hold, result_view
+from .....application.modelo.work_form_next_step import ModeloFormNextAction
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1, modelo_work_form_changes
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.modelo_export_artefact import ModeloExportArtefact
-from .....core.operations import OperationTerminalCondition
+from .....core.operations import OperationEffect, OperationTerminalCondition
 from ...components.dialogs import ConfirmScreen
 from ...operations.controller_port import OperationControllerPort
-from ...operations.refusal_explanation import public_refusal_explanation
+from ...refusal.panel import RefusalSlot
 from ..export_result import ModeloExportResultScreen
 from .casilla_list_models import AddressKey
 from .export import WorkbenchExportScreen
-from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
-from .progress import NextAction
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
-    _BLOCKED_LOCALE_KEY,
-    _CHECKED_LOCALE_KEYS,
-    _FILE_OUT_OF_DATE_LOCALE_KEY,
-    _NEXT_KEYS,
-    _SELF_REPORTING_OPERATIONS,
-    _VALUE_CHANGING_OPERATIONS,
-    _WITHHELD_LOCALE_KEY,
+    NEXT_KEYS,
+    SELF_REPORTING_OPERATIONS,
+    VALUE_CHANGING_OPERATIONS,
 )
-from .wording import day_text
 
 if TYPE_CHECKING:
     from .....application.operations.frontend_projection import OperationPublicProjectionV1
     from ...operations.modal import OperationModalSettledOutcomeV1
+    from ...refusal.served import ServedRefusalV1
     from .screen import ModeloWorkbenchScreen
 
 
@@ -59,11 +59,13 @@ class WorkbenchOperationMixin:
         again; there is no way past this but a new file, or a correction when
         the older file was already filed.
         """
-        form = self.form
-        export = None if form is None else form.last_export
-        if export is None or export.current:
+        load = self._load
+        if load is None:
             return False
-        self._notice(tr(_FILE_OUT_OF_DATE_LOCALE_KEY, date=day_text(export.exported_at, self._language)))
+        record = record_availability(load.form, self._language, verified=load.verified, filed=self.recorded)
+        if record.reason is not ModeloFormUnavailable.FILE_OUT_OF_DATE:
+            return False
+        self._notice(record.words or "")
         return True
 
     def _filing_withheld(self: ModeloWorkbenchScreen) -> bool:
@@ -82,19 +84,17 @@ class WorkbenchOperationMixin:
             self._state_apply_prerequisite()
             return True
         if self._session.dirty:
-            action = tr("tui.modelo.workbench.next.apply", count=len(self._session.changes))
-            self._notice(f"{action} [{_NEXT_KEYS[NextAction.APPLY]}]")
+            action = tr("workspace.modelo.next.apply", count=len(self._session.changes))
+            self._notice(f"{action} [{NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return True
-        progress = self._progress(load)
-        if not progress.filing_withheld:
+        hold = export_hold(load.form, self._language, verified=load.verified, recorded=self.recorded)
+        if hold is None or hold.reason is ModeloFormExportHoldReason.VERIFY:
             return False
-        if progress.blocking:
+        if hold.reason is ModeloFormExportHoldReason.BLOCKS:
             self.action_issues()
-            self._notice(tr(_BLOCKED_LOCALE_KEY, count=progress.blocking))
-            return True
-        if self._may_confirm():
+        elif self._may_confirm():
             self._confirm_next()
-        self._notice(tr(_WITHHELD_LOCALE_KEY, count=progress.assumed))
+        self._notice(f"{hold.words} [{NEXT_KEYS[hold.action]}]")
         return True
 
     def action_export(self: ModeloWorkbenchScreen) -> None:
@@ -108,22 +108,18 @@ class WorkbenchOperationMixin:
             self._filing_withheld()
             return
         offer = actions.export_offer()
-        filing_ready = load.verified and not self._progress(load).filing_withheld
         artefacts = tuple(
             artefact
             for artefact in offer.artefacts
-            if (
-                artefact is ModeloExportArtefact.CALCULATION_REVIEW_XLSX
-                or (filing_ready if artefact is ModeloExportArtefact.FICHERO_BOE else load.verified)
-            )
+            if artefact_availability(artefact, load.form, self._language, verified=load.verified).available
         )
         if not artefacts:
             if self._filing_withheld():
                 return
-            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         if load.form.calculation_revision_id is None:
-            self._notice(tr("tui.modelo.workbench.export.verify_first"))
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         offer = replace(
             offer,
@@ -142,7 +138,7 @@ class WorkbenchOperationMixin:
             if request.artefact is not ModeloExportArtefact.CALCULATION_REVIEW_XLSX and (
                 self._load is None or not self._load.verified
             ):
-                self._notice(tr("tui.modelo.workbench.export.verify_first"))
+                self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
                 return
             self._run_operation(partial(actions.export, request))
 
@@ -226,36 +222,41 @@ class WorkbenchOperationMixin:
         condition: OperationTerminalCondition | None,
     ) -> None:
         self._apply_prerequisite = None
-        notice = self._operation_refusal_notice(outcome)
+        self._show_operation_refusal(outcome.refusal)
+        if outcome.view_model.projection.effect is OperationEffect.UNKNOWN:
+            # An effect that may have committed is not reported as not done, and the declaration is not read
+            # again over it: the staged changes stay as they were until the filer reads it.
+            self._notice(tr("workspace.modelo.operation.unknown"))
+            return
+        notice = tr("workspace.modelo.operation.not_done")
         if applies_changes:
             refused = condition is OperationTerminalCondition.REFUSED
             self.run_worker(partial(self._read_refused_apply, notice, refused), group="workbench-read", exclusive=True)
         else:
             self._notice(notice)
 
-    @staticmethod
-    def _operation_refusal_notice(outcome: OperationModalSettledOutcomeV1) -> str:
-        # The stopped executor's own message, when it recorded one, says more than the registry's generic sentence.
-        explanation = outcome.error_explanation or (
-            public_refusal_explanation(outcome.view_model.receipt_ref)
-            if outcome.view_model.receipt_kind == "refusal"
-            else None
-        )
-        message = tr("tui.modelo.workbench.operation.not_done")
-        return message if explanation is None else f"{message} {explanation}"
+    def _show_operation_refusal(self: ModeloWorkbenchScreen, refusal: ServedRefusalV1 | None) -> None:
+        """Show the refusal the last operation served beneath the notice, or take the last one away."""
+        slot = next(iter(self.query("#wb-operation-refusal").results(RefusalSlot)), None)
+        if slot is not None:
+            slot.show(refusal)
+        elif refusal is not None:
+            self.query_one("#wb-status").mount(RefusalSlot(refusal, id="wb-operation-refusal"), after="#wb-notice")
+        self._show_wallet_door(refusal)
 
     def _settle_succeeded_operation(
         self: ModeloWorkbenchScreen, applies_changes: bool, outcome: OperationModalSettledOutcomeV1
     ) -> None:
         self._apply_prerequisite = None
+        self._show_operation_refusal(None)
         yours = frozenset(change.key for change in self._session.changes) if applies_changes else frozenset()
         if applies_changes:
             self._session.discard()
         projection = outcome.view_model.projection
         definition = str(projection.definition_id)
-        reports_itself = not applies_changes and definition in _SELF_REPORTING_OPERATIONS
+        reports_itself = not applies_changes and definition in SELF_REPORTING_OPERATIONS
         if not reports_itself:
-            self._notice(tr("tui.modelo.workbench.operation.done"))
+            self._notice(tr("workspace.modelo.operation.done"))
         actions = self._actions
         if actions is not None:
             self.run_worker(partial(asyncio.to_thread, actions.refresh_product), group="workbench-refresh")
@@ -276,7 +277,7 @@ class WorkbenchOperationMixin:
             and actions is not None
         ):
             self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
-        changes_values = projection.definition_id in _VALUE_CHANGING_OPERATIONS
+        changes_values = projection.definition_id in VALUE_CHANGING_OPERATIONS
         original = before if changes_values else None
         self.run_worker(
             partial(self._read_after, original, yours, reporting),
@@ -314,15 +315,16 @@ class WorkbenchOperationMixin:
         reporting: str | None = None,
     ) -> None:
         """Read the declaration again, say what a calculation or a check concluded, and show what changed."""
-        await self._read()
+        if not await self._read():
+            return
         after = self._load
         if reporting is not None and after is not None:
-            self._notice(self._outcome_text(reporting, after.form))
+            self._notice(self._outcome_text(reporting, after))
         if before is None or after is None or after is before:
             return
         changes = modelo_work_form_changes(before.form, after.form)
         if not changes:
-            self._notice(tr("tui.modelo.workbench.result_diff.nothing_changed"))
+            self._notice(tr("workspace.modelo.result_diff.nothing_changed"))
             return
         lines = result_lines(
             changes,
@@ -338,18 +340,19 @@ class WorkbenchOperationMixin:
 
         self.app.push_screen(WorkbenchResultScreen(lines), closed)
 
-    def _outcome_text(self: ModeloWorkbenchScreen, definition: str, form: ModeloWorkForm) -> str:
+    def _outcome_text(self: ModeloWorkbenchScreen, definition: str, load: ModeloWorkFormLoadV1) -> str:
         """What a finished calculation or check concluded, in the filer's words."""
         if definition == str(MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID):
-            verdict = form.verification
-            if verdict is None:
-                return tr("tui.modelo.workbench.operation.done")
-            return tr(_CHECKED_LOCALE_KEYS[verdict], key="i")
-        view = result_view(form, self._language, staged=0, recorded=self.recorded)
-        if view is None or view.settled is None:
-            return tr("tui.modelo.workbench.operation.done")
-        direction, value = view.settled
-        return tr("tui.modelo.workbench.operation.calculated", direction=direction, value=value)
+            verdict = load.journey.verdict
+            if verdict.checked_words is None:
+                return tr("workspace.modelo.operation.done")
+            if not verdict.checked_resolves:
+                return verdict.checked_words
+            return f"{verdict.checked_words} [{NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
+        view = result_view(load.form, self._language, recorded=self.recorded)
+        if view is None or view.words is None or view.amount_text is None:
+            return tr("workspace.modelo.operation.done")
+        return tr("workspace.modelo.operation.calculated", direction=view.words, value=view.amount_text)
 
     async def _state_export_result(
         self: ModeloWorkbenchScreen, actions: ModeloWorkbenchActionsV1, projection: OperationPublicProjectionV1

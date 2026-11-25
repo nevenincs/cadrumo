@@ -47,6 +47,17 @@ class SchemaFamilyDispositionDeclaration(RegistryModel):
     reason: str = Field(min_length=1, max_length=1024)
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    inherited_from: RevisionId | None = Field(
+        default=None,
+        exclude=True,
+        repr=False,
+        description=(
+            "The edition that stated this disposition, when the edition holding it inherits it from its "
+            "predecessor; unset when the holding edition states it itself. Set by the loader during "
+            "materialisation and refused when authored. Excluded from serialisation, because where a "
+            "disposition is stated says nothing about what it means, and inheriting a claim is not new evidence."
+        ),
+    )
 
 
 class CasillaStorageSelector(RegistryModel):

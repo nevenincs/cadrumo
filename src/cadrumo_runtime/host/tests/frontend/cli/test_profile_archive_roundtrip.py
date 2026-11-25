@@ -49,6 +49,7 @@ from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo.tests.privacy_helpers import assert_public_profile_id_not_leaked
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -76,16 +77,9 @@ def _create_profile(name: str, *, tax_id: str) -> str:
     return register_cli_profile(
         label=name,
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": tax_id,
             "activities.description": "design",
-            "taxpayer_type.entity_type": "natural_person",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "identity.name": "Archive",
             "identity.surnames": "Roundtrip",
         },
@@ -132,7 +126,7 @@ def _invoke_authenticated_profile(profile_name: str, args: list[str]) -> Result:
     """Invoke one profile worker command with the fixture's one-use password."""
     from cadrumo.core.config import load_settings
 
-    with native_cli_profile_server(load_settings().cadrumo_local_storage_root):
+    with native_cli_profile_server(load_settings().cadrumo_storage_root):
         result = invoke_cached_cli(
             ("--profile", profile_name, "--profile-secrets-stdin", *args),
             input=json.dumps({"profile_passphrase": _test_passphrase()}),
@@ -249,7 +243,7 @@ def test_archive_inspect_reads_header_without_decrypting(tmp_path: Path) -> None
     operator wants to check a backup file before deciding whether to restore
     it -- which is precisely the moment they may have no working profile.
     """
-    _create_profile("profile3", tax_id="11111111H")
+    _create_profile("profile3", tax_id="00001500M")
 
     archive_path = tmp_path / "profile3-backup.cadrumo-bucket.tar.gz"
     r_export = _archive_export("profile3", archive_path)
@@ -289,7 +283,7 @@ def test_archive_restore_refuses_corrupted_payload(tmp_path: Path) -> None:
     mean the seal provides no tamper protection at all, and every other
     assertion in this module would be worthless.
     """
-    _create_profile("profile4", tax_id="22222222J")
+    _create_profile("profile4", tax_id="00001501Y")
 
     archive_path = tmp_path / "profile4-backup.cadrumo-bucket.tar.gz"
     r_export = _archive_export("profile4", archive_path)
@@ -330,7 +324,7 @@ def test_archive_restore_refuses_an_identity_already_published(tmp_path: Path) -
     """
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
-    _create_profile("profile5", tax_id="33333333P")
+    _create_profile("profile5", tax_id="00001502F")
     source_bucket_id = resolve_active_bucket_id()
     assert source_bucket_id is not None
 

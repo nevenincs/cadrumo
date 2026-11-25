@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -40,18 +40,21 @@ from .actions_split_merge import split_transaction
 from .id_resolution import resolve_transaction_id
 from .models import SplitChildCommand, SplitTransactionResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
 LEDGER_SPLIT_PHASE = "ledger.split.manual"
 LedgerSplitRemergeOperationId = Literal["ledger.merge"]
 _SPLIT_REMERGED_BY: tuple[LedgerSplitRemergeOperationId, ...] = ("ledger.merge",)
-_MAX_SPLIT_CHILDREN = 128
-_MAX_SPLIT_RESULT_JSON_BYTES = 16_384
-_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=96)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
-_Description = Annotated[str, Field(min_length=1, max_length=1024)]
-_Reason = Annotated[str, Field(max_length=500)]
+LEDGER_SPLIT_CHILDREN_MAX = 128
+"""The most parts one manual split makes."""
+MAX_SPLIT_RESULT_JSON_BYTES = 16_384
+_TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
+LEDGER_SPLIT_PART_DESCRIPTION_MAX = 1024
+"""The most characters the description of one split part takes."""
+_Description = Annotated[str, Field(min_length=1, max_length=LEDGER_SPLIT_PART_DESCRIPTION_MAX)]
+_Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 
 
@@ -82,7 +85,7 @@ class LedgerSplitChildRequest(BaseModel):
         return trimmed
 
 
-_Children = Annotated[tuple[LedgerSplitChildRequest, ...], Field(min_length=2, max_length=_MAX_SPLIT_CHILDREN)]
+_Children = Annotated[tuple[LedgerSplitChildRequest, ...], Field(min_length=2, max_length=LEDGER_SPLIT_CHILDREN_MAX)]
 
 
 class LedgerSplitRequest(BaseModel):
@@ -143,7 +146,7 @@ class LedgerSplitOperationResult(BaseModel):
     split_group_id: Hex64Str
     child_transaction_ids: Annotated[
         tuple[TransactionId, ...],
-        Field(min_length=2, max_length=_MAX_SPLIT_CHILDREN),
+        Field(min_length=2, max_length=LEDGER_SPLIT_CHILDREN_MAX),
     ]
     bucket_event_id: Hex64Str
     parent_business_classification: BusinessClassification
@@ -285,12 +288,12 @@ def _preflight_result(
         child_business_classification=BusinessClassification.NOT_YET_PROCESSED,
         remerged_by=_SPLIT_REMERGED_BY,
     )
-    _require_result_bound(projection)
+    require_result_bound(projection)
 
 
-def _require_result_bound(projection: LedgerSplitOperationResult) -> None:
+def require_result_bound(projection: LedgerSplitOperationResult) -> None:
     """Reject a result projection larger than its registered byte bound."""
-    if len(projection.model_dump_json().encode("utf-8")) > _MAX_SPLIT_RESULT_JSON_BYTES:
+    if len(projection.model_dump_json().encode("utf-8")) > MAX_SPLIT_RESULT_JSON_BYTES:
         raise TransactionValidationError("ledger split result exceeds its registered projection bound")
 
 
@@ -417,11 +420,12 @@ def _operation_result(
         child_business_classification=next(iter(child_classifications)),
         remerged_by=_SPLIT_REMERGED_BY,
     )
-    _require_result_bound(projection)
+    require_result_bound(projection)
     return projection
 
 
-def _project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project a ledger split result after matching it to its terminal receipt."""
     if type(result) is not LedgerSplitExecutionResult or not terminal_receipt_matches(
         receipt,
         definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID,
@@ -454,12 +458,9 @@ def resolve_ledger_split_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-ledger consent and COMMIT for manual split."""
-    if request.definition_id != LEDGER_SPLIT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        LedgerSplitRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID, request_type=LedgerSplitRequest
+    )
 
 
 def build_ledger_split_registration(
@@ -469,7 +470,7 @@ def build_ledger_split_registration(
     return OperationPublicDefinitionRegistrationV1.compose_request_result(
         definition=definition,
         public_result_type=LedgerSplitOperationResult,
-        result_projector=_project_operation_result,
+        result_projector=project_operation_result,
         access_resolver=resolve_ledger_split_access,
     )
 

@@ -25,6 +25,7 @@ from datetime import date
 import pytest
 
 from ....core.errors.hierarchy import ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -34,6 +35,8 @@ from ..descendant_facts import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
+EXERCISE = filing_year_envelope().horizon
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -42,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 def _hijo_guarderia(gastos: int) -> DescendantInfo:
     """Child born 2022-06-01 → age 2 at 2024-12-31, eligible menor-3."""
     return DescendantInfo(
-        birth_date=date(2022, 6, 1),
+        birth_date=date(EXERCISE - 2, 6, 1),
         gastos_guarderia_euros=gastos,
     )
 
@@ -50,7 +53,7 @@ def _hijo_guarderia(gastos: int) -> DescendantInfo:
 def _hijo_no_menor_3(gastos: int) -> DescendantInfo:
     """Child born 2020-01-01 → age 4 at 2024-12-31, NOT eligible for Art. 81.2."""
     return DescendantInfo(
-        birth_date=date(2020, 1, 1),
+        birth_date=date(EXERCISE - 4, 1, 1),
         gastos_guarderia_euros=gastos,
     )
 
@@ -106,15 +109,15 @@ class TestGastosGuarderiaFactPersistence:
         injector answers at calculate time, against the filing year it is
         computing rather than a year baked into the stored facts.
         """
-        facts = dict(descendant_facts_from_list((_hijo_guarderia(2000), _hijo_no_menor_3(9999))))
-        assert facts["renta_family.descendiente.0.gastos_guarderia"] == "2000"
+        facts = dict(descendant_facts_from_list((_hijo_guarderia(1850), _hijo_no_menor_3(9999))))
+        assert facts["renta_family.descendiente.0.gastos_guarderia"] == "1850"
         assert facts["renta_family.descendiente.1.gastos_guarderia"] == "9999"
 
     def test_roundtrip_gastos_via_facts(self) -> None:
         """gastos_guarderia_euros survives descendant_facts_from_list → descendant_list_from_facts roundtrip."""
         original = (
             DescendantInfo(
-                birth_date=date(2022, 6, 1),
+                birth_date=date(EXERCISE - 2, 6, 1),
                 gastos_guarderia_euros=1500,
             ),
         )
@@ -134,17 +137,17 @@ class TestParseDescendienteFlagGastosGuarderia:
     """parse_descendiente_flag must accept GASTOS_GUARDERIA= and validate >= 0."""
 
     def test_gastos_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=1500")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},GASTOS_GUARDERIA=1500")
         assert d.gastos_guarderia_euros == 1500
 
     def test_gastos_zero_accepted(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=0")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},GASTOS_GUARDERIA=0")
         assert d.gastos_guarderia_euros == 0
 
     def test_gastos_absent_defaults_to_zero(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01")
+        d = parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()}")
         assert d.gastos_guarderia_euros == 0
 
     def test_gastos_negative_raises(self) -> None:
         with pytest.raises(ProfileAnswerTypeError, match="GASTOS_GUARDERIA"):
-            parse_descendiente_flag("NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=-1")
+            parse_descendiente_flag(f"NACIMIENTO={date(EXERCISE - 2, 6, 1).isoformat()},GASTOS_GUARDERIA=-1")

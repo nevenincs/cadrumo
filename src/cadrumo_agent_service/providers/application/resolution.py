@@ -5,14 +5,15 @@ frontend shows and what a consumer receives cannot disagree:
 
 1. A record that cannot be read refuses; it is never treated as absent.
 2. A lane turned off (assistant ``disabled``) or a removed (``disabled``)
-   credential wins over everything, including the development environment.
+   credential wins over everything.
    Turning a lane off keeps its stored key; it is only not used.
 3. For the assistant, a provider-sign-in choice selects the provider's own CLI
    sign-in. It never erases a stored key, which extraction keeps using.
-4. A stored key or token wins over the environment.
-5. An unset credential falls back to the process environment value constructed
-   from the provider id (``CADRUMO_LLM_<ID>_API_KEY``) in development storage
-   mode only. Installed builds have no environment path.
+4. A stored key or token is the only direct credential; with none stored, a
+   lane that takes a key is unavailable. No process environment value stands
+   in for a profile's stored key.
+5. A keyless lane needs no record: unless it is turned off it resolves as
+   usable with no credential, whatever an older record still holds.
 
 The resolver's result carries the secret. It is for in-process consumers
 (extraction, the hosted-agent controller) and never for frontend output.
@@ -20,19 +21,17 @@ The resolver's result carries the secret. It is for in-process consumers
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
 from typing import Final
 
 from pydantic import BaseModel, SecretStr
 
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.core.storage_environment import StorageMode
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
-from ..domain.catalog import ProviderAuthKind, ProviderCatalogEntry, ProviderConsumer, ProviderId
+from ..domain.catalog import LaneId, ProviderAuthKind, ProviderCatalogEntry, ProviderConsumer
 from ..domain.record import (
     AssistantAuth,
     CredentialKind,
@@ -42,12 +41,14 @@ from ..domain.record import (
 )
 from .contracts import (
     CliState,
+    CliStateCause,
     ProviderCredentialSource,
     ProviderReadiness,
     ProviderSettingsMode,
     ProviderStatusEntry,
     ProviderStatusReason,
 )
+from .next_steps import next_step_for
 from .ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -80,9 +81,9 @@ class ProviderCredentialUnavailableReason(StrEnum):
 class ResolvedDirectCredential(BaseModel):
     """A direct key or token a consumer may use. Its repr masks the secret."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    provider: ProviderId
+    provider: LaneId
     consumer: ProviderConsumer
     kind: CredentialKind
     secret: SecretStr
@@ -95,9 +96,9 @@ class ResolvedDirectCredential(BaseModel):
 class ResolvedProviderSignIn(BaseModel):
     """The assistant uses the provider's own CLI sign-in; Cadrumo hands over no secret."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    provider: ProviderId
+    provider: LaneId
     consumer: ProviderConsumer
     generation: Hex64Str
 
@@ -105,14 +106,26 @@ class ResolvedProviderSignIn(BaseModel):
 class ProviderCredentialUnavailable(BaseModel):
     """No credential resolves, for a typed reason."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider: str
     consumer: ProviderConsumer
     reason: ProviderCredentialUnavailableReason
 
 
-type ProviderCredentialResolution = ResolvedDirectCredential | ResolvedProviderSignIn | ProviderCredentialUnavailable
+class ResolvedKeyless(BaseModel):
+    """A keyless lane is usable with no credential; Cadrumo hands over no secret and no URL."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    provider: LaneId
+    consumer: ProviderConsumer
+    generation: Hex64Str
+
+
+type ProviderCredentialResolution = (
+    ResolvedDirectCredential | ResolvedProviderSignIn | ResolvedKeyless | ProviderCredentialUnavailable
+)
 
 
 def provider_mode(read: ProviderRecordRead) -> ProviderSettingsMode:
@@ -131,6 +144,13 @@ def provider_mode(read: ProviderRecordRead) -> ProviderSettingsMode:
     return ProviderSettingsMode.UNSET
 
 
+def lane_mode(entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsMode:
+    """Return the mode of one lane: a keyless lane is only ever unset or turned off."""
+    if entry.auth_kind is ProviderAuthKind.NONE:
+        return ProviderSettingsMode.DISABLED if _keyless_turned_off(read) else ProviderSettingsMode.UNSET
+    return provider_mode(read)
+
+
 def read_revision(read: ProviderRecordRead) -> str:
     """Return the guard an action must send for this read."""
     if isinstance(read, StoredProviderRecord):
@@ -140,40 +160,19 @@ def read_revision(read: ProviderRecordRead) -> str:
     return ABSENT_SECURE_OBJECT_REVISION_ID
 
 
-def _environment_secret(
-    entry: ProviderCatalogEntry, environment: Mapping[str, str], storage_mode: StorageMode
-) -> SecretStr | None:
-    """Return the development fallback secret, or ``None`` outside development."""
-    if storage_mode is not StorageMode.DEVELOPMENT or not entry.auth_kind.accepts_direct_credential:
-        return None
-    if entry.auth_kind.accepts_base_url and entry.default_base_url is None:
-        # The environment carries no gateway URL, so such a key could reach nothing.
-        return None
-    value = environment.get(entry.development_variable)
-    if value is None or not value.strip():
-        return None
-    return SecretStr(value)
-
-
 def status_entry(
     entry: ProviderCatalogEntry,
     read: ProviderRecordRead,
     *,
-    environment: Mapping[str, str],
-    storage_mode: StorageMode,
     cli_state: CliState | None,
+    cli_state_cause: CliStateCause | None = None,
 ) -> ProviderStatusEntry:
     """Project one lane's read into masked status."""
-    mode = provider_mode(read)
+    mode = lane_mode(entry, read)
     stored = read.record if isinstance(read, StoredProviderRecord) else None
-    available, source, readiness, reason = _availability(
-        entry, read, mode, environment=environment, storage_mode=storage_mode
-    )
-    if (
-        mode is not ProviderSettingsMode.DISABLED
-        and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
-        and not isinstance(read, UnreadableProviderRecord)
-    ):
+    credential = stored.credential if stored is not None and entry.auth_kind.accepts_direct_credential else None
+    available, source, readiness, reason = _availability(entry, read, mode)
+    if _uses_provider_sign_in(entry, read, mode):
         available = cli_state is CliState.INSTALLED_SIGNED_IN
         readiness = ProviderReadiness.NOT_VERIFIED if available else ProviderReadiness.SIGN_IN_REQUIRED
         reason = None if available else ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
@@ -182,18 +181,35 @@ def status_entry(
         provider=entry.provider,
         transport=entry.transport,
         display_name=entry.display_name,
+        reads_off_host=entry.reads_off_host,
         auth_kind=entry.auth_kind,
         consumers=entry.consumers,
         mode=mode,
-        credential_saved=stored is not None and stored.credential is not None,
+        credential_saved=credential is not None,
         available=available,
         source=source,
         readiness=readiness,
         reason=reason,
-        base_url=stored.credential.base_url if stored is not None and stored.credential is not None else None,
+        base_url=credential.base_url if credential is not None else None,
         default_base_url=entry.default_base_url,
         cli_state=cli_state,
+        cli_state_cause=cli_state_cause,
+        next_step=next_step_for(cli_state_cause.value if cli_state_cause is not None else None),
+        sign_out_available=entry.logout and cli_state is CliState.INSTALLED_SIGNED_IN,
         revision=read_revision(read),
+    )
+
+
+def _uses_provider_sign_in(
+    entry: ProviderCatalogEntry,
+    read: ProviderRecordRead,
+    mode: ProviderSettingsMode,
+) -> bool:
+    return (
+        entry.auth_kind is not ProviderAuthKind.NONE
+        and mode is not ProviderSettingsMode.DISABLED
+        and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
+        and not isinstance(read, UnreadableProviderRecord)
     )
 
 
@@ -201,28 +217,18 @@ def _availability(
     entry: ProviderCatalogEntry,
     read: ProviderRecordRead,
     mode: ProviderSettingsMode,
-    *,
-    environment: Mapping[str, str],
-    storage_mode: StorageMode,
 ) -> tuple[bool, ProviderCredentialSource, ProviderReadiness, ProviderStatusReason | None]:
     none = ProviderCredentialSource.NONE
     if isinstance(read, UnreadableProviderRecord):
         return False, none, ProviderReadiness.UNUSABLE, ProviderStatusReason.RECORD_UNREADABLE
     if mode is ProviderSettingsMode.DISABLED:
         return False, none, ProviderReadiness.DISABLED, ProviderStatusReason.TURNED_OFF
-    if mode is ProviderSettingsMode.PROVIDER_SIGN_IN:
+    if mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.NONE:
         return True, none, ProviderReadiness.NOT_VERIFIED, None
     if entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY:
         return True, none, ProviderReadiness.SIGN_IN_REQUIRED, ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
     if mode in {ProviderSettingsMode.KEY, ProviderSettingsMode.OAUTH}:
         return True, ProviderCredentialSource.PROFILE, ProviderReadiness.NOT_VERIFIED, None
-    if _environment_secret(entry, environment, storage_mode) is not None:
-        return (
-            True,
-            ProviderCredentialSource.ENVIRONMENT,
-            ProviderReadiness.NOT_VERIFIED,
-            None,
-        )
     return False, none, ProviderReadiness.MISSING, ProviderStatusReason.NOT_CONFIGURED
 
 
@@ -240,19 +246,19 @@ class ProviderCredentialResolver:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
-        environment: Mapping[str, str],
-        storage_mode: StorageMode,
     ) -> None:
-        """Bind the resolver to one profile's store and the process's storage mode."""
+        """Bind the resolver to one profile's store and the agent's catalog."""
         self._store = store
         self._catalog_source = catalog_source
-        self._environment = environment
-        self._storage_mode = storage_mode
 
-    def resolve(self, provider_id: str, consumer: ProviderConsumer) -> ProviderCredentialResolution:
+    def resolve(
+        self, provider_id: str, consumer: ProviderConsumer, *, deadline: TimeoutDeadline | None = None
+    ) -> ProviderCredentialResolution:
         """Return the effective credential, the sign-in choice, or a typed unavailability."""
         try:
-            catalog = self._catalog_source.catalog()
+            catalog = (
+                self._catalog_source.catalog() if deadline is None else self._catalog_source.catalog(deadline=deadline)
+            )
         except ProviderCatalogUnavailableError:
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.CATALOG_UNAVAILABLE)
         entry = catalog.entry(provider_id)
@@ -260,7 +266,7 @@ class ProviderCredentialResolver:
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.UNKNOWN_PROVIDER)
         if not entry.serves(consumer):
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.CONSUMER_NOT_SUPPORTED)
-        reads = self._store.read((entry.id,))
+        reads = self._store.read((entry.id,)) if deadline is None else self._store.read((entry.id,), deadline=deadline)
         if isinstance(reads, StoreRefusal):
             return _unavailable(provider_id, consumer, _unavailable_reason_for_store(reads.code))
         (read,) = reads
@@ -275,6 +281,8 @@ class ProviderCredentialResolver:
         if isinstance(read, UnreadableProviderRecord):
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.RECORD_UNREADABLE)
         record = read.record if isinstance(read, StoredProviderRecord) else None
+        if entry.auth_kind is ProviderAuthKind.NONE:
+            return _resolve_keyless(entry, consumer, read, record)
         if record is not None and record.credential_state is CredentialState.DISABLED:
             if record.assistant_auth is AssistantAuth.PROVIDER_SIGN_IN:
                 return ResolvedProviderSignIn(provider=entry.id, consumer=consumer, generation=record.generation)
@@ -284,28 +292,7 @@ class ProviderCredentialResolver:
             return sign_in
         if record is not None and record.assistant_auth is AssistantAuth.DISABLED:
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
-        if record is not None and record.credential is not None:
-            return ResolvedDirectCredential(
-                provider=entry.id,
-                consumer=consumer,
-                kind=record.credential.kind,
-                secret=record.credential.secret,
-                base_url=record.credential.base_url or entry.default_base_url,
-                source=ProviderCredentialSource.PROFILE,
-                generation=record.generation,
-            )
-        secret = _environment_secret(entry, self._environment, self._storage_mode)
-        if secret is None:
-            return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
-        return ResolvedDirectCredential(
-            provider=entry.id,
-            consumer=consumer,
-            kind=CredentialKind.API_KEY,
-            secret=secret,
-            base_url=entry.default_base_url,
-            source=ProviderCredentialSource.ENVIRONMENT,
-            generation=_PROCESS_GENERATION,
-        )
+        return _resolve_direct(entry, consumer, record)
 
     @staticmethod
     def _assistant_sign_in(
@@ -322,6 +309,44 @@ class ProviderCredentialResolver:
             generation = record.generation if record is not None else _PROCESS_GENERATION
             return ResolvedProviderSignIn(provider=entry.id, consumer=ProviderConsumer.ASSISTANT, generation=generation)
         return None
+
+
+def _resolve_direct(
+    entry: ProviderCatalogEntry,
+    consumer: ProviderConsumer,
+    record: ProviderSettingsRecord | None,
+) -> ProviderCredentialResolution:
+    if record is not None and record.credential is not None:
+        return ResolvedDirectCredential(
+            provider=entry.id,
+            consumer=consumer,
+            kind=record.credential.kind,
+            secret=record.credential.secret,
+            base_url=record.credential.base_url or entry.default_base_url,
+            source=ProviderCredentialSource.PROFILE,
+            generation=record.generation,
+        )
+    return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
+
+
+def _resolve_keyless(
+    entry: ProviderCatalogEntry,
+    consumer: ProviderConsumer,
+    read: ProviderRecordRead,
+    record: ProviderSettingsRecord | None,
+) -> ProviderCredentialResolution:
+    if _keyless_turned_off(read):
+        return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
+    generation = record.generation if record is not None else _PROCESS_GENERATION
+    return ResolvedKeyless(provider=entry.id, consumer=consumer, generation=generation)
+
+
+def _keyless_turned_off(read: ProviderRecordRead) -> bool:
+    """Return whether a keyless lane's record turns it off; no other stored field applies to it."""
+    if not isinstance(read, StoredProviderRecord):
+        return False
+    record = read.record
+    return record.assistant_auth is AssistantAuth.DISABLED or record.credential_state is CredentialState.DISABLED
 
 
 def _unavailable(
@@ -346,7 +371,9 @@ __all__ = [
     "ProviderCredentialUnavailable",
     "ProviderCredentialUnavailableReason",
     "ResolvedDirectCredential",
+    "ResolvedKeyless",
     "ResolvedProviderSignIn",
+    "lane_mode",
     "provider_mode",
     "read_revision",
     "status_entry",

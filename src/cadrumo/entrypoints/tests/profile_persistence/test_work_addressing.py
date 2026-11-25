@@ -13,9 +13,10 @@ from sqlalchemy import event
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelector
 from cadrumo.application.modelo.work_addressing import (
@@ -23,10 +24,12 @@ from cadrumo.application.modelo.work_addressing import (
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
     ModeloWorkAddress,
+    resolve_modelo_revision_pick,
+)
+from cadrumo.application.modelo.work_capture import (
     ModeloWorkCaptureError,
     ModeloWorkCurrentCoordinate,
     capture_modelo_work_resolution,
-    resolve_modelo_revision_pick,
 )
 from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
@@ -52,48 +55,16 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _ADDRESSING_PROFILE_ID = "13000000-0000-4000-8000-000000000230"
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Modelo Work"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+    seed_ready_profile(bucket_id=bucket_id, at=_T0)
 
 
 _OUTPUT_CASILLA: CasillaId = validated_casilla_id("01")
@@ -432,6 +403,9 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
     assert binding.value == work_unit.work_unit_id
     assert binding.source is ActionArgumentSource.VERDICT_CONTEXT
     assert binding.source_key == "work_unit_id"
+    # The CLI boundary reads the one verdict of the whole raised chain, so the
+    # selector refusal this recovery replaces must not stand beside it.
+    assert nested_terminal_precondition_verdict(raised.value) == verdict
 
 
 @pytest.mark.parametrize(
@@ -529,6 +503,7 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
     assert verdict.argument_bindings == ()
     assert verdict.missing_argument_names == ()
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
+    assert nested_terminal_precondition_verdict(raised.value) == verdict
 
 
 def _capture_period() -> Period:
@@ -543,13 +518,13 @@ def _capture_source_imports() -> str:
     """Return the capture region source so a registry reach would be visible."""
     import inspect
 
-    from cadrumo.application.modelo import work_addressing
+    from cadrumo.application.modelo import work_capture
 
     return "".join(
         inspect.getsource(member)
         for member in (
-            work_addressing.capture_modelo_work_resolution,
-            work_addressing._work_capture_observation,
+            work_capture.capture_modelo_work_resolution,
+            work_capture.work_capture_observation,
         )
     )
 
@@ -631,7 +606,7 @@ def test_work_capture_pointer_limb_defeats_an_aba_return_to_the_same_bucket(
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         implicit_request = _capture_request(None)
-        root = load_settings().cadrumo_local_storage_root
+        root = load_settings().cadrumo_storage_root
         original = read_pointer(root)
         before = capture_modelo_work_resolution(implicit_request, catalogue_repository=repository)
 
@@ -656,7 +631,7 @@ def test_explicit_bucket_capture_excludes_the_pointer_limb(
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         _seed_work_unit(repository, bucket_id=profile.bucket_id, operation=operation)
         explicit_request = _capture_request(profile.bucket_id)
-        root = load_settings().cadrumo_local_storage_root
+        root = load_settings().cadrumo_storage_root
         original = read_pointer(root)
         before = capture_modelo_work_resolution(explicit_request, catalogue_repository=repository)
 

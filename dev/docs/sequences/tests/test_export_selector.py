@@ -7,31 +7,33 @@ import pytest
 from cadrumo.application.modelo.export_projection import ModeloPriorDomiciliationPublicProvenance
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
-from ..export_evidence import _modelo_export_selector_matches, _ModeloExportEvidence
+from ..export_evidence import ModeloExportEvidence, modelo_export_selector_matches
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _PROFILE = "99999999-9999-4999-8999-999999999999"
-_REGISTRY_REVISION = "2026"
-_PERIOD = PublicPeriod(filing_year=2026, code="1T")
+_YEAR = filing_year_envelope().horizon
+_REGISTRY_REVISION = str(_YEAR)
+_PERIOD = PublicPeriod(filing_year=_YEAR, code="1T")
 _CALCULATION_REVISION = "b" * 64
 _WORK_UNIT = derive_work_unit_id(
-    bucket_id=_PROFILE, modelo="303", filing_year=2026, period=_PERIOD.to_period(), revision_id=_REGISTRY_REVISION
+    bucket_id=_PROFILE, modelo="303", filing_year=_YEAR, period=_PERIOD.to_period(), revision_id=_REGISTRY_REVISION
 )
-_COORDINATES = ("aeat", "app", "modelo", "export", "--modelo", "303", "--year", "2026", "--period", "1T")
+_COORDINATES = ("aeat", "app", "modelo", "export", "--modelo", "303", "--year", str(_YEAR), "--period", "1T")
 _EXACT = ("aeat", "--format", "json", "app", "modelo", "export", _WORK_UNIT, "--revision", _CALCULATION_REVISION)
 
 
-def _evidence(**changes: object) -> _ModeloExportEvidence:
-    receipt = _ModeloExportEvidence(
+def _evidence(**changes: object) -> ModeloExportEvidence:
+    receipt = ModeloExportEvidence(
         operation="modelo.export",
         bucket_id=_PROFILE,
         work_unit_id=_WORK_UNIT,
         calculation_revision_id=_CALCULATION_REVISION,
         modelo="303",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         output_path="unused.boe",
         byte_size=0,
@@ -48,7 +50,7 @@ def _evidence(**changes: object) -> _ModeloExportEvidence:
 
 @pytest.mark.parametrize("argv", [_COORDINATES, _EXACT, (*_COORDINATES, "--revision", _CALCULATION_REVISION)])
 def test_complete_export_selector_matches_canonical_receipt(argv: tuple[str, ...]) -> None:
-    assert _modelo_export_selector_matches(
+    assert modelo_export_selector_matches(
         _evidence(), argv=argv, profile_id=_PROFILE, registry_revision_id=_REGISTRY_REVISION
     )
 
@@ -63,12 +65,12 @@ def test_complete_export_selector_matches_canonical_receipt(argv: tuple[str, ...
         (*_EXACT[:6], "a" * 64, *_EXACT[7:]),
         _EXACT[:-2],
         (*_EXACT, "--modelo", "303"),
-        (*_EXACT, "--year", "2026", "--period", "1T"),
+        (*_EXACT, "--year", str(_YEAR), "--period", "1T"),
         (*_EXACT, "--registry-revision", _REGISTRY_REVISION),
     ],
 )
 def test_incomplete_contradictory_or_mixed_export_selector_is_refused(argv: tuple[str, ...]) -> None:
-    assert not _modelo_export_selector_matches(
+    assert not modelo_export_selector_matches(
         _evidence(), argv=argv, profile_id=_PROFILE, registry_revision_id=_REGISTRY_REVISION
     )
 
@@ -77,30 +79,30 @@ def test_incomplete_contradictory_or_mixed_export_selector_is_refused(argv: tupl
     "changes",
     [
         {"modelo": "130"},
-        {"filing_year": 2025},
-        {"period": PublicPeriod(filing_year=2026, code="2T")},
+        {"filing_year": _YEAR - 1},
+        {"period": PublicPeriod(filing_year=_YEAR, code="2T")},
         {"work_unit_id": "a" * 64},
         {"calculation_revision_id": "a" * 64},
     ],
 )
 def test_exact_selector_cannot_relabel_the_filing_target(changes: dict[str, object]) -> None:
-    assert not _modelo_export_selector_matches(
+    assert not modelo_export_selector_matches(
         _evidence(**changes), argv=_EXACT, profile_id=_PROFILE, registry_revision_id=_REGISTRY_REVISION
     )
 
 
-@pytest.mark.parametrize("revision", [None, "2025"])
+@pytest.mark.parametrize("revision", [None, f"{_REGISTRY_REVISION}-other"])
 def test_exact_selector_requires_the_selected_registry_revision(revision: str | None) -> None:
-    assert not _modelo_export_selector_matches(
+    assert not modelo_export_selector_matches(
         _evidence(), argv=_EXACT, profile_id=_PROFILE, registry_revision_id=revision
     )
 
 
 def test_exact_selector_is_bound_to_the_profile_even_when_public_bucket_is_redacted() -> None:
     receipt = _evidence(bucket_id="<bucket-id>")
-    assert _modelo_export_selector_matches(
+    assert modelo_export_selector_matches(
         receipt, argv=_EXACT, profile_id=_PROFILE, registry_revision_id=_REGISTRY_REVISION
     )
-    assert not _modelo_export_selector_matches(
+    assert not modelo_export_selector_matches(
         receipt, argv=_EXACT, profile_id="88888888-8888-4888-8888-888888888888", registry_revision_id=_REGISTRY_REVISION
     )

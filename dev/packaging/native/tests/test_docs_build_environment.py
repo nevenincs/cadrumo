@@ -14,7 +14,7 @@ from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 from .. import docs_build
 from ..docs_build import compile_command, compile_environment
-from ..docs_stage import DocsPackagingError
+from ..docs_errors import DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -37,10 +37,8 @@ def test_the_compile_carries_product_storage_and_no_documentation_selector(
     environment = compile_environment(tmp_path / "storage")
 
     assert environment[STORAGE_ROOT.variable] == str(tmp_path / "storage")
-    assert environment["CADRUMO_STORAGE_ROOT"] == str(tmp_path / "storage")
     assert Path(environment["CADRUMO_DEV_CACHE_ROOT"]).is_relative_to(tmp_path)
     assert Path(environment["CADRUMO_REGISTRY_DISK_CACHE_DIR"]).is_relative_to(tmp_path)
-    assert Path(environment["CADRUMO_LOG_DIR"]).is_relative_to(tmp_path / "storage")
     assert Path(environment["TMP"]).is_dir()
     carried = sorted(key for key in environment if key.startswith("CADRUMO_DOCS_"))
     assert not carried, f"the packaging driver carried documentation selectors the compile owns: {carried}"
@@ -100,7 +98,7 @@ def test_a_failed_compile_stops_the_packaging_build(tmp_path: Path, monkeypatch:
         lambda *_args, **_settings: SimpleNamespace(returncode=2, stdout="boom\n", stderr="", duration_seconds=0),
     )
     with pytest.raises(SystemExit, match="User documentation compile failed: exit 2"):
-        docs_build._compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
+        docs_build.compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
     assert (tmp_path / "work" / "compile.log").read_text(encoding="utf-8") == "boom\n"
 
 
@@ -114,7 +112,7 @@ def test_a_compile_that_wrote_no_root_for_a_declared_language_refuses(
         lambda *_args, **_settings: SimpleNamespace(returncode=0, stdout="", stderr="", duration_seconds=0),
     )
     with pytest.raises(DocsPackagingError, match="wrote no root for"):
-        docs_build._compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
+        docs_build.compile_roots(tmp_path / "build", tmp_path / "work", _LANGUAGES)
 
 
 def test_the_apex_language_is_a_declared_root(tmp_path: Path) -> None:

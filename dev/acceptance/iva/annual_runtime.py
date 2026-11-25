@@ -6,6 +6,7 @@ import secrets
 from contextlib import AbstractContextManager, ExitStack
 from pathlib import Path
 
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from .cli_journey import (
@@ -14,11 +15,11 @@ from .cli_journey import (
 )
 from .filing_year import IvaJourneyYear
 from .multirate_cli_journey import (
-    _create_profile,
+    create_profile,
 )
 
 
-def _start(
+def start(
     executable: Path,
     authority_root: Path,
     storage_root: Path,
@@ -28,6 +29,7 @@ def _start(
     resources: ExitStack,
     runtime_scope: AbstractContextManager[object] | None = None,
 ) -> tuple[InstalledCli, list[SanitizedCommandReceipt], Path]:
+    """Start the installed CLI against a fresh storage root and create the journey profile."""
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -35,19 +37,20 @@ def _start(
         resources.enter_context(runtime_scope)
     artifact_root.mkdir(parents=True, exist_ok=True)
     artifact = artifact_root / "synthetic-annual-foundation-purchase.pdf"
-    artifact.write_bytes(b"%PDF-1.4\n% synthetic annual IVA purchase evidence\n")
+    artifact.write_bytes(text_pdf_bytes(("synthetic annual IVA purchase evidence",)))
     cli = InstalledCli(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )
     receipts: list[SanitizedCommandReceipt] = []
     try:
-        _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
+        create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
     except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     return cli, receipts, artifact
 
 
-def _reopen(cli: InstalledCli, authority_root: Path, storage_root: Path) -> InstalledCli:
+def reopen(cli: InstalledCli, authority_root: Path, storage_root: Path) -> InstalledCli:
+    """Return a new installed CLI handle over the given authority and storage roots."""
     return InstalledCli(
         cli.executable, storage_root=storage_root, authority_root=authority_root, passphrase=cli.passphrase
     )

@@ -7,25 +7,38 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from ..pipeline import joined_record_design
 from ..pipeline.joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
-    RecordDesignWorkbookFormat,
 )
 from ..pipeline.semantic_map import SemanticMap
 from ..pipeline.semantic_map_validation import SemanticMapAnomalyException
+from .semantic_map_intermediate_support import intermediate_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+def _design_epoch(source_ref: str) -> str:
+    """Return the record-design epoch the published authority declares for one design source."""
+    with bundled_indexed_authority().operation() as operation:
+        epoch = operation.source_reference(source_ref).record_design_epoch
+    assert epoch is not None, f"design source {source_ref} declares no record-design epoch"
+    return str(epoch)
+
+
+_M130_EPOCH = _design_epoch("aeat-dr-130-2019-v12")
+
+
 @pytest.fixture
 def _m130_inspection() -> RegistryRevisionInspection:
-    return compiled_bundled_authority().inspect_revision("130", filing_year=2026, period="1T")
+    return compiled_bundled_authority().inspect_revision("130", filing_year=filing_year_envelope().horizon, period="1T")
 
 
 #: Validated against modelo 130, not modelo 200. The 200 revision declares 578
@@ -35,45 +48,11 @@ def _m130_inspection() -> RegistryRevisionInspection:
 #: asserts. Modelo 130 is a real revision authority declaring none.
 def _intermediate(snapshot) -> RecordDesignIntermediate:
     return RecordDesignIntermediate.model_validate(
-        {
-            "source": {
-                "source_ref": "aeat-dr-130-2019-v12",
-                "source_sha256": snapshot.sources["aeat-dr-130-2019-v12"].sha256,
-                "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2019",
-            },
-            "sheets": (
-                {
-                    "sheet": "Registro tipo 1",
-                    "record_identity": "registro-tipo-1",
-                    "declared_total": 2,
-                    "fields": (
-                        {
-                            "sheet": "Registro tipo 1",
-                            "record_identity": "registro-tipo-1",
-                            "source_row": 14,
-                            "source_cell": "A14",
-                            "ordinal": "1",
-                            "offset": 1,
-                            "length": 1,
-                            "aeat_type": "AN",
-                            "normalized_description": "Campo uno",
-                        },
-                        {
-                            "sheet": "Registro tipo 1",
-                            "record_identity": "registro-tipo-1",
-                            "source_row": 15,
-                            "source_cell": "A15",
-                            "ordinal": "2",
-                            "offset": 2,
-                            "length": 1,
-                            "aeat_type": "AN",
-                            "normalized_description": "Campo dos",
-                        },
-                    ),
-                },
-            ),
-        },
+        intermediate_payload(
+            source_ref="aeat-dr-130-2019-v12",
+            source_sha256=snapshot.sources["aeat-dr-130-2019-v12"].sha256,
+            design_epoch=_M130_EPOCH,
+        )
     )
 
 
@@ -109,7 +88,7 @@ def _semantic_map(*, entries: tuple[dict[str, object], ...]) -> SemanticMap:
     return SemanticMap.model_validate(
         {
             "modelo": "130",
-            "design_epoch": "2019",
+            "design_epoch": _M130_EPOCH,
             "source_ref": "aeat-dr-130-2019-v12",
             "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
             "records": (

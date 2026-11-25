@@ -40,20 +40,26 @@ from .....application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
+from .....application.ledger.structured_invoice_ports import (
+    StructuredInvoiceClassification,
+    StructuredInvoiceClassificationKind,
+)
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
+from .....domain.iva.schema import InvoiceKind
 from .secure_sql import TestRuntimeProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _REFERENCE = "ev-structured-001"
+_CORRECTIVE = StructuredInvoiceClassificationKind.CORRECTIVE
 
 
 def _two_rate_draft() -> InvoiceDraft:
     """A draft with every campaign-added field populated non-default."""
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         invoice_number="UBL-2024-0042",
         invoice_date="2024-11-15",
         taxable_base=Decimal("150.00"),
@@ -144,7 +150,7 @@ def test_a_correction_replaces_the_pending_draft_rather_than_forking_a_second(
         extractor="en16931-ubl",
         settings=profile.settings,
     )
-    corrected = _two_rate_draft().model_copy(update={"supplier_tax_id": "ESX1234567L"})
+    corrected = _two_rate_draft().model_copy(update={"supplier_tax_id": "ESX0001500M"})
     write_extraction_draft(
         bucket_id=profile.bucket_id,
         evidence_reference=_REFERENCE,
@@ -169,7 +175,7 @@ def test_a_correction_replaces_the_pending_draft_rather_than_forking_a_second(
         settings=profile.settings,
     )
     assert pending is not None
-    assert pending.draft.supplier_tax_id == "ESX1234567L"
+    assert pending.draft.supplier_tax_id == "ESX0001500M"
     assert pending.extractor == "operator-correction"
 
 
@@ -259,7 +265,7 @@ def _provenance_bearing_draft() -> InvoiceDraft:
     that persists all of them.
     """
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
         invoice_date="2024-11-15",
@@ -279,9 +285,9 @@ def _provenance_bearing_draft() -> InvoiceDraft:
                 field="supplier_tax_id",
                 origin=FieldOrigin.TEXT_LAYER,
                 grounding=FieldGroundingOutcome.AMBIGUOUS,
-                anchor="ESB12345674",
+                anchor="ESB00015016",
                 candidates=(
-                    FieldAmbiguityCandidate(value="ESB12345674", anchor="NIF: ESB12345674", note="header block"),
+                    FieldAmbiguityCandidate(value="ESB00015016", anchor="NIF: ESB00015016", note="header block"),
                     FieldAmbiguityCandidate(value="ESB87654321", anchor="ESB87654321", note="footer block"),
                 ),
                 note="two tax ids printed on the same document",
@@ -334,7 +340,7 @@ def test_field_provenance_survives_the_real_encrypted_boundary(profile: TestRunt
     ambiguous = by_field["supplier_tax_id"]
     assert ambiguous.grounding is FieldGroundingOutcome.AMBIGUOUS
     assert len(ambiguous.candidates) == 2
-    assert {candidate.value for candidate in ambiguous.candidates} == {"ESB12345674", "ESB87654321"}
+    assert {candidate.value for candidate in ambiguous.candidates} == {"ESB00015016", "ESB87654321"}
     assert all(candidate.note for candidate in ambiguous.candidates), "a candidate lost the note that distinguishes it"
 
     contradicted = by_field["grand_total"]
@@ -383,13 +389,13 @@ def test_deleting_a_persisted_provenance_field_makes_the_load_refuse() -> None:
         ExtractionDraftDocument.model_validate_json(json.dumps(corrupted))
 
 
-def _busy_fallback() -> LabelReadingFallback:
+def _degraded_fallback() -> LabelReadingFallback:
     """A degraded reading populated off every default, so a dropped field cannot pass as a default."""
     return LabelReadingFallback(
-        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         unread_fields=("currency", "supplier_name"),
-        reader_error_type="LLMBusyError",
-        failed_condition_id="llm.local_inference.slot_available",
+        reader_error_type="LLMContentionError",
+        failed_condition_id="llm.agent.model_run_completed",
     )
 
 
@@ -404,7 +410,7 @@ def test_a_degraded_reading_is_stored_with_its_draft_across_the_encrypted_bounda
     written = write_extraction_draft(
         bucket_id=profile.bucket_id,
         evidence_reference=_REFERENCE,
-        draft=_two_rate_draft().with_label_reading_fallback(_busy_fallback()),
+        draft=_two_rate_draft().with_label_reading_fallback(_degraded_fallback()),
         extractor="extract_invoice_draft_from_evidence",
         settings=profile.settings,
     )
@@ -412,7 +418,7 @@ def test_a_degraded_reading_is_stored_with_its_draft_across_the_encrypted_bounda
     reloaded = load_extraction_drafts(profile.bucket_id, profile.settings)
 
     assert reloaded == written, "the boundary must return exactly what crossed it"
-    assert reloaded.drafts[0].label_reading_fallback == _busy_fallback()
+    assert reloaded.drafts[0].label_reading_fallback == _degraded_fallback()
     # One home once stored: the record, not a second copy on the draft.
     assert reloaded.drafts[0].draft.label_reading_fallback is None
 
@@ -457,7 +463,7 @@ def test_a_draft_stored_before_the_degradation_was_kept_reads_as_none_recorded(p
                 draft=_two_rate_draft(),
                 extractor="extract_invoice_draft_from_evidence",
                 drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
-                label_reading_fallback=_busy_fallback(),
+                label_reading_fallback=_degraded_fallback(),
             ),
         ),
     )
@@ -480,3 +486,53 @@ def test_a_draft_stored_before_the_degradation_was_kept_reads_as_none_recorded(p
     (stored,) = loaded.drafts
     assert stored.label_reading_fallback is None
     assert stored == current.drafts[0].model_copy(update={"label_reading_fallback": None})
+
+
+def test_the_class_a_structured_reader_stated_and_the_direction_a_person_declared_survive_the_boundary(
+    profile: TestRuntimeProfile,
+) -> None:
+    """Two facts the draft's own serialisation cannot carry come back with the draft.
+
+    The document class lives on the draft in a private attribute that is not
+    part of its serialised form, so a stored review that lost it would differ
+    from a fresh read of the same bytes. The declared direction is a fact about
+    the import, which only the stored record can hold.
+    """
+    draft = _two_rate_draft()
+    draft.set_facturae_invoice_class(StructuredInvoiceClassification(source_code="OR", kind=_CORRECTIVE))
+
+    write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=draft,
+        extractor="facturae-32",
+        settings=profile.settings,
+        declared_kind=InvoiceKind.ISSUED,
+    )
+
+    stored = read_extraction_draft(
+        bucket_id=profile.bucket_id, evidence_reference=_REFERENCE, settings=profile.settings
+    )
+
+    assert stored is not None
+    assert stored.draft.facturae_invoice_class == StructuredInvoiceClassification(source_code="OR", kind=_CORRECTIVE)
+    assert stored.declared_kind is InvoiceKind.ISSUED
+
+
+def test_a_draft_stating_no_class_and_no_direction_stores_none_of_either(profile: TestRuntimeProfile) -> None:
+    write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=_two_rate_draft(),
+        extractor="en16931-ubl",
+        settings=profile.settings,
+    )
+
+    stored = read_extraction_draft(
+        bucket_id=profile.bucket_id, evidence_reference=_REFERENCE, settings=profile.settings
+    )
+
+    assert stored is not None
+    assert stored.draft.facturae_invoice_class is None
+    assert stored.structured_invoice_class is None
+    assert stored.declared_kind is None

@@ -13,9 +13,9 @@ from dataclasses import dataclass
 from datetime import date
 
 from ....core.concepto_ingreso import ConceptoIngreso
-from ....core.time.clock import today_madrid
 from .errors import RegistryValidationError
-from .facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
+from .facts.envelope_editions import resolve_support_envelope_editions
+from .facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact, ResolvedGovernedFact
 from .facts.variants import FactSelector
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
@@ -56,26 +56,27 @@ class ConceptoIngresoCatalogue:
         return token
 
 
-def _resolve_catalogue(
-    *,
-    effective_date: date,
-    authority: GovernedFactSource,
-) -> ConceptoIngresoCatalogue:
-    resolved = authority.resolve_governed_fact(
-        EntitySetFactQuery(
-            fact_id=_FACT_ID,
-            date_axis=DateAxis.FILING_PERIOD,
-            effective_date=effective_date,
-            selectors=(_VOCABULARY_SELECTOR,),
-        ),
+def _vocabulary_query(effective_date: date) -> EntitySetFactQuery:
+    return EntitySetFactQuery(
+        fact_id=_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=effective_date,
+        selectors=(_VOCABULARY_SELECTOR,),
     )
+
+
+def _vocabulary_entities(resolved: ResolvedGovernedFact) -> frozenset[str]:
     if not isinstance(resolved, ResolvedEntitySetFact):
         raise RegistryValidationError("income-concept vocabulary must resolve as an entity-set fact")
-    entities = tuple(sorted(entity.strip() for entity in resolved.payload.entities))
+    entities = tuple(entity.strip() for entity in resolved.payload.entities)
     if not entities or len(entities) != len(set(entities)) or any(not entity for entity in entities):
         raise RegistryValidationError("income-concept vocabulary must contain unique non-empty tokens")
+    return frozenset(entities)
+
+
+def _catalogue(entities: frozenset[str]) -> ConceptoIngresoCatalogue:
     return ConceptoIngresoCatalogue(
-        tokens=tuple(ConceptoIngreso.from_registry(entity) for entity in entities),
+        tokens=tuple(ConceptoIngreso.from_registry(entity) for entity in sorted(entities)),
     )
 
 
@@ -84,9 +85,24 @@ def resolve_concepto_ingreso_catalogue(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ConceptoIngresoCatalogue:
-    """Resolve the selected dated income-concept vocabulary."""
+    """Resolve the income-concept vocabulary.
+
+    A dated read takes the vocabulary in force on ``effective_date``. Without a
+    date the run date is never substituted: the vocabulary admits every token
+    an edition inside the supported filing years declares, which admits a
+    token but cannot decide a tax fact; a caller deciding one supplies the
+    date.
+    """
     selected = require_governed_fact_authority(authority, subject="income-concept catalogue")
-    return _resolve_catalogue(effective_date=effective_date or today_madrid(), authority=selected)
+    if effective_date is not None:
+        return _catalogue(_vocabulary_entities(selected.resolve_governed_fact(_vocabulary_query(effective_date))))
+    editions = resolve_support_envelope_editions(selected, _vocabulary_query)
+    if not editions:
+        raise RegistryValidationError("income-concept vocabulary authors no edition inside the supported filing years")
+    entities = frozenset[str]()
+    for resolved in editions:
+        entities |= _vocabulary_entities(resolved)
+    return _catalogue(entities)
 
 
 def require_concepto_ingreso(

@@ -142,6 +142,23 @@ class M303RegimeCompositionCatalogue:
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
+    @property
+    def general_only(self) -> M303RegimeComposition:
+        """Return the one composition that claims no simplified regime.
+
+        Refuses a vocabulary declaring none or several, because a general-regime
+        filer must reach exactly one answer to the design's simplified-regime field.
+        """
+        matches = tuple(
+            definition.token for definition in self.definitions if definition.simplified_scope == "not_claimed"
+        )
+        if len(matches) != 1:
+            raise RegistryValidationError(
+                "Modelo 303 regime-composition catalogue must declare exactly one composition "
+                "that claims no simplified regime",
+            )
+        return matches[0]
+
     def require_simplified_scope(self, value: object) -> M303RegimenSimplificadoScope:
         """Validate and return one simplified-regime scope some composition declares."""
         if not isinstance(value, str):
@@ -360,6 +377,18 @@ def require_m303_regime_composition(
     ).require(value)
 
 
+def m303_general_only_regime_composition(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> M303RegimeComposition:
+    """Return the registry-declared composition of a filer claiming no simplified regime."""
+    return resolve_m303_regime_composition_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).general_only
+
+
 def m303_regime_composition_choices(
     *,
     effective_date: date | None = None,
@@ -425,6 +454,7 @@ __all__ = [
     "M303RegimeCompositionDefinition",
     "M303TaxTerritoryCatalogue",
     "M303TaxTerritoryDefinition",
+    "m303_general_only_regime_composition",
     "m303_regime_composition_choices",
     "m303_regime_composition_export_code",
     "m303_regime_composition_simplified_scope",

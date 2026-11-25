@@ -34,7 +34,7 @@ from typing import Final
 import pytest
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

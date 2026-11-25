@@ -5,7 +5,7 @@ module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`); follows the same split pattern the
 module's own docstring documents for
 :mod:`~entrypoints.cli.ledger_rule_results`,
-:mod:`~entrypoints.cli._ledger_llm_payloads`, and
+:mod:`~entrypoints.cli.ledger_llm_payloads`, and
 :mod:`~entrypoints.cli.ledger_catalogue_invoice_results`.
 Covers two CLI sub-app payload families:
 
@@ -23,18 +23,22 @@ Consumers import these schemas from this defining module.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import AfterValidator, NonNegativeInt, field_validator
 
+from ...application.ledger.evidence_followup_contracts import EvidenceReviewReasonWordsWire
 from ...application.ledger.invoice_draft_payloads import (
     EvidenceDraftDiscrepancyPayload,
     EvidenceFieldAmbiguityCandidatePayload,
     EvidenceFieldProvenancePayload,
+    EvidenceFindingWordsPayload,
 )
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
@@ -46,12 +50,11 @@ from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
 from ...domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
-    InventoryYear,
     MovementKind,
     ValuationMethod,
 )
-from ._decimal_wire import bounded_decimal_wire_text
-from ._wire_scalars import IsoDateText, enum_value_text
+from .decimal_wire import bounded_decimal_wire_validator
+from .wire_scalars import IsoDateText, enum_value_validator
 
 # The inventory transport is built by dumping the canonical InventoryLedger to
 # JSON and re-validating the mapping, so every field below stays a string on
@@ -63,12 +66,14 @@ from ._wire_scalars import IsoDateText, enum_value_text
 # deductible ratio on the share scale, and a local ``_HUNDRED`` beside a local
 # ``_ONE`` is exactly the pairing that lets one field silently take the other
 # convention. Named constants say which scale is meant.
-_PositiveQuantity = bounded_decimal_wire_text(minimum=ZERO, exclusive_minimum=True)
-_NonNegativeAmount = bounded_decimal_wire_text(minimum=ZERO)
-_IvaRatePct = bounded_decimal_wire_text(minimum=PERCENTAGE_MIN, maximum=PERCENTAGE_MAX)
-_DeductibleRatio = bounded_decimal_wire_text(minimum=UNIT_PROPORTION_MIN, maximum=UNIT_PROPORTION_MAX)
-_MovementKindText = enum_value_text(MovementKind)
-_ValuationMethodText = enum_value_text(ValuationMethod)
+_PositiveQuantity = Annotated[str, bounded_decimal_wire_validator(minimum=ZERO, exclusive_minimum=True)]
+_NonNegativeAmount = Annotated[str, bounded_decimal_wire_validator(minimum=ZERO)]
+_IvaRatePct = Annotated[str, bounded_decimal_wire_validator(minimum=PERCENTAGE_MIN, maximum=PERCENTAGE_MAX)]
+_DeductibleRatio = Annotated[
+    str, bounded_decimal_wire_validator(minimum=UNIT_PROPORTION_MIN, maximum=UNIT_PROPORTION_MAX)
+]
+_MovementKindText = Annotated[str, enum_value_validator(MovementKind)]
+_ValuationMethodText = Annotated[str, enum_value_validator(ValuationMethod)]
 
 
 def _validate_inventory_schema_version(value: str) -> str:
@@ -81,7 +86,7 @@ def _validate_inventory_schema_version(value: str) -> str:
 _InventorySchemaVersion = Annotated[str, AfterValidator(_validate_inventory_schema_version)]
 
 if TYPE_CHECKING:
-    from ...application.inventory.service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
+    from ...application.inventory.service import InventoryValuationPreviewResult
 
 # ---------------------------------------------------------------------------
 # P07 — Inventory sub-app
@@ -92,22 +97,54 @@ class InventoryStockLayerPayload(OutputSchema):
     """One :class:`StockLayer` transport row."""
 
     sku: NonEmptyStr = "default"
-    quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    unit_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    quantity: _PositiveQuantity
+    unit_cost: _NonNegativeAmount
     source_movement_id: NonEmptyStr
 
 
 class InventoryAcquisitionCostSummaryPayload(OutputSchema):
     """Operator-safe acquisition summary without evidence identities."""
 
-    consideration_excluding_iva: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    directly_attributable_cost_total: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    nonrecoverable_iva_included: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    recoverable_iva_excluded: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    total_acquisition_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    consideration_excluding_iva: _NonNegativeAmount
+    directly_attributable_cost_total: _NonNegativeAmount
+    nonrecoverable_iva_included: _NonNegativeAmount
+    recoverable_iva_excluded: _NonNegativeAmount
+    total_acquisition_cost: _NonNegativeAmount
     component_count: NonNegativeInt
     evidence_count: PositiveCount
     complete: bool
+
+
+class InventoryAttributableCostDetailPayload(OutputSchema):
+    """One directly attributable cost as the operator stated it."""
+
+    component_id: NonEmptyStr
+    kind: NonEmptyStr
+    taxable_base: str
+    iva_amount: str
+    deductible_iva_ratio: str
+    evidence_references: list[str]
+
+
+class InventoryAcquisitionDocumentPayload(OutputSchema):
+    """One purchase document's identity."""
+
+    reference: NonEmptyStr
+    evidence_kind: NonEmptyStr
+    content_digest: NonEmptyStr
+    file_name: str | None = None
+
+
+class InventoryAcquisitionDetailPayload(OutputSchema):
+    """The private facts of one purchase, shown only by ``inventory inspect``."""
+
+    consideration_iva_amount: str
+    consideration_deductible_iva_ratio: str
+    components: list[InventoryAttributableCostDetailPayload]
+    documents: list[InventoryAcquisitionDocumentPayload]
+    consideration_evidence: NonEmptyStr
+    attributable_cost_review_evidence: NonEmptyStr
+    iva_recoverability_review_evidence: NonEmptyStr
 
 
 class InventoryMovementPayload(OutputSchema):
@@ -115,16 +152,19 @@ class InventoryMovementPayload(OutputSchema):
 
     movement_id: NonEmptyStr
     movement_date: IsoDateText
-    kind: _MovementKindText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    kind: _MovementKindText
     sku: NonEmptyStr = "default"
-    quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    unit_cost: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    taxable_base: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    iva_rate: _IvaRatePct  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    iva_amount: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    quantity: _PositiveQuantity
+    unit_cost: _NonNegativeAmount | None = None
+    taxable_base: _NonNegativeAmount | None = None
+    iva_rate: _IvaRatePct
+    iva_amount: _NonNegativeAmount | None = None
+    deductible_iva_ratio: _DeductibleRatio
     acquisition_cost: InventoryAcquisitionCostSummaryPayload | None = None
     schema_version: _InventorySchemaVersion
+    acquisition_detail: InventoryAcquisitionDetailPayload | None = None
+    ledger_row: NonEmptyStr = "unstated"
+    claimed_transaction_id: str | None = None
 
 
 class InventoryClosingAuthorityFingerprintPayload(OutputSchema):
@@ -136,23 +176,102 @@ class InventoryClosingAuthorityFingerprintPayload(OutputSchema):
     prior_closing_link: str
 
 
+class InventoryDescriptorPayload(OutputSchema):
+    """The descriptive facts of one inventory."""
+
+    label: NonEmptyStr
+    description: str | None = None
+
+
+class InventoryHistoryEntryPayload(OutputSchema):
+    """One retained change with the fact it displaced, evidence payloads removed."""
+
+    correction_id: NonEmptyStr
+    kind: NonEmptyStr
+    recorded_at: NonEmptyStr
+    actor: NonEmptyStr
+    correction_reason: str | None = None
+    retirement_reason: str | None = None
+    superseded_movement: InventoryMovementPayload | None = None
+    replacement_movement_id: str | None = None
+    prior_opening_stock: str | None = None
+    prior_valuation_method: str | None = None
+    prior_descriptor: InventoryDescriptorPayload | None = None
+
+
 class InventoryLedgerPayload(OutputSchema):
     """One per-actividad inventory ledger record.
 
     Mirrors :class:`InventoryLedger`'s
     ``model_dump(mode='json')`` plus the ``bucket_event_ids`` field the
-    CLI appends at the emit site.
+    CLI appends at the emit site. Worker advisories are presented separately
+    through envelope notices, rather than copied into this state payload.
     """
 
     actividad_id: NonEmptyStr
-    year: InventoryYear
-    valuation_method: _ValuationMethodText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
-    opening_stock: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    year: FourDigitYear
+    valuation_method: _ValuationMethodText
+    opening_stock: _NonNegativeAmount
     opening_layers: list[InventoryStockLayerPayload] = []
     closing_authority_fingerprints: InventoryClosingAuthorityFingerprintPayload | None = None
     period_movements: list[InventoryMovementPayload] = []
     schema_version: _InventorySchemaVersion
     bucket_event_ids: list[str] = []
+    descriptor: InventoryDescriptorPayload | None = None
+    retired: bool = False
+    retirement_reason: str | None = None
+    history: list[InventoryHistoryEntryPayload] = []
+
+
+class InventoryOptionPayload(OutputSchema):
+    """One offered value and the key of its word."""
+
+    value: NonEmptyStr
+    label_key: NonEmptyStr
+    role: str | None = None
+    effect_key: str | None = None
+
+
+class InventoryOptionFamilyPayload(OutputSchema):
+    """One closed vocabulary."""
+
+    family: NonEmptyStr
+    options: list[InventoryOptionPayload]
+
+
+class InventoryOptionsResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory options``."""
+
+    families: list[InventoryOptionFamilyPayload]
+
+
+class InventoryClaimCandidatePayload(OutputSchema):
+    """One ledger transaction a purchase may claim."""
+
+    transaction_id: NonEmptyStr
+    booked_date: IsoDateText
+    counterparty: str | None = None
+    description: NonEmptyStr
+    currency: IsoCurrencyCode
+    taxable_base: str | None = None
+    iva_amount: str | None = None
+    recargo_amount: str | None = None
+
+
+class InventoryClaimCandidatesResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory movement claim-candidates``."""
+
+    actividad_id: NonEmptyStr
+    year: FourDigitYear
+    movement_id: NonEmptyStr
+    candidates: list[InventoryClaimCandidatePayload]
+
+
+class InventoryEvidenceAddResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger inventory evidence-add``."""
+
+    reference: NonEmptyStr
+    content_digest: NonEmptyStr
 
 
 class InventoryListRowPayload(InventoryLedgerPayload):
@@ -160,6 +279,8 @@ class InventoryListRowPayload(InventoryLedgerPayload):
 
     schema_version: _InventorySchemaVersion = INVENTORY_SCHEMA_VERSION
     movement_count: int = 0
+    label: str | None = None
+    correction_count: int = 0
 
 
 class InventoryListResult(OutputSchema):
@@ -176,6 +297,19 @@ class InventoryCreateResult(InventoryLedgerPayload):
 
 class InventoryMovementAddResult(InventoryLedgerPayload):
     """JSON envelope for ``aeat app ledger inventory movement add``."""
+
+
+class InventoryInspectResult(InventoryLedgerPayload):
+    """JSON envelope for ``aeat app ledger inventory inspect``."""
+
+
+class InventoryLedgerChangeResult(InventoryLedgerPayload):
+    """JSON envelope for every inventory edit, rectification, retirement and restoration.
+
+    ``outcome`` is ``applied``, or ``replayed`` when this exact request already applied.
+    """
+
+    outcome: NonEmptyStr
 
 
 class InventoryClosingAuthorityRecordResult(OutputSchema):
@@ -221,7 +355,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
         return value
 
     @classmethod
-    def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
+    def from_result(cls, result: InventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
         """Flatten the application preview wrapper into this CLI envelope.
 
         The wrapper carries an inner ``preview`` plus ``bucket_event_ids``;
@@ -265,6 +399,10 @@ class EvidenceRecordPayload(OutputSchema):
     notes: str = ""
     created_at: str
     updated_at: str
+    readability: Literal["readable", "unreadable", "unchecked"] = "unchecked"
+    document_shape: str | None = None
+    unreadable_cause: str | None = None
+    readability_checked_at: str | None = None
     bucket_event_ids: list[str] = []
 
 
@@ -282,6 +420,10 @@ class EvidenceUpdateResult(EvidenceRecordPayload):
 
 class EvidenceRemoveResult(EvidenceRecordPayload):
     """JSON envelope for ``aeat app ledger evidence remove``."""
+
+
+class EvidenceVerifyResult(EvidenceRecordPayload):
+    """JSON envelope for ``aeat app ledger evidence verify``: the record with the finding the check kept."""
 
 
 class EvidenceListResult(OutputSchema):
@@ -318,6 +460,23 @@ class AttachmentReviewViewResult(AttachmentReviewPayload):
     """One stored attachment's non-secret metadata and provenance."""
 
     bucket_id: BucketId
+
+
+class EvidencePageResult(OutputSchema):
+    """One page of a stored document, drawn and written to the PNG file the operator named."""
+
+    bucket_id: BucketId
+    evidence_id: str | None = None
+    attachment_id: Hex64Str
+    media_type: str
+    page: int
+    page_count: int
+    width: int
+    height: int
+    source_sha256: Hex64Str
+    file_name: str | None = None
+    output_path: str
+    bytes_written: NonNegativeInt
 
 
 class ConsentedDispatchPayload(OutputSchema):
@@ -474,6 +633,10 @@ class EvidenceReviewBlockerPayload(OutputSchema):
     reason: str
     field: str | None = None
     detail: str = ""
+    words: EvidenceFindingWordsPayload | None = None
+    #: The sentence served for ``words`` and the language it is in.
+    detail_words: str | None = None
+    detail_words_language: str | None = None
     candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
 
 
@@ -485,6 +648,8 @@ class EvidenceReviewRowPayload(OutputSchema):
     drafted_at: str
     blocking_count: int = 0
     reasons: list[str] = []
+    reason_words: EvidenceReviewReasonWordsWire = []
+    reason_words_language: Annotated[str, enum_value_validator(OutputLanguage)] | None = None
     # The queue's non-blocking half. A row carrying no blocker and two advisories
     # is a document nothing stops and something is wrong with, which the blocking
     # columns alone render identical to a clean one. Primary queue data rather

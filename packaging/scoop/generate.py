@@ -8,6 +8,7 @@ import json
 import sys
 import zipfile
 from dataclasses import dataclass
+from email.message import Message
 from email.parser import Parser
 from pathlib import Path
 
@@ -23,7 +24,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 def _load_packaging_helpers():
     """Load repository tooling after direct-script path bootstrapping."""
-    from dev.packaging._distribution_names import normalise_distribution_name
+    from dev.packaging.distribution_names import normalise_distribution_name
     from dev.packaging.hashing import sha256_path
     from dev.packaging.python_cohort import load_python_cohort
     from dev.packaging.uv_constraints import export_runtime_constraints
@@ -53,6 +54,16 @@ class WheelArtifact:
     console_scripts: tuple[str, ...]
 
 
+def _wheel_metadata(wheel: Path) -> tuple[Message, tuple[str, ...]]:
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        if len(metadata_names) != 1:
+            raise SystemExit(f"expected one METADATA member in {wheel}: {metadata_names!r}")
+        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
+        console_scripts = _console_scripts(archive, wheel)
+    return metadata, console_scripts
+
+
 def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> WheelArtifact:
     matches = tuple(sorted(cohort_dir.glob(wheel_glob)))
     if len(matches) != 1:
@@ -60,12 +71,7 @@ def _wheel_artifact(cohort_dir: Path, distribution: str, wheel_glob: str) -> Whe
             f"expected one {distribution} wheel matching {wheel_glob!r}; got {[path.name for path in matches]!r}",
         )
     wheel = matches[0].resolve(strict=True)
-    with zipfile.ZipFile(wheel) as archive:
-        metadata_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
-        if len(metadata_names) != 1:
-            raise SystemExit(f"expected one METADATA member in {wheel}: {metadata_names!r}")
-        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
-        console_scripts = _console_scripts(archive, wheel)
+    metadata, console_scripts = _wheel_metadata(wheel)
     observed_name = metadata.get("Name")
     version = metadata.get("Version")
     if not (observed_name is not None and observed_name) or not (version is not None and version):

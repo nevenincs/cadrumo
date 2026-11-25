@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#art20-trabajo-reduccion-compute'
 date: '2026-06-15'
-modified: '2026-07-17'
-body_hash: 'sha256:a6bf00560277707139db36ca9aea03ff18b4c78dc415ced8d6a3fabf5e13a1ce'
+modified: '2026-11-11'
+body_hash: 'sha256:380dcb8404de238a68cd325aa9c9b08efb4931d832051b1d39304f67812258ef'
 related:
   - '[[2026-06-15-art20-trabajo-reduccion-compute-research]]'
 ---
@@ -29,7 +29,7 @@ with zero operator signal. This ADR decides how `0023` should be modelled.
 The art. 20 schedule (verified this campaign against the bundled `ley-35-2006.html#a20`
 and the AEAT 2024 manual §7.1.6, RDL 4/2024 art. 3.1 / BOE-A-2024-12944):
 
-- rendimiento neto del trabajo (RNT, `0022`) ≤ 14.852 €: reduction = 7.302 €;
+- rendimiento neto del trabajo before the art. 19.2.f expenses (RNT, the role of `0018`) ≤ 14.852 €: reduction = 7.302 €;
 - 14.852 < RNT ≤ 17.673,52: 7.302 − 1,75 × (RNT − 14.852);
 - 17.673,52 < RNT < 19.747,5: 2.364,34 − 1,14 × (RNT − 17.673,52);
 - RNT ≥ 19.747,5: 0;
@@ -95,6 +95,8 @@ grounded on RDL 4/2024 art. 3.1, never an inline literal (`aeat-schema-central-c
 Phase 2 (flip `0023` to COMPUTED) remains gated on the cross-section "otras rentas"
 aggregate and the engine refactor; when it lands the advisory either migrates to the
 registry predicate / `BLOCKING_RULE` consistency check or is retired.
+
+Phase 2 is decided by `2026-11-11-export-parity-work-income-sourcing-adr`: `0023` is computed from a dated registry schedule applied to the role of `0018` and gated by a computed other-income node. The Phase 1 advisory, its mapping fact and its ceiling fact are retired.
 
 ## Rationale
 

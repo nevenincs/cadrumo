@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-30'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee46ddc1116ed76b60ecfcbd6fe468782f7cd78a6c897060ebc7c3697c43c01e'
+body_hash: 'sha256:b2f895902fc8c6bf061271bf1a5a19415ef415abf97dd1faed14af34751724c6'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]"
@@ -49,7 +49,7 @@ coverage are settled.
 
 - Offset order tracks the official form closely where offsets exist, and section-plus-declaration
   order does not. A probe against the official record design shipped in the corpus reported a
-  perfect rank correlation for modelo 303 in 2025 against a near-zero one for the alternative.
+  perfect rank correlation for modelo 303 against a near-zero one for the alternative.
   An independent pass could not reproduce the probe's casilla population, so the exact
   correlation figure is not yet established and this record does not rest on it; re-measuring it
   is an open item. The qualitative ordering — offsets close, declaration order uncorrelated — is

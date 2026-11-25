@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -42,11 +42,16 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId, OperationRevision
 from cadrumo.application.operations.persistence.replay import OperationReplayLimit
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.async_cleanup import await_cancellation_complete
-from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
+from cadrumo.core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import exchange_timeout, remaining_budget
@@ -74,6 +79,7 @@ _CANCELLATION = TypeAdapter[OperationCancellationResultV1](OperationCancellation
 _DETACH = TypeAdapter[OperationDetachResultV1](OperationDetachResultV1)
 _RESPONSE_CONTROL = TypeAdapter[OperationResponseControlResultV1](OperationResponseControlResultV1)
 _RESPONSE_MUTATION = TypeAdapter[OperationResponseMutationResultV1](OperationResponseMutationResultV1)
+_EXCHANGE_TIMEOUT_SECONDS = 30.0
 
 
 def _settled_result_expected[ResultT: BaseModel](
@@ -135,6 +141,21 @@ def _parse_settled_result[ResultT: BaseModel](
     return result
 
 
+def _parse_review_success[ReviewT: BaseModel](
+    raw: bytes, model: type[ReviewT]
+) -> OperationReviewProjectionSuccessV1[ReviewT]:
+    """Validate a review success envelope specialised to ``model``."""
+    # CAST-RATIONALE-TUI-REVIEW-GENERIC: Pydantic's runtime specialization binds
+    # the success envelope's projection field to this exact model;
+    # __class_getitem__ has an overly broad typing stub, so restore that generic
+    # result for static checking.
+    success_type = cast(
+        "type[OperationReviewProjectionSuccessV1[ReviewT]]",
+        OperationReviewProjectionSuccessV1.__class_getitem__(model),
+    )
+    return success_type.model_validate_json(raw)
+
+
 def _settled_result_matches_binding[ResultT: BaseModel](
     result: OperationResultProjectionSuccessV1[ResultT],
     expected: OperationSchemaIdentityV1,
@@ -162,7 +183,7 @@ def _submission_session(client: FrontendClient, expected_session_id: UUID | None
 def _exchange_deadline(deadline: float | None) -> float:
     if deadline is not None:
         remaining_budget(deadline)
-    selected = time.monotonic() + 30
+    selected = time.monotonic() + _EXCHANGE_TIMEOUT_SECONDS
     if deadline is not None:
         selected = min(selected, deadline)
     remaining_budget(selected)
@@ -244,6 +265,8 @@ class OperationController:
     operation_id: OperationId
     session_id: UUID
     deadline: float | None = None
+    definition_contract: OperationPublicDefinitionContractV1 | None = field(default=None, repr=False, compare=False)
+    """The contract the submission was admitted under; ``None`` for a controller rebuilt from an operation id."""
 
     def __post_init__(self) -> None:
         """Refuse another frontend or an already replaced application session."""
@@ -270,6 +293,13 @@ class OperationController:
 
     def _call_deadline(self) -> float:
         return _exchange_deadline(self.deadline)
+
+    def _result_deadline(self) -> float:
+        """Keep the owned total budget separate from each page exchange."""
+        if self.deadline is None:
+            return self._call_deadline()
+        remaining_budget(self.deadline)
+        return self.deadline
 
     @classmethod
     async def submit(
@@ -365,7 +395,13 @@ class OperationController:
         )
         if client.session_id != session_id:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-        return cls(client=client, operation_id=receipt.receipt.operation_id, session_id=session_id, deadline=deadline)
+        return cls(
+            client=client,
+            operation_id=receipt.receipt.operation_id,
+            session_id=session_id,
+            deadline=deadline,
+            definition_contract=contract,
+        )
 
     async def read_settled_result[ResultT: BaseModel](
         self,
@@ -416,11 +452,14 @@ class OperationController:
             definition_contract_digest=contract.definition_contract_digest,
             result_schema=expected,
         )
+        deadline = self._result_deadline()
         document = await await_cancellation_complete(
             asyncio.to_thread(
                 self.client.read_result_document,
                 request,
-                deadline=self._call_deadline(),
+                deadline=deadline,
+                timeout=remaining_budget(deadline),
+                page_timeout=_EXCHANGE_TIMEOUT_SECONDS,
             ),
             task_name="tui-runtime-result",
         )
@@ -450,8 +489,7 @@ class OperationController:
             self.client.session_id != self.session_id
             or projection.operation_id != self.operation_id
             or projection.lifecycle is not OperationLifecycle.TERMINAL
-            or projection.terminal_condition
-            not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
+            or projection.terminal_condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL
         ):
             return None
         contract = projection.definition_contract
@@ -523,6 +561,13 @@ class OperationController:
         self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
     ) -> OperationReviewProjectionResultV1[ReviewT]:
         """Resolve only the original reference's registered schema and contract."""
+        resolved, _digest = await self.resolve_review_document(reference, projection_type)
+        return resolved
+
+    async def resolve_review_document[ReviewT: BaseModel](
+        self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
+    ) -> tuple[OperationReviewProjectionResultV1[ReviewT], str]:
+        """Resolve and fingerprint the same complete runtime review envelope."""
         if reference.operation_id != self.operation_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         reply = await self._exchange(
@@ -542,9 +587,9 @@ class OperationController:
         raw = canonical_json_bytes(reply.document)
         try:
             if reply.document.get("outcome") == "refused":
-                return OperationReviewProjectionRefusalV1.model_validate_json(raw)
+                return OperationReviewProjectionRefusalV1.model_validate_json(raw), content_hash_hex(reply.document)
             model = RuntimeReviewDocument if projection_type is BaseModel else projection_type
-            resolved = OperationReviewProjectionSuccessV1[model].model_validate_json(raw)
+            resolved = _parse_review_success(raw, model)
         except ValidationError:
             raise RefusalError(RefusalCode.INVALID_FRAME) from None
         if (
@@ -554,7 +599,7 @@ class OperationController:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         # When the caller explicitly asks for BaseModel, retain all registered
         # JSON fields in its transport RootModel rather than discard them.
-        return cast("OperationReviewProjectionResultV1[ReviewT]", resolved)
+        return cast("OperationReviewProjectionResultV1[ReviewT]", resolved), content_hash_hex(reply.document)
 
     async def manage(self, request: OperationManagementRequest) -> dict[str, JsonValue]:
         """Use canonical controls under this operation's original session binding."""
@@ -614,6 +659,11 @@ async def await_terminal_projection(
     request schema is an invalid frame; the deadline bounds both observation
     and waiting.
     """
+    remaining_budget(deadline)
+    if controller.deadline is not None:
+        remaining_budget(controller.deadline)
+        deadline = min(deadline, controller.deadline)
+    controller = replace(controller, deadline=deadline)
     with AsyncOperationChanges(controller.client) as changes:
         return await _await_terminal(controller, changes, definition_id, subject_ref, request_schema, deadline)
 
@@ -636,13 +686,7 @@ async def _await_terminal(
         if not isinstance(observed, OperationObservationSuccessV1):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         state = observed.projection
-        if (
-            state.operation_id != controller.operation_id
-            or state.definition_id != definition_id
-            or state.subject_ref != subject_ref
-            or state.definition_contract.request_schema != request_schema
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
+        _require_terminal_identity(state, controller.operation_id, definition_id, subject_ref, request_schema)
         if state.lifecycle is OperationLifecycle.TERMINAL:
             return state
         if not changes.armed:
@@ -650,6 +694,22 @@ async def _await_terminal(
             changes.arm()
             continue
         await changes.wait(remaining_budget(deadline))
+
+
+def _require_terminal_identity(
+    state: OperationPublicProjectionV1,
+    operation_id: str,
+    definition_id: str,
+    subject_ref: str,
+    request_schema: OperationSchemaIdentityV1,
+) -> None:
+    if (
+        state.operation_id != operation_id
+        or state.definition_id != definition_id
+        or state.subject_ref != subject_ref
+        or state.definition_contract.request_schema != request_schema
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _decode[T](adapter: TypeAdapter[T], document: dict[str, JsonValue]) -> T:

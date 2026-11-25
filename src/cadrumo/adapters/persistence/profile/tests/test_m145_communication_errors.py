@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 from .....application.modelo.m145_communication_records import (
-    M145CommunicationCreateCommand,
     M145CommunicationRecordAmbiguousError,
     M145CommunicationRecordExportError,
     M145CommunicationRecordNotFoundError,
@@ -35,8 +34,10 @@ from .....application.modelo.m145_communication_records import (
 )
 from .....core.errors.error_codes import get_registered_error_code
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....tests.log_records import delivered_records
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
+from .m145_communication_support import communication_command, valid_field_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -55,27 +56,8 @@ _FORBIDDEN_LOG_TERMS = (
 )
 
 
-def _field_values(**overrides: str) -> dict[str, str]:
-    values = {
-        "perceptor.nif": "12345678Z",
-        "perceptor.primer-apellido": "Garcia",
-        "perceptor.segundo-apellido": "Lopez",
-        "perceptor.nombre": "Ana",
-        "perceptor.anio-nacimiento": "1981",
-    }
-    values.update(overrides)
-    return values
-
-
-def _command(*, field_values: dict[str, str] | None = None) -> M145CommunicationCreateCommand:
-    return M145CommunicationCreateCommand(
-        communication_year=2026,
-        field_values=field_values if field_values is not None else _field_values(),
-    )
-
-
 def _captured_service_messages(caplog: pytest.LogCaptureFixture) -> tuple[str, ...]:
-    return tuple(record.getMessage() for record in caplog.records if record.name == _LOGGER_NAME)
+    return tuple(record.getMessage() for record in delivered_records(caplog) if record.name == _LOGGER_NAME)
 
 
 def _assert_messages_use_communication_vocabulary(messages: tuple[str, ...]) -> None:
@@ -115,7 +97,7 @@ def test_m145_communication_create_delivery_completion_logs_use_communication_vo
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         created = create_m145_communication_record(
-            _command(),
+            communication_command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -146,12 +128,12 @@ def test_m145_communication_invalid_delivery_raises_typed_error_and_logs_refusal
     operation: PinnedAuthorityOperation,
 ) -> None:
     caplog.set_level(logging.WARNING, logger=_LOGGER_NAME)
-    field_values = _field_values()
+    field_values = valid_field_values()
     field_values.pop("perceptor.nif")
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            _command(field_values=field_values),
+            communication_command(field_values=field_values),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,
@@ -182,7 +164,7 @@ def test_m145_communication_completion_before_delivery_raises_typed_error_and_lo
 
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(
-            _command(),
+            communication_command(),
             bucket_id=runtime.bucket_id,
             ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
             operation=operation,

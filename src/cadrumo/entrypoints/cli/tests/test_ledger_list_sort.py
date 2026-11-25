@@ -20,24 +20,23 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.ledger.actions_manual import ledger_transaction_payload
 from ....application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
-from ....application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
-from ....application.ledger.list_query import sort_ledger_results as _sort_results
-from ....application.ledger.models import ManualLedgerTransactionResult
-from ....application.ledger.review_projection import ledger_transaction_review_status
-from ....application.ledger.transaction_projection import (
-    LedgerTransactionProjection,
-    LedgerTransactionReviewProjection,
+from ....application.ledger.list_operation import ledger_list_row
+from ....application.ledger.list_query import (
+    LedgerTransactionListQuery,
+    query_ledger_transaction_list,
+    sort_ledger_results,
 )
+from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
+from ....core.output_rendering import render_command_output
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger_action_composition import compose_ledger_action_ports
-from .._ledger_list import project_ledger_list
+from ..ledger_list import project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -109,8 +108,8 @@ def test_sort_by_equal_key_falls_back_to_transaction_id_ascending() -> None:
     )
     ascending_tids = sorted(r.transaction.transaction_id for r in rows)
 
-    asc = _sort_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.ASC)
-    desc = _sort_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.DESC)
+    asc = sort_ledger_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.ASC)
+    desc = sort_ledger_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.DESC)
 
     # Equal primary key -> identical tie-break order under both directions.
     assert [r.transaction.transaction_id for r in asc] == ascending_tids
@@ -145,19 +144,19 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
     )
     rows = (high, mid, low)
 
-    by_amount_asc = _sort_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.ASC)
+    by_amount_asc = sort_ledger_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.ASC)
     assert [r.transaction.raw.amount for r in by_amount_asc] == [
         Decimal("100.00"),
         Decimal("200.00"),
         Decimal("300.00"),
     ]
-    by_amount_desc = _sort_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.DESC)
+    by_amount_desc = sort_ledger_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.DESC)
     assert [r.transaction.raw.amount for r in by_amount_desc] == [
         Decimal("300.00"),
         Decimal("200.00"),
         Decimal("100.00"),
     ]
-    by_created_asc = _sort_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.ASC)
+    by_created_asc = sort_ledger_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.ASC)
     assert [r.transaction.created_at for r in by_created_asc] == [
         datetime(2024, 1, 1, tzinfo=UTC),
         datetime(2024, 2, 1, tzinfo=UTC),
@@ -196,8 +195,8 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
     )
     rows = (missing, with_key_late, with_key_early)
 
-    asc = _sort_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.ASC)
-    desc = _sort_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.DESC)
+    asc = sort_ledger_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.ASC)
+    desc = sort_ledger_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.DESC)
 
     # Missing key trails in BOTH orders.
     assert asc[-1].transaction.raw.value_date is None
@@ -244,14 +243,7 @@ def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_reposito
         )
         snapshot = LedgerListSnapshot(
             profile_id=UUID(profile.bucket_id),
-            rows=tuple(
-                LedgerTransactionReviewProjection(
-                    transaction=LedgerTransactionProjection.from_payload(ledger_transaction_payload(item.transaction)),
-                    review_status=ledger_transaction_review_status(item.transaction),
-                    group_label=item.transaction.group_label,
-                )
-                for item in canonical_page.results
-            ),
+            rows=tuple(ledger_list_row(item.transaction) for item in canonical_page.results),
             total=canonical_page.total,
             truncated=canonical_page.truncated,
             offset=0,
@@ -265,3 +257,63 @@ def test_project_ledger_list_renders_canonical_sort_from_real_encrypted_reposito
     # so the assertion checks the ascending ORDER of the rendered amounts.
     amounts = [row.amount for row in projection.rows]
     assert amounts == ["100", "200", "300"]
+
+
+def test_project_ledger_list_renders_imported_terminal_controls_inert(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """An imported narrative carrying terminal controls reaches text output inert.
+
+    The description is persisted through the real encrypted repository, read
+    back through the canonical list query and rendered through the central
+    text renderer. The embedded newline and tab must not forge a row or a
+    column, and no ESC, CR, C1 or bidi character may survive.
+    """
+    hostile = "Cafe\x1b[2J\x1b]52;c;cHduZWQ=\x07\rfake\nforged\trow\u202egnp.exe\x9b31m"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="65853d4f-9e30-443f-9f91-b048ef4d292e") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        repo.save(
+            TransactionCatalogue.from_transactions(
+                [
+                    _transaction(
+                        provider_id="hostile",
+                        amount=Decimal("10.00"),
+                        description=hostile,
+                        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+                    ),
+                ],
+            ),
+        )
+        ports = compose_ledger_action_ports(bucket_id=profile.bucket_id, operation=authority_operation)
+        canonical_page = query_ledger_transaction_list(
+            LedgerTransactionListQuery(
+                spec=LedgerReviewFilterSpec.from_strings([]),
+                sort_by=LedgerSortField.AMOUNT,
+                sort_order=LedgerSortOrder.ASC,
+            ),
+            bucket_id=profile.bucket_id,
+            ports=ports,
+        )
+        projection = project_ledger_list(
+            LedgerListSnapshot(
+                profile_id=UUID(profile.bucket_id),
+                rows=tuple(ledger_list_row(item.transaction) for item in canonical_page.results),
+                total=canonical_page.total,
+                truncated=canonical_page.truncated,
+                offset=0,
+                limit=None,
+                by_group=False,
+            ),
+        )
+
+    rendered = render_command_output(format_name="text", payload=None, lines=projection.lines)
+    rendered_lines = rendered.text.split("\n")
+    assert len(rendered_lines) == len(projection.lines) == 3
+    data_columns = rendered_lines[-1].split("\t")
+    assert len(data_columns) == len(rendered_lines[1].split("\t"))
+    for control in ("\x1b", "\x07", "\r", "\u202e", "\x9b"):
+        assert control not in rendered.text
+    assert "Cafe\\u001b[2J" in data_columns[4]
+    assert "\\nforged\\trow\\u202egnp.exe" in data_columns[4]
+    assert projection.rows[0].description == hostile

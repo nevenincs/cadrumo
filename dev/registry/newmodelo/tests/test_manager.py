@@ -10,6 +10,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...conformance.manager import load_locale_coverage_index
 from ..checklist import CHECKLIST, render_checklist
@@ -20,7 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # A modelo id that is guaranteed to collide with no real registry entry
 # (three digits, well above the highest AEAT modelo code currently modelled).
 _THROWAWAY_MODELO_ID = "987"
-_THROWAWAY_REVISION_ID = "2026-y-siguientes"
+_YEAR = filing_year_envelope().horizon
+_THROWAWAY_REVISION_ID = f"{_YEAR}-y-siguientes"
+_LATER_REVISION_ID = f"{_YEAR + 1}-y-siguientes"
 
 
 def _scaffold(
@@ -121,8 +124,8 @@ def test_scaffold_rejects_malformed_revision_id(tmp_path: Path) -> None:
             manager.scaffold(
                 _THROWAWAY_MODELO_ID,
                 bad_revision_id,
-                valid_from=date(2026, 1, 1),
-                year_from=2026,
+                valid_from=date(_YEAR, 1, 1),
+                year_from=_YEAR,
                 periods=("0A",),
             )
         assert not (tmp_path / _THROWAWAY_MODELO_ID).exists(), bad_revision_id
@@ -156,10 +159,10 @@ def test_scaffold_refuses_to_graft_a_revision_onto_a_real_foreign_modelo(tmp_pat
     )
 
     with pytest.raises(NewModeloError, match="modelo already exists"):
-        _scaffold(manager, _THROWAWAY_MODELO_ID, "2099-y-siguientes")
+        _scaffold(manager, _THROWAWAY_MODELO_ID, _LATER_REVISION_ID)
 
     # Confirm nothing was written into the foreign modelo's revisions tree.
-    assert not (foreign_modelo_dir / "revisions" / "2099-y-siguientes").exists()
+    assert not (foreign_modelo_dir / "revisions" / _LATER_REVISION_ID).exists()
 
 
 def test_new_edition_preserves_existing_manifest_and_declarations(tmp_path: Path) -> None:
@@ -168,15 +171,15 @@ def test_new_edition_preserves_existing_manifest_and_declarations(tmp_path: Path
     foreign_modelo_dir.mkdir(parents=True)
     manifest = foreign_modelo_dir / "manifest.toml"
     manifest.write_text('[modelo]\nid = "987"\ntax_domain = "iva"\n', encoding="utf-8")
-    existing = foreign_modelo_dir / "revisions" / "2026" / "casillas" / "0001.toml"
+    existing = foreign_modelo_dir / "revisions" / str(_YEAR) / "casillas" / "0001.toml"
     existing.parent.mkdir(parents=True)
     existing.write_text("# existing declaration\n", encoding="utf-8")
     before_manifest = manifest.read_bytes()
     before_existing = existing.read_bytes()
 
-    result = _scaffold(manager, _THROWAWAY_MODELO_ID, "2099-y-siguientes", existing_modelo=True)
-    assert (foreign_modelo_dir / "revisions" / "2099-y-siguientes" / "revision.toml").is_file()
-    assert result.written == (Path("revisions/2099-y-siguientes/revision.toml"),)
+    result = _scaffold(manager, _THROWAWAY_MODELO_ID, _LATER_REVISION_ID, existing_modelo=True)
+    assert (foreign_modelo_dir / "revisions" / _LATER_REVISION_ID / "revision.toml").is_file()
+    assert result.written == (Path(f"revisions/{_LATER_REVISION_ID}/revision.toml"),)
     assert manifest.read_bytes() == before_manifest
     assert existing.read_bytes() == before_existing
 
@@ -303,31 +306,31 @@ def test_a_successor_edition_uses_latest_edition_only_as_storage_baseline(tmp_pa
     """
     from cadrumo.core.toml import parse_toml
 
-    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-hasta-08-y-2t", "2024-01-01")
-    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-desde-09-y-3t", "2024-09-01")
+    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, f"{_YEAR - 1}-hasta-08-y-2t", f"{_YEAR - 1}-01-01")
+    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, f"{_YEAR - 1}-desde-09-y-3t", f"{_YEAR - 1}-09-01")
     (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text('[modelo]\nid = "987"\n', encoding="utf-8")
 
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
-    _scaffold(manager, _THROWAWAY_MODELO_ID, "2025", existing_modelo=True)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, str(_YEAR), existing_modelo=True)
 
-    revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2025" / "revision.toml"
-    declared = parse_toml(revision_path.read_text(encoding="utf-8"))["revisions"]["2025"]
-    assert declared["casilla_storage_baseline"] == "2024-desde-09-y-3t"
-    assert declared["family_storage_baseline"] == "2024-desde-09-y-3t"
+    revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / str(_YEAR) / "revision.toml"
+    declared = parse_toml(revision_path.read_text(encoding="utf-8"))["revisions"][str(_YEAR)]
+    assert declared["casilla_storage_baseline"] == f"{_YEAR - 1}-desde-09-y-3t"
+    assert declared["family_storage_baseline"] == f"{_YEAR - 1}-desde-09-y-3t"
     assert "predecessor" not in declared
 
 
 def test_a_backfilled_edition_does_not_reuse_a_later_storage_baseline(tmp_path: Path) -> None:
     from cadrumo.core.toml import parse_toml
 
-    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2025", "2025-01-01")
+    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, str(_YEAR), f"{_YEAR}-01-01")
     (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text('[modelo]\nid = "987"\n', encoding="utf-8")
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
 
-    _scaffold(manager, _THROWAWAY_MODELO_ID, "2024", existing_modelo=True)
+    _scaffold(manager, _THROWAWAY_MODELO_ID, str(_YEAR - 1), existing_modelo=True)
 
-    revision = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2024" / "revision.toml"
-    declared = parse_toml(revision.read_text(encoding="utf-8"))["revisions"]["2024"]
+    revision = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / str(_YEAR - 1) / "revision.toml"
+    declared = parse_toml(revision.read_text(encoding="utf-8"))["revisions"][str(_YEAR - 1)]
     assert "casilla_storage_baseline" not in declared
     assert "family_storage_baseline" not in declared
 

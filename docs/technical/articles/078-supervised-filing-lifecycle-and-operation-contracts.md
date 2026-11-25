@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-078` · **Topic:** [Modelo work and revision lifecycle, part 1](../topics/modelo-work-and-revision-lifecycle-part-1.md)
+**Topic:** [Modelo work and revision lifecycle: calculation, export and filing](../topics/modelo-work-calculation-and-filing.md)
 
 <!-- preserved:article -->
 **Scope:** 11 implementation files in src/cadrumo/application/modelo; 5,370 lines, 232,764 bytes, and 47,951 measured proxy tokens. All nine bounded-reader pages were inspected in order, including the complete operation-definition module. Static analysis only; no imports, application execution, or tests were run. Token counts are the manifest's o200k_base proxy, not a claim about native model context limits.

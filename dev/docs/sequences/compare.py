@@ -10,7 +10,7 @@ One comparison policy per frame kind, applied to an executed
   reporting the post-mask ``differing_paths`` on failure. The live envelope is
   first path-normalised (``normalise_document_paths``) with THIS run's sandbox
   and checkout paths, matching the tokens the golden baked at build time, so a
-  path leaking into a string value (``config check``'s storage-root / corpus-path
+  path leaking into a string value (a diagnostic storage-root / corpus-path
   ``detail``) does not diverge every run; this is a value-anchored replacement of
   the known roots, orthogonal to and preceding the central field mask. This
   module exposes NO mask parameter and never overrides ``mask_document``'s central default:
@@ -56,7 +56,6 @@ from .golden_store import (
     SANDBOX_WORKDIR_PLACEHOLDER,
     GoldenFrame,
     SequenceGolden,
-    mask_host_conditional_details,
     masked_envelope_values,
     normalise_document_paths,
     normalise_frame_envelope,
@@ -291,19 +290,15 @@ def _compare_envelope(
             # The golden's envelope was path-normalised at build time; the
             # live envelope carries THIS run's raw sandbox/checkout paths, so
             # tokenise it the same value-anchored way before the central field
-            # mask — otherwise a path leaking into a string value (config
-            # check's storage-root / corpus-path detail) diverges every run.
+            # mask — otherwise a path leaking into a string value (a diagnostic
+            # storage-root / corpus-path detail) diverges every run.
             live_envelope = normalise_frame_envelope(
                 actual.envelope,
                 frame=actual,
                 transcript=transcript,
             )
-            # Same platform-conditional carve-out the text tier applies, at
-            # the structural tier: each side's own detail is masked, so the
-            # row's id and verdict stay under exact comparison while the
-            # sentence describing the HOST drops out of both.
-            masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
-            masked_actual = mask_host_conditional_details(mask_document(live_envelope))
+            masked_expected = mask_document(expected.envelope)
+            masked_actual = mask_document(live_envelope)
             if not isinstance(masked_expected, Mapping) or not isinstance(masked_actual, Mapping):
                 problems.append(f"{at}: masking returned a non-document, so the envelopes cannot be compared")
             else:

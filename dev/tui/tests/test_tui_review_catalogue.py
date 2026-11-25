@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from .._artifacts import MANIFEST_NAME, Manifest, RenderedFrame, ThemeName, write_manifest
-from .._review_catalogue import SETTLE_SECONDS, ReviewCatalogue, parse_stem
-from .._viewports import VIEWPORTS, ViewportName
+from ..artifacts import MANIFEST_NAME, Manifest, RenderedFrame, ThemeName, write_manifest
+from ..review_catalogue import SETTLE_SECONDS, ReviewCatalogue, parse_stem
+from ..viewports import VIEWPORTS, ViewportName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -261,7 +261,7 @@ def test_manifest_readings_attach_only_to_the_pixels_they_were_recorded_against(
     described = _settled_frame(tmp_path, "home--ready__small__dark", (1, 1, 1))
     _settled_frame(tmp_path, "home--ready__small__light", (2, 2, 2))
     manifest = Manifest(
-        generated_at="2026-09-29T12:00:00+00:00",
+        generated_at="1980-09-29T12:00:00+00:00",
         source_revision=_REVISION,
         source_revision_at_end=_REVISION,
         cell_height=22,

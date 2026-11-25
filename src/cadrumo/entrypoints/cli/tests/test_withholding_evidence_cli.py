@@ -11,6 +11,7 @@ import typer
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import quarterly_filer_cadence
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ....application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
@@ -50,7 +51,7 @@ def _invoice() -> Invoice:
             "invoice_number": "CLI-WITHHOLDING-001",
             "issued_at": date(2025, 3, 31),
             "counterparty_name": "Resident professional SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": line.iva_amount,
@@ -114,16 +115,7 @@ def _annual_detail(invoice: Invoice) -> WithholdingObservation:
         clave=RetencionClave.from_registry("G"),
         percibido_dinerario=Decimal("500.00"),
         retencion_practicada=Decimal("95.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("500.00"),
         porcentaje_retencion=Decimal("19"),
     )
@@ -163,10 +155,10 @@ def test_cli_evidence_shape_refuses_a_caller_authored_recognition_date() -> None
 
 def test_capital_cli_evidence_derives_the_123_exigibility_period_without_a_payment() -> None:
     """The public request carries evidence, never a caller-selected 123 quarter."""
-    from ..modelo_aggregate_commands import _parse_typed_cli_observations
+    from ..modelo_aggregate_commands import parse_typed_cli_observations
 
     invoice = _invoice()
-    parsed = _parse_typed_cli_observations(
+    parsed = parse_typed_cli_observations(
         [_capital_request(invoice).model_dump_json()],
         model=InvoiceWithholdingEvidenceRequest,
         flag="--received-invoice-retencion",
@@ -201,13 +193,13 @@ def test_capital_cli_evidence_refuses_partial_underlying_events(
     message: str,
 ) -> None:
     """A CLI payload cannot create an event identity without its legal date."""
-    from ..modelo_aggregate_commands import _parse_typed_cli_observations
+    from ..modelo_aggregate_commands import parse_typed_cli_observations
 
     invoice = _invoice()
     payload = json.loads(_capital_request(invoice).model_dump_json()) | update
 
     with pytest.raises(typer.BadParameter, match=message) as exc_info:
-        _parse_typed_cli_observations(
+        parse_typed_cli_observations(
             [json.dumps(payload)],
             model=InvoiceWithholdingEvidenceRequest,
             flag="--received-invoice-retencion",
@@ -220,8 +212,9 @@ def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence(
     """The 111/115/123 CLI module has no direct set-replace mutation helper."""
     from .. import modelo_aggregate_commands
 
-    assert not hasattr(modelo_aggregate_commands, "_persist_retencion_observations")
-    assert not hasattr(modelo_aggregate_commands, "_persist_cli_owned_observations")
+    for helper in ("persist_retencion_observations", "persist_cli_owned_observations"):
+        assert not hasattr(modelo_aggregate_commands, helper)
+        assert not hasattr(modelo_aggregate_commands, f"_{helper}")
 
 
 def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
@@ -232,8 +225,10 @@ def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
     """
     from .. import modelo_aggregate_commands
 
-    assert "123" in modelo_aggregate_commands._PERIODIC_WINDOW_MODELOS
-    assert "123" not in modelo_aggregate_commands._INVOICE_EVIDENCE_MODELOS
+    assert "123" in modelo_aggregate_commands.periodic_withholding_modelos()
+    with pytest.raises(typer.BadParameter):
+        modelo_aggregate_commands.refuse_m123_invoice("123", ["{}"])
+    modelo_aggregate_commands.refuse_m123_invoice("111", ["{}"])
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:

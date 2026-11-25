@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.m193_phase_materialization import (
     Modelo193DisclosurePhase,
@@ -42,6 +43,7 @@ from cadrumo.application.aggregation.withholding_observation_service import (
 )
 from cadrumo.application.aggregation.withholding_producer import (
     WithholdingEvidenceCaptureCommand,
+    WithholdingEvidenceCaptureResult,
     WithholdingProducer,
     WithholdingProducerError,
 )
@@ -56,18 +58,17 @@ from cadrumo.application.aggregation.withholding_recognition import (
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
 _CAPITAL_SCHEME = RetencionScheme("intereses")
 
 
-def _producer_for(objects: object) -> tuple[WithholdingProducer, WithholdingObservationService]:
-    from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-
+def _producer_for(objects: SecureObjectRepository) -> tuple[WithholdingProducer, WithholdingObservationService]:
     assert isinstance(objects, SecureObjectRepository)
     service = WithholdingObservationService(
         WithholdingObservationWorkflowAdapter(
@@ -116,7 +117,7 @@ def _command(
         source_object_id="invoice-issued-2025-03-31",
         source_revision_id="invoice-revision-1",
         allocation_id=allocation_id,
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Professional Recipient",
         scheme=scheme,
         taxable_base=Decimal(taxable_base),
@@ -161,7 +162,7 @@ def _capital_command(
         source_object_id="capital-invoice-2025-12",
         source_revision_id="capital-invoice-revision-1",
         allocation_id=allocation_id,
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Resident Capital Recipient",
         scheme=scheme,
         taxable_base=Decimal("500.00"),
@@ -204,23 +205,14 @@ def _annual_detail(
 ) -> WithholdingObservation:
     return WithholdingObservation(
         source_id="invoice-issued-2025-03-31",
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="Professional Recipient",
         transaction_date=paid_on,
         clave=RetencionClave.from_registry(clave),
         subclave=subclave,
         percibido_dinerario=Decimal(taxable_base),
         retencion_practicada=Decimal(retencion_amount),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal(taxable_base),
         porcentaje_retencion=Decimal("19"),
     )
@@ -233,22 +225,13 @@ def _capital_pending_payment_detail(*, transaction_date: date) -> Modelo193Pendi
         nonpayment_cause=Modelo193NonpaymentCause.HOLDER_NOT_PRESENTED_FOR_COLLECTION,
         actual_recipient_detail=WithholdingObservation(
             source_id="capital-invoice-2025-12",
-            perceptor_tax_id="11111111H",
+            perceptor_tax_id="00001500M",
             perceptor_legal_name="Resident Capital Recipient",
             transaction_date=transaction_date,
             clave=RetencionClave.from_registry("B"),
             percibido_dinerario=Decimal("500.00"),
             retencion_practicada=Decimal("95.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("500.00"),
             porcentaje_retencion=Decimal("19"),
             clave_codigo=4,
@@ -272,7 +255,7 @@ def _rent_property(key: str, cadastral_reference: str) -> Modelo180PropertyEvide
         withholding_percentage=Decimal("19.00"),
         address=Modelo180StructuredAddress(
             province_code="28",
-            municipality_code="079",
+            municipality_code="28079",
             municipality="Madrid",
             locality="Madrid",
             postal_code="28001",
@@ -342,141 +325,175 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
         assert resolution.binding_values["modelo-111-actividades-dinerario-retenciones"] == Decimal("95.00")
 
 
+def _capture_unpaid_capital_and_reopen(
+    repository: SecureObjectRepository,
+) -> tuple[WithholdingEvidenceCaptureResult, WithholdingProducer, WithholdingObservationService]:
+    """Capture the unpaid exigible capital accrual, then reopen the producer and read it back as pending."""
+    producer, _service = _producer_for(repository)
+    unpaid = producer.capture(
+        _capital_command(
+            modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2025, 12, 15))
+        ),
+        cadence=quarterly_filer_cadence(2025),
+    )
+
+    assert unpaid is not None
+    assert unpaid.scope == WithholdingWindowScope(
+        modelo="123",
+        period=Period.from_year_and_code(2025, "4T"),
+    )
+    assert unpaid.recognition.recognized_on == date(2025, 12, 15)
+    assert unpaid.recognition.recognition_event_id == "capital-exigibility-2025-12"
+    assert unpaid.recognition.settlement_event_id is None
+
+    reopened_producer, reopened_service = _producer_for(repository)
+    before_settlement = reopened_service.read_window(unpaid.scope)
+    assert len(before_settlement.entries) == 1
+    persisted = RetencionObservationRepositoryAdapter(objects=repository).load_observations("123", unpaid.scope.period)
+    assert len(persisted) == 1
+    assert persisted[0].accrued_on == "2025-12-15"
+    assert persisted[0].modelo_193_capital is not None
+    assert persisted[0].modelo_193_capital.settlement_event is None
+    pending_at_accrual = materialize_modelo_193_disclosure_phases(
+        persisted, filing_year=2025, pending_disclosure_years=published_pending_disclosure_years()
+    )
+    assert len(pending_at_accrual) == 1
+    pending = pending_at_accrual[0]
+    assert pending.phase is Modelo193DisclosurePhase.PENDING
+    assert pending.annual_detail.perceptor_tax_id == "999999999"
+    assert pending.annual_detail.representative_tax_id == "999999999"
+    assert pending.annual_detail.perceptor_legal_name == "VALORES PENDIENTE DE ABONO"
+    assert pending.annual_detail.pendiente_flag == "X"
+    assert pending.taxable_base == Decimal("500.00")
+    assert pending.retencion_amount == Decimal("95.00")
+    return unpaid, reopened_producer, reopened_service
+
+
+def _settle_capital_later(
+    reopened_producer: WithholdingProducer,
+    reopened_service: WithholdingObservationService,
+    unpaid: WithholdingEvidenceCaptureResult,
+) -> tuple[WithholdingEvidenceCaptureCommand, WithholdingEvidenceCaptureResult]:
+    """Replace the unpaid generation with the later settlement and check the single entry carries it."""
+    settled_command = _capital_command(
+        payment_id="capital-settlement-2026-01",
+        paid_on=date(2026, 1, 20),
+        settlement_amount="405.00",
+        modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2026, 1, 20)),
+    ).model_copy(
+        update={
+            "mode": WithholdingMutationMode.REPLACE,
+            "baseline": unpaid.mutation.baseline,
+            "reason": "synthetic later capital settlement",
+            "supersedes_generation_id": unpaid.mutation.baseline.generation_id,
+            "idempotency_key": "capital-settlement-capture-2026-01",
+        }
+    )
+    settled = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
+
+    assert settled is not None
+    assert settled.scope == unpaid.scope
+    assert settled.recognition.recognized_on == date(2025, 12, 15)
+    assert settled.recognition.recognition_event_id == unpaid.recognition.recognition_event_id
+    assert settled.recognition.settlement_event_id == "capital-settlement-2026-01"
+    after_settlement = reopened_service.read_window(unpaid.scope)
+    assert len(after_settlement.entries) == 1
+    assert after_settlement.entries[0].identity.settlement_event_id == "capital-settlement-2026-01"
+    assert after_settlement.entries[0].allocation.allocated_settlement == Decimal("405.00")
+    assert after_settlement.entries[0].retencion is not None
+    assert after_settlement.entries[0].retencion.modelo_193_capital is not None
+    assert after_settlement.entries[0].retencion.modelo_193_capital.settlement_event == WithholdingDatedEvent(
+        event_id="capital-settlement-2026-01",
+        occurred_on=date(2026, 1, 20),
+    )
+    return settled_command, settled
+
+
+def _assert_settlement_adds_no_second_123_liability(
+    repository: SecureObjectRepository,
+    unpaid: WithholdingEvidenceCaptureResult,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    _after_reopen_producer, after_reopen_service = _producer_for(repository)
+    persisted_after_settlement = RetencionObservationRepositoryAdapter(objects=repository).load_observations(
+        "123", unpaid.scope.period
+    )
+    assert len(persisted_after_settlement) == 1
+    assert len(after_reopen_service.read_window(unpaid.scope).entries) == 1
+    aggregation = RetencionesAggregationSourceResolver.aggregate(
+        "123", persisted_after_settlement, period=unpaid.scope.period, operation=authority_operation
+    )
+    assert aggregation.total_taxable_base == Decimal("500.00")
+    assert aggregation.total_retencion == Decimal("95.00")
+    assert {row.scheme for row in aggregation.rollups} == {RetencionScheme("intereses")}
+
+    pending_after_settlement = materialize_modelo_193_disclosure_phases(
+        persisted_after_settlement,
+        filing_year=2025,
+        pending_disclosure_years=published_pending_disclosure_years(),
+    )
+    settlement_phase = materialize_modelo_193_disclosure_phases(
+        persisted_after_settlement,
+        filing_year=2026,
+        pending_disclosure_years=published_pending_disclosure_years(),
+    )
+    assert [row.phase for row in pending_after_settlement] == [Modelo193DisclosurePhase.PENDING]
+    assert [row.phase for row in settlement_phase] == [Modelo193DisclosurePhase.SETTLED_PRIOR_ACCRUAL]
+    settled_row = settlement_phase[0]
+    assert settled_row.original_accrual_year == 2025
+    assert settled_row.settlement_event_id == "capital-settlement-2026-01"
+    assert settled_row.annual_detail.perceptor_tax_id == "00001500M"
+    assert settled_row.annual_detail.accrual_year == 2025
+    assert settled_row.annual_detail.pendiente_flag is None
+    assert settled_row.amount_authority_advisory is not None
+    assert (
+        materialize_modelo_193_disclosure_phases(
+            persisted_after_settlement,
+            filing_year=2027,
+            pending_disclosure_years=published_pending_disclosure_years(),
+        )
+        == ()
+    )
+
+
+def _assert_replay_is_idempotent_and_stale_baseline_refused(
+    reopened_producer: WithholdingProducer,
+    reopened_service: WithholdingObservationService,
+    unpaid: WithholdingEvidenceCaptureResult,
+    settled: WithholdingEvidenceCaptureResult,
+    settled_command: WithholdingEvidenceCaptureCommand,
+) -> None:
+    replay = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
+    assert replay is not None and replay.mutation.replayed
+    assert len(reopened_service.read_window(unpaid.scope).entries) == 1
+
+    stale = settled_command.model_copy(
+        update={
+            "baseline": unpaid.mutation.baseline,
+            "idempotency_key": "capital-stale-settlement-capture",
+        }
+    )
+    with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
+        reopened_producer.capture(stale, cadence=quarterly_filer_cadence(2025))
+    assert len(reopened_service.read_window(unpaid.scope).entries) == 1
+
+    audit = reopened_service.read_generation(unpaid.scope, settled.mutation.baseline.generation_id)
+    assert audit is not None
+    assert audit.supersedes_generation_id == unpaid.mutation.baseline.generation_id
+
+
 def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate_123_liability(
     tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """One active allocation yields both accepted annual phases without another 123 row."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        producer, _service = _producer_for(profile.repository)
-        unpaid = producer.capture(
-            _capital_command(
-                modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2025, 12, 15))
-            ),
-            cadence=quarterly_filer_cadence(2025),
+        unpaid, reopened_producer, reopened_service = _capture_unpaid_capital_and_reopen(profile.repository)
+        settled_command, settled = _settle_capital_later(reopened_producer, reopened_service, unpaid)
+        _assert_settlement_adds_no_second_123_liability(profile.repository, unpaid, authority_operation)
+        _assert_replay_is_idempotent_and_stale_baseline_refused(
+            reopened_producer, reopened_service, unpaid, settled, settled_command
         )
-
-        assert unpaid is not None
-        assert unpaid.scope == WithholdingWindowScope(
-            modelo="123",
-            period=Period.from_year_and_code(2025, "4T"),
-        )
-        assert unpaid.recognition.recognized_on == date(2025, 12, 15)
-        assert unpaid.recognition.recognition_event_id == "capital-exigibility-2025-12"
-        assert unpaid.recognition.settlement_event_id is None
-
-        reopened_producer, reopened_service = _producer_for(profile.repository)
-        before_settlement = reopened_service.read_window(unpaid.scope)
-        assert len(before_settlement.entries) == 1
-        persisted = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
-            "123", unpaid.scope.period
-        )
-        assert len(persisted) == 1
-        assert persisted[0].accrued_on == "2025-12-15"
-        assert persisted[0].modelo_193_capital is not None
-        assert persisted[0].modelo_193_capital.settlement_event is None
-        pending_at_accrual = materialize_modelo_193_disclosure_phases(
-            persisted, filing_year=2025, pending_disclosure_years=published_pending_disclosure_years()
-        )
-        assert len(pending_at_accrual) == 1
-        pending = pending_at_accrual[0]
-        assert pending.phase is Modelo193DisclosurePhase.PENDING
-        assert pending.annual_detail.perceptor_tax_id == "999999999"
-        assert pending.annual_detail.representative_tax_id == "999999999"
-        assert pending.annual_detail.perceptor_legal_name == "VALORES PENDIENTE DE ABONO"
-        assert pending.annual_detail.pendiente_flag == "X"
-        assert pending.taxable_base == Decimal("500.00")
-        assert pending.retencion_amount == Decimal("95.00")
-
-        settled_command = _capital_command(
-            payment_id="capital-settlement-2026-01",
-            paid_on=date(2026, 1, 20),
-            settlement_amount="405.00",
-            modelo_193_pending_payment=_capital_pending_payment_detail(transaction_date=date(2026, 1, 20)),
-        ).model_copy(
-            update={
-                "mode": WithholdingMutationMode.REPLACE,
-                "baseline": unpaid.mutation.baseline,
-                "reason": "synthetic later capital settlement",
-                "supersedes_generation_id": unpaid.mutation.baseline.generation_id,
-                "idempotency_key": "capital-settlement-capture-2026-01",
-            }
-        )
-        settled = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
-
-        assert settled is not None
-        assert settled.scope == unpaid.scope
-        assert settled.recognition.recognized_on == date(2025, 12, 15)
-        assert settled.recognition.recognition_event_id == unpaid.recognition.recognition_event_id
-        assert settled.recognition.settlement_event_id == "capital-settlement-2026-01"
-        after_settlement = reopened_service.read_window(unpaid.scope)
-        assert len(after_settlement.entries) == 1
-        assert after_settlement.entries[0].identity.settlement_event_id == "capital-settlement-2026-01"
-        assert after_settlement.entries[0].allocation.allocated_settlement == Decimal("405.00")
-        assert after_settlement.entries[0].retencion is not None
-        assert after_settlement.entries[0].retencion.modelo_193_capital is not None
-        assert after_settlement.entries[0].retencion.modelo_193_capital.settlement_event == WithholdingDatedEvent(
-            event_id="capital-settlement-2026-01",
-            occurred_on=date(2026, 1, 20),
-        )
-
-        _after_reopen_producer, after_reopen_service = _producer_for(profile.repository)
-        persisted_after_settlement = RetencionObservationRepositoryAdapter(
-            objects=profile.repository
-        ).load_observations("123", unpaid.scope.period)
-        assert len(persisted_after_settlement) == 1
-        assert len(after_reopen_service.read_window(unpaid.scope).entries) == 1
-        aggregation = RetencionesAggregationSourceResolver.aggregate(
-            "123", persisted_after_settlement, period=unpaid.scope.period
-        )
-        assert aggregation.total_taxable_base == Decimal("500.00")
-        assert aggregation.total_retencion == Decimal("95.00")
-        assert {row.scheme for row in aggregation.rollups} == {RetencionScheme("intereses")}
-
-        pending_after_settlement = materialize_modelo_193_disclosure_phases(
-            persisted_after_settlement,
-            filing_year=2025,
-            pending_disclosure_years=published_pending_disclosure_years(),
-        )
-        settlement_phase = materialize_modelo_193_disclosure_phases(
-            persisted_after_settlement,
-            filing_year=2026,
-            pending_disclosure_years=published_pending_disclosure_years(),
-        )
-        assert [row.phase for row in pending_after_settlement] == [Modelo193DisclosurePhase.PENDING]
-        assert [row.phase for row in settlement_phase] == [Modelo193DisclosurePhase.SETTLED_PRIOR_ACCRUAL]
-        settled_row = settlement_phase[0]
-        assert settled_row.original_accrual_year == 2025
-        assert settled_row.settlement_event_id == "capital-settlement-2026-01"
-        assert settled_row.annual_detail.perceptor_tax_id == "11111111H"
-        assert settled_row.annual_detail.accrual_year == 2025
-        assert settled_row.annual_detail.pendiente_flag is None
-        assert settled_row.amount_authority_advisory is not None
-        assert (
-            materialize_modelo_193_disclosure_phases(
-                persisted_after_settlement,
-                filing_year=2027,
-                pending_disclosure_years=published_pending_disclosure_years(),
-            )
-            == ()
-        )
-
-        replay = reopened_producer.capture(settled_command, cadence=quarterly_filer_cadence(2025))
-        assert replay is not None and replay.mutation.replayed
-        assert len(reopened_service.read_window(unpaid.scope).entries) == 1
-
-        stale = settled_command.model_copy(
-            update={
-                "baseline": unpaid.mutation.baseline,
-                "idempotency_key": "capital-stale-settlement-capture",
-            }
-        )
-        with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
-            reopened_producer.capture(stale, cadence=quarterly_filer_cadence(2025))
-        assert len(reopened_service.read_window(unpaid.scope).entries) == 1
-
-        audit = reopened_service.read_generation(unpaid.scope, settled.mutation.baseline.generation_id)
-        assert audit is not None
-        assert audit.supersedes_generation_id == unpaid.mutation.baseline.generation_id
 
 
 @pytest.mark.parametrize("perception_key", ("A", "B", "D"))
@@ -759,7 +776,9 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
         assert len(service.read_window(replay.scope).entries) == 4
 
 
-def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> None:
+def test_rent_allocations_reopen_as_two_annual_property_rows(
+    tmp_path: Path, authority_operation: PinnedAuthorityOperation
+) -> None:
     """The annual materializer reads active 115 quarters, not a second annual store."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, _service = _producer_for(profile.repository)
@@ -809,7 +828,9 @@ def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> 
         repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
         annual_source = repository.load_annual_source_observations("115", 2025)
         assert len(annual_source) == 3
-        result = aggregate_retenciones_180(annual_source, period=Period.from_year_and_code(2025, "0A"))
+        result = aggregate_retenciones_180(
+            annual_source, period=Period.from_year_and_code(2025, "0A"), operation=authority_operation
+        )
         assert result.type2_record_count == 2
         assert result.total_perceptors == 1
         assert result.total_taxable_base == Decimal("500.00")

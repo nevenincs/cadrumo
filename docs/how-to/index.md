@@ -155,7 +155,7 @@ Classify entries manually, in bulk, with allocation, or through the review queue
 :link: classify-with-llm
 :link-type: doc
 
-Set up the local reader, preview and apply suggestions, and classify from an
+Preview and apply suggestions, and classify from an
 attached invoice.
 :::
 
@@ -214,7 +214,7 @@ Fill in a declaration box by box in the full-screen interface, then calculate, r
 :link: modelo-036
 :link-type: doc
 
-Record an alta, modificación, or baja you filed at AEAT's sede.
+Record a registration, amendment, or deregistration you filed at AEAT's online portal.
 :::
 
 :::{grid-item-card} Modelo 100 (Renta)
@@ -306,6 +306,13 @@ Pull and store the AEAT receipt, then compare it with your local record of the f
 :link-type: doc
 
 Expose the toolset to Claude or any MCP client, with the safety boundary intact.
+:::
+
+:::{grid-item-card} Sign in to an AI provider by hand
+:link: sign-in-to-an-ai-provider-by-hand
+:link-type: doc
+
+Sign in from a console when the in-app sign-in under Settings > AI providers fails.
 :::
 
 :::{grid-item-card} Troubleshooting

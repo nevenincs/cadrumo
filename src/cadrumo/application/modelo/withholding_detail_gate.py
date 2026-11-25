@@ -59,8 +59,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingSourceKind
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -81,6 +81,7 @@ from ..calculations.m111_no_retenciones import (
 from .verification_preconditions import build_verification_precondition_failure
 
 if TYPE_CHECKING:
+    from ...core.modelo import Modelo
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -115,8 +116,16 @@ class _NoObligationAttestation:
     read_attested_periods: Callable[[Mapping[str, str] | None], frozenset[tuple[int, str]]]
 
 
+#: The periodic withholding modelo the activity-withholding ledger category feeds.
+#:
+#: The registry's IRPF ledger taxonomy declares the activity category's purpose
+#: as activity-income withholding, which is this modelo's family and its resumen
+#: anual's. Named once so the ledger comparison and the taxonomy cannot come to
+#: disagree about which summary an activity row is evidence for.
+_ACTIVITY_LEDGER_EVIDENCE_SOURCE_ROLE: Final = "withholding.work_periodic"
+
 #: Which periodic withholding modelos an operator can attest a no-obligation
-#: period for, by the modelo the annual source folds.
+#: period for, by the role of the form the annual source folds.
 #:
 #: A modelo absent here has no channel at all, which is a different answer from
 #: an unused channel: the operator cannot prove the absence, so an empty detail
@@ -127,20 +136,12 @@ class _NoObligationAttestation:
 #: the retenciones resolver, so it never reaches this gate.
 _NO_OBLIGATION_ATTESTATIONS: Final[Mapping[str, _NoObligationAttestation]] = MappingProxyType(
     {
-        Modelo("111").value: _NoObligationAttestation(
+        _ACTIVITY_LEDGER_EVIDENCE_SOURCE_ROLE: _NoObligationAttestation(
             profile_path=M111_NO_RETENCIONES_PROFILE_PATH,
             read_attested_periods=m111_no_retenciones_periods_from_profile_values,
         ),
     },
 )
-
-#: The periodic withholding modelo the activity-withholding ledger category feeds.
-#:
-#: The registry's IRPF ledger taxonomy declares the activity category's purpose
-#: as activity-income withholding, which is this modelo's family and its resumen
-#: anual's. Named once so the ledger comparison and the taxonomy cannot come to
-#: disagree about which summary an activity row is evidence for.
-_ACTIVITY_LEDGER_EVIDENCE_SOURCE_MODELO: Final = Modelo("111")
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,12 +258,12 @@ def _contradicting_ledger_row_ids(
     or not a retención was practised on the payment.
 
     Scoped to the summary whose periodic source is
-    :data:`_ACTIVITY_LEDGER_EVIDENCE_SOURCE_MODELO`, because the registry
+    :data:`_ACTIVITY_LEDGER_EVIDENCE_SOURCE_ROLE`, because the registry
     taxonomy gives this category the activity-income withholding purpose and
     that is the family the modelo owns. A summary folding another periodic
     modelo reads a different store, and an activity row says nothing about it.
     """
-    if source_modelo != _ACTIVITY_LEDGER_EVIDENCE_SOURCE_MODELO:
+    if source_modelo != form_for_role(_ACTIVITY_LEDGER_EVIDENCE_SOURCE_ROLE, authority=operation):
         return ()
     catalogue = transaction_repository.load_for_date_range(
         work_unit.period.start_date,
@@ -275,6 +276,31 @@ def _contradicting_ledger_row_ids(
             if _is_retenedor_activity_payment(transaction, operation=operation)
         ),
     )
+
+
+def _attested_quarters(
+    *,
+    source_modelo: Modelo | None,
+    filing_year: int,
+    profile_path_values: Mapping[str, str] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[_NoObligationAttestation | None, tuple[str, ...]]:
+    """Return the attestation channel of the periodic source and the quarters it attests for the year."""
+    attestation = next(
+        (
+            channel
+            for role, channel in _NO_OBLIGATION_ATTESTATIONS.items()
+            if source_modelo == form_for_role(role, authority=operation)
+        ),
+        None,
+    )
+    attested_keys: frozenset[tuple[int, str]] = (
+        attestation.read_attested_periods(profile_path_values)
+        if attestation is not None
+        else frozenset[tuple[int, str]]()
+    )
+    attested = tuple(period for period in QUARTERLY_WITHHOLDING_PERIODS if (filing_year, period) in attested_keys)
+    return attestation, attested
 
 
 def resolve_withholding_detail_absence(
@@ -298,13 +324,12 @@ def resolve_withholding_detail_absence(
     modelo = str(work_unit.modelo)
     filing_year = work_unit.filing_year
     source_modelo = annual_withholding_periodic_source(modelo)
-    attestation = _NO_OBLIGATION_ATTESTATIONS.get(source_modelo.value) if source_modelo is not None else None
-    attested_keys: frozenset[tuple[int, str]] = (
-        attestation.read_attested_periods(profile_path_values)
-        if attestation is not None
-        else frozenset[tuple[int, str]]()
+    attestation, attested = _attested_quarters(
+        source_modelo=source_modelo,
+        filing_year=filing_year,
+        profile_path_values=profile_path_values,
+        operation=operation,
     )
-    attested = tuple(period for period in QUARTERLY_WITHHOLDING_PERIODS if (filing_year, period) in attested_keys)
     return WithholdingDetailAbsence(
         modelo=modelo,
         filing_year=filing_year,

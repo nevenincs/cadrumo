@@ -8,6 +8,7 @@ through the committed capsule, never about a call having been made.
 
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -15,13 +16,13 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import registered_profile
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.custody_ports import (
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,
@@ -37,7 +38,6 @@ from cadrumo.application.user_profile.recovery_custody import (
     reset_profile_passphrase_with_recovery,
     revoke_profile_recovery,
 )
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.credentials import ProfilePasswordRefusalReason
 
 if TYPE_CHECKING:
@@ -56,16 +56,7 @@ class _HandoverDeclinedError(Exception):
     """The operator walked away before copying the code down."""
 
 
-def _register() -> UUID:
-    """Create the subject profile; it is born without recovery."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    outcome = register_profile_with_credentials(
-        label=_LABEL,
-        passphrase=_CURRENT,
-        profile_create_context=_profile_create_context_for_test,
-        profile_decode_context=_profile_decode_context_for_test,
-    )
-    return UUID(outcome.profile_id)
+_registered = partial(registered_profile, owner_module=__name__, label=_LABEL, passphrase=_CURRENT)
 
 
 def _enroll(profile_id: UUID, passphrase: str = _CURRENT) -> str:
@@ -110,8 +101,7 @@ def test_a_profile_is_born_without_recovery_and_enrols_only_after_the_handover_p
     tmp_path: Path,
 ) -> None:
     """The wrapper lands only once the operator has proved possession of the minted code."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         wrapper = _wrapper_path(profile_id)
         assert not wrapper.exists()
         assert profile_recovery_status(profile_id=profile_id).enrolled is False
@@ -143,8 +133,7 @@ def test_a_profile_is_born_without_recovery_and_enrols_only_after_the_handover_p
 
 
 def test_a_mismatching_handover_proof_installs_nothing(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_id = _register()
+    with _registered(tmp_path) as (storage_root, profile_id):
         before = _storage_snapshot(storage_root)
 
         with pytest.raises(ProfileRecoveryError) as refused:
@@ -160,8 +149,7 @@ def test_a_mismatching_handover_proof_installs_nothing(tmp_path: Path) -> None:
 
 
 def test_a_handover_that_raises_aborts_the_enrolment_and_wipes_the_key(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_id = _register()
+    with _registered(tmp_path) as (storage_root, profile_id):
         before = _storage_snapshot(storage_root)
         seen: list[ProfileRecoveryEnrollment] = []
 
@@ -182,8 +170,7 @@ def test_a_rejected_current_passphrase_refuses_enrolment_without_minting_a_code(
     tmp_path: Path,
     current_candidate: str,
 ) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_id = _register()
+    with _registered(tmp_path) as (storage_root, profile_id):
         before = _storage_snapshot(storage_root)
         handovers: list[ProfileRecoveryEnrollment] = []
 
@@ -201,8 +188,7 @@ def test_a_rejected_current_passphrase_refuses_enrolment_without_minting_a_code(
 
 
 def test_enrolling_twice_refuses_and_keeps_the_first_wrapper(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         _enroll(profile_id)
         wrapper = _wrapper_path(profile_id)
         first = wrapper.read_bytes()
@@ -224,8 +210,7 @@ def test_enrolling_twice_refuses_and_keeps_the_first_wrapper(tmp_path: Path) -> 
 
 
 def test_revocation_removes_the_wrapper_and_is_idempotent(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         wrapper = _wrapper_path(profile_id)
 
@@ -241,7 +226,7 @@ def test_revocation_removes_the_wrapper_and_is_idempotent(tmp_path: Path) -> Non
         assert again.changed is False
 
         # A revoked code is dead: the reset door no longer has a wrapper to prove it against.
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         with pytest.raises(ProfileRecoveryError) as refused:
             reset_profile_passphrase_with_recovery(
                 profile_id=profile_id,
@@ -258,8 +243,7 @@ def test_revocation_removes_the_wrapper_and_is_idempotent(tmp_path: Path) -> Non
 
 
 def test_revocation_proves_the_current_passphrase_before_disclosing_enrolment_state(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         _enroll(profile_id)
         wrapper = _wrapper_path(profile_id)
         first = wrapper.read_bytes()
@@ -277,8 +261,7 @@ def test_revocation_proves_the_current_passphrase_before_disclosing_enrolment_st
 
 
 def test_status_reflects_the_committed_wrapper_without_any_secret(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         assert profile_recovery_status(profile_id=profile_id) == profile_recovery_status(profile_id=profile_id)
         assert profile_recovery_status(profile_id=profile_id).enrolled is False
         _enroll(profile_id)
@@ -294,9 +277,8 @@ def test_status_reflects_the_committed_wrapper_without_any_secret(tmp_path: Path
 
 def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epoch(tmp_path: Path) -> None:
     """The whole point of enrolment: the new passphrase opens the records, the old one no longer does."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
         material_before = load_committed_profile_password_material(profile_id)
@@ -343,10 +325,9 @@ def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epo
 
 def test_the_same_code_resets_again_after_a_reset(tmp_path: Path) -> None:
     """Reset retains enrolment, so the code stays good for the next forgotten passphrase too."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     third = "recovery-enrollment-third-operator-secret"
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         for replacement in (_REPLACEMENT, third):
             reset = reset_profile_passphrase_with_recovery(
@@ -363,9 +344,8 @@ def test_the_same_code_resets_again_after_a_reset(tmp_path: Path) -> None:
 
 
 def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_id = _register()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    with _registered(tmp_path) as (storage_root, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
         before = _storage_snapshot(storage_root)
@@ -402,9 +382,8 @@ def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(t
 
 
 def test_reset_refuses_a_profile_that_never_enrolled(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_id = _register()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    with _registered(tmp_path) as (storage_root, profile_id):
         reset_test_profile_session()
         before = _storage_snapshot(storage_root)
 
@@ -422,9 +401,8 @@ def test_reset_refuses_a_profile_that_never_enrolled(tmp_path: Path) -> None:
 
 
 def test_reset_checks_the_new_passphrase_and_its_confirmation_before_any_proof(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        profile_id = _register()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    with _registered(tmp_path) as (storage_root, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
         before = _storage_snapshot(storage_root)
@@ -463,10 +441,9 @@ def test_reset_checks_the_new_passphrase_and_its_confirmation_before_any_proof(t
 
 def test_an_ordinary_rotation_after_enrolment_keeps_the_code_working(tmp_path: Path) -> None:
     """Rotation preserves the DEK epoch, so the wrapper enrolled before it still proves the same key."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     third = "recovery-enrollment-post-rotation-operator-secret"
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         wrapper = _wrapper_path(profile_id)
         wrapper_before = wrapper.read_bytes()
@@ -504,12 +481,11 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
     from datetime import timedelta
 
     from cadrumo.application.user_profile import recovery_custody
-    from cadrumo.core.time.clock import now
+    from cadrumo.core.time.clock import wall_now
     from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-    _, decode = _profile_contexts_for_test()
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        profile_id = _register()
+    _, decode = profile_authority_contexts()
+    with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
         before = load_committed_profile_password_material(profile_id).envelope
@@ -527,8 +503,8 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
         assert not retired
         assert load_committed_profile_password_material(profile_id).envelope == before
         # Advance only the explicit recovery clock past the real shared throttle.
-        later = now() + timedelta(minutes=1)
-        monkeypatch.setattr(recovery_custody, "_now", lambda: later)
+        later = wall_now() + timedelta(minutes=1)
+        monkeypatch.setattr(recovery_custody, "wall_now", lambda: later)
         reset_profile_passphrase_with_recovery(
             profile_id=profile_id,
             recovery_code=code,

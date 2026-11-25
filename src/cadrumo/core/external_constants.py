@@ -67,6 +67,13 @@ CLASSIFIED_BY_MANUAL: Final[str] = "manual"
 #: by the rule engine with no operator override.
 CLASSIFIED_BY_AUTO: Final[str] = "auto"
 
+#: Prefix of a ``classified_by`` stamp that records Cadrumo computing figures for a row (a derivation)
+#: rather than anyone deciding its classification.
+CLASSIFIED_BY_DERIVED_PREFIX: Final[str] = "derived:"
+
+#: Stamp of the derivation that works a row's base, rate and IVA out from a chosen IVA category.
+CLASSIFIED_BY_IVA_CATEGORY_DERIVATION: Final[str] = CLASSIFIED_BY_DERIVED_PREFIX + "iva-category"
+
 
 class _Frozen(BaseModel):
     """Strict, frozen base for external-constant submodels.
@@ -265,7 +272,7 @@ class AeatNotificationsQuery(_Frozen):
         detail_view_action: Action token returning the notification PDF.
     """
 
-    lookback_years: int = Field(ge=1, le=50)
+    lookback_years: int = Field(ge=1, le=64)
     date_format: str
     tipo_consulta_all: str
     leida_all: str
@@ -429,40 +436,6 @@ class OnlineServicesSection(_Frozen):
     google: GoogleServiceSection
 
 
-class DependencyHostsSection(_Frozen):
-    """Hosts each setup item downloads from, by host group.
-
-    The network preflight reaches exactly these hosts before a setup moves any
-    byte, and a setup plan names them as its sources. A group name is the
-    ``network_host_group`` of a setup item declaration, or of one part of it:
-    the local AI's group is its program's hosts and its model registry's.
-    """
-
-    browser: tuple[str, ...] = Field(min_length=1)
-    model_runtime: tuple[str, ...] = Field(min_length=1)
-    model_registry: tuple[str, ...] = Field(min_length=1)
-
-    @field_validator("browser", "model_runtime", "model_registry", mode="before")
-    @classmethod
-    @pydantic_validation_boundary
-    def _hosts_from_toml_arrays(cls, value: object) -> object:
-        if is_object_list(value):
-            return tuple(value)
-        return value
-
-    def hosts_for(self, group: str) -> tuple[str, ...]:
-        """Return the hosts of ``group``, refusing a group this registry does not declare."""
-        hosts = {
-            "browser": self.browser,
-            "model_runtime": self.model_runtime,
-            "model_registry": self.model_registry,
-            "local_ai": tuple(dict.fromkeys((*self.model_runtime, *self.model_registry))),
-        }.get(group)
-        if hosts is None:
-            raise KeyError(group)
-        return hosts
-
-
 class ExternalConstants(_Frozen):
     """Top-level registry model mirroring the TOML root.
 
@@ -473,7 +446,6 @@ class ExternalConstants(_Frozen):
 
     aeat: AeatSection
     online_services: OnlineServicesSection
-    dependency_hosts: DependencyHostsSection
 
 
 #: IANA-registered MIME type for PDF document payloads.
@@ -499,6 +471,19 @@ XLSX_EXTENSION: Final[Literal[".xlsx"]] = ".xlsx"
 
 #: Excel macro-enabled workbook file-extension string (lower-case, dot-prefixed).
 XLSM_EXTENSION: Final[Literal[".xlsm"]] = ".xlsm"
+
+#: Open Financial Exchange statement file-extension string (lower-case, dot-prefixed).
+OFX_EXTENSION: Final[Literal[".ofx"]] = ".ofx"
+
+#: Quicken-flavoured OFX statement file-extension string (lower-case, dot-prefixed).
+QFX_EXTENSION: Final[Literal[".qfx"]] = ".qfx"
+
+#: File extensions the CSV statement provider reads; ``.tsv`` is the tab-separated
+#: spelling of the same table, which the provider's delimiter detection reads.
+CSV_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".tsv", ".txt"})
+
+#: File extensions the OFX statement provider reads.
+OFX_EXTENSIONS: Final[frozenset[str]] = frozenset({OFX_EXTENSION, QFX_EXTENSION})
 
 #: Legacy ISO-8859-1 / Latin-1 encoding used by AEAT sede fixed-width response bodies.
 LATIN_1_ENCODING: Final[str] = "latin-1"

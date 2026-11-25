@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -41,6 +41,17 @@ def iva_recargo_fact_query(applied_rate: Decimal, operation_date: date) -> Mappi
     )
 
 
+def _window(applied_rate: Decimal) -> tuple[date, date | None]:
+    """Return the operation window the authored schedule gives one applied rate.
+
+    The transitional rates are bounded by their own windows, so the days a test
+    asks about come from the schedule and not from a year of its own.
+    """
+    (variant,) = (item for item in _authored_fact().variants if Decimal(str(item.selectors[0].value)) == applied_rate)
+    assert variant.valid_from is not None
+    return variant.valid_from, variant.valid_to
+
+
 def _catalogue() -> GovernedFactCatalogue:
     fact = _authored_fact()
     return GovernedFactCatalogue(facts={fact.fact_id: fact})
@@ -69,7 +80,9 @@ def test_authored_recargo_fact_emits_identity_unique_authority_variants() -> Non
 
 def test_recargo_query_uses_applied_rate_and_inclusive_operation_window() -> None:
     catalogue = _catalogue()
-    for boundary in (date(2024, 10, 1), date(2024, 12, 31)):
+    opening, closing = _window(Decimal("0.02"))
+    assert closing is not None
+    for boundary in (opening, closing):
         resolved = resolve_governed_fact(
             catalogue,
             iva_recargo_fact_query(Decimal("0.02"), boundary),
@@ -85,7 +98,7 @@ def test_recargo_query_uses_applied_rate_and_inclusive_operation_window() -> Non
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             catalogue,
-            iva_recargo_fact_query(Decimal("0.02"), date(2025, 1, 1)),
+            iva_recargo_fact_query(Decimal("0.02"), closing + timedelta(days=1)),
             authority_digest="c" * 64,
             support=committed_supported_filing_years(),
         )
@@ -93,15 +106,16 @@ def test_recargo_query_uses_applied_rate_and_inclusive_operation_window() -> Non
 
 def test_recargo_query_distinguishes_coexisting_applied_rates() -> None:
     catalogue = _catalogue()
+    transitional_day, _end = _window(Decimal("0.05"))
     ordinary = resolve_governed_fact(
         catalogue,
-        iva_recargo_fact_query(Decimal("0.10"), date(2024, 6, 1)),
+        iva_recargo_fact_query(Decimal("0.10"), transitional_day),
         authority_digest="d" * 64,
         support=committed_supported_filing_years(),
     )
     transitional = resolve_governed_fact(
         catalogue,
-        iva_recargo_fact_query(Decimal("0.05"), date(2024, 6, 1)),
+        iva_recargo_fact_query(Decimal("0.05"), transitional_day),
         authority_digest="d" * 64,
         support=committed_supported_filing_years(),
     )

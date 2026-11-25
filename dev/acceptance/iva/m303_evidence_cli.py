@@ -9,18 +9,19 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from .filing_year import IvaJourneyYear
 from .m303_evidence_contracts import (
-    _DEVELOPMENT_MOCK_HEADER,
-    _LAST_PERIOD_DAYS,
-    _PERIOD,
-    _PRIOR_PERIOD,
+    DEVELOPMENT_MOCK_HEADER,
+    LAST_PERIOD_DAYS,
+    PERIOD,
+    PRIOR_PERIOD,
     CommandOutcome,
     IvaInstalledM303Error,
 )
-from .m303_evidence_projection import _mapping, _text, resultado_matches_oracle
+from .m303_evidence_projection import mapping, resultado_matches_oracle, text
 
 if TYPE_CHECKING:
     pass
@@ -52,7 +53,7 @@ class _Cli:
             return document
         if evidence.returncode != 0:
             raise IvaInstalledM303Error(f"installed CLI refused {evidence.command}: {code}")
-        return _mapping(document.get("result"), label=evidence.command)
+        return mapping(document.get("result"), label=evidence.command)
 
 
 def _cli_capture_and_create_work(
@@ -60,13 +61,13 @@ def _cli_capture_and_create_work(
 ) -> str:
     """Capture one ordinary ``year`` sale and purchase inside ``period`` and create its M303 work unit."""
     sale_date, purchase_date = dates
-    evidence_id = _text(
+    evidence_id = text(
         cli.run(("app", "ledger", "evidence", "add", str(artifact), "--supplier", "Synthetic supplier SL")).get(
             "evidence_id"
         ),
         label="evidence add",
     )
-    sale = _text(
+    sale = text(
         cli.run(
             (
                 *("app", "ledger", "add", "--date", sale_date, "--amount", "121.00", "--direction", "INCOMING"),
@@ -78,14 +79,14 @@ def _cli_capture_and_create_work(
         ).get("transaction_id"),
         label="sale add",
     )
-    sale_invoice = _text(
+    sale_invoice = text(
         cli.run(
             _invoice_args(kind="issued", number="IVA-M303-ISS", subtotal="100.00", iva_amount="21.00", date=sale_date)
         ).get("invoice_id"),
         label="sale invoice add",
     )
     cli.run(("app", "ledger", "link", sale, "--invoice-id", sale_invoice))
-    purchase = _text(
+    purchase = text(
         cli.run(
             (
                 *("app", "ledger", "add", "--date", purchase_date, "--amount", "60.50", "--direction", "OUTGOING"),
@@ -104,7 +105,7 @@ def _cli_capture_and_create_work(
             *("--deduction-kind", "domestic_current", "--counterparty-country", "ES", "--reaffirm"),
         )
     )
-    purchase_invoice = _text(
+    purchase_invoice = text(
         cli.run(
             _invoice_args(kind="received", number="IVA-M303-REC", subtotal="50.00", iva_amount="10.50", date=sale_date)
         ).get("invoice_id"),
@@ -118,7 +119,7 @@ def _cli_capture_and_create_work(
         )
     )
     created = cli.run(("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", period))
-    return _text(created.get("work_unit_id"), label="work create")
+    return text(created.get("work_unit_id"), label="work create")
 
 
 def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str, date: str) -> tuple[str, ...]:
@@ -136,22 +137,23 @@ def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str, dat
     )
     return (
         *("app", "ledger", "invoice", "add", "--kind", kind, "--counterparty-name", "Synthetic party SL"),
-        *("--counterparty-nif", "A58818501", "--invoice-number", number, "--invoice-date", date),
+        *("--counterparty-nif", "B00000281", "--invoice-number", number, "--invoice-date", date),
         *("--country-code", "ES", "--iva-category", "domestic_general", "--line", line),
     )
 
 
-def _attest(cli: _Cli, *, year: int, period: str, observed_at: str) -> tuple[str, str]:
+def attest(cli: _Cli, *, year: int, period: str, observed_at: str) -> tuple[str, str]:
+    """Attest the modelo 303 exoneration through the CLI, returning attachment id and digest."""
     attested = cli.run(
         (
             *("app", "modelo", "work", "attest-m303-exonerado-390", "--year", str(year)),
             *("--period", period, "--observed-at", observed_at),
         )
     )
-    return _text(attested.get("attachment_id"), label="attest"), _text(attested.get("sha256"), label="attest")
+    return text(attested.get("attachment_id"), label="attest"), text(attested.get("sha256"), label="attest")
 
 
-def _calculate_args(
+def calculate_args(
     work_unit_id: str, *, attestation: tuple[str, str] | None, joint_return_elected: bool = False
 ) -> tuple[str, ...]:
     """Answer the joint-return question, and supply the attestation pair only when given."""
@@ -166,33 +168,34 @@ def _calculate_args(
     )
 
 
-def _revision_ids(cli: _Cli, work_unit_id: str) -> tuple[str, ...]:
+def revision_ids(cli: _Cli, work_unit_id: str) -> tuple[str, ...]:
+    """Return the calculation revision ids listed for a work unit."""
     listed = cli.run(("app", "modelo", "work", "revisions", work_unit_id))
     rows = listed.get("revisions")
     if not isinstance(rows, list):
         raise IvaInstalledM303Error("installed revisions listing returned no rows")
     return tuple(
-        _text(_mapping(row, label="revision row").get("calculation_revision_id"), label="revision row")
+        text(mapping(row, label="revision row").get("calculation_revision_id"), label="revision row")
         for row in cast(list[object], rows)
     )
 
 
-def _read_revision(cli: _Cli, revision_id: str) -> tuple[bool, bool]:
+def read_revision(cli: _Cli, revision_id: str) -> tuple[bool, bool]:
     """Return (resultado matches oracle, revision verified) from the public revision readback."""
     revision = cli.run(("app", "modelo", "work", "revision", revision_id))
-    casillas = _mapping(revision.get("casilla_values"), label="revision casillas")
+    casillas = mapping(revision.get("casilla_values"), label="revision casillas")
     return resultado_matches_oracle(casillas.get("iva.resultado")), revision.get("verified_at") is not None
 
 
-def _require_development_developer_header(payload: bytes, positions: tuple[str, str, str]) -> None:
+def require_development_developer_header(payload: bytes, positions: tuple[str, str, str]) -> None:
     """Refuse unless the official developer-header bytes carry the all-zero development identity."""
     record, program_span, developer_span = positions
     envelope_start = payload.find(b"<T303")
     if envelope_start < 0:
         raise IvaInstalledM303Error(f"Modelo 303 export carries no {record} envelope prefix")
     for span, expected in (
-        (program_span, _DEVELOPMENT_MOCK_HEADER["program"]),
-        (developer_span, _DEVELOPMENT_MOCK_HEADER["developer"]),
+        (program_span, DEVELOPMENT_MOCK_HEADER["program"]),
+        (developer_span, DEVELOPMENT_MOCK_HEADER["developer"]),
     ):
         first, last = (int(bound) for bound in span.split("-"))
         if payload[envelope_start + first - 1 : envelope_start + last] != expected:
@@ -203,20 +206,21 @@ def _fresh_cli(args: argparse.Namespace, store: Path, passphrase: str) -> _Cli:
     return _Cli(InstalledCli(args.cli, storage_root=store, authority_root=args.authority_root, passphrase=passphrase))
 
 
-def _setup_store(
+def setup_store(
     args: argparse.Namespace,
     journey_year: IvaJourneyYear,
     name: str,
     *,
-    period: str = _PERIOD,
-    wallet_period: str = _PRIOR_PERIOD,
-    days: tuple[tuple[int, int], tuple[int, int]] = _LAST_PERIOD_DAYS,
+    period: str = PERIOD,
+    wallet_period: str = PRIOR_PERIOD,
+    days: tuple[tuple[int, int], tuple[int, int]] = LAST_PERIOD_DAYS,
     monthly_filer: bool = False,
 ) -> tuple[Path, str, _Cli, str]:
+    """Create a synthetic store and journey profile for a modelo 303 evidence scenario."""
     store = cast(Path, args.output_root) / name
     store.mkdir(parents=True)
     artifact = args.output_root / f"{name}-synthetic-purchase.pdf"
-    artifact.write_bytes(b"%PDF-1.4\n% synthetic acceptance purchase evidence\n")
+    artifact.write_bytes(text_pdf_bytes(("synthetic acceptance purchase evidence",)))
     passphrase = secrets.token_urlsafe(32)
     cli = _fresh_cli(args, store, passphrase)
     try:

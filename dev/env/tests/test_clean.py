@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.test_runs.reaper import PID_TRUST_CEILING_SECONDS
 
 from ..clean import (
@@ -50,7 +50,7 @@ var/
 secrets/
 .vault/
 .vaultspec/
-.logs/
+.tmp/
 scratch/
 .coverage
 """
@@ -60,6 +60,22 @@ def _write(path: Path, content: str = "x") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     return path
+
+
+def test_canonical_temp_keeps_live_scratch_and_flags_unowned_work(repository: Path) -> None:
+    live = _write(repository / ".tmp" / f"cr_{os.getpid()}_abc123" / "work.txt")
+    capture = _write(repository / ".tmp" / "manual" / "capture.txt")
+    live_verdict, _ = classify(repository, live.parent.relative_to(repository).as_posix())
+    capture_verdict, _ = classify(repository, capture.parent.relative_to(repository).as_posix())
+    assert live_verdict is Verdict.KEEP
+    assert capture_verdict is Verdict.FLAG
+
+
+def test_canonical_logs_preserve_live_run(repository: Path) -> None:
+    run = repository / ".tmp" / "logs" / "audit-runs" / "1980-10-29" / f"run-audit-{os.getpid()}-abcdef"
+    _write(run / "run.log")
+    verdict, _ = classify(repository, ".tmp/logs/audit-runs")
+    assert verdict is Verdict.KEEP
 
 
 @pytest.fixture
@@ -137,33 +153,35 @@ def test_the_mixed_var_root_is_split_rather_than_judged_whole(repository: Path) 
 def test_the_logs_scratch_root_is_reaped_and_only_a_live_owner_defers_it(
     repository: Path,
 ) -> None:
-    """`.logs/` is scratch with no excepted child; only a live owner defers a family.
+    """`.tmp/logs/` is scratch with no excepted child; only a live owner defers a family.
 
     Everything there is output of a run -- captured stdout, downloaded payloads,
     draft vault bodies, a cache -- so a verdict of KEEP asserts a durability the
-    tree does not have. `test-runs` used to be spared by NAME, and that was
-    wrong in both directions at once: finished test runs survived this section
-    forever, while a live `audit-runs` directory was reaped mid-write because it
-    was not the name being recognised. The question is liveness, it is asked of
-    the owning pid, and it is asked of every family alike.
+    tree does not have. Sparing a family by NAME would be wrong in both
+    directions at once: finished test runs would survive this section forever,
+    while a live family that is not the name being recognised would be reaped
+    mid-write. The question is liveness, it is asked of the owning pid, and it is
+    asked of every family alike.
     """
-    captured = _write(repository / ".logs" / "authority-provenance.err", "captured stderr")
-    logs_cache = _write(repository / ".logs" / "cache" / "payload.bin", "derived")
+    captured = _write(repository / ".tmp" / "logs" / "authority-provenance.err", "captured stderr")
+    logs_cache = _write(repository / ".tmp" / "logs" / "cache" / "payload.bin", "derived")
     finished = _write(
         repository
-        / ".logs"
+        / ".tmp"
+        / "logs"
         / "test-runs"
-        / "2026-09-08"
-        / f"20260908T000000.0Z-pytest-{os.getpid()}-abcd1234"
+        / "1980-09-08"
+        / f"19800908T000000.0Z-pytest-{os.getpid()}-abcd1234"
         / "run.json",
         "{}",
     )
     live = _write(
         repository
-        / ".logs"
+        / ".tmp"
+        / "logs"
         / "audit-runs"
-        / "2026-09-08"
-        / f"20260908T000000.0Z-audit-{os.getpid()}-beef5678"
+        / "1980-09-08"
+        / f"19800908T000000.0Z-audit-{os.getpid()}-beef5678"
         / "run.log",
         "still being written",
     )
@@ -171,15 +189,15 @@ def test_the_logs_scratch_root_is_reaped_and_only_a_live_owner_defers_it(
     entries = assess(repository)
     reclaim(repository, entries)
 
-    assert _verdict_for(entries, ".logs/audit-runs")[0] is Verdict.KEEP
+    assert _verdict_for(entries, ".tmp/logs/audit-runs")[0] is Verdict.KEEP
     assert live.exists(), "a run whose owner is alive was removed mid-write"
-    assert _verdict_for(entries, ".logs/test-runs")[0] is Verdict.REAP
+    assert _verdict_for(entries, ".tmp/logs/test-runs")[0] is Verdict.REAP
     for name, path in (
         ("captured output", captured),
         ("cache", logs_cache),
         ("a finished run", finished),
     ):
-        assert not path.exists(), f"{name} under .logs/ survived, so something there is still excepted"
+        assert not path.exists(), f"{name} under .tmp/logs/ survived, so something there is still excepted"
 
 
 def test_a_directory_named_cache_is_reaped_wherever_it_is_not_protected(repository: Path) -> None:
@@ -245,7 +263,7 @@ def test_the_command_exits_zero_on_a_clean_tree_and_on_a_dirty_one(
 
     Every ``--apply`` here is scoped to ``--only worktree``, and that is a
     correctness requirement rather than tidiness. The temp section's roots are
-    the OS temp directory and this checkout's ``.logs/`` -- genuinely global
+    the OS temp directory and this checkout's ``.tmp/`` -- genuinely global
     locations that no fixture can redirect -- so an unscoped ``--apply`` in a
     test reaps a developer's real abandoned sessions and real test-run evidence
     as a side effect of running the suite. The worktree section is the only one

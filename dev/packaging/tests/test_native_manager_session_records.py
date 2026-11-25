@@ -19,7 +19,7 @@ from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_mem
 from cadrumo.core.storage_taxonomy import StorageScope
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from cadrumo_runtime.adapters.boot_record import runtime_boot_record_path
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -60,6 +60,7 @@ def test_the_package_declares_the_manager_records_beside_the_runtime_records(tmp
     assert PurePosixPath(_COMPONENTS["manager_failed_versions"]).parent.as_posix() == runtime_directory
     assert PurePosixPath(_COMPONENTS["manager_log_file"]).parent.as_posix() == _COMPONENTS["logs"]
     assert PurePosixPath(_COMPONENTS["manager_preferences"]).parent.as_posix() == "."
+    assert PurePosixPath(_COMPONENTS["local_engine_selection"]).parent.as_posix() == "."
 
 
 def test_the_command_line_declares_none_of_the_manager_records() -> None:
@@ -68,6 +69,7 @@ def test_the_command_line_declares_none_of_the_manager_records() -> None:
         _VECTORS["quit_marker_location"],
         _COMPONENTS["manager_failed_versions"],
         _COMPONENTS["manager_preferences"],
+        _COMPONENTS["local_engine_selection"],
         _COMPONENTS["manager_log_file"],
     }
     command_line = {location.subpath for location in STORAGE_TAXONOMY.values() if location.scope is StorageScope.ROOT}

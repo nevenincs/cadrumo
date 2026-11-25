@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-026` · **Topic:** [Application orchestration and diagnostics](../topics/application-orchestration-and-diagnostics.md)
+**Topic:** [Application orchestration and diagnostics](../topics/application-orchestration-and-diagnostics.md)
 
 <!-- preserved:article -->
 ## Scope
@@ -44,7 +44,7 @@ The strongest local qualities are durable phase recording with resume checks, ex
 All 20 assigned files were read in full across pages 1–9.
 
 - application/__init__.py (3 lines) (`src/cadrumo/application/__init__.py`)
-- _state_projection_readiness.py (24 lines) (`src/cadrumo/application/_state_projection_readiness.py`)
+- state_projection_readiness.py (24 lines) (`src/cadrumo/application/state_projection_readiness.py`)
 - auth_credentials.py (34 lines) (`src/cadrumo/application/auth_credentials.py`)
 - bucket_deletion_command_ports.py (34 lines) (`src/cadrumo/application/bucket_deletion_command_ports.py`)
 - bucket_event_projection.py (90 lines) (`src/cadrumo/application/bucket_event_projection.py`)

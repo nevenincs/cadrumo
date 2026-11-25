@@ -30,7 +30,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationPublicTerminalEventV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -50,11 +50,12 @@ from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationRequestV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -292,7 +293,7 @@ def _install_censal_bridge(
 
 
 def _contract(definition_id: str) -> OperationPublicDefinitionContractV1:
-    return build_production_operation_registry().lookup_public_contract(definition_id)
+    return production_operation_registry().lookup_public_contract(definition_id)
 
 
 def test_runtime_handoff_submits_exact_profile_and_starts_before_return(

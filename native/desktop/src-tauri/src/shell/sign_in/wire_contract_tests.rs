@@ -210,6 +210,45 @@ fn python_logout_keeps_known_and_unknown_automation_separate_and_propagates_refu
 }
 
 #[test]
+fn password_logout_recovery_requires_proven_disk_receipt_removal_and_keeps_native_cleanup_unknown()
+{
+    let mut document = fixture("logout-true");
+    document["result"]["human_receipt_revoked"] = json!(true);
+    document["result"]["receipt_removed"] = json!(true);
+    document["result"]["keychain_removed"] = json!(false);
+    let outcome = logout_recovery(from_document(document.clone()).unwrap())
+        .ok()
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(outcome).unwrap()["remainingAccess"]["automationRevoked"],
+        json!(false)
+    );
+    for field in ["human_receipt_revoked", "receipt_removed"] {
+        for value in [json!(false), Value::Null, json!("true"), json!(1)] {
+            let mut unproven = document.clone();
+            unproven["result"][field] = value;
+            assert!(
+                logout_recovery(from_document(unproven).unwrap()).is_err(),
+                "{field}"
+            );
+        }
+        let mut missing = document.clone();
+        missing["result"].as_object_mut().unwrap().remove(field);
+        assert!(
+            logout_recovery(from_document(missing).unwrap()).is_err(),
+            "{field}"
+        );
+    }
+    let refusal = logout_recovery(from_document(fixture("logout-refused")).unwrap())
+        .err()
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(refusal).unwrap()["code"],
+        json!("absent")
+    );
+}
+
+#[test]
 fn python_logout_access_is_carried_for_both_values_and_refused_when_absent() {
     // A key the person issued that can still admit, and one that cannot.
     for remains in [json!(true), json!(false), Value::Null] {
@@ -338,4 +377,36 @@ fn python_profile_creation_refusals_keep_their_reason_and_name_a_taken_label() {
         serde_json::to_value(created(from_document(other).unwrap()).unwrap()).unwrap()["code"],
         "REFUSED_PROFILE_REGISTRATION"
     );
+}
+
+#[test]
+fn a_password_change_is_changed_refused_or_unconfirmed_as_the_product_reports_it() {
+    assert_eq!(
+        password_changed(&output_of(fixture("passphrase-change"))).unwrap(),
+        PasswordChangeResult::Changed
+    );
+    assert_eq!(
+        serde_json::to_value(
+            password_changed(&output_of(fixture("passphrase-change-rejected"))).unwrap()
+        )
+        .unwrap(),
+        json!({"kind": "refused", "code": "CREDENTIAL_REJECTED", "retryAfterSeconds": null})
+    );
+    // A submitted rotation whose outcome was not observed is never a refusal.
+    assert_eq!(
+        password_changed(&output_of(fixture("passphrase-change-unknown"))).unwrap(),
+        PasswordChangeResult::Unknown
+    );
+    let mut unchanged = fixture("passphrase-change");
+    unchanged["result"]["changed"] = json!(false);
+    assert!(password_changed(&output_of(unchanged)).is_err());
+    let mut observed_none = fixture("passphrase-change-unknown");
+    observed_none["error"]["context"]["effect"] = json!("none");
+    assert!(matches!(
+        password_changed(&output_of(observed_none)).unwrap(),
+        PasswordChangeResult::Refused { .. }
+    ));
+    let mut other = fixture("passphrase-change");
+    other["command"] = json!("config.login");
+    assert!(password_changed(&output_of(other)).is_err());
 }

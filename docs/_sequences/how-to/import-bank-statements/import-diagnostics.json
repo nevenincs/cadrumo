@@ -28,7 +28,7 @@
         "app",
         "ledger",
         "view",
-        "71a5db2b"
+        "21853f4f"
       ],
       "captures": [],
       "envelope": {
@@ -47,13 +47,16 @@
           "bucket_id": "<bucket-id>",
           "review_status": "pending",
           "transaction": {
+            "accrual_date": null,
             "amount": "1210",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-02-10",
             "business_classification": "NOT_YET_PROCESSED",
             "business_pct": null,
             "category_id": null,
             "classification_confidence": null,
+            "classification_decided_by": "auto",
             "classification_reason": "",
             "classified_at": null,
             "classified_by": "auto",
@@ -63,28 +66,59 @@
             "created_at": "2026-04-01T09:00:00+00:00",
             "currency": "EUR",
             "date": "2026-02-10",
-            "description": "Cobro factura F-2026-001 servicios de consultoria",
+            "deduction_fact_kind": null,
+            "description": "Cobro factura limpieza de oficinas enero",
             "direction": "INCOMING",
+            "figures_derived": false,
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
+            "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
             "iva_amount": null,
             "iva_category": null,
             "iva_rate": null,
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
+            "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": null,
+            "statement_reference": "ALT-VTA-01",
             "taxable_base": null,
-            "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+            "transaction_id": "21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80",
             "usage_ratio_id": null,
             "value_date": "2026-02-10",
             "value_in_eur": null
           },
-          "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+          "transaction_id": "21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80"
         },
         "schema_version": "2",
         "status": "warning"

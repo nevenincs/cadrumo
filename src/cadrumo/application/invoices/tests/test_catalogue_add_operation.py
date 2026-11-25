@@ -6,7 +6,8 @@ import asyncio
 import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import Never, cast
 from uuid import UUID, uuid4
@@ -19,20 +20,23 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
+from ....domain.currency.service import OPERATOR_DECLARED_RATE_SOURCE
 from ....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
-from ....domain.iva.schema import InvoiceKind
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_add_operation as add_operation
 from ..catalogue_add_contracts import (
@@ -50,7 +54,7 @@ from ..catalogue_add_operation import (
     build_invoice_add_registration,
 )
 from ..catalogue_creation_ports import CatalogueCreationPorts
-from ..tests._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from ..tests.catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -62,7 +66,7 @@ def _request(**overrides: object) -> InvoiceAddRequest:
         "profile_id": _PROFILE,
         "kind": InvoiceKind.RECEIVED,
         "counterparty_name": "Synthetic supplier",
-        "counterparty_tax_id": "A58818501",
+        "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "invoice_number": "ADD-2026-001",
         "issued_at": date(2026, 4, 15),
@@ -72,6 +76,16 @@ def _request(**overrides: object) -> InvoiceAddRequest:
     }
     values.update(overrides)
     return InvoiceAddRequest.model_validate(values)
+
+
+@pytest.mark.parametrize("currency", ["eur", "EURO", "€", "EU", ""])
+def test_the_request_refuses_a_currency_that_is_not_an_iso_4217_code(currency: str) -> None:
+    with pytest.raises(ValidationError):
+        _request(currency=currency)
+
+
+def test_the_request_admits_an_iso_4217_code() -> None:
+    assert _request(currency="USD").currency == "USD"
 
 
 def test_request_json_roundtrip_keeps_decimal_meaning_and_refuses_incomplete_line_modes() -> None:
@@ -135,6 +149,7 @@ def test_request_json_roundtrip_keeps_decimal_meaning_and_refuses_incomplete_lin
         ),
         pytest.param({"iva_category": "UNDECLARED_CATEGORY"}, id="iva-category"),
         pytest.param({"invoice_class": "UNDECLARED_CLASS"}, id="invoice-class"),
+        pytest.param({"invoice_class": "ordinaria"}, id="invoice-class-not-spelled-as-its-token"),
     ),
 )
 def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str, object], monkeypatch) -> None:
@@ -162,6 +177,59 @@ def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str,
     assert context.operands.value.result.outcome == "validation_error"
     assert context.operands.value.result.validation_code == "invalid_invoice"
     assert len(ports.invoice_repository.load()) == 0
+
+
+def test_an_invoice_older_than_the_filing_years_is_kept_as_a_dated_record(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    ports = in_memory_catalogue_creation_ports()
+    line = InvoiceAddLine(
+        description="Service",
+        quantity=PublicDecimal(decimal="1"),
+        unit_price=PublicDecimal(decimal="100.00"),
+        subtotal=PublicDecimal(decimal="100.00"),
+        iva_rate="RATE_21",
+        iva_amount=PublicDecimal(decimal="21.00"),
+    )
+
+    with private_authority_lease() as authority_operation:
+        floor = authority_operation.supported_filing_years().date_envelope().floor
+        context = _Context(authority_operation)
+        request = OperationRequest[InvoiceAddRequest](
+            definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=floor - timedelta(days=1)),
+        )
+        result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
+
+    assert not isinstance(result, OperationRefusalEvidence)
+    assert [invoice.issued_at for invoice in ports.invoice_repository.load()] == [floor - timedelta(days=1)]
+
+
+def test_an_invoice_older_than_the_filing_years_reads_its_published_rate_and_is_kept(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    ports = in_memory_catalogue_creation_ports()
+    line = InvoiceAddLine(
+        description="Service",
+        quantity=PublicDecimal(decimal="1"),
+        unit_price=PublicDecimal(decimal="100.00"),
+        subtotal=PublicDecimal(decimal="100.00"),
+        iva_rate="RATE_21",
+        iva_amount=PublicDecimal(decimal="21.00"),
+    )
+
+    with private_authority_lease() as authority_operation:
+        context = _Context(authority_operation)
+        request = OperationRequest[InvoiceAddRequest](
+            definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=date(2020, 12, 31)),
+        )
+        result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
+
+    assert not isinstance(result, OperationRefusalEvidence)
+    assert len(ports.invoice_repository.load()) == 1
 
 
 def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -197,11 +265,7 @@ def test_executor_refuses_foreign_active_profile_before_phase_or_factory(monkeyp
     assert factory_calls == []
 
 
-def test_invoice_add_lease_wire_requires_python_enum_values() -> None:
-    with pytest.raises(ValidationError):
-        InvoiceAddBusinessPremisesLease(situacion_inmueble="1")
-
-
+@pytest.mark.usefixtures("operation")
 def test_registration_requires_profile_scoped_commit_and_secure_request_storage() -> None:
     def unused_factory(*, bucket_id: str) -> CatalogueCreationPorts:
         raise AssertionError(f"registration composed profile ports for {bucket_id}")
@@ -229,11 +293,14 @@ def test_registration_requires_profile_scoped_commit_and_secure_request_storage(
         "situacion_inmueble": SituacionInmueble.ABROAD.value,
         "referencia_catastral": "9872023VH5797S0001WX",
     }
+    invalid_decoded = registry.decode_request_payload(
+        INVOICE_ADD_OPERATION_DEFINITION_ID,
+        json.dumps(invalid_wire),
+    )
+    assert isinstance(invalid_decoded, InvoiceAddRequest)
+    assert invalid_decoded.business_premises_lease is not None
     with pytest.raises(ValidationError):
-        registry.decode_request_payload(
-            INVOICE_ADD_OPERATION_DEFINITION_ID,
-            json.dumps(invalid_wire),
-        )
+        invalid_decoded.business_premises_lease.to_domain()
     request = OperationRequest[InvoiceAddRequest](
         definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(_PROFILE)),
@@ -333,6 +400,10 @@ class _Context:
         self.events = _Events()
         self.cancellation = _Cancellation()
         self.operands = _Operands(self.cancellation, self.events)
+
+    @property
+    def effect(self) -> OperationEffect:
+        return self.events.effects[-1] if self.events.effects else OperationEffect.NONE
 
     @property
     def revision(self) -> int:
@@ -517,6 +588,41 @@ def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch)
     assert project_invoice_add_result(context.operands.value, receipt) == result
 
 
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        pytest.param(
+            {
+                "taxable_base": None,
+                "iva_rate": None,
+                "lines": (
+                    InvoiceAddLine(
+                        description="Service",
+                        quantity=PublicDecimal(decimal="1E+30"),
+                        unit_price=PublicDecimal(decimal="100.00"),
+                        subtotal=PublicDecimal(decimal="100.00"),
+                        iva_rate="RATE_21",
+                        iva_amount=PublicDecimal(decimal="21.00"),
+                    ),
+                ),
+            },
+            id="magnitude-beyond-decimal-arithmetic",
+        ),
+    ),
+)
+def test_a_value_the_domain_cannot_carry_is_the_same_typed_refusal_as_any_invalid_invoice(
+    overrides: dict[str, object], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context, ports = _execute_add(_request(**overrides), monkeypatch)
+
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert result.outcome == "validation_error"
+    assert result.validation_code == "invalid_invoice"
+    assert len(ports.invoice_repository.load()) == 0
+
+
 def _execute_add(
     payload: InvoiceAddRequest, monkeypatch: pytest.MonkeyPatch
 ) -> tuple[_Context, CatalogueCreationPorts]:
@@ -593,11 +699,7 @@ def test_a_lease_on_a_received_invoice_is_an_invalid_invoice_refusal(monkeypatch
             "9872023VH5797S0001WX",
             id="domain-invalid-situation-reference-pair",
         ),
-        pytest.param(
-            "1",
-            "9872023VH5797S0001WX",
-            id="poisoned-raw-enum-string",
-        ),
+        pytest.param("not-a-declared-situation", "", id="unknown-raw-situation"),
     ),
 )
 def test_executor_rechecks_poisoned_lease_before_creating_ports(
@@ -640,9 +742,88 @@ def test_executor_rechecks_poisoned_lease_before_creating_ports(
     assert context.operands.value.result.validation_code == "invalid_invoice"
 
 
-def test_the_request_refuses_a_situacion_outside_the_record_design() -> None:
+@pytest.mark.usefixtures("operation")
+def test_the_worker_refuses_a_situacion_outside_the_record_design() -> None:
+    request = _request(
+        kind=InvoiceKind.ISSUED,
+        business_premises_lease={"situacion_inmueble": "5"},
+    )
+    assert request.business_premises_lease is not None
     with pytest.raises(ValidationError):
+        request.business_premises_lease.to_domain()
+
+
+def _foreign_request(*, currency: str, declared_fx_rate: str | None) -> InvoiceAddRequest:
+    with private_authority_lease() as authority_operation:
+        issued_at = date(authority_operation.supported_filing_years().horizon, 4, 15)
+    return _request(
+        counterparty_name="Synthetic overseas supplier",
+        counterparty_tax_id="DE811907980",
+        counterparty_country="DE",
+        issued_at=issued_at,
+        taxable_base=PublicDecimal(decimal="1000.00"),
+        iva_rate=None,
+        currency=currency,
+        declared_fx_rate=None if declared_fx_rate is None else PublicDecimal(decimal=declared_fx_rate),
+    )
+
+
+def test_a_declared_rate_reaches_the_stored_invoice_as_the_operators(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The one add operation every frontend submits stamps the stated rate, not a provider's."""
+    context, ports = _execute_add(_foreign_request(currency="USD", declared_fx_rate="0.9250"), monkeypatch)
+
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert result.outcome == "created"
+    assert result.euro_value_pending is False
+    (stored,) = tuple(ports.invoice_repository.load())
+    assert stored.fx_rate == Decimal("0.9250")
+    assert stored.fx_rate_source == OPERATOR_DECLARED_RATE_SOURCE
+    assert stored.base_total_eur == Decimal("925.00")
+
+
+def test_without_a_declared_rate_an_unpublished_rate_leaves_the_euro_value_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context, ports = _execute_add(_foreign_request(currency="USD", declared_fx_rate=None), monkeypatch)
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.euro_value_pending is True
+    (stored,) = tuple(ports.invoice_repository.load())
+    assert (stored.fx_rate, stored.fx_rate_source) == (None, None)
+
+
+@pytest.mark.parametrize(("currency", "declared"), [("EUR", "0.9250"), ("USD", "0"), ("USD", "-0.9250")])
+def test_a_rate_that_cannot_be_declared_is_an_invalid_invoice_refusal_with_no_write(
+    currency: str, declared: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context, ports = _execute_add(_foreign_request(currency=currency, declared_fx_rate=declared), monkeypatch)
+
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert (result.outcome, result.validation_code) == ("validation_error", "invalid_invoice")
+    assert result.refusal_words is not None
+    assert len(ports.invoice_repository.load()) == 0
+
+
+def test_an_issued_used_goods_margin_invoice_is_stored_under_its_stated_category(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The add operation admits the régimen especial de los bienes usados as the invoice's IVA category."""
+    context, ports = _execute_add(
         _request(
             kind=InvoiceKind.ISSUED,
-            business_premises_lease={"situacion_inmueble": "5"},
-        )
+            issued_at=date(filing_year_envelope().horizon, 4, 15),
+            taxable_base=PublicDecimal(decimal="1500.00"),
+            iva_rate=None,
+            iva_category="special_regime_used_goods",
+        ),
+        monkeypatch,
+    )
+
+    assert context.operands.value is not None
+    assert context.operands.value.result.outcome == "created"
+    (stored,) = ports.invoice_repository.load().values()
+    assert stored.iva_category == IvaCategory("special_regime_used_goods")
+    assert (stored.base_total, stored.iva_total) == (Decimal("1500.00"), Decimal("0.00"))

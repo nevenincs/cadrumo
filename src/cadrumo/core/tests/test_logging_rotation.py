@@ -2,15 +2,14 @@
 
 The diagnostic log formerly used a plain ``FileHandler`` and grew without
 bound. It is now a size-capped ``RotatingFileHandler`` whose cap and backup
-count are settings. These tests reconfigure logging against a temp log
-directory and exercise the real handler, then restore the healthy default
+count are settings. These tests reconfigure logging against a temp storage
+root and exercise the real handler, then restore the healthy default
 configuration so sibling tests see an intact logger.
 """
 
 from __future__ import annotations
 
 import logging
-import logging.handlers
 import re
 import subprocess
 import sys
@@ -18,12 +17,13 @@ from pathlib import Path
 
 import pytest
 
-from .. import logging as _logging_mod
-from ..config import override_settings
-from ..diagnostic_log import DiagnosticFormatter
+from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
+
 from ..directory_scan import scan_directory
 from ..log_file_handler import AnnouncingRotatingFileHandler
-from ..logging import LOG_FILE_FORMAT, configure_logging
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -75,14 +75,14 @@ finally:
                 )
             )
         for child in children:
-            stdout, stderr = child.communicate(timeout=30)
+            stdout, stderr = child.communicate(timeout=PROCESS_HANG_GUARD_SECONDS)
             assert child.returncode == 0, (stdout, stderr)
             assert not stderr, stderr
     finally:
         for child in children:
             if child.poll() is None:
                 child.kill()
-                child.communicate(timeout=10)
+                child.communicate(timeout=PROCESS_HANG_GUARD_SECONDS)
     records = [
         line
         for path in tmp_path.glob("shared.log*")
@@ -94,91 +94,101 @@ finally:
     assert set(records) == expected
 
 
-def _rotating_file_handlers(log_dir: Path) -> list[logging.handlers.RotatingFileHandler]:
-    root = logging.getLogger()
-    return [
-        handler
-        for handler in root.handlers
-        if isinstance(handler, logging.handlers.RotatingFileHandler) and Path(handler.baseFilename).parent == log_dir
-    ]
+def _log_directory_under(storage_root: Path) -> Path:
+    """Return where the diagnostic log directory sits beneath ``storage_root``, from its declared subpath."""
+    return storage_root / storage_location(StorageCategory.LOGS).relative_path()
+
+
+def _write_configured_log(storage_root: Path, *, max_bytes: int, backups: int, records: int) -> None:
+    """Configure under a context-local override and write after leaving that context."""
+    script = """
+import sys
+from pathlib import Path
+from cadrumo.core.config import override_settings
+from cadrumo.core.logging import configure_logging, flush_logging, get_logger, shutdown_logging
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS as HANG
+with override_settings(cadrumo_storage_root=Path(sys.argv[1]), cadrumo_log_file_max_bytes=int(sys.argv[2]),
+                       cadrumo_log_file_backup_count=int(sys.argv[3]), cadrumo_log_stderr_level='CRITICAL'):
+    configure_logging()
+assert flush_logging(timeout=HANG), 'configuration did not complete'
+logger = get_logger('cadrumo.tests.format')
+for index in range(int(sys.argv[4])):
+    logger.warning('format probe %03d %s', index, 'x' * 40)
+assert flush_logging(timeout=HANG), 'log delivery did not complete'
+shutdown_logging(timeout=2)
+"""
+    result = run_audited_process(
+        [sys.executable, "-c", script, str(storage_root), str(max_bytes), str(backups), str(records)],
+        capture_output=True,
+        text=True,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_file_handler_is_rotating_with_settings_cap_and_backups(tmp_path: Path) -> None:
-    log_dir = tmp_path / "probe-logs"
-    original_configured = _logging_mod._configured
-    try:
-        _logging_mod._configured = False
-        with override_settings(
-            cadrumo_log_dir=log_dir,
-            cadrumo_log_file_max_bytes=1024,
-            cadrumo_log_file_backup_count=3,
-        ):
-            configure_logging()
-            handlers = _rotating_file_handlers(log_dir)
-            assert len(handlers) == 1, "exactly one rotating file handler must target the log dir"
-            handler = handlers[0]
-            assert handler.maxBytes == 1024
-            assert handler.backupCount == 3
-    finally:
-        _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+    storage_root = tmp_path / "probe-root"
+    _write_configured_log(storage_root, max_bytes=1024, backups=3, records=60)
+
+    log_dir = _log_directory_under(storage_root)
+    base = log_dir / "cadrumo.log"
+    backups = [path for path in scan_directory(log_dir, pattern="cadrumo.log.*") if path.suffix[1:].isdigit()]
+    assert base.exists(), "the context-local override must direct the file beneath this storage root"
+    assert len(backups) == 3, "rollover must retain the configured number of backups"
+    assert all(path.stat().st_size <= 1024 for path in (base, *backups))
 
 
 def test_log_rolls_over_and_bounds_backups(tmp_path: Path) -> None:
-    log_dir = tmp_path / "probe-logs"
-    original_configured = _logging_mod._configured
-    try:
-        _logging_mod._configured = False
-        with override_settings(
-            cadrumo_log_dir=log_dir,
-            cadrumo_log_file_max_bytes=512,
-            cadrumo_log_file_backup_count=2,
-        ):
-            configure_logging()
-            emitter = logging.getLogger("cadrumo.tests.rotation")
-            for index in range(400):
-                emitter.warning("rotation probe record %d with padding %s", index, "x" * 40)
-            for handler in _rotating_file_handlers(log_dir):
-                handler.flush()
+    storage_root = tmp_path / "probe-root"
+    _write_configured_log(storage_root, max_bytes=512, backups=2, records=60)
 
-            base = log_dir / "cadrumo.log"
-            assert base.exists(), "the active log file must exist"
-            # Rollover produced at least one backup, and the backup count is
-            # bounded by the configured ceiling (no unbounded growth).
-            backups = [path for path in scan_directory(log_dir, pattern="cadrumo.log.*") if path.suffix[1:].isdigit()]
-            assert backups, "writing past the cap must produce at least one rotated backup"
-            assert len(backups) <= 2, "retained backups must not exceed cadrumo_log_file_backup_count"
-    finally:
-        _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+    log_dir = _log_directory_under(storage_root)
+    base = log_dir / "cadrumo.log"
+    backups = [path for path in scan_directory(log_dir, pattern="cadrumo.log.*") if path.suffix[1:].isdigit()]
+    assert base.exists(), "the active log file must exist"
+    assert len(backups) == 2, "rollover must retain the configured number of backups"
+    assert all(path.stat().st_size <= 512 for path in (base, *backups))
 
 
 def test_file_records_use_the_published_line_format(tmp_path: Path) -> None:
-    log_dir = tmp_path / "format-logs"
-    original_configured = _logging_mod._configured
-    try:
-        _logging_mod._configured = False
-        with override_settings(cadrumo_log_dir=log_dir):
-            configure_logging()
-            handlers = _rotating_file_handlers(log_dir)
-            assert len(handlers) == 1
-            formatter = handlers[0].formatter
-            assert formatter is not None
-            probe = logging.LogRecord(
-                "cadrumo.tests.format", logging.ERROR, __file__, 1, "rendered %s", ("probe",), None
-            )
-            assert formatter.format(probe) == DiagnosticFormatter(LOG_FILE_FORMAT).format(probe)
-            logging.getLogger("cadrumo.tests.format").warning("format probe")
-            handlers[0].flush()
-            lines = (log_dir / "cadrumo.log").read_text(encoding="utf-8").splitlines()
-    finally:
-        _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+    storage_root = tmp_path / "format-root"
+    _write_configured_log(storage_root, max_bytes=1024, backups=3, records=1)
+    lines = (_log_directory_under(storage_root) / "cadrumo.log").read_text(encoding="utf-8").splitlines()
     line = re.compile(
-        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[WARNING\] cadrumo\.tests\.format: format probe"
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z \[WARNING\] cadrumo\.tests\.format: format probe 000 x{40}"
         r' \| \{"process_id":\d+,"process_role":"python","thread_id":\d+,"thread_name":"MainThread"\}'
     )
     assert any(line.fullmatch(entry) for entry in lines), lines
+
+
+@pytest.mark.parametrize("entry", ("first_record", "set_level"))
+def test_context_override_reaches_implicit_configuration_after_scope_exit(tmp_path: Path, entry: str) -> None:
+    storage_root = tmp_path / "implicit-root"
+    script = """
+import logging, sys
+from pathlib import Path
+from cadrumo.core.config import override_settings
+from cadrumo.core.logging import flush_logging, get_logger, set_log_level, shutdown_logging
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS as HANG
+logger = get_logger('cadrumo.tests.context_handoff')
+with override_settings(cadrumo_storage_root=Path(sys.argv[1]), cadrumo_log_stderr_level='CRITICAL',
+                       cadrumo_log_file_level='CRITICAL'):
+    if sys.argv[2] == 'first_record':
+        logger.critical('context-first-record')
+    else:
+        set_log_level(logging.INFO, file_level=logging.DEBUG)
+assert flush_logging(timeout=HANG), 'configuration did not complete'
+if sys.argv[2] == 'set_level':
+    logger.debug('context-level-change')
+    assert flush_logging(timeout=HANG), 'level change did not reach the file'
+shutdown_logging(timeout=2)
+"""
+    result = run_audited_process(
+        [sys.executable, "-c", script, str(storage_root), entry],
+        capture_output=True,
+        text=True,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
+    )
+    assert result.returncode == 0, result.stderr
+    output = (_log_directory_under(storage_root) / "cadrumo.log").read_text(encoding="utf-8")
+    assert ("context-first-record" if entry == "first_record" else "context-level-change") in output

@@ -7,6 +7,7 @@ from typing import Literal
 
 import pytest
 
+from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
@@ -25,9 +26,8 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 
 from .evidence_test_support import pdf_file
-from .evidence_test_support import secure_objects as _secure_objects
 
-__all__ = ["_secure_objects", "pdf_file"]
+__all__ = ["pdf_file"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -64,6 +64,7 @@ def test_evidence_add_retries_and_commits_row_with_its_event(
             evidence_repository=evidence_repository,
             attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=secure_objects)),
             bucket_event_repository=event_repository,
+            document_shape_probe=probe_document_shape,
         ),
     )
     concurrent = _record(_CONCURRENT_ID)

@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..parts import split_units_by_budget
 from ..schema import (
@@ -38,9 +38,9 @@ from ..sidecar import (
 )
 from ..workbook import (
     WORKBOOK_EXTRACTOR_ID,
-    _render_sheet,
     build_outputs,
     extract_workbook,
+    render_sheet,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
@@ -49,14 +49,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
 _REPO_ROOT = REPO_ROOT
 _DISENOS = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "aeat_official" / "disenos_registro"
 
+
+def _first_design(modelo: str, suffix: str) -> Path:
+    """Return the shipped first-listed design workbook of a modelo, found on disk rather than named."""
+    files = _DISENOS / f"modelo_{modelo}" / "files"
+    matches = sorted(files.glob(f"01-{modelo}-*{suffix}"))
+    return matches[0] if matches else files / f"01-{modelo}-absent{suffix}"
+
+
 # A real modern .xlsx Modelo 303 design (openpyxl path) and a real legacy
 # .xls Modelo 123 design (xlrd path). Both ship in the corpus.
-_XLSX_WORKBOOK = (
-    _DISENOS / "modelo_303" / "files" / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-)
-_XLS_WORKBOOK = (
-    _DISENOS / "modelo_123" / "files" / "01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls"
-)
+_XLSX_WORKBOOK = _first_design("303", "-xlsx.xlsx")
+_XLS_WORKBOOK = _first_design("123", "-xls.xls")
 
 
 def test_worked_example_workbooks_exist() -> None:
@@ -98,7 +102,7 @@ def test_xlsx_extracts_field_position_table() -> None:
 
 
 def test_xls_extracts_via_xlrd() -> None:
-    """The legacy .xls path (xlrd) yields a valid, populated record.
+    """The .xls path (xlrd) yields a valid, populated record.
 
     openpyxl cannot open the binary BIFF .xls; this proves the xlrd reader
     path covers the 28 legacy designs and normalises numeric cells (xlrd
@@ -237,7 +241,7 @@ def test_workbook_and_pdf_extractors_share_one_budget_and_naming_scheme() -> Non
     split identically rather than each carrying its own drifted budget or
     naming convention.
     """
-    from .. import _pdf as pdf
+    from .. import pdf as pdf
     from .. import workbook
     from ..parts import TEXT_BUDGET_BYTES, part_stand_in_path
 
@@ -263,7 +267,7 @@ def test_render_sheet_normalises_and_drops_empty_rows() -> None:
     Pure-logic check on the renderer: a blank spacer row is dropped, and a
     short row does not render dangling separators for absent trailing cells.
     """
-    rendered = _render_sheet(
+    rendered = render_sheet(
         "S",
         [
             [1.0, "Posic.", None, None],

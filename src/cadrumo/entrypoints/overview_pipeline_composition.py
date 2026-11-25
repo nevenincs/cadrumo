@@ -11,7 +11,7 @@ from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .adapter_composition import build_calculation_action_ports
+from .adapter_composition_work_ports import build_calculation_action_ports
 from .ledger_action_composition import compose_ledger_action_ports
 
 

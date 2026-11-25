@@ -17,14 +17,13 @@ from cadrumo.application.operations.composition import OperationComposedServices
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.persistence.leases import OperationOwnerLease
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.config import override_settings
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies
@@ -70,6 +69,12 @@ class FaultAuthorizationClient(WorkerAuthorizationClient):
         self.held: set[AccessAction] = set()
 
     @override
+    async def check(self, request: WorkerAuthorityRequest) -> None:
+        # This port's guard stands in for the runtime's admission; a check holds it for no body.
+        async with self.guard(request):
+            pass
+
+    @override
     @asynccontextmanager
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         if isinstance(request, WorkerResponseScopeRequest):
@@ -77,9 +82,7 @@ class FaultAuthorizationClient(WorkerAuthorizationClient):
         action = request.request.action
         self.held.add(action)
         try:
-            yield WorkerAuthorizationLease(
-                identity=self.identity, root=self.root, parent_pid=self.parent_pid, request=request
-            )
+            yield WorkerAuthorizationLease(connections=self.connections, request=request)
         finally:
             self.held.remove(action)
 
@@ -96,14 +99,14 @@ class PausedHost(ProfileWorkerOperationHost):
         self.paused_journal = PausedJournal(storage_root=custody.root)
 
     @override
-    def _composed(self) -> OperationComposedServices:
-        if self._services is None:
+    def composed(self) -> OperationComposedServices:
+        if self.services is None:
             services = compose_operation_dependencies(
-                authority_operation=self._pinned(), execution_authority_factory=self._bind_execution
+                authority_operation=self.pinned(), execution_authority_factory=self._bind_execution
             )
             services.submission.supervisor._journal = self.paused_journal
-            self._services = services
-        return super()._composed()
+            self.services = services
+        return super().composed()
 
 
 async def _exercise_composed(tmp_path: Path) -> None:
@@ -111,7 +114,7 @@ async def _exercise_composed(tmp_path: Path) -> None:
         root, ((identity, key), _) = profiles
         route = ExitStack()
         route.enter_context(
-            override_settings(cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id))
+            override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id))
         )
         custody = ProfileWorkerCustody(identity, storage_root=root)
         session = lease(identity)
@@ -136,7 +139,7 @@ async def _exercise_composed(tmp_path: Path) -> None:
             )
             # Finish fixture startup before timing the journal cancellation
             # boundary; lazy registry composition can outlast its pause budget.
-            host._composed()
+            host.composed()
             submitting = asyncio.create_task(
                 host.submit(
                     session_id=session.session_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT, request=request
@@ -168,7 +171,7 @@ async def _exercise_composed(tmp_path: Path) -> None:
 
             assert AccessAction.SUBMIT not in client.held
             assert await host.start(operation_id, session.session_id) == operation_id
-            await asyncio.wait_for(host._composed().submission.settled(operation_id), 20)
+            await asyncio.wait_for(host.composed().submission.settled(operation_id), 20)
             settled = await OperationJournalRepository(storage_root=root).load(operation_id)
             record = ProfileRecordRepository.for_current_session(
                 identity.binding.profile_id, profile_decode_context=host.profile_decode_context()
@@ -198,9 +201,7 @@ async def exercise_lazy_close(tmp_path: Path) -> None:
     """Open the publication during submit, then close it from the owning caller."""
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles:
         root, ((identity, key), _) = profiles
-        with override_settings(
-            cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)
-        ):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root)
             session = lease(identity)
             custody.install(session, bytearray(key))

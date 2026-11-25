@@ -10,7 +10,7 @@ import pytest
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import MissingTranslationError, override_locales_root
 from ..records import TabName
-from ..review_labels import _REVIEW_LABEL_KEYS, ReviewWorkbookLabels
+from ..review_labels import REVIEW_LABEL_KEYS, ReviewWorkbookLabels
 from ..review_workbook import build_review_workbook
 from .review_fixture import review_snapshot
 
@@ -68,7 +68,7 @@ def test_unknown_semantic_label_is_not_a_dynamic_catalogue_route() -> None:
 def test_all_required_review_labels_are_authored_in_packaged_catalogue(locale: OutputLanguage) -> None:
     """The real installed catalogue must resolve every consumer-declared label."""
     labels = ReviewWorkbookLabels(locale)
-    for semantic_key, catalogue_key in _REVIEW_LABEL_KEYS.items():
+    for semantic_key, catalogue_key in REVIEW_LABEL_KEYS.items():
         rendered = labels(semantic_key)
         assert rendered.strip()
         assert rendered != catalogue_key

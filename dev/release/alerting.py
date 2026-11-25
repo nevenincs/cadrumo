@@ -45,8 +45,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import UTF_8
+from dev.paths import UTF_8
+from dev.temporary_output import prepare_temp_root
 
 _UTF_8: Final[str] = UTF_8
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0
@@ -217,12 +217,7 @@ def post_webhook(url: str, alert: ReleaseAlert) -> None:
     """POST the alert to an operator-nominated webhook."""
     body = json.dumps({"text": alert_payload(alert), "workflow": alert.workflow, "run_url": alert.run_url})
     endpoint = urllib.parse.urlsplit(url)
-    if (
-        endpoint.scheme != "https"
-        or endpoint.hostname is None
-        or (endpoint.username is not None and endpoint.username)
-        or (endpoint.password is not None and endpoint.password)
-    ):
+    if endpoint.scheme != "https" or endpoint.hostname is None or bool(endpoint.username) or bool(endpoint.password):
         raise AlertError("alert webhook URL must be an HTTPS endpoint without embedded credentials")
     try:
         port = endpoint.port
@@ -269,7 +264,7 @@ def emit_alert(
 
     gh = _resolve_gh(gh_executable)
     if (existing := find_open_alert(alert, repository=repository, gh_executable=gh)) is not None:
-        with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as scratch:
+        with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as scratch:
             body_path = Path(scratch) / "alert-body.md"
             body_path.write_text(alert_payload(alert), encoding=_UTF_8, newline="\n")
             _run_gh(gh, ["issue", "comment", existing, "--repo", repository, "--body-file", str(body_path)])
@@ -281,7 +276,7 @@ def emit_alert(
     # unbounded, and a command line is neither: Windows caps one at ~8k
     # characters, and embedded newlines are quoted differently by every shell
     # in the chain. `--body-file` sidesteps both.
-    with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as scratch:
         body_path = Path(scratch) / "alert-body.md"
         body_path.write_text(alert_payload(alert), encoding=_UTF_8, newline="\n")
         base = ["issue", "create", "--repo", repository, "--title", alert.title, "--body-file", str(body_path)]

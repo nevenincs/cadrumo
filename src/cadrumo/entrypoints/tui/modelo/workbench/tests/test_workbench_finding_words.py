@@ -30,31 +30,23 @@ from textual.color import Color
 from textual.widget import Widget
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, FindingFactKind
-from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
+from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, NO_PERIODS_FACT, FindingFactKind
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormIssue,
     ModeloFormOrigin,
+    address_key,
+)
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_models import (
     ModeloFormRepeatingBlock,
     ModeloFormSection,
     ModeloWorkForm,
-    address_key,
 )
-from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
-)
+from ......application.modelo.work_form_next_step import missing_count
 from ......core.config import override_settings
-from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import tr
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
-from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -62,17 +54,17 @@ from ......domain.modelos.verification_report import (
 )
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
+from ....tests.settling import settle
 from ..casilla_list_models import CasillaListHeading
-from ..header import missing_count
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel, IssueLine
+from ..issue_scale import IssueLine
 from ..issues import WorkbenchIssuesScreen
 from ..navigator import NavigatorState, navigator_rows, presented_form
 from ..page_items import WorkbenchPage, page_items, workbench_pages
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK, DONE_MARK, MISSING_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import registry_form, served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -81,9 +73,11 @@ _FINDING_CLASS: Final[str] = "ModeloVerificationFinding"
 _LEGAL_REF: Final[str] = "ley-37-1992:art-99"
 
 _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]] = {
-    FindingFactKind.PERIOD: ("4T", "0A", "01", "2P", "EXT-3T", "AD-HOC"),
+    FindingFactKind.PERIOD: ("4T", "0A", "01", "2P", "EXT-3T", "EVENT-3"),
+    FindingFactKind.PERIODS: ("1T|2T", NO_PERIODS_FACT, "EXT-3T|0A|EVENT-3"),
     FindingFactKind.DATE: ("2025-03-01", "unknown"),
     FindingFactKind.BOX: ("op.codigo-pais", "0435", "m100.casilla-rnt"),
+    FindingFactKind.BOXES: ("0435", "0435,m100.casilla-rnt", "op.codigo-pais,0435"),
     FindingFactKind.BOX_NUMBER: ("76-77", "12"),
     FindingFactKind.MODELO: ("303", "absent"),
     FindingFactKind.YEAR: (2025,),
@@ -91,13 +85,16 @@ _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]
     FindingFactKind.NUMBER: (Decimal("0.75"),),
     FindingFactKind.COUNT: (3,),
     FindingFactKind.OFFICIAL_CODE: ("FR",),
+    FindingFactKind.DOCUMENT_NUMBER: ("A-2025/0017",),
     FindingFactKind.TECHNICAL: ("modelo-303.page_1.sujeto-pasivo", "ab12" * 16),
 }
 """Values of the shapes the producers store, several per kind so every way of writing one is rendered."""
+_INVOICE_ID: Final[str] = "ab12" * 16
+"""An invoice id is a content digest, so the finding that names one to open must carry that shape."""
 _VARIANTS: Final[int] = max(len(values) for values in _REPRESENTATIVE.values())
 
 _TOKENS: Final[Mapping[str, re.Pattern[str]]] = {
-    "period code": re.compile(r"(?<![\w.-])(?:[1-4][TP]|0A|EXT-[1-4]T|AD-HOC|EVENT-\d+)(?![\w-])"),
+    "period code": re.compile(r"(?<![\w.-])(?:[1-4][TP]|0A|EXT-[1-4]T|EVENT-\d+)(?![\w-])"),
     "ISO date": re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
     "dotted identifier": re.compile(r"\b[a-z][a-z0-9_-]*\.[a-z0-9_-]+"),
     "snake-case identifier": re.compile(r"\b[a-z]+_[a-z0-9_]+\b"),
@@ -159,11 +156,37 @@ def _returned_dict_keys(module: ast.Module, name: str) -> set[str]:
     raise _UnreadableFactsError(f"no function {name} returning a dict literal")
 
 
+def _builder_keys(module: ast.Module, name: str) -> set[str]:
+    """The keys of the dict a module function of that name builds in one local and returns."""
+    for node in ast.walk(module):
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            returned = [
+                inner.value.id
+                for inner in ast.walk(node)
+                if isinstance(inner, ast.Return) and isinstance(inner.value, ast.Name)
+            ]
+            if len(returned) != 1:
+                raise _UnreadableFactsError(f"{name} does not return one local dict")
+            return _local_keys(module, node, returned[0])
+    raise _UnreadableFactsError(f"no function {name} building a dict")
+
+
 def _local_keys(module: ast.Module, function: ast.AST, name: str) -> set[str]:
     """Every fact key bound to the local ``name``: its dict literal or builder, and each key assigned to it."""
     keys: set[str] = set()
     bound = False
     for node in ast.walk(function):
+        if (
+            isinstance(node, ast.AugAssign)
+            and isinstance(node.op, ast.BitOr)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == name
+        ):
+            literal, splats = _dict_keys(node.value)
+            if splats:
+                raise _UnreadableFactsError(f"{name} splats {splats}")
+            keys |= literal
+            bound = True
         if isinstance(node, ast.Assign | ast.AnnAssign):
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
             value = node.value
@@ -208,9 +231,13 @@ def _call_site_keys(module: ast.Module, function_name: str) -> set[str]:
 def _fact_names(module: ast.Module, call: ast.Call, facts: ast.expr) -> set[str]:
     if isinstance(facts, ast.Name):
         return _local_keys(module, _enclosing(module, call), facts.id)
+    if isinstance(facts, ast.Call) and isinstance(facts.func, ast.Name):
+        return _builder_keys(module, facts.func.id)
     keys, splats = _dict_keys(facts)
-    for _ in splats:
-        keys |= _call_site_keys(module, _enclosing(module, call).name)
+    function = _enclosing(module, call)
+    parameters = {argument.arg for argument in [*function.args.args, *function.args.kwonlyargs]}
+    for splat in splats:
+        keys |= _call_site_keys(module, function.name) if splat in parameters else _local_keys(module, function, splat)
     return keys
 
 
@@ -222,12 +249,40 @@ def _enum_member[EnumT: (ModeloVerificationFindingKind, ModeloVerificationFindin
     return default
 
 
-def _locale_keys(node: ast.expr | None, locator: str) -> tuple[str, ...]:
-    """Read every literal branch; refuse a key that cannot be inspected statically."""
+def _constant_locale_key(module: ast.Module, name: str) -> str | None:
+    """The string literal a module-level constant of that name is bound to, if exactly one is."""
+    values = {
+        statement.value.value
+        for statement in module.body
+        if isinstance(statement, ast.Assign | ast.AnnAssign)
+        and isinstance(statement.value, ast.Constant)
+        and isinstance(statement.value.value, str)
+        and any(
+            isinstance(target, ast.Name) and target.id == name
+            for target in (statement.targets if isinstance(statement, ast.Assign) else [statement.target])
+        )
+    }
+    return next(iter(values)) if len(values) == 1 else None
+
+
+def _locale_keys(node: ast.expr | None, locator: str, module: ast.Module | None = None) -> tuple[str, ...]:
+    """Read every literal branch; refuse a key that cannot be inspected statically.
+
+    With the producing ``module``, a module-level string constant is read as its literal.
+    """
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return (node.value,)
     if isinstance(node, ast.IfExp):
-        return tuple(dict.fromkeys((*_locale_keys(node.body, locator), *_locale_keys(node.orelse, locator))))
+        return tuple(
+            dict.fromkeys((*_locale_keys(node.body, locator, module), *_locale_keys(node.orelse, locator, module)))
+        )
+    if (
+        module is not None
+        and isinstance(node, ast.Name)
+        and (constant := _constant_locale_key(module, node.id)) is not None
+        and constant != ""
+    ):
+        return (constant,)
     pytest.fail(f"{locator}: a finding built without a literal catalogue key")
 
 
@@ -242,7 +297,7 @@ def _producers() -> Iterator[_Producer]:
                 continue
             keywords = {keyword.arg: keyword.value for keyword in node.keywords}
             locator = f"{path.relative_to(_SOURCE_ROOT).as_posix()}:{node.lineno}"
-            locale_keys = _locale_keys(keywords.get("message_locale_key"), locator)
+            locale_keys = _locale_keys(keywords.get("message_locale_key"), locator, module)
             facts_node = keywords.get("message_facts")
             try:
                 facts = set() if facts_node is None else _fact_names(module, node, facts_node)
@@ -270,6 +325,8 @@ def _finding(producer: _Producer, variant: int) -> ModeloVerificationFinding:
         for name in sorted(producer.facts)
         if (kind := FINDING_FACT_KINDS.get(name)) is not None
     }
+    if "invoice_id" in facts:
+        facts["invoice_id"] = _INVOICE_ID
     return ModeloVerificationFinding(
         kind=producer.kind,
         severity=producer.severity,
@@ -387,12 +444,12 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
     with override_settings(cadrumo_output_language="en"):
         english = {line.level: line.message for line in issue_lines(form)}
 
-    assert "periodo 4.º trimestre" in spanish[IssueLevel.INFO]
-    assert "01/03/2025" in spanish[IssueLevel.INFO]
-    assert "(1.234,50 EUR)" in spanish[IssueLevel.CHECK]
-    assert "difieren en 234,50 EUR" in spanish[IssueLevel.CHECK]
-    assert "period 4th quarter" in english[IssueLevel.INFO]
-    assert "(1,234.50 EUR)" in english[IssueLevel.CHECK]
+    assert "periodo 4.º trimestre" in spanish[ModeloFormAttention.INFO]
+    assert "1 mar 2025" in spanish[ModeloFormAttention.INFO]
+    assert "(1.234,50 EUR)" in spanish[ModeloFormAttention.CHECK]
+    assert "difieren en 234,50 EUR" in spanish[ModeloFormAttention.CHECK]
+    assert "period 4th quarter" in english[ModeloFormAttention.INFO]
+    assert "(1,234.50 EUR)" in english[ModeloFormAttention.CHECK]
 
 
 def test_a_missing_value_already_listed_among_the_missing_boxes_is_not_listed_twice() -> None:
@@ -414,40 +471,12 @@ def test_a_missing_value_already_listed_among_the_missing_boxes_is_not_listed_tw
 
     assert ModeloFormIssue(finding=listed).attention is ModeloFormAttention.MISSING
     assert [(line.level, line.box, line.message) for line in lines] == [
-        (IssueLevel.MISSING, "06", "Required box [06] is empty.")
+        (ModeloFormAttention.MISSING, "06", "Required box [06] is empty.")
     ]
 
 
 def _form_349(operation: PinnedAuthorityOperation, findings: tuple[ModeloVerificationFinding, ...]) -> ModeloWorkForm:
-    modelo, year, code = "349", 2026, "1T"
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000349",
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="e" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=findings,
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
-    )
+    return registry_form(operation, modelo="349", year=2026, code="1T", findings=findings)
 
 
 def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_leads_to_the_table(
@@ -474,7 +503,7 @@ def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_lea
         "EU VAT number",
         "Transaction code",
     ]
-    assert {line.level for line in lines} == {IssueLevel.MISSING}
+    assert {line.level for line in lines} == {ModeloFormAttention.MISSING}
     assert {line.message for line in lines} == {"This table has no records yet, and every record needs this value."}
     assert all(line.in_records and line.box == "·" for line in lines)
     assert [line.key for line in lines] == [
@@ -577,12 +606,11 @@ async def test_every_blocking_mark_in_the_findings_list_is_drawn_in_the_error_co
         update={"issues": (ModeloFormIssue(finding=blocking), ModeloFormIssue(finding=warning))}
     )
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(100, 40)) as pilot:
             app.theme = theme
-            for _ in range(4):
-                await pilot.pause()
+            await settle(pilot)
             error = Color.parse(app.theme_variables["error"])
             title = _glyph_colours(screen.query_one("#issues-title", Static), BLOCKS_MARK.glyph)
             heading = _glyph_colours(screen.query_one("#issues-list", OptionList), BLOCKS_MARK.glyph)
@@ -614,7 +642,7 @@ def test_reconciliation_wire_findings_reach_tui_issue_lines(locale):
         lines = issue_lines(form)
     matched = [line for line in lines if "test-reconciliation-evidence" in line.technical]
     assert len(matched) == 3
-    assert all(line.level is IssueLevel.CHECK for line in matched)
+    assert all(line.level is ModeloFormAttention.CHECK for line in matched)
     assert all("application.modelo" not in line.message and "%{" not in line.message for line in matched)
     by_key = {
         finding.message_locale_key: next(line for line in matched if finding.message_locale_key in line.technical)

@@ -25,9 +25,11 @@ import pytest
 
 from ....core.hashing import content_hash_hex
 from ....domain.iva.schema import IvaCategory
+from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction
 from ..actions_common import command_matches_current
-from ..actions_manual import _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, _source_sha256, _transaction_from_command
+from ..actions_manual import SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, source_sha256, transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -96,7 +98,7 @@ def _keyed_command(**overrides: object) -> ManualLedgerTransactionCommand:
 
 def test_a_keyless_row_without_an_asset_link_keeps_its_earlier_identity() -> None:
     """Hash, provider id and transaction id all equal what the earlier builder produced."""
-    transaction = _transaction_from_command(_keyless_command(), occurred_at=_OCCURRED_AT)
+    transaction = transaction_from_command(_keyless_command(), occurred_at=_OCCURRED_AT)
 
     assert transaction.raw.provenance.source_sha256 == _PINNED_KEYLESS_SOURCE_SHA256
     assert transaction.raw.provider_transaction_id == (
@@ -107,7 +109,7 @@ def test_a_keyless_row_without_an_asset_link_keeps_its_earlier_identity() -> Non
 
 def test_a_keyed_row_without_an_asset_link_keeps_its_earlier_provenance_hash() -> None:
     """A keyed row's id is clock-free, but the hash on its provenance is still identity."""
-    transaction = _transaction_from_command(_keyed_command(), occurred_at=_OCCURRED_AT)
+    transaction = transaction_from_command(_keyed_command(), occurred_at=_OCCURRED_AT)
 
     assert transaction.raw.provenance.source_sha256 == _PINNED_KEYED_SOURCE_SHA256
     assert transaction.raw.provider_transaction_id == f"manual:{_BUCKET_ID}:pin-key-0001"
@@ -126,13 +128,13 @@ def test_the_pins_would_catch_an_absent_field_folded_in_as_null() -> None:
 
     assert command.investment_asset_id is None
     assert folding_every_field != _PINNED_KEYLESS_SOURCE_SHA256
-    assert _source_sha256(command, occurred_at=_OCCURRED_AT) == _PINNED_KEYLESS_SOURCE_SHA256
+    assert source_sha256(command, occurred_at=_OCCURRED_AT) == _PINNED_KEYLESS_SOURCE_SHA256
 
 
 def test_a_present_asset_link_distinguishes_the_hash_and_the_keyless_identity() -> None:
     """Omission applies only to absence: a linked asset is content, and so is which asset."""
-    first = _transaction_from_command(_keyless_command(investment_asset_id="bi-0001"), occurred_at=_OCCURRED_AT)
-    second = _transaction_from_command(_keyless_command(investment_asset_id="bi-0002"), occurred_at=_OCCURRED_AT)
+    first = transaction_from_command(_keyless_command(investment_asset_id="bi-0001"), occurred_at=_OCCURRED_AT)
+    second = transaction_from_command(_keyless_command(investment_asset_id="bi-0002"), occurred_at=_OCCURRED_AT)
 
     assert first.raw.provenance.source_sha256 != _PINNED_KEYLESS_SOURCE_SHA256
     assert first.transaction_id != _PINNED_KEYLESS_TRANSACTION_ID
@@ -143,7 +145,7 @@ def test_a_present_asset_link_distinguishes_the_hash_and_the_keyless_identity() 
 
 def test_a_present_asset_link_changes_a_keyed_rows_provenance_hash_but_not_its_key_identity() -> None:
     """The key names the logical add; the hash still records what the add carried."""
-    linked = _transaction_from_command(_keyed_command(investment_asset_id="bi-0001"), occurred_at=_OCCURRED_AT)
+    linked = transaction_from_command(_keyed_command(investment_asset_id="bi-0001"), occurred_at=_OCCURRED_AT)
 
     assert linked.raw.provenance.source_sha256 != _PINNED_KEYED_SOURCE_SHA256
     assert linked.transaction_id == _PINNED_KEYED_TRANSACTION_ID
@@ -151,7 +153,7 @@ def test_a_present_asset_link_changes_a_keyed_rows_provenance_hash_but_not_its_k
 
 def test_a_keyed_retry_that_only_adds_an_asset_link_is_not_a_no_op() -> None:
     """The idempotency match still sees the asset link, so a same-key retry carrying it conflicts."""
-    stored = _transaction_from_command(_keyed_command(), occurred_at=_OCCURRED_AT)
+    stored = transaction_from_command(_keyed_command(), occurred_at=_OCCURRED_AT)
 
     assert command_matches_current(_keyed_command(), stored)
     assert not command_matches_current(_keyed_command(investment_asset_id="bi-0001"), stored)
@@ -161,7 +163,16 @@ def test_every_omitted_field_is_an_optional_command_field_defaulting_to_none() -
     """Omitting a field while ``None`` is lossless only when ``None`` is its default absence."""
     fields = ManualLedgerTransactionCommand.model_fields
 
-    assert set(fields) >= _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, sorted(_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT)
-    for name in _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT:
+    assert set(fields) >= SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, sorted(SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT)
+    for name in SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT:
         assert not fields[name].is_required(), name
         assert fields[name].default is None, name
+
+
+def test_a_stated_vehicle_use_reaches_the_row_and_its_identity() -> None:
+    stated = transaction_from_command(
+        _keyless_command(iva_vehicle_use=IvaVehicleUse.SURVEILLANCE), occurred_at=_OCCURRED_AT
+    )
+    assert stated.iva_vehicle_use is IvaVehicleUse.SURVEILLANCE
+    assert stated.raw.provenance.source_sha256 != _PINNED_KEYLESS_SOURCE_SHA256
+    assert Transaction.model_validate_json(stated.model_dump_json()).iva_vehicle_use is IvaVehicleUse.SURVEILLANCE

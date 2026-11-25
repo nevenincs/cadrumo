@@ -54,7 +54,6 @@ from ..entity_type import resolve_entity_vocabulary
 from ..eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..foreign_asset_obligation_catalogue import resolve_foreign_asset_obligation_catalogue
 from ..governed_fact_scope import GovernedFactSource, validating_governed_facts
-from ..inventory_anexo_d_applicability import resolve_inventory_anexo_d_filing_year
 from ..invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ..irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ..irpf_income_categories import resolve_irpf_income_category_catalogue
@@ -67,7 +66,7 @@ from ..iva_legal_vocabulary import resolve_iva_art69_dos_service_catalogue, reso
 from ..iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ..iva_rate_role_catalogue import resolve_iva_rate_role_catalogue
 from ..iva_regime_vocabulary import resolve_iva_regime_catalogue
-from ..ledger_oss_bindings import LedgerOssProvider, OssIossLedgerObservation
+from ..ledger_oss_bindings import OssIossLedgerObservation
 from ..lorca_reduction import resolve_lorca_reduction
 from ..m303_schema_vocabulary import resolve_m303_regime_composition_catalogue, resolve_m303_tax_territory_catalogue
 from ..m347_threshold import resolve_m347_threshold_buckets
@@ -83,20 +82,23 @@ from ..refund_eligibility import resolve_refund_eligibility_policy
 from ..renta_codes_catalogue import resolve_fiscal_residency_catalogue, ue_eea_country_codes
 from ..renta_expense_policy import renta_expense_policy_declarations
 from ..rental_reduction import resolve_rental_reduction_art232_tier_catalogue
-from ..retenciones_bindings import _registry_schemes_for_modelo
+from ..retencion_clave_catalogue import resolve_retencion_clave
+from ..retenciones_bindings import registry_schemes_for_modelo
 from ..setup_profile_bindings import mapping_fact_entries
 from ..situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
 from ..situacion_familiar_m145_catalogue import resolve_situacion_familiar_m145_catalogue
 from ..tax_id_format import runtime_tax_id_format, tax_id_format_value
 from ..third_party_declaration_roles import resolve_third_party_declaration_role_catalogue
 from ..travel_agency_mediation import resolve_travel_agency_mediation_catalogue
-from ..withholding_bindings import _withholding_role_declarations, resolve_retencion_clave
+from ..withholding_bindings import withholding_role_declarations
+from .authored_editions import filing_year_envelope
 from .fact_scope import outside_governed_fact_validation
 from .m347_fixture import resolve_m347_counterparty_annual_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EFFECTIVE = date(2025, 3, 1)
+_YEAR = filing_year_envelope().horizon
+_EFFECTIVE = date(_YEAR, 3, 1)
 
 _CATALOGUES: tuple[Callable[..., object], ...] = (
     resolve_ccaa_catalogue,
@@ -163,8 +165,20 @@ def test_the_same_catalogue_resolves_from_an_explicit_authority(resolve: Callabl
         assert resolve(effective_date=_EFFECTIVE, authority=operation) is not None
 
 
-_FILING_YEAR_END = date(2025, 12, 31)
-_LORCA_EFFECTIVE = date(2024, 12, 31)
+_FILING_YEAR_END = date(_YEAR, 12, 31)
+
+
+def _newest_lorca_window_end() -> date:
+    """End of the newest dated variant of the Lorca reduction fact, which stopped being authored for later years."""
+    with bundled_indexed_authority().operation() as operation:
+        variants = operation.governed_fact("liva-orden-lorca-reduction").variants
+    ends = [variant.valid_to for variant in variants if variant.valid_to is not None]
+    assert ends, "the Lorca reduction fact must declare closed annual variants"
+    return max(ends)
+
+
+_LORCA_EFFECTIVE = _newest_lorca_window_end()
+_CHILD_BIRTH = date(filing_year_envelope().floor, 4, 1)
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,7 +204,7 @@ def _first_slice_routing(authority: GovernedFactSource | None) -> object:
 
 
 _DESCENDANT_ROW_FACTS = {
-    "renta_family.descendiente.0.birth_date": "2018-04-01",
+    "renta_family.descendiente.0.birth_date": _CHILD_BIRTH.isoformat(),
     "renta_family.descendiente.0.relacion": "descendiente",
 }
 _OSS_OBSERVATION_VALIDATOR = OssIossLedgerObservation.__pydantic_decorators__.model_validators[
@@ -207,7 +221,7 @@ def _ledger_oss_observation_validator(authority: GovernedFactSource | None) -> o
     del authority
     observation = OssIossLedgerObservation.model_construct(
         ledger_id="oss-1",
-        transaction_date=date(2026, 2, 15),
+        transaction_date=date(_YEAR, 2, 15),
         regime=OssIossRegime("external_scheme"),
         destination_member_state="de",
         rate_kind="reduced",
@@ -217,12 +231,6 @@ def _ledger_oss_observation_validator(authority: GovernedFactSource | None) -> o
         iva_amount=Decimal(10),
     )
     return _OSS_OBSERVATION_VALIDATOR(observation)
-
-
-def _ledger_oss_transaction_kinds_validator(authority: GovernedFactSource | None) -> object:
-    """Run the binding selector's transaction-kind validator itself, for the reason given above."""
-    del authority
-    return LedgerOssProvider._validate_registry_transaction_kinds((TransactionKind("external_scheme_services"),))
 
 
 _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object]], ...] = (
@@ -240,11 +248,11 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ),
     ("pending_orden_vocabulary", lambda authority: pending_orden_vocabulary(authority=authority)),
     ("modelo_rendering", lambda authority: modelo_rendering_declarations(_EFFECTIVE, authority=authority)),
-    ("renta_expense_policy", lambda authority: renta_expense_policy_declarations(2024, authority=authority)),
+    ("renta_expense_policy", lambda authority: renta_expense_policy_declarations(_YEAR, authority=authority)),
     (
         "retenciones_scheme_lookup",
-        lambda authority: _registry_schemes_for_modelo(
-            _EmptyRetencionesAggregation("111", Period.from_year_and_code(2025, "1T")), authority=authority
+        lambda authority: registry_schemes_for_modelo(
+            _EmptyRetencionesAggregation("111", Period.from_year_and_code(_YEAR, "1T")), authority=authority
         ),
     ),
     (
@@ -252,7 +260,7 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
         lambda authority: mapping_fact_entries("legal-reference-schema-vocabulary", authority=authority),
     ),
     ("retencion_clave", lambda authority: resolve_retencion_clave("A", _EFFECTIVE, authority=authority)),
-    ("withholding_role", lambda authority: _withholding_role_declarations(_EFFECTIVE, authority=authority)),
+    ("withholding_role", lambda authority: withholding_role_declarations(_EFFECTIVE, authority=authority)),
     (
         "known_bad_citation",
         lambda authority: find_known_bad(
@@ -270,7 +278,10 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
         ),
     ),
     ("retention_floor", lambda authority: retention_floor_years(effective_date=_EFFECTIVE, authority=authority)),
-    ("m130_retenciones_route", lambda authority: resolve_m130_retenciones_route(authority=authority)),
+    (
+        "m130_retenciones_route",
+        lambda authority: resolve_m130_retenciones_route(effective_date=_EFFECTIVE, authority=authority),
+    ),
     ("first_slice_expense_routing", _first_slice_routing),
     ("irpf_category_taxonomy", lambda authority: ledger_irpf_category_catalogue(authority=authority)),
     (
@@ -303,11 +314,11 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ),
     (
         "insurance_declarations",
-        lambda authority: count_seguro_enfermedad_insured((), filing_year=2025, authority=authority),
+        lambda authority: count_seguro_enfermedad_insured((), filing_year=_YEAR, authority=authority),
     ),
     (
         "insurance_fact_projection",
-        lambda authority: seguro_enfermedad_insured_counts_from_facts({}, filing_year=2025, authority=authority),
+        lambda authority: seguro_enfermedad_insured_counts_from_facts({}, filing_year=_YEAR, authority=authority),
     ),
     (
         "descendant_stored_relacion",
@@ -315,23 +326,21 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ),
     (
         "descendant_disability_bands",
-        lambda authority: parse_descendiente_flag("NACIMIENTO=2018-04-01,DISCAPACIDAD=0", authority=authority),
+        lambda authority: parse_descendiente_flag(
+            f"NACIMIENTO={_CHILD_BIRTH.isoformat()},DISCAPACIDAD=0", authority=authority
+        ),
     ),
     (
         "maternity_formula_spec",
-        lambda authority: compute_deduccion_maternidad_0611([("hijo-1", 3)], filing_year=2025, authority=authority),
+        lambda authority: compute_deduccion_maternidad_0611([("hijo-1", 3)], filing_year=_YEAR, authority=authority),
     ),
     (
         "perceptor_clave_scope",
         lambda authority: resolve_perceptor_clave_scope(
-            period=Period.from_year_and_code(2025, "0A"), authority=authority
+            period=Period.from_year_and_code(_YEAR, "0A"), authority=authority
         ),
     ),
     ("development_mock_software_identity", lambda authority: development_mock_software_identity(authority=authority)),
-    (
-        "inventory_anexo_d_filing_year",
-        lambda authority: resolve_inventory_anexo_d_filing_year(filing_year=2025, authority=authority),
-    ),
     (
         "invoice_legal_mention_catalogue",
         lambda authority: invoice_legal_mention_declarations(_EFFECTIVE, authority=authority),
@@ -341,7 +350,6 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ("iva_rate_slot_catalogue", lambda authority: resolve_iva_rate_token("RATE_2", _EFFECTIVE)),
     ("detail_row_catalogue", lambda authority: resolve_detail_row_owning_modelos(effective_date=_EFFECTIVE)),
     ("ledger_oss_observation", _ledger_oss_observation_validator),
-    ("ledger_oss_transaction_kinds", _ledger_oss_transaction_kinds_validator),
 )
 
 

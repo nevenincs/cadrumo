@@ -32,11 +32,13 @@ from ....application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,
     settle_sector_definitive,
 )
+from ....application.prorrata_register.seed import prior_definitiva_source_coordinates
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
@@ -44,9 +46,8 @@ from ....domain.prorrata_register.register import (
 )
 from ..storage.errors import StorageValidationError
 from ..storage.secure_object_namespaces import CALCULATION_OBSERVATIONS_NAMESPACE, PROFILE_PRORRATA_REGISTER_NAMESPACE
-from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ._secure_model_document import (
+from .secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,
 )
@@ -181,16 +182,20 @@ class ProrrataRegisterRepository:
         expected_revision_id: str,
         source_snapshot: ProrrataPriorSettlementSourceSnapshot,
     ) -> None:
-        """Fence both possible unmembered prior 303 rows and the register in one transaction."""
+        """Fence every possible unmembered prior definitive source row and the register in one transaction."""
         if source_snapshot.backend_identity is not self._objects.engine:
             raise StorageValidationError("prorrata seed source and target must share the same profile store")
+        coordinates = prior_definitiva_source_coordinates()
         expected = {
-            (CALCULATION_OBSERVATIONS_NAMESPACE.namespace, observation_key_for_token("303", ejercicio - 1, token))
-            for token in ("4T", "12")
+            (
+                CALCULATION_OBSERVATIONS_NAMESPACE.namespace,
+                observation_key_for_token(modelo, ejercicio - 1, token),
+            )
+            for modelo, token in coordinates
         }
         actual = {(revision.namespace, revision.object_key) for revision in source_snapshot.revisions}
-        if len(source_snapshot.revisions) != 2 or actual != expected:
-            raise StorageValidationError("prorrata seed requires both prior-year 303 source revisions")
+        if len(source_snapshot.revisions) != len(coordinates) or actual != expected:
+            raise StorageValidationError("prorrata seed requires every prior-year definitive source revision")
         assertions = tuple(
             SecureObjectRevisionAssertion(
                 namespace=revision.namespace,
@@ -243,6 +248,7 @@ class ProrrataRegisterRepository:
                 entries=(*retained, entry),
                 sector_definitions=current.sector_definitions,
                 activity_rows=current.activity_rows,
+                gross_declarations=current.gross_declarations,
             )
 
         return self._storage.mutate(_apply)
@@ -338,7 +344,30 @@ class ProrrataRegisterRepository:
                 entries=current.entries,
                 sector_definitions=(*retained, definition),
                 activity_rows=current.activity_rows,
+                gross_declarations=current.gross_declarations,
             )
+
+        return self._storage.mutate(_apply)
+
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        """Atomically replace the operator gross declarations derived from the latest register.
+
+        ``rewrite`` runs against every compare-and-swap candidate, so a duplicate,
+        absence or sector check it makes always sees the register it commits
+        over; a concurrent writer makes it re-read and re-apply. Only the gross
+        declarations change: entries, sector definitions and activity rows are
+        carried from the same candidate.
+
+        Raises:
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
+        """
+
+        def _apply(current: ProrrataRegister) -> ProrrataRegister:
+            return current.with_gross_declarations(rewrite(current))
 
         return self._storage.mutate(_apply)
 
@@ -358,4 +387,5 @@ def _replace_entry(current: ProrrataRegister, entry: ProrrataRegisterEntry) -> P
         entries=(*retained, entry),
         sector_definitions=current.sector_definitions,
         activity_rows=current.activity_rows,
+        gross_declarations=current.gross_declarations,
     )

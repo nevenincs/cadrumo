@@ -7,10 +7,10 @@ DIVIDED, and these assertions pin the division line so a later change cannot
 drift it in either direction.
 
 Both directions matter and they fail differently. If a core write migrates into
-the subpackage, an optional install starts owning ledger state. If the core
+the subpackage, the model-facing adapters start owning ledger state. If the core
 starts reaching for inference unconditionally, the non-ledger diagnostics
-consumer becomes conditional on an optional package. Neither shows up as a test
-failure anywhere else, which is why these are structural.
+consumer becomes coupled to the model-facing adapters. Neither shows up as a
+test failure anywhere else, which is why these are structural.
 """
 
 from __future__ import annotations
@@ -42,9 +42,9 @@ def test_no_bucket_event_or_classification_write_happens_inside_the_subpackage()
     """The division line: classification writes and event history stay core-side.
 
     The subpackage asks the model; it does not record the answer. A write that
-    migrated here would put ledger state and the operator's audit trail behind
-    an optional install, and would emit lifecycle events from a component the
-    core cannot assume is present.
+    migrated here would put ledger state and the operator's audit trail inside
+    the model-facing adapters, and would emit lifecycle events from a component
+    the core must not depend on.
 
     Mutation that must trip this: call ``emit_bucket_event`` or
     ``set_classification`` from any module under the subpackage.
@@ -97,7 +97,7 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
                 if alias.name.startswith("cadrumo.adapters.outbound.llm")
             )
     assert reaches == [], (
-        "core run-health diagnostics must not import the optional inference subpackage; "
+        "core run-health diagnostics must not import the inference subpackage; "
         f"it reads run record from the core-side store instead. Reaches: {reaches}"
     )
 
@@ -148,7 +148,7 @@ def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> Non
     It consumes the interchange DTOs from the application-owned port module and
     the apply and reject functions from its own package. It must NOT import the
     inference package at all: a reader, a client, a store or even a DTO taken
-    from there would put review-loop behaviour behind an optional install.
+    from there would couple review-loop behaviour to the model-facing adapters.
 
     Asserted on what the module imports rather than on what it happens to call,
     because the dependency is acquired at import time and that is when it would

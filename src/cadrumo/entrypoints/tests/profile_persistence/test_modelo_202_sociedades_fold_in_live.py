@@ -65,15 +65,16 @@ Coverage map for the sociedades fold surface
 * **M200 <- M202 pagos fraccionados anuales (casilla DP200014B:00611)** —
   proven LIVE here (see
   :func:`test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live`).
-  The fold reaches casilla ``DP200014B:00611`` ("cuota diferencial") via the
+  Each M202 instalment reaches its own computed casilla, the primer, segundo and
+  tercer pago fraccionado ``DP200014B:00601``, ``00603`` and ``00605``, through one
+  relation per instalment and modalidad
+  (``modelo-200-pago-fraccionado-<ordinal>-40-2`` reads c03,
+  ``...-40-3`` reads c34) resolved by the enrolled
+  :class:`RelationPrefillSourceResolver`. ``00611`` ("cuota diferencial") is the
   formula ``modelo-200-cuota-diferencial``:
-  ``00611 = subtract(DP200014B:00599, relation["modelo-200-pagos-fraccionados-anuales"])``.
-  The relation resolves the sum of the three M202 c34 instalments (1P + 2P + 3P)
-  through the enrolled :class:`RelationPrefillSourceResolver`; ``00611`` is a
-  *computed* casilla whose formula consumes the resolved relation value directly
-  — not via a *bound* casilla. With all manual M200 inputs at zero (``00599 =
-  0``), the formula produces ``00611 = 0 - sum(M202 1P+2P+3P c34)`` and the
-  three DISTINCT seeded values make the subtraction unmistakable.
+  ``00611 = 00599 - (00601 + 00603 + 00605)``. With all manual M200 inputs at zero
+  (``00599 = 0``), it produces ``00611 = 0 - sum(M202 1P+2P+3P c34)`` and the
+  three DISTINCT seeded values make each instalment and the subtraction unmistakable.
 * **M390 <- M303 iva** — already proven LIVE by
   ``test_modelo_390_303_fold_in_live``; not duplicated here.
 """
@@ -87,30 +88,24 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
 
 __all__ = ["register_wizard_catalogue", "secure_objects"]
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.action_errors import ModeloRequiredBindingsMissingError
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -121,7 +116,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
+from .observation_seeding_support import save_preceding_m200_turnover, save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -135,6 +130,8 @@ def bucket_id() -> str:
 
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+# The sociedad-limitada persona's turnover of the twelve months before the period.
+_PRECEDING_TURNOVER = Decimal("28500.00")
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _M202 = "202"
 _M200 = "200"
@@ -151,7 +148,6 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M200_CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_M200_CUOTA_EJERCICIO")
 _M202_CUOTA_BASE_BINDING = "modelo-202-cuota-base-ejercicio-anterior"
-_M202_PAGOS_ANTERIORES_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 # Bound casillas on the M202/2025 revision under test.
 _CASILLA_BASE: CasillaId = validated_casilla_id(
@@ -177,11 +173,16 @@ _M200_PRIOR_CUOTA = Decimal("48000.00")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 #: The M200 relations that fold the same-year M202 pagos fraccionados.
 _M202_PAGO_RELATIONS = frozenset(
-    {
-        "modelo-200-pagos-fraccionados-anuales",
-        "modelo-200-pagos-fraccionados-anuales-40-2",
-    },
+    f"modelo-200-pago-fraccionado-{instalment}-{modalidad}"
+    for instalment in ("primero", "segundo", "tercero")
+    for modalidad in ("40-2", "40-3")
 )
+#: The Modelo 200 casilla of each Modelo 202 instalment: primer, segundo and tercer pago fraccionado.
+_M200_PAGO_CASILLA_BY_PERIOD: dict[str, CasillaId] = {
+    "1P": validated_casilla_id("DP200014B:00601", surface="_M200_PAGO_CASILLA_BY_PERIOD"),
+    "2P": validated_casilla_id("DP200014B:00603", surface="_M200_PAGO_CASILLA_BY_PERIOD"),
+    "3P": validated_casilla_id("DP200014B:00605", surface="_M200_PAGO_CASILLA_BY_PERIOD"),
+}
 #: The M200 cross-year self-carries, absent for this pagos-only persona.
 _M200_SELF_CARRY_RELATIONS = frozenset(
     {
@@ -198,7 +199,7 @@ _M200_SELF_CARRY_RELATIONS = frozenset(
 _BUCKET_ID_M200 = "8ebc9e26-9e28-48aa-946f-f34d71807ad3"
 
 # The *computed* casilla that the formula ``modelo-200-cuota-diferencial``
-# targets: 00611 = subtract(DP200014B:00599, relation[pagos-fraccionados]).
+# targets: 00611 = 00599 - (00601 + 00603 + 00605).
 # ``DP200014B`` is the xsd-group prefix for the Apartado B liquidación block.
 _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     "DP200014B:00611",
@@ -224,84 +225,26 @@ def secure_objects_m200(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_m200_sociedad_profile() -> None:
-    """Seed a legal-entity ``UserProfileRecord`` covering M200's six profile bindings.
-
-    M200/2024 declares six ``source = "profile"`` bindings. Four are consumed
-    by the cuota chain: ``legal-entity-form``, ``new-entity-flag``,
-    ``incn-prior-12-months``, ``tributacion-estado-porcentaje``. Two are
-    Sociedad Laboral specific: ``sal-reserva-especial-dotada`` and
-    ``sal-capital-social``. For a standard SL (not a SAL), the SAL facts are
-    absent / zero, which the formulas treat as no dotacion. The profile resolver
-    fills all six from the persisted record via
-    :mod:`cadrumo.application.modelo.profile_binding`;
-    no profile binding is hand-fed through the caller channel. ``display_name``
-    matches the ``isolated_runtime_profile`` manifest label.
-    """
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID_M200,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B87654323"),
-            UserProfileFact(path="identity.legal_name", value="M200 Fold Sociedad Limitada"),
-            UserProfileFact(path="activities.description", value="desarrollo de software"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
-
-
 def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist one filed M202/2025 instalment (c34) for the M200 pagos fold proof."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M202,
+            filing_year=_FILING_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    casilla_values={
-                        _M202_PAGO_OUTPUT: value,
-                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M202_PAGO_OUTPUT: value,
+                    _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: value,
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -315,7 +258,12 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     caller channel, so ``DP200014B:00599`` (cuota a ingresar) resolves to zero
     and ``DP200014B:00611`` (cuota diferencial) == 0 − sum(M202 pagos).
     """
-    _seed_m200_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID_M200, at=_T0)
+    # The rate reads the preceding período's turnover from its own Modelo 200, held here at the
+    # persona's stated twelve-month figure, so the two agree.
+    save_preceding_m200_turnover(
+        CalculationObservationRepository(), filing_year=_FILING_YEAR, turnover=_PRECEDING_TURNOVER, captured_at=_T0
+    )
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(
         _M200,
@@ -345,118 +293,47 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
         )
 
 
-def _seed_sociedad_profile() -> None:
-    """Seed a legal-entity ``UserProfileRecord`` covering M202's profile binding.
-
-    M202/2025 declares one ``source = "profile"`` binding,
-    ``modelo-202-2025-y-siguientes-incn-prior-12-months`` (selector
-    ``profile_model = taxpayer, field = incn_prior_12_months``). The live source
-    mesh's profile resolver fills it from the persisted record, so the value is
-    NOT hand-fed through the caller channel. ``entity_type`` and
-    ``legal_entity_form`` describe the sociedad routing axis the corporate-tax
-    facts hang off; ``display_name`` matches the ``isolated_runtime_profile``
-    manifest label (``"Test runtime profile"``) so the loaded
-    :class:`CommittedProfileView` passes its cross-store label-agreement validator.
-    """
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="M202 Fold Sociedad Limitada"),
-            UserProfileFact(path="activities.description", value="servicios empresariales"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
-
-
 def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist one filed M202/2025 instalment carrying the c34 pago for ``period``."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M202,
+            filing_year=_FILING_YEAR,
+            period=period,
+            observations=registry_grounded_observations(
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
                 period=period,
-                observations=registry_grounded_observations(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    casilla_values={
-                        _M202_PAGO_OUTPUT: value,
-                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                    },
-                ),
+                casilla_values={
+                    _M202_PAGO_OUTPUT: value,
+                    _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                },
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
-                        modelo=_M202,
-                        filing_year=_FILING_YEAR,
-                        period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: value,
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
 def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist the prior-year M200 cuota del ejercicio (DP200014B:00599) the 2P base folds."""
-    obs_repo.save(
-        obs_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
+    save_stamped_observation(
+        obs_repo,
+        RegistryModeloObservation(
+            modelo=_M200,
+            filing_year=_PRIOR_M200_YEAR,
+            period="0A",
+            observations=registry_grounded_observations(
                 modelo=_M200,
                 filing_year=_PRIOR_M200_YEAR,
                 period="0A",
-                observations=registry_grounded_observations(
-                    modelo=_M200,
-                    filing_year=_PRIOR_M200_YEAR,
-                    period="0A",
-                    casilla_values={_M200_CUOTA_EJERCICIO: cuota},
-                    grade=RegistryAuthorityGrade.CALCULATION,
-                ),
+                casilla_values={_M200_CUOTA_EJERCICIO: cuota},
+                grade=RegistryAuthorityGrade.CALCULATION,
             ),
-            source_kind=APP_FILING_SOURCE_KIND,
-            captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(
-                RegistryModeloObservation(
-                    modelo=_M200,
-                    filing_year=_PRIOR_M200_YEAR,
-                    period="0A",
-                    observations=registry_grounded_observations(
-                        modelo=_M200,
-                        filing_year=_PRIOR_M200_YEAR,
-                        period="0A",
-                        casilla_values={_M200_CUOTA_EJERCICIO: cuota},
-                        grade=RegistryAuthorityGrade.CALCULATION,
-                    ),
-                )
-            ),
-        )
+        ),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
     )
 
 
@@ -469,7 +346,7 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
     binding resolves from the seeded sociedad record. No ``binding_values`` are
     supplied so the live mesh is the sole value source.
     """
-    _seed_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
     with bundled_indexed_authority().operation() as operation:
@@ -577,7 +454,7 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A live M202 calculate with missing prior observations must not save zero carries."""
-    _seed_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")
@@ -607,10 +484,10 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     assert context is not None
     missing_bindings = context["missing_bindings"]
     assert isinstance(missing_bindings, tuple)
-    assert set(missing_bindings) == {
-        _M202_CUOTA_BASE_BINDING,
-        _M202_PAGOS_ANTERIORES_BINDING,
-    }
+    # The persona pays by the cuota modality (LIS art. 40.2): its instalment is a share of the last
+    # cuota and deducts no earlier instalment, which only the base-imponible modality (art. 40.3)
+    # subtracts, so the absent prior return leaves only the cuota base unresolved.
+    assert set(missing_bindings) == {_M202_CUOTA_BASE_BINDING}
     assert cr_repo.load().revisions == {}
     stored_work_unit = wu_repo.load().get(work_unit.work_unit_id)
     assert stored_work_unit is not None
@@ -633,14 +510,12 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
     """E2E: the three filed M202 instalments fold into M200 casilla DP200014B:00611.
 
     Reconciles a prior dead-wiring false-alarm: the M200 <- M202 pagos fold is NOT dead — it
-    reaches the *computed* casilla ``DP200014B:00611`` ("cuota diferencial") via
-    the formula ``00611 = subtract(DP200014B:00599, relation[
-    modelo-200-pagos-fraccionados-anuales])`` through the enrolled
-    ``RelationPrefillSourceResolver`` (source_modelo 202, output 34, periods
-    1P/2P/3P, sum). It does NOT flow through the manual ``is_pagos_fraccionados``
-    casillas 00601/00447, which an earlier test exercised by mistake. The three DISTINCT seeded
-    pagos make the fold unmistakable: the cuota-diferencial subtraction must drop
-    by exactly the seeded sum.
+    reaches the *computed* casillas 00601, 00603 and 00605 (one per instalment,
+    each read through the enrolled ``RelationPrefillSourceResolver`` from its own
+    M202 filing, c03 plus c34) and the cuota diferencial
+    ``00611 = 00599 - (00601 + 00603 + 00605)``. The three DISTINCT seeded pagos make
+    the fold unmistakable: each instalment casilla holds its own filing's pago and
+    the cuota-diferencial subtraction drops by exactly the seeded sum.
     """
     obs_repo = CalculationObservationRepository()
     for period, value in _M202_C34_PAGOS.items():
@@ -657,6 +532,10 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
     values = result.revision.casilla_values
     cuota_a_ingresar = Decimal(values[_CASILLA_CUOTA_A_INGRESAR])
     cuota_diferencial = Decimal(values[_CASILLA_CUOTA_DIFERENCIAL])
+    # Each instalment casilla holds the pago of its own M202 filing.
+    assert {period: Decimal(values[casilla]) for period, casilla in _M200_PAGO_CASILLA_BY_PERIOD.items()} == (
+        _M202_C34_PAGOS
+    )
     # Fold-wiring invariant: cuota diferencial == cuota a ingresar - sum(M202 pagos).
     assert cuota_diferencial == cuota_a_ingresar - expected_pagos_sum, (
         f"M200 00611 must fold the three M202 pagos (sum {expected_pagos_sum}) out of "

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any
 
 from dev.acceptance.income_tax.installed_tui_child import (
@@ -23,7 +23,7 @@ def _rendered(widget: object) -> str:
     return str(render()).strip() if callable(render) else ""
 
 
-def _notice_key(pilot: Any, selector: str, candidates: Sequence[str]) -> str | None:
+def notice_key(pilot: Any, selector: str, candidates: Sequence[str]) -> str | None:
     """Name the catalogue key whose rendering is the visible notice, never the text itself."""
     from textual.widgets import Static
 
@@ -64,13 +64,15 @@ def _refusal_notice_stack(pilot: Any) -> list[str]:
     return stack
 
 
-async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str, refusal_key: str) -> TuiOutcome:
+async def settle_expected_refusal(
+    pilot: Any, *, activation_id: str, step: str, refusal_key: str, refusal_context: Mapping[str, object] | None = None
+) -> TuiOutcome:
     """Drive one operation the product must refuse and read the refusal where the product leaves it.
 
     The operation modal dismisses itself as soon as the operation is terminal, so
     a refusal settled after Apply is observed on the workbench notice: the
     sentence saying the operation did not complete, followed by the registry's
-    public explanation.
+    public explanation, rendered with the context the refusal serves.
     """
     import time
 
@@ -80,7 +82,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     from cadrumo.core.i18n.render import tr
     from cadrumo.entrypoints.tui.operations.modal import OperationModal
 
-    not_done = tr("tui.modelo.workbench.operation.not_done")
+    not_done = tr("workspace.modelo.operation.not_done")
     query_public_selector(pilot, activation_id, Button).focus()
     await pilot.press("enter")
     applied = False
@@ -111,7 +113,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
             f"stack={stack})",
             diagnostic=public_surface_diagnostic(pilot),
         )
-    if notice != f"{not_done} {tr(refusal_key)}":
+    if notice != f"{not_done} {tr(refusal_key, **(refusal_context or {}))}":
         # The notice is the only place the product explains a non-refusal; a
         # bare sentence would send the reader to the operation journal.
         raise InstalledTuiChildError(
@@ -121,7 +123,7 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     return TuiOutcome(step=step, terminal_condition="refused", visible_notice_key=refusal_key)
 
 
-def _visible_refusal(pilot: Any) -> str:
+def visible_refusal(pilot: Any) -> str:
     """Name what the operator can see after a non-succeeded operation: the modal receipt or the workbench notice."""
     from textual.css.query import NoMatches
 

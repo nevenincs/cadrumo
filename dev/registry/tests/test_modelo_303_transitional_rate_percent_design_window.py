@@ -56,6 +56,7 @@ from cadrumo.domain.calculations.registry.bindings import resolve_available_boun
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, revision_covering
 from cadrumo.domain.period import calculation_filing_date
 
 from ..compiler.authority import compiled_bundled_authority
@@ -111,11 +112,11 @@ def _calculate(*, filing_year: int, period: str) -> RegistryCalculationResult:
         # Casilla 166 does not exist in the 2023 revision: the transitional
         # recargo boxes arrive with the 2024-late diseno, so `None` here means
         # "this revision declares no such box" rather than "it computes zero".
-        (2023, "1T", "5.00", None),
-        (2024, "3T", "5.00", "0.00"),
-        (2024, "4T", "7.50", "2.00"),
-        (2025, "1T", "0.00", "0.00"),
-        (2026, "2T", "0.00", "0.00"),
+        (_TRANSITIONAL_FLIP_EXERCISE - 1, "1T", "5.00", None),
+        (_TRANSITIONAL_FLIP_EXERCISE, "3T", "5.00", "0.00"),
+        (_TRANSITIONAL_FLIP_EXERCISE, "4T", "7.50", "2.00"),
+        (_TRANSITIONAL_FLIP_EXERCISE + 1, "1T", "0.00", "0.00"),
+        (_TRANSITIONAL_FLIP_EXERCISE + 2, "2T", "0.00", "0.00"),
     ],
 )
 def test_transitional_rate_constant_follows_the_design_window(
@@ -146,7 +147,14 @@ def test_the_flip_lands_exactly_on_the_09_3t_to_10_4t_boundary() -> None:
 
 @pytest.mark.parametrize(
     ("filing_year", "period", "expected_revision_id"),
-    [(2025, "1T", "2025"), (2026, "2T", "2026-y-siguientes")],
+    [
+        (
+            _TRANSITIONAL_FLIP_EXERCISE + 1,
+            "1T",
+            str(revision_covering("303", _TRANSITIONAL_FLIP_EXERCISE + 1).id),
+        ),
+        (_TRANSITIONAL_FLIP_EXERCISE + 2, "2T", str(open_ended_revision("303").id)),
+    ],
 )
 def test_the_expired_window_is_not_declared_in_the_revisions_that_neutralise_it(
     filing_year: int,
@@ -190,5 +198,5 @@ def test_the_expired_window_is_not_declared_in_the_revisions_that_neutralise_it(
             snapshot,
             inputs=inputs,
             binding_values=binding_values,
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": date(_TRANSITIONAL_FLIP_EXERCISE, 12, 31)},
         )

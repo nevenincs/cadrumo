@@ -82,6 +82,7 @@ from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthor
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 
 from ..compiler.authority import compile_validated_authority
+from ..compiler.holiday_calendar_coverage import verify_holiday_calendar_coverage
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
 from ..compiler.loader import load_registry_tree
 from ..pipeline.authority_publication import AuthorityDatabaseCurrency, authority_database_currency
@@ -91,11 +92,11 @@ from .manager import (
     ConformanceReport,
     build_coverage_report,
     load_conformance_report,
-    render_coverage,
-    render_report,
-    vacuity_warning,
 )
-from .stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+from .render import render_coverage, render_report, vacuity_warning
+from .stamp import StampableReviewStatus, bundled_registry_root, stamp_revision
+from .stamp_toml import StampError
+from .xml_input_dictionary import verify_xml_input_dictionary_layouts
 
 if TYPE_CHECKING:
     from .closure import RegistryClosureReport
@@ -112,11 +113,19 @@ def validate_registry(
     registry_root: Path | None = None,
     source_root: Path | None = None,
 ) -> ValidatedRegistryAuthority:
-    """Compile and verify the complete registry authority without publishing it."""
+    """Compile and verify the complete registry authority without publishing it.
+
+    Beyond compilation this proves the legal catalogue's corpus quotations and
+    that every year the supported filing years' deadline windows reach has a
+    complete holiday calendar, and that every XML export layout admits its
+    input-dictionary rows against the edition's official dictionaries and XSD.
+    """
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
     authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
     verify_legal_catalogue_grounding(authority.catalogues.legal, source_root=resolved_source_root)
+    verify_holiday_calendar_coverage(authority.modelos, authority.catalogues)
+    verify_xml_input_dictionary_layouts(authority, source_root=resolved_source_root)
     return authority
 
 
@@ -527,7 +536,9 @@ def emit_registry_closure_command(
 @app.command("stamp")
 def stamp(
     modelo: Annotated[str, typer.Argument(help="Modelo id to stamp, e.g. 130.")],
-    revision: Annotated[str, typer.Argument(help="Revision id to stamp, e.g. 2019-y-siguientes.")],
+    revision: Annotated[
+        str, typer.Argument(help="Revision id to stamp: the name of one of the modelo's revision directories.")
+    ],
     engineered_by: Annotated[
         str | None,
         typer.Option("--engineered-by", help="Who built this revision."),

@@ -223,6 +223,7 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
         "family_removals",
         "family_positions",
         "cleared_families",
+        "family_disposition_removals",
         "scoped_families",
         # A restatement only stops inheritance; lifting it into the ordinary
         # delta keeps every hydrated member, which the member comparison proves.
@@ -781,12 +782,13 @@ def _export_findings(
 
 
 @dataclass(slots=True)
-class _PayloadSink:
+class PayloadSink:
     """Keeps the validated in-memory payload so no plaintext export touches disk."""
 
     payload: bytes = b""
 
     def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
+        """Retain the validated export payload."""
         self.payload = payload.payload
 
 
@@ -863,7 +865,7 @@ def _export_bytes_finding(
                         )
                 if producer_snapshot is None:
                     producer_snapshot = scenario.producer_snapshot()
-                sink = _PayloadSink()
+                sink = PayloadSink()
                 export_draft(
                     draft,
                     payload_consumer=sink,

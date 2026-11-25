@@ -30,16 +30,16 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     capital_request,
     withholding_producer,
 )
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
-from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from cadrumo.application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import (
     quarterly_filer_cadence,
     quarterly_filer_cadence_for,
 )
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -48,6 +48,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -91,7 +92,11 @@ def test_the_settled_row_advisory_reaches_the_collection_year_modelo_193_calcula
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=datetime.now(UTC))
+        seed_modelo_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=datetime.now(UTC),
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
         assert (
             withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
             is not None

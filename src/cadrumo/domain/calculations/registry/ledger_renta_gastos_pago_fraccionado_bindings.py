@@ -13,27 +13,27 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import (
+from .binding_selector_utils import provider_member
+from .errors import RegistryError, RegistryValidationError
+from .form_codes import differs_from_role
+from .ids import BindingId
+from .ledger_binding_resolution import (
     casilla_target_matcher,
     deductible_amount_aggregate,
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .errors import RegistryValidationError
-from .ids import BindingId
-from .ledger_binding_selector_support import casilla_id_set
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,
+    ledger_target_casilla_failures,
     require_ledger_aggregation_op,
     require_ledger_fact,
-    require_ledger_target_casilla,
 )
 
 if TYPE_CHECKING:
     from .schema import BindingDefinition, ModeloRevision
 
-_RENTA_130_GASTO_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_130_GASTO_CASILLAS", "02")
 _DEDUCTIBLE_AMOUNT_FACTS: frozenset[str] = frozenset({"deductible_amount_sum"})
 
 
@@ -81,7 +81,7 @@ class LedgerRentaGastosPagoFraccionadoProvider(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_modelo_130(cls, value: Modelo) -> Modelo:
-        if value != Modelo("130"):
+        if differs_from_role(value, "renta.direct_instalment"):
             raise ValueError("ledger_renta_gastos_pago_fraccionado_aggregation modelo must be '130'")
         return value
 
@@ -137,15 +137,14 @@ def _renta_gastos_pago_fraccionado_reachability_probe(
     It is kept rather than deleted because it costs nothing and becomes live
     the moment this family's matcher tests anything the selector declares as a
     SET -- the shape that makes the sibling
-    :func:`_iva_reachability_probe` genuinely bite. The tautology is pinned by
+    :func:`iva_reachability_probe` genuinely bite. The tautology is pinned by
     ``test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail``,
     which reddens if the match rule changes, forcing this paragraph to be
     rewritten instead of quietly outliving its truth.
 
     The reachability guarantee this family actually has is elsewhere and is
-    real: ``target_casilla_id`` is validated against
-    :data:`_RENTA_130_GASTO_CASILLAS` by the caller below, and the revision's
-    own casilla set is cross-checked at snapshot build.
+    real: :func:`ledger_renta_gastos_pago_fraccionado_target_failures` holds
+    ``target_casilla_id`` to the box the edition binds to this binding at build.
     """
     matcher = casilla_target_matcher(selector)
     probe = _ReachabilityProbeObservation(
@@ -169,18 +168,28 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
         LedgerRentaGastosPagoFraccionadoProvider,
     )
-    require_ledger_target_casilla(
-        binding,
-        selector.target_casilla_id,
-        _RENTA_130_GASTO_CASILLAS,
-        scope="supported Modelo 130 gasto casillas",
-    )
     require_ledger_aggregation_op(binding)
     require_ledger_fact(binding, selector.fact, _DEDUCTIBLE_AMOUNT_FACTS)
     try:
         _renta_gastos_pago_fraccionado_reachability_probe(selector)
     except RegistryValidationError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
+
+
+def ledger_renta_gastos_pago_fraccionado_target_failures(revision: ModeloRevision) -> list[str]:
+    """Refuse a gasto binding aimed at a box the edition does not bind to it.
+
+    Args:
+        revision: :class:`ModeloRevision` whose instalment expense targets are checked.
+    """
+    return ledger_target_casilla_failures(
+        revision,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+        target_casilla_id=lambda binding: (
+            provider_member(binding, LedgerRentaGastosPagoFraccionadoProvider).target_casilla_id
+        ),
+        reciprocal=True,
+    )
 
 
 def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
@@ -257,3 +266,23 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: B
 
 
 LedgerRentaGastosPagoFraccionadoProvider = LedgerRentaGastosPagoFraccionadoProvider
+
+
+def renta_gastos_pago_fraccionado_target_casilla(revision: ModeloRevision, *, modelo: str) -> CasillaId:
+    """Return the one box a :class:`ModeloRevision` gives a modelo's instalment expenses.
+
+    Raises:
+        RegistryError: When the revision does not declare exactly one target.
+    """
+    targets = {
+        binding.provider.target_casilla_id
+        for binding in revision.bindings
+        if isinstance(binding.provider, LedgerRentaGastosPagoFraccionadoProvider)
+        and str(binding.provider.modelo) == modelo
+    }
+    if len(targets) != 1:
+        raise RegistryError(
+            "selected revision must declare exactly one renta-gasto aggregation target",
+            context={"modelo": modelo, "target_count": len(targets)},
+        )
+    return next(iter(targets))

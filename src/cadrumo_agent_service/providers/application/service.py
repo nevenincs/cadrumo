@@ -6,9 +6,10 @@ It reads every provider in one answer and performs the person's acts:
 * set or replace a direct credential (and any base URL);
 * choose how the assistant authenticates, without touching a stored key;
 * turn the lane off, which persists ``disabled`` for the assistant (so the
-  development fallback is blocked too) and keeps any stored key;
+  lane is not used) and keeps any stored key;
 * turn an off lane back on, restoring the way it authenticates;
-* reset, which deletes the record and returns the provider to ``unset``.
+* reset, which deletes the record and returns the provider to ``unset``;
+* sign a cli lane's provider out through the agent, which leaves the record as it is.
 
 Every action carries the revision the caller read as its guard and is
 committed with a compare-and-swap, then read back. Setting only stores: there
@@ -20,13 +21,12 @@ service; it holds no frontend or transport concern.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
 
 from pydantic import SecretStr
 
-from cadrumo.core.storage_environment import StorageMode
 from cadrumo.core.time.clock import now
 
 from ..domain.catalog import ProviderCatalogEntry, ProviderConsumer, validate_https_base_url
@@ -35,12 +35,14 @@ from ..domain.record import (
     AssistantAuth,
     CredentialKind,
     CredentialState,
+    LocalEngine,
     ProviderCredential,
     ProviderSettingsRecord,
     credential_secret_refusal,
     new_settings_generation,
 )
 from .contracts import (
+    CliObservation,
     CliState,
     ProviderSettingsActionAccepted,
     ProviderSettingsActionResult,
@@ -48,8 +50,10 @@ from .contracts import (
     ProviderSettingsRefusal,
     ProviderSettingsRefusalCode,
     ProviderSettingsStatus,
+    ProviderStatusEntry,
     is_provider_settings_revision,
 )
+from .local_model_list import engine_lanes
 from .ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -60,7 +64,10 @@ from .ports import (
     StoreRefusalCode,
     UnreadableProviderRecord,
 )
-from .resolution import provider_mode, read_revision, status_entry
+from .resolution import lane_mode, read_revision, status_entry
+
+type ReadsPending = Callable[[tuple[ProviderStatusEntry, ...]], bool]
+"""Asked with the lanes as read: whether a background read that keeps what they show is still under way."""
 
 
 class AssistantAuthChoice(StrEnum):
@@ -85,41 +92,53 @@ class ProviderSettingsService:
         *,
         store: ProviderSettingsStore,
         catalog_source: ProviderCatalogSource,
-        environment: Mapping[str, str],
-        storage_mode: StorageMode,
+        selected_engine: Callable[[], LocalEngine | None],
         clock: Callable[[], datetime] = now,
-        cli_state_probe: Callable[[ProviderCatalogEntry], CliState] | None = None,
+        cli_state_probe: Callable[[ProviderCatalogEntry], CliObservation] | None = None,
     ) -> None:
-        """Bind the service to one profile's store and the process's storage mode."""
+        """Bind the service to one profile's store and its catalog.
+
+        ``selected_engine`` reads the local engine the profile runs, ``None``
+        when its setting cannot be read; the status lists only that engine's
+        keyless lane, by the rule the picker and the local model lists share.
+        """
         self._store = store
         self._catalog_source = catalog_source
-        self._environment = environment
-        self._storage_mode = storage_mode
+        self._selected_engine = selected_engine
         self._clock = clock
         self._cli_state_probe = cli_state_probe
 
-    def status(self) -> ProviderSettingsStatus | ProviderSettingsRefusal:
-        """Return masked status of every catalogued provider, or a typed refusal."""
+    def status(self, *, reads_pending: ReadsPending) -> ProviderSettingsStatus | ProviderSettingsRefusal:
+        """Return masked status of every catalogued provider the selected engine is served, or a typed refusal.
+
+        ``reads_pending`` is asked, with the lanes as read, whether the reads that keep what they
+        show are still under way; this service runs none of them.
+        """
+        return self._status(observe_cli=True, reads_pending=reads_pending)
+
+    def lanes(self, *, reads_pending: ReadsPending) -> ProviderSettingsStatus | ProviderSettingsRefusal:
+        """Return every lane as ``status`` does, without probing a provider's command-line app.
+
+        A cli lane's program state is ``unknown``, as it is where no probe is supplied; every
+        other fact is the one ``status`` reports.
+        """
+        return self._status(observe_cli=False, reads_pending=reads_pending)
+
+    def _status(
+        self, *, observe_cli: bool, reads_pending: ReadsPending
+    ) -> ProviderSettingsStatus | ProviderSettingsRefusal:
         try:
             catalog = self._catalog_source.catalog()
         except ProviderCatalogUnavailableError:
             return _refused(ProviderSettingsRefusalCode.CATALOG_UNAVAILABLE)
-        reads = self._store.read(catalog.provider_ids)
+        entries = engine_lanes(catalog, self._selected_engine)
+        reads = self._store.read(tuple(entry.id for entry in entries))
         if isinstance(reads, StoreRefusal):
             return _refusal_for_store(reads.code)
-        return ProviderSettingsStatus(
-            development=self._storage_mode is StorageMode.DEVELOPMENT,
-            providers=tuple(
-                status_entry(
-                    entry,
-                    read,
-                    environment=self._environment,
-                    storage_mode=self._storage_mode,
-                    cli_state=self._cli_state(entry),
-                )
-                for entry, read in zip(catalog.providers, reads, strict=True)
-            ),
+        lanes = tuple(
+            self._status_entry(entry, read, observe_cli=observe_cli) for entry, read in zip(entries, reads, strict=True)
         )
+        return ProviderSettingsStatus(providers=lanes, reads_pending=reads_pending(lanes))
 
     def set_credential(
         self,
@@ -153,12 +172,7 @@ class ProviderSettingsService:
         stored_base_url = _resolved_base_url(current, base_url)
         if stored_base_url is None and entry.auth_kind.accepts_base_url and entry.default_base_url is None:
             return _refused(ProviderSettingsRefusalCode.BASE_URL_REJECTED)
-        previous = current.record if isinstance(current, StoredProviderRecord) else None
-        assistant_auth = (
-            previous.assistant_auth
-            if previous is not None and previous.assistant_auth is not AssistantAuth.DISABLED
-            else AssistantAuth.DIRECT_API
-        )
+        assistant_auth = _credential_assistant_auth(current)
         record = self._record(
             entry,
             assistant_auth=assistant_auth,
@@ -180,9 +194,7 @@ class ProviderSettingsService:
             return entry
         if not entry.serves(ProviderConsumer.ASSISTANT):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
-        if choice is AssistantAuthChoice.PROVIDER_SIGN_IN and not entry.auth_kind.accepts_provider_sign_in:
-            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
-        if choice is AssistantAuthChoice.DIRECT_API and not entry.auth_kind.accepts_direct_credential:
+        if not _auth_choice_supported(entry, choice):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         current = self._current(entry, expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
@@ -231,8 +243,7 @@ class ProviderSettingsService:
         * a stored credential is used directly again (``direct_api``);
         * a lane that takes only provider sign-in selects that sign-in again;
         * otherwise nothing is left to restore, so the record is deleted and
-          the lane is ``unset`` again, which in development re-enables the
-          environment fallback.
+          the lane is ``unset`` again.
 
         A lane that is not off is refused with ``unknown``.
         """
@@ -242,7 +253,10 @@ class ProviderSettingsService:
         current = self._current(entry, expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
             return current
-        if not isinstance(current, StoredProviderRecord) or provider_mode(current) is not ProviderSettingsMode.DISABLED:
+        if (
+            not isinstance(current, StoredProviderRecord)
+            or lane_mode(entry, current) is not ProviderSettingsMode.DISABLED
+        ):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         previous = current.record
         if previous.credential is not None and entry.auth_kind.accepts_direct_credential:
@@ -258,6 +272,29 @@ class ProviderSettingsService:
             credential=previous.credential,
         )
         return self._commit(entry, record, expected_revision)
+
+    def sign_out(
+        self,
+        provider_id: str,
+        *,
+        expected_revision: str,
+        log_out: Callable[[ProviderCatalogEntry], None],
+    ) -> ProviderSettingsActionResult:
+        """Sign the lane's provider out with ``log_out``, then read the lane back.
+
+        The sign-in is the provider's own, so the profile's record is left as it
+        is; its revision guards the act all the same, so a person signs out the
+        lane they were shown. ``log_out`` raises when the provider is not signed
+        out, and nothing is read back then.
+        """
+        entry = self._lane(provider_id)
+        if isinstance(entry, ProviderSettingsRefusal):
+            return entry
+        current = self._current(entry, expected_revision)
+        if isinstance(current, ProviderSettingsRefusal):
+            return current
+        log_out(entry)
+        return self._accepted(entry, current)
 
     def turned_off_lanes(self) -> frozenset[tuple[str, str]] | None:
         """Return the ``(provider, transport)`` of every lane turned off, from the store alone.
@@ -276,7 +313,7 @@ class ProviderSettingsService:
         return frozenset(
             (entry.provider, entry.transport.value)
             for entry, read in zip(catalog.providers, reads, strict=True)
-            if isinstance(read, StoredProviderRecord) and provider_mode(read) is ProviderSettingsMode.DISABLED
+            if isinstance(read, StoredProviderRecord) and lane_mode(entry, read) is ProviderSettingsMode.DISABLED
         )
 
     def reset(self, provider_id: str, *, expected_revision: str) -> ProviderSettingsActionResult:
@@ -357,25 +394,45 @@ class ProviderSettingsService:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return self._accepted(entry, read)
 
-    def _cli_state(self, entry: ProviderCatalogEntry) -> CliState | None:
+    def _status_entry(
+        self, entry: ProviderCatalogEntry, read: ProviderRecordRead, *, observe_cli: bool = True
+    ) -> ProviderStatusEntry:
+        observed = self._cli_observation(entry, observe=observe_cli)
+        return status_entry(
+            entry,
+            read,
+            cli_state=None if observed is None else observed.state,
+            cli_state_cause=None if observed is None else observed.cause,
+        )
+
+    def _cli_observation(self, entry: ProviderCatalogEntry, *, observe: bool = True) -> CliObservation | None:
         """Return a cli lane's program state; ``unknown`` until a safe probe is supplied."""
         if not entry.cli_programs:
             return None
-        if self._cli_state_probe is None:
-            return CliState.UNKNOWN
+        if not observe or self._cli_state_probe is None:
+            return CliObservation(CliState.UNKNOWN)
         # The lane's primary program is the first the agent lists.
         return self._cli_state_probe(entry)
 
     def _accepted(self, entry: ProviderCatalogEntry, read: ProviderRecordRead) -> ProviderSettingsActionAccepted:
         return ProviderSettingsActionAccepted(
-            entry=status_entry(
-                entry,
-                read,
-                environment=self._environment,
-                storage_mode=self._storage_mode,
-                cli_state=self._cli_state(entry),
-            ),
+            entry=self._status_entry(entry, read),
         )
+
+
+def _credential_assistant_auth(current: ProviderRecordRead) -> AssistantAuth:
+    previous = current.record if isinstance(current, StoredProviderRecord) else None
+    return (
+        previous.assistant_auth
+        if previous is not None and previous.assistant_auth is not AssistantAuth.DISABLED
+        else AssistantAuth.DIRECT_API
+    )
+
+
+def _auth_choice_supported(entry: ProviderCatalogEntry, choice: AssistantAuthChoice) -> bool:
+    if choice is AssistantAuthChoice.PROVIDER_SIGN_IN and not entry.auth_kind.accepts_provider_sign_in:
+        return False
+    return not (choice is AssistantAuthChoice.DIRECT_API and not entry.auth_kind.accepts_direct_credential)
 
 
 def _resolved_base_url(current: ProviderRecordRead, change: str | BaseUrlChange) -> str | None:
@@ -410,4 +467,5 @@ __all__ = [
     "AssistantAuthChoice",
     "BaseUrlChange",
     "ProviderSettingsService",
+    "ReadsPending",
 ]

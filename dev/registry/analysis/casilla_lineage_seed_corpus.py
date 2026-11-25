@@ -9,7 +9,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_cache import ModeloSource
-from .casilla_lineage_seed_paths import _REPO_ROOT
+from .casilla_lineage_seed_paths import REPO_ROOT
 from .casilla_lineage_seed_types import ModeloLoadFailure
 
 _RECORDED_REASON_LIMIT = 512
@@ -53,7 +53,7 @@ def _recorded_reason(message: str) -> str:
     reason.
     """
     text = next((line.strip() for line in message.splitlines() if line.strip()), "")
-    root = str(_REPO_ROOT.resolve())
+    root = str(REPO_ROOT.resolve())
     for prefix in (f"{root}\\", f"{root}/", root):
         text = text.replace(prefix, "")
     text = text.replace("\\", "/")

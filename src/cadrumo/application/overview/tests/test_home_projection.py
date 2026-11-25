@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import ValidationError
 
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ...operator_actions.models import DeclaredNextAction
 from ..calendar_models import (
@@ -39,7 +40,7 @@ def _agenda_entry(
     period_code: str = "3T",
     due_on: date = date(2026, 10, 20),
 ) -> HomeAgendaEntry:
-    return HomeAgendaEntry(
+    return HomeAgendaEntry.worded(
         modelo=modelo,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period_code),
@@ -47,6 +48,7 @@ def _agenda_entry(
         period_state=OverviewPeriodState.DUE,
         local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
         aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+        language=OutputLanguage.ES,
     )
 
 
@@ -129,17 +131,8 @@ def test_selected_profile_posture_requires_a_label() -> None:
         HomeAccountSession(posture=HomeSessionPosture.ACTIVE)
 
 
-def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
-    agenda = HomeAgendaEntry(
-        modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "3T"),
-        due_on=date(2026, 10, 20),
-        period_state=OverviewPeriodState.DUE,
-        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
-        aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
-    )
-    projection = HomeProjectionV1(
+def _never_captured_projection(agenda: HomeAgendaEntry) -> HomeProjectionV1:
+    return HomeProjectionV1(
         generated_at=_NOW,
         account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
         actions_state=_AVAILABLE,
@@ -156,13 +149,27 @@ def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
         messages_requiring_attention=0,
     )
 
+
+def test_local_agenda_survives_when_aeat_evidence_was_never_captured() -> None:
+    agenda = HomeAgendaEntry.worded(
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "3T"),
+        due_on=date(2026, 10, 20),
+        period_state=OverviewPeriodState.DUE,
+        local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
+        aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+        language=OutputLanguage.ES,
+    )
+    projection = _never_captured_projection(agenda)
+
     assert projection.agenda == (agenda,)
     assert projection.agenda_evidence_state.availability is HomeAvailability.NEVER_CAPTURED
 
 
 def test_agenda_requires_chronological_order_and_preview_bound() -> None:
     def entry(due_on: date, period_code: str) -> HomeAgendaEntry:
-        return HomeAgendaEntry(
+        return HomeAgendaEntry.worded(
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, period_code),
@@ -170,6 +177,7 @@ def test_agenda_requires_chronological_order_and_preview_bound() -> None:
             period_state=OverviewPeriodState.DUE,
             local_filing_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
             aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
+            language=OutputLanguage.ES,
         )
 
     with pytest.raises(ValidationError, match="chronological"):
@@ -237,7 +245,7 @@ def test_declaration_state_is_closed_and_period_year_must_match() -> None:
 
 
 def test_never_captured_aeat_evidence_refuses_an_observed_submission() -> None:
-    agenda = HomeAgendaEntry(
+    agenda = HomeAgendaEntry.worded(
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "3T"),
@@ -245,24 +253,10 @@ def test_never_captured_aeat_evidence_refuses_an_observed_submission() -> None:
         period_state=OverviewPeriodState.DUE,
         local_filing_state=OverviewLocalFilingState.READY_TO_FILE,
         aeat_submission_state=OverviewAeatSubmissionState.ACCEPTED,
+        language=OutputLanguage.ES,
     )
     with pytest.raises(ValidationError, match="cannot claim AEAT submission"):
-        HomeProjectionV1(
-            generated_at=_NOW,
-            account=HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Example profile"),
-            actions_state=_AVAILABLE,
-            declarations_state=_AVAILABLE,
-            ledger_state=_AVAILABLE,
-            ledger=HomeLedgerReadiness(entries=0, requiring_review=0, unclassified=0, missing_evidence=0),
-            agenda_state=_AVAILABLE,
-            agenda_evidence_state=HomeZoneState(
-                availability=HomeAvailability.NEVER_CAPTURED,
-                reason_code="aeat.never_captured",
-            ),
-            agenda=(agenda,),
-            messages_state=_AVAILABLE,
-            messages_requiring_attention=0,
-        )
+        _never_captured_projection(agenda)
 
 
 def test_non_available_messages_cannot_claim_a_zero_count() -> None:

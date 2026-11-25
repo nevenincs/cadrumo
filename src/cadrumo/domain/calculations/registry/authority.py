@@ -27,8 +27,6 @@ from ....core.hashing import content_hash_hex, sha256_hex
 from ....core.identity.digest import ContentDigest
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
-from ....core.tax_domain import TaxDomain
-from ....core.time.clock import today_madrid
 from . import authority_location
 from .authority_artifact import (
     AuthorityComponentKind,
@@ -51,6 +49,7 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
+from .authority_deadlines import DeadlineWindow, validated_deadline_windows
 from .authority_store import (
     AuthorityStoreError,
     SQLiteAuthorityReader,
@@ -58,6 +57,8 @@ from .authority_store import (
 from .errors import RegistrySnapshotError, RegistryValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Hashable
+
     # The typed registry -- modelo schema, governed facts, snapshots and
     # temporal selection -- is imported by the methods that evaluate it. A
     # profile decode needs only the generation pin and the profile schema, and
@@ -66,25 +67,19 @@ if TYPE_CHECKING:
     from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
     from .facts.schema import GovernedFact
     from .ids import RevisionId
-    from .schema import (
-        ModeloDefinition,
-        ModeloRevision,
-        RegistryCatalogues,
-        RegistrySnapshot,
-        SnapshotGlobalCatalogues,
-        SupportedFilingYearsCatalogue,
-    )
-    from .schema_deadlines import DeadlineWindowDefinition
+    from .schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+    from .schema_catalogues import RegistryCatalogues
     from .schema_exports import ExportLayoutDefinition
     from .schema_form_layouts import FormLayoutDefinition
     from .schema_references import LegalReference, SourceReference
+    from .snapshot_globals import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
+    from .snapshot_proof import SnapshotCrossCheckProof, SnapshotProofContract
     from .static_inspection import RegistryRevisionInspection
-    from .temporal import ModeloRevisionDirectory
+    from .temporal import ModeloRevisionDirectory, RevisionSelectionMetadata
 
 _LOGGER = get_logger(__name__)
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
-type _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
 
 type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
@@ -177,8 +172,8 @@ class ValidatedRegistryAuthority:
 
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
-    _modelos_by_id: dict[str, ModeloDefinition]
-    _snapshots: dict[_SnapshotKey, RegistrySnapshot]
+    modelos_by_id: dict[str, ModeloDefinition]
+    snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _identity_digest: str = ""
     evidence: AuthorityEvidenceProjection = field(default_factory=AuthorityEvidenceProjection)
     _profile_schema: ProfileSchemaDefinition | None = field(default=None, repr=False)
@@ -209,8 +204,8 @@ class ValidatedRegistryAuthority:
         authority = cls(
             modelos=modelos,
             catalogues=catalogues,
-            _modelos_by_id={modelo.id: modelo for modelo in modelos},
-            _snapshots={},
+            modelos_by_id={modelo.id: modelo for modelo in modelos},
+            snapshots={},
             _identity_digest=identity_digest,
             evidence=AuthorityEvidenceProjection() if evidence is None else evidence,
             _profile_schema=profile_schema,
@@ -246,7 +241,7 @@ class ValidatedRegistryAuthority:
         """
         normalized = Modelo(modelo_id)
         try:
-            return self._modelos_by_id[normalized.value]
+            return self.modelos_by_id[normalized.value]
         except KeyError as exc:
             raise RegistrySnapshotError(
                 f"modelo {normalized.value!r} is not present in the calculation registry"
@@ -255,32 +250,6 @@ class ValidatedRegistryAuthority:
     def supported_filing_years(self) -> SupportedFilingYearsCatalogue:
         """Return the registry's single filing-year support envelope."""
         return self.catalogues.require_supported_filing_years()
-
-    def tax_domain(
-        self,
-        tax_domain: str | TaxDomain,
-        *,
-        effective_date: date | None = None,
-    ) -> TaxDomain:
-        """Return a syntax-valid tax domain only when this authority declares it."""
-        from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-        from .schema_base import DateAxis
-
-        normalized = TaxDomain(tax_domain)
-        resolved = self.resolve_governed_fact(
-            MappingFactQuery(
-                fact_id="tax-domain-catalogue",
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=effective_date or today_madrid(),
-            )
-        )
-        if not isinstance(resolved, ResolvedMappingFact):
-            raise RegistrySnapshotError("tax-domain catalogue did not resolve as a mapping")
-        declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
-        declared = {code.strip() for code in declarations.get("catalogue.codes", "").split(",") if code.strip()}
-        if normalized.value not in declared:
-            raise RegistrySnapshotError(f"tax domain {normalized.value!r} is not present in the calculation registry")
-        return normalized
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one typed governed-fact query through this validated authority."""
@@ -403,7 +372,7 @@ class ValidatedRegistryAuthority:
 
         normalized_modelo_id = Modelo(modelo_id).value
         key = (normalized_modelo_id, filing_year, period, on, revision_id, grade)
-        cached = self._snapshots.get(key)
+        cached = self.snapshots.get(key)
         if cached is not None:
             return cached
         modelo = self.validate_modelo(normalized_modelo_id)
@@ -417,9 +386,9 @@ class ValidatedRegistryAuthority:
                 revision_id=revision_id,
                 grade=grade,
             )
-        if len(self._snapshots) >= 1024:
-            self._snapshots.pop(next(iter(self._snapshots)))
-        self._snapshots[key] = snapshot
+        if len(self.snapshots) >= 1024:
+            self.snapshots.pop(next(iter(self.snapshots)))
+        self.snapshots[key] = snapshot
         return snapshot
 
     def capture_law_selected_projection(
@@ -480,7 +449,7 @@ class ValidatedRegistryAuthority:
         year: int,
         *,
         modelos: tuple[str, ...] | None = None,
-    ) -> tuple[_DeadlineWindow, ...]:
+    ) -> tuple[DeadlineWindow, ...]:
         """Return canonically owned, validated deadline windows for ``year``.
 
         Window rows retain their containing revision for provenance, but that
@@ -491,51 +460,9 @@ class ValidatedRegistryAuthority:
         stricter corpus validation verdict.  This is selection, not
         deduplication: every row in the selected revision remains observable.
         """
-        from .temporal import select_revision
-
-        out: list[_DeadlineWindow] = []
-        for modelo in self._selected_modelos(modelos):
-            candidates = tuple(
-                (revision, window)
-                for revision in modelo.revisions.values()
-                for window in revision.deadline_windows
-                if window.filing_year == year
-            )
-            if not candidates:
-                continue
-            try:
-                self.validate_modelo(modelo.id)
-            except RegistryValidationError:
-                raise
-            for containing_revision, window in candidates:
-                selected_revision = select_revision(
-                    modelo,
-                    filing_year=window.period.filing_year,
-                    period=window.period.registry_token,
-                    support=self.catalogues.supported_filing_years,
-                )
-                if selected_revision.id != containing_revision.id:
-                    continue
-                # Cold validation proves this ownership invariant.  Keep the
-                # guard at the projection boundary as a defence against a
-                # future traversal refactor accidentally returning provenance
-                # from a revision other than the canonical selector's result.
-                if containing_revision is not modelo.revisions[selected_revision.id]:
-                    raise RegistrySnapshotError(
-                        f"modelo {modelo.id} deadline provenance names revision "
-                        f"{containing_revision.id!r} while the canonical selector resolved "
-                        f"{selected_revision.id!r}",
-                    )
-                out.append((modelo.id, selected_revision, window))
-        out.sort(
-            key=lambda item: (
-                item[2].closes_on,
-                item[0],
-                *_deadline_window_period_sort_key(item[2]),
-                *_deadline_window_qualifier_sort_key(item[2]),
-            ),
+        return validated_deadline_windows(
+            self._selected_modelos(modelos), year, catalogues=self.catalogues, validate_modelo=self.validate_modelo
         )
-        return tuple(out)
 
     def _selected_modelos(self, modelos: tuple[str, ...] | None) -> tuple[ModeloDefinition, ...]:
         if modelos is None:
@@ -543,22 +470,23 @@ class ValidatedRegistryAuthority:
         return tuple(self.modelo(modelo_id) for modelo_id in modelos)
 
 
-def _deadline_window_period_sort_key(window: DeadlineWindowDefinition) -> tuple[int, str]:
-    return window.filing_year, window.period.registry_token
+@dataclass(frozen=True, slots=True)
+class _SnapshotProjectionKey:
+    """Every input a pinned snapshot depends on besides its generation."""
 
-
-def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tuple[str, tuple[str, ...]]:
-    """Order qualified plazo variants without defining another vocabulary."""
-    resultado = "" if window.resultado_scope is None else window.resultado_scope.value
-    tipo_renta = () if window.tipo_renta_scope is None else tuple(sorted(window.tipo_renta_scope))
-    return resultado, tipo_renta
+    modelo_id: str
+    filing_year: int
+    period: str
+    on: date | None
+    revision_id: RevisionId | None
+    grade: RegistryAuthorityGrade
 
 
 @dataclass(frozen=True, slots=True, weakref_slot=True)
 class PinnedAuthorityOperation:
     """Typed component access confined to one leased authority generation."""
 
-    _reader: AuthorityComponentReader
+    reader: AuthorityComponentReader
     generation: AuthorityGenerationPin
     _state_lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
     _fact_resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
@@ -573,7 +501,7 @@ class PinnedAuthorityOperation:
         """Load an addressed component only through this operation's generation."""
         if pin != self.generation:
             raise RegistrySnapshotError("authority component query crossed an operation generation boundary")
-        return self._reader.load(query, pin=self.generation)
+        return self.reader.load(query, pin=self.generation)
 
     def governed_fact(self, fact_id: str) -> GovernedFact:
         """Load one raw governed fact by canonical identity."""
@@ -586,7 +514,7 @@ class PinnedAuthorityOperation:
 
     def snapshot_globals(self) -> SnapshotGlobalCatalogues:
         """Load the registry-wide globals published with this generation."""
-        from .schema import SnapshotGlobalCatalogues
+        from .snapshot_globals import SnapshotGlobalCatalogues
 
         value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
         if not isinstance(value, SnapshotGlobalCatalogues):
@@ -602,7 +530,7 @@ class PinnedAuthorityOperation:
         # The profile schema model tree is only needed by profile-bound operations.
         from ...user_profile.schema import ProfileSchemaDefinition
 
-        value = self._reader.load(ProfileSchemaComponentQuery(schema_id), pin=self.generation)
+        value = self.reader.load(ProfileSchemaComponentQuery(schema_id), pin=self.generation)
         if not isinstance(value, ProfileSchemaDefinition):
             raise RegistryValidationError("profile schema component decoded to an unexpected type")
         return value
@@ -621,7 +549,7 @@ class PinnedAuthorityOperation:
 
         normalized = Modelo(modelo_id).value
         try:
-            value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
+            value = self.reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
         except LookupError as exc:
             if normalized not in self.modelo_ids():
                 raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=normalized) from exc
@@ -639,7 +567,7 @@ class PinnedAuthorityOperation:
         revision = self.revision(normalized, revision_id)
         layouts = tuple(
             self.export_layout(normalized, revision_id, query.layout_id)
-            for query in self._reader.component_queries()
+            for query in self.reader.component_queries()
             if isinstance(query, ExportLayoutComponentQuery)
             and query.modelo_id == normalized
             and query.revision_id == revision_id
@@ -663,7 +591,7 @@ class PinnedAuthorityOperation:
         """Return deterministic modelo identities without hydrating directories."""
         return tuple(
             query.modelo_id
-            for query in self._reader.component_queries()
+            for query in self.reader.component_queries()
             if isinstance(query, ModeloDirectoryComponentQuery)
         )
 
@@ -671,8 +599,16 @@ class PinnedAuthorityOperation:
         """Return deterministic modelo/revision identities without hydrating payloads."""
         return tuple(
             (query.modelo_id, query.revision_id)
-            for query in self._reader.component_queries()
+            for query in self.reader.component_queries()
             if isinstance(query, ModeloRevisionComponentQuery)
+        )
+
+    def export_layout_ids(self) -> tuple[tuple[str, str, str], ...]:
+        """Return deterministic modelo/revision/layout identities of every export layout without hydrating them."""
+        return tuple(
+            (query.modelo_id, query.revision_id, query.layout_id)
+            for query in self.reader.component_queries()
+            if isinstance(query, ExportLayoutComponentQuery)
         )
 
     def revision_for_context(
@@ -697,6 +633,64 @@ class PinnedAuthorityOperation:
         )
         return self.revision(normalized, selected.id)
 
+    def reachable_authority_grade(
+        self,
+        modelo_id: str | Modelo,
+        *,
+        filing_year: int,
+        period: str,
+    ) -> RegistryAuthorityGrade:
+        """Return the highest grade a snapshot of this filing coordinate can be built at.
+
+        The law-selected revision's declared grade, lowered to calculation when
+        the revision is carried across a year it does not author. A reader that
+        opens a declaration at what its authority claims asks here instead of
+        reading the revision, so a projected year is opened at the grade it
+        reaches rather than refused at the grade its source edition declares.
+        """
+        from .schema_references import reachable_authority_grade
+        from .temporal import revision_temporal_resolution
+
+        revision = self.revision_for_context(modelo_id, filing_year=filing_year, period=period)
+        resolution = revision_temporal_resolution(
+            revision,
+            filing_year=filing_year,
+            period=period,
+            support=self.supported_filing_years(),
+        )
+        return reachable_authority_grade(revision.effective_authority_grade, resolution.projection_direction)
+
+    def reading_snapshot(
+        self,
+        modelo_id: str | Modelo,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+    ) -> RegistrySnapshot:
+        """Return the snapshot a consumer reads to calculate, preview or report, not to claim for filing.
+
+        An authored year is read at the grade its revision declares, so an
+        edition held below filing grade is read at that grade rather than refused.
+        A year the selected revision does not author is carried across from the
+        nearest edition and reaches calculation grade at most, so it is read at
+        that grade instead of being refused as a filing claim. Only the
+        filing-claim gates (verification, export, filing) ask :meth:`snapshot`
+        for filing grade of a year directly.
+        """
+        from .schema_references import reachable_authority_grade
+        from .temporal import revision_temporal_resolution
+
+        revision = self.revision_for_context(modelo_id, filing_year=filing_year, period=period, on=on)
+        resolution = revision_temporal_resolution(
+            revision,
+            filing_year=filing_year,
+            period=period,
+            support=self.supported_filing_years(),
+        )
+        grade = reachable_authority_grade(revision.effective_authority_grade, resolution.projection_direction)
+        return self.snapshot(modelo_id, filing_year=filing_year, period=period, on=on, grade=grade)
+
     def snapshot(
         self,
         modelo_id: str | Modelo,
@@ -707,12 +701,143 @@ class PinnedAuthorityOperation:
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
-        """Build one validated snapshot from same-generation point components."""
-        from .schema import RegistryCatalogues
-        from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
-        from .temporal import select_revision_metadata
+        """Return one validated snapshot built from same-generation point components.
+
+        A snapshot is validated against this operation's governed facts, none
+        read at the run date, so it is shared under the generation and the full
+        request coordinate. Sharing needs the reader's
+        accounted cache; any other reader builds afresh on every call.
+        """
+        from .schema import RegistrySnapshot
 
         normalized = Modelo(modelo_id).value
+        reader = self.reader
+        if not isinstance(reader, SQLiteAuthorityReader):
+            return self._build_snapshot(
+                normalized, filing_year=filing_year, period=period, on=on, revision_id=revision_id, grade=grade
+            )
+        key = _SnapshotProjectionKey(
+            modelo_id=normalized,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
+        value = reader.retain_projection(
+            key,
+            pin=self.generation,
+            build=lambda: self._build_snapshot(
+                normalized, filing_year=filing_year, period=period, on=on, revision_id=revision_id, grade=grade
+            ),
+        )
+        if not isinstance(value, RegistrySnapshot):
+            raise RegistryValidationError("registry snapshot projection resolved to an unexpected type")
+        return value
+
+    def retained_projection[T](self, key: Hashable, *, kind: type[T], build: Callable[[], T]) -> T:
+        """Share one immutable derivation of this generation's published registry content.
+
+        ``key`` names every input ``build`` reads besides the generation, and
+        ``build`` reads only this operation's authority: never profile data,
+        and never a snapshot saved with a calculation, whose bytes are not this
+        generation's. The value lives in the reader's accounted cache under the
+        pinned generation, so a reader for another generation recomputes it.
+        Any other reader builds afresh on every call, as :meth:`snapshot` does.
+        """
+        reader = self.reader
+        if not isinstance(reader, SQLiteAuthorityReader):
+            return build()
+        value = reader.retain_projection(key, pin=self.generation, build=build)
+        if not isinstance(value, kind):
+            raise RegistryValidationError("registry projection resolved to an unexpected type")
+        return value
+
+    def build_unretained_snapshot(
+        self,
+        modelo_id: str | Modelo,
+        /,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None = None,
+        revision_id: RevisionId | None = None,
+        grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    ) -> RegistrySnapshot:
+        """Build one validated snapshot exactly as :meth:`snapshot` does, without sharing it.
+
+        This is the same build behind a :meth:`snapshot` cache miss, proof use
+        included, but the result is not retained in the reader's accounted
+        cache. A caller visiting many coordinates once, such as the publication
+        sweep over every declared selector, would otherwise fill the component
+        budget with snapshots nobody asks for again and evict the components
+        that later requests need. The components the build loads are cached as
+        usual.
+        """
+        return self._build_snapshot(
+            Modelo(modelo_id).value,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            revision_id=revision_id,
+            grade=grade,
+        )
+
+    def snapshot_proof_contract(self) -> SnapshotProofContract | None:
+        """Return the snapshot proof contract this generation records, or ``None`` without proofs."""
+        reader = self.reader
+        return reader.snapshot_proof_contract() if isinstance(reader, SQLiteAuthorityReader) else None
+
+    def _usable_snapshot_proof(
+        self,
+        selected: RevisionSelectionMetadata,
+        normalized: str,
+        *,
+        filing_year: int,
+        period: str,
+        grade: RegistryAuthorityGrade,
+    ) -> SnapshotCrossCheckProof | None:
+        """Return publication's proof for this request when every trust condition holds.
+
+        The admitted physical digest already covers the proof rows. The proof
+        additionally needs this process to run the validator that proved it and
+        a recorded cell whose revision is the one just selected.
+
+        The validator identity is checked last, once a recorded cell would
+        otherwise be used: it re-reads every source module of the validator, and
+        a request publication did not prove takes full validation without it.
+        """
+        from .snapshot_proof import runtime_validator_matches, snapshot_proof_key
+
+        reader = self.reader
+        if not isinstance(reader, SQLiteAuthorityReader):
+            return None
+        contract = reader.snapshot_proof_contract()
+        if contract is None:
+            return None
+        proof = reader.snapshot_proof(
+            snapshot_proof_key(selected, modelo_id=normalized, filing_year=filing_year, period=period, grade=grade)
+        )
+        if proof is None or proof.revision_id != selected.id or not runtime_validator_matches(contract):
+            return None
+        return proof
+
+    def _build_snapshot(
+        self,
+        normalized: str,
+        *,
+        filing_year: int,
+        period: str,
+        on: date | None,
+        revision_id: RevisionId | None,
+        grade: RegistryAuthorityGrade,
+    ) -> RegistrySnapshot:
+        from .governed_fact_scope import validating_governed_facts
+        from .schema_catalogues import RegistryCatalogues
+        from .snapshot import build_validated_snapshot
+        from .snapshot_references import collect_snapshot_ref_ids
+        from .temporal import select_revision_metadata
+
         directory = self.modelo_directory(normalized)
         selected = select_revision_metadata(
             directory,
@@ -732,16 +857,23 @@ class PinnedAuthorityOperation:
             supplementary_ordenes=globals_value.supplementary_ordenes,
             supported_filing_years=directory.supported_filing_years,
         )
-        return build_validated_snapshot(
-            modelo,
-            catalogues,
-            filing_year=filing_year,
-            period=period,
-            on=on,
-            revision_id=revision_id,
-            grade=grade,
-            revision_directory=directory,
+        proof = (
+            self._usable_snapshot_proof(selected, normalized, filing_year=filing_year, period=period, grade=grade)
+            if on is None and revision_id is None
+            else None
         )
+        with validating_governed_facts(self):
+            return build_validated_snapshot(
+                modelo,
+                catalogues,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+                revision_id=revision_id,
+                grade=grade,
+                revision_directory=directory,
+                proof=proof,
+            )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one fact once per query without revalidating its static component."""
@@ -765,7 +897,7 @@ class PinnedAuthorityOperation:
 
     def runtime_catalogue(self, family: str) -> object:
         """Load one named runtime catalogue family."""
-        return self._reader.load(RuntimeCatalogueComponentQuery(family), pin=self.generation)
+        return self.reader.load(RuntimeCatalogueComponentQuery(family), pin=self.generation)
 
     def legal_reference(self, reference_id: str) -> LegalReference:
         """Load one legal declaration by canonical identity."""
@@ -800,7 +932,7 @@ class PinnedAuthorityOperation:
         """Load one separately addressable export layout."""
         from .schema_exports import ExportLayoutDefinition
 
-        value = self._reader.load(
+        value = self.reader.load(
             ExportLayoutComponentQuery(Modelo(modelo_id).value, revision_id, layout_id),
             pin=self.generation,
         )
@@ -818,17 +950,17 @@ class PinnedAuthorityOperation:
 
         normalized = Modelo(modelo_id).value
         query = FormLayoutComponentQuery(normalized, revision_id)
-        if query not in self._reader.component_queries():
+        if query not in self.reader.component_queries():
             self.revision(normalized, revision_id)
             return None
-        value = self._reader.load(query, pin=self.generation)
+        value = self.reader.load(query, pin=self.generation)
         if not isinstance(value, FormLayoutDefinition):
             raise RegistryValidationError("form layout component decoded to an unexpected type")
         return value
 
     def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:
         """Load one publisher-captured legal evidence projection."""
-        value = self._reader.load(
+        value = self.reader.load(
             EvidenceComponentQuery(legal_reference_id, AuthorityComponentKind.LEGAL_EVIDENCE),
             pin=self.generation,
         )
@@ -851,7 +983,7 @@ class PinnedAuthorityOperation:
         the snapshot admission path. The capture compares current against every
         coordinate read from the same admitted generation in this process.
         """
-        from .snapshot import collect_snapshot_ref_ids
+        from .snapshot_references import collect_snapshot_ref_ids
         from .static_inspection import RegistryRevisionInspection
         from .temporal import select_revision_metadata
 
@@ -887,7 +1019,7 @@ class PinnedAuthorityOperation:
 
     def source_evidence(self, source_reference_id: str) -> PublishedSourceEvidence:
         """Load one publisher-captured public source payload."""
-        value = self._reader.load(
+        value = self.reader.load(
             EvidenceComponentQuery(source_reference_id, AuthorityComponentKind.SOURCE_EVIDENCE),
             pin=self.generation,
         )
@@ -974,18 +1106,19 @@ class IndexedRegistryAuthority:
 
 
 _bundled_indexed_authority_lock = RLock()
-_bundled_indexed_authority: IndexedRegistryAuthority | None = None
+bundled_indexed_authority_owner: IndexedRegistryAuthority | None = None
+"""The process-shared owner :func:`bundled_indexed_authority` returns; ``None`` before first use and after release."""
 
 
 def bundled_indexed_authority() -> IndexedRegistryAuthority:
     """Return the process-shared descriptor-following indexed authority owner."""
-    global _bundled_indexed_authority
+    global bundled_indexed_authority_owner
     with _bundled_indexed_authority_lock:
-        if _bundled_indexed_authority is None:
-            _bundled_indexed_authority = IndexedRegistryAuthority(
+        if bundled_indexed_authority_owner is None:
+            bundled_indexed_authority_owner = IndexedRegistryAuthority(
                 authority_location.bundled_authority_descriptor_path()
             )
-        return _bundled_indexed_authority
+        return bundled_indexed_authority_owner
 
 
 def release_bundled_indexed_authority() -> bool:
@@ -1006,14 +1139,14 @@ def release_bundled_indexed_authority() -> bool:
     Returns:
         Whether the process holds no shared owner afterwards.
     """
-    global _bundled_indexed_authority
+    global bundled_indexed_authority_owner
     with _bundled_indexed_authority_lock:
-        if _bundled_indexed_authority is None:
+        if bundled_indexed_authority_owner is None:
             return True
         try:
-            _bundled_indexed_authority.close()
+            bundled_indexed_authority_owner.close()
         except AuthorityStoreError as refusal:
-            _LOGGER.warning("the shared registry authority stayed open: %s", refusal)
+            _LOGGER.warning("the shared registry authority stayed open: %s", str(refusal))
             return False
-        _bundled_indexed_authority = None
+        bundled_indexed_authority_owner = None
         return True

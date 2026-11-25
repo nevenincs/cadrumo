@@ -26,6 +26,7 @@ from pydantic import ValidationError
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time.clock import now
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....persistence.storage.secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
@@ -33,8 +34,9 @@ from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store as session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "1f6b0000-0000-4000-8000-00000000f0f0"
-_NON_JSON_CAPTURED_AT = datetime(2026, 5, 28, 13, 55, 0, tzinfo=UTC)
+_NON_JSON_CAPTURED_AT = datetime(_YEAR, 5, 28, 13, 55, 0, tzinfo=UTC)
 
 
 def _playwright_shaped_storage_state() -> dict[str, object]:

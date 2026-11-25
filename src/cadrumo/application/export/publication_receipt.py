@@ -60,13 +60,7 @@ class PublicationReceipt(BaseModel):
             raise ValueError("publication root must bind the exact profile")
         if len({item.artifact_id for item in self.artifacts}) != len(self.artifacts):
             raise ValueError("publication artifacts must have distinct identities")
-        for item in self.artifacts:
-            if (
-                item.profile_id != self.profile_id
-                or item.root_folder_id != self.root.artifact_id
-                or item.publication_id != self.publication_id
-            ):
-                raise ValueError("publication artifact identity does not match its receipt")
+        self._require_artifact_ownership()
         if self.state in {PublicationState.PARTIAL, PublicationState.UNCERTAIN}:
             if self.failure is None:
                 raise ValueError("incomplete publication requires a failure classification")
@@ -75,6 +69,15 @@ class PublicationReceipt(BaseModel):
         if self.state not in {PublicationState.PREPARED, PublicationState.UNCERTAIN} and not self.artifacts:
             raise ValueError("acknowledged remote effects require artifact identities")
         return self
+
+    def _require_artifact_ownership(self) -> None:
+        for item in self.artifacts:
+            if (
+                item.profile_id != self.profile_id
+                or item.root_folder_id != self.root.artifact_id
+                or item.publication_id != self.publication_id
+            ):
+                raise ValueError("publication artifact identity does not match its receipt")
 
     def advance(
         self,

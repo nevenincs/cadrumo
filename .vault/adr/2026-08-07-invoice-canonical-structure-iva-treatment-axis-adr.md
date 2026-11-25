@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#invoice-canonical-structure'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8cb5b01450c7abbe88fdab487d44ca46c69f96697171a76274cff220ddca153'
+body_hash: 'sha256:fa47182a891ad7011140542d3dae77078aced968a2096aebac71845c332536fb'
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -102,7 +102,7 @@ settled before any resolution is written.
 
 - The resolution must stay date-aware. The declared-rate lookup takes a fraction, not a
   percentage, and answers against the rate records in force on the invoice's own issue
-  date; a tier's rate changes by statute, so resolving a 2024 document against today's
+  date; a tier's rate changes by statute, so resolving an earlier-dated document against today's
   table answers about a rate it was never charged at.
 - The recargo decline is independent of this decision and must survive it. A
   recargo-bearing supply grounds under both the ordinary domestic and the recargo
@@ -167,7 +167,7 @@ imprecision is invisible to every filing surface and visible only to the operato
   the standard-case line helper, which classifies from the RATE SLOT, so an exempt line
   becomes domestic-exempt at rate kind exempt while the casilla 59 and 60 bindings select
   on intra-community-supply and the two export categories at rate kind zero. Verified on
-  both the 2009 and 2023 revisions - such a line misses on both axes, and no Modelo 303
+  both the earliest and the latest Modelo 303 revisions - such a line misses on both axes, and no Modelo 303
   selector absorbs domestic-exempt or domestic-zero, so a stray observation routes
   nowhere rather than into a wrong casilla. Delivering that base to casillas 59 and 60
   requires constructing the observation from the invoice's own category, the direct

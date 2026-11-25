@@ -13,10 +13,11 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from textual.pilot import Pilot
 
 from ......application.modelo.source_policy import SourceSurface
-from ......application.modelo.work_form_models import ModeloFormIssue, ModeloFormOrigin, ModeloWorkForm
+from ......application.modelo.work_form_field_vocabulary import ModeloFormOrigin
+from ......application.modelo.work_form_findings import ModeloFormIssue
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -24,23 +25,19 @@ from ......domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....components.host import ScreenHostApp
+from ....tests.settling import settle
 from ..issue_projection import issue_lines
 from ..issue_scale import ConfirmAssumedValues
 from ..issues import WorkbenchIssuesScreen
 from ..sources import OpenSourceSurface
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import served_load, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _LEGAL_REF = "ley-37-1992:art-99"
 _STILL_OPEN = "still open"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _warning(casilla_id: str) -> ModeloFormIssue:
@@ -65,12 +62,12 @@ def _form(*issues: ModeloFormIssue, assumed: bool = False) -> ModeloWorkForm:
 
 async def _choose(form: ModeloWorkForm, *keys: str) -> object:
     with override_settings(cadrumo_output_language="en"):
-        screen = WorkbenchIssuesScreen(form)
+        screen = WorkbenchIssuesScreen(served_load(form))
         app = ScreenHostApp(screen)
         async with app.run_test(size=(120, 40)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press(*keys)
-            await _settle(pilot)
+            await settle(pilot)
             still_open = isinstance(app.screen, WorkbenchIssuesScreen)
             if still_open:
                 app.exit(None)

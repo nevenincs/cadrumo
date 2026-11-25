@@ -12,9 +12,9 @@ import pytest
 import yaml
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..lane_recipe_commands import _recipe_bodies, _recipes_invoked_by
+from ..lane_recipe_commands import recipe_bodies, recipes_invoked_by
 from ..workflow_delegation import calls_local_workflow
 from ..workflow_run_text import executed_lines
 
@@ -23,6 +23,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _WORKFLOWS: Final = REPO_ROOT / ".github" / "workflows"
 _MAIN_GROUP_SUFFIX = "${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}"
 _CHECK_GROUPS = frozenset({"check", "test", "build"})
+#: ``${{ <admission> && '<admitted name>' || '<withheld name>' }}``.
+_ADMISSION_NAME = re.compile(r"\$\{\{ .+ && '(?P<admitted>[^']+)' \|\| '(?P<withheld>[^']+)' \}\}")
 
 
 def _documents(root: Path = _WORKFLOWS) -> list[tuple[Path, dict[str, Any]]]:
@@ -71,7 +73,13 @@ def _just_groups() -> set[str]:
 
 
 def test_every_job_name_describes_coverage_with_the_shared_vocabulary() -> None:
-    """Job rows use ``<Kind>: <Subject> [(Platform)]`` and never tool or marker subjects."""
+    """Job rows use ``<Kind>: <Subject> [(Platform)]`` and never tool or marker subjects.
+
+    Both names of a job withheld from untrusted pull requests are checked.
+    Proved able to fail: renaming the merge gate verdict's withheld name to
+    `merge gate withheld` and running this test alone failed on its assertion;
+    restoring the name made it pass.
+    """
     forbidden = _tool_names() | _registered_markers()
     groups = _just_groups()
     assert groups >= _CHECK_GROUPS, f"merge vocabulary is not backed by just groups: {sorted(_CHECK_GROUPS - groups)}"
@@ -95,19 +103,24 @@ def test_every_job_name_describes_coverage_with_the_shared_vocabulary() -> None:
                         f"{path.name}:{key}: dynamic row names are not unique by runtime, phase, platform"
                     )
                 continue
-            match = job_name.fullmatch(name)
-            if match is None:
-                violations.append(f"{path.name}:{key}: invalid job name {name!r}")
-                continue
-            subject_words = {word.casefold() for word in re.findall(r"[A-Za-z0-9_-]+", match.group(2))}
-            leaked = sorted(subject_words & forbidden)
-            if leaked:
-                violations.append(f"{path.name}:{key}: subject names tools/markers {leaked}")
-            platform = match.group(3)
-            platforms = {"Linux", "Windows", "macOS"}
-            qualified = platform and platform.split(", ", 1)[0] in platforms and "${{" in platform
-            if platform and not (platform in platforms or "${{ matrix." in platform or qualified):
-                violations.append(f"{path.name}:{key}: unsupported platform label {platform!r}")
+            # A job withheld from untrusted pull requests carries two literal
+            # names, and each must read as a row on its own.
+            admission = _ADMISSION_NAME.fullmatch(name)
+            candidates = (admission["admitted"], admission["withheld"]) if admission else (name,)
+            for candidate in candidates:
+                match = job_name.fullmatch(candidate)
+                if match is None:
+                    violations.append(f"{path.name}:{key}: invalid job name {candidate!r}")
+                    continue
+                subject_words = {word.casefold() for word in re.findall(r"[A-Za-z0-9_-]+", match.group(2))}
+                leaked = sorted(subject_words & forbidden)
+                if leaked:
+                    violations.append(f"{path.name}:{key}: subject names tools/markers {leaked}")
+                platform = match.group(3)
+                platforms = {"Linux", "Windows", "macOS"}
+                qualified = platform and platform.split(", ", 1)[0] in platforms and "${{" in platform
+                if platform and not (platform in platforms or "${{ matrix." in platform or qualified):
+                    violations.append(f"{path.name}:{key}: unsupported platform label {platform!r}")
             matrix = (job.get("strategy") or {}).get("matrix")
             if matrix and "${{ matrix." not in name:
                 violations.append(f"{path.name}:{key}: matrix rows are not distinguished in the job name")
@@ -160,6 +173,14 @@ _RECIPE_SIGNATURE: Final = re.compile(r"^(?P<name>[a-z][\w-]*)(?P<parameters>[^:
 #: transport's own calls are read by `_recipes_invoked_by` and carry no
 #: arguments, so they are left to it.
 _JUST_CALL_WITH_ARGUMENTS: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)(?P<arguments>[^|;&\n]*)")
+
+# An intrinsic branch/exit does not launch a command. Keep the predicate inert:
+# commands inside a predicate or body must remain visible to duplicate detection.
+_POWERSHELL_EXIT_GUARD: Final = re.compile(
+    r"if\s*\(\s*\$[A-Za-z_][\w:]*\s+-(?:eq|ne|lt|le|gt|ge)\s+[+-]?\d+\s*\)"
+    r"\s*\{\s*exit(?:\s+(?:\$[A-Za-z_][\w:]*|[+-]?\d+))?\s*;?\s*\}",
+    re.IGNORECASE,
+)
 
 
 def _recipe_parameters(text: str) -> dict[str, tuple[tuple[str, str | None], ...]]:
@@ -219,7 +240,7 @@ def _commands(
     signatures = {} if parameters is None else parameters
 
     def expand(text: str, stack: frozenset[str] = frozenset(), *, recipe_body: bool = False) -> None:
-        invoked = _recipes_invoked_by(text)
+        invoked = recipes_invoked_by(text)
         if invoked:
             arguments_by_recipe = _invocation_arguments(text)
             for recipe in sorted(invoked - {"setup"}):
@@ -237,7 +258,11 @@ def _commands(
             return
         for line in text.splitlines():
             normalized = re.sub(r"\s+", " ", line.strip().lstrip("@"))
-            if normalized and not normalized.startswith(("#", "$", "echo ", "Write-", "else", "fi", "}", ")", "-")):
+            if (
+                normalized
+                and not normalized.startswith(("#", "$", "echo ", "Write-", "else", "fi", "}", ")", "-"))
+                and _POWERSHELL_EXIT_GUARD.fullmatch(normalized) is None
+            ):
                 commands.append(normalized)
 
     for step in job.get("steps") or []:
@@ -274,7 +299,7 @@ def _platform_recipe_bodies(text: str, platform: str) -> dict[str, str]:
             attributes = []
         if keep:
             kept.append(raw)
-    return _recipe_bodies("\n".join(kept))
+    return recipe_bodies("\n".join(kept))
 
 
 _RECIPE_HEADER_LINE: Final = re.compile(r"^[a-z][\w-]*\b[^:\n]*:(?![=])")
@@ -330,6 +355,35 @@ def test_one_parameterised_recipe_with_the_same_argument_twice_is_a_duplicate() 
     counts = Counter(_commands(job, bodies, parameters))
 
     assert counts["uv run matrix --phase smoke"] == 2
+
+
+@pytest.mark.parametrize(
+    "guard", ("if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }", "if ($buildStatus -gt 0) { exit 1; }")
+)
+def test_intrinsic_exit_guards_are_not_repeated_commands(guard: str) -> None:
+    """Repeated status checks preserve a single build and real duplicate detection."""
+    justfile = f"gate:\n    cmake --preset selected\n    {guard}\n    uv run check\n    {guard}\n    uv run check\n"
+    bodies = _platform_recipe_bodies(justfile, "windows")
+
+    assert Counter(_commands({"steps": [{"run": "just gate"}]}, bodies)) == Counter(
+        {"cmake --preset selected": 1, "uv run check": 2}
+    )
+
+
+@pytest.mark.parametrize(
+    "command",
+    (
+        "if ($ready) { uv run check }",
+        "if (uv run check) { exit 1 }",
+        "if ($status -ne 0) { exit $status; uv run check }",
+    ),
+)
+def test_exit_guard_recognition_keeps_commands_inside_conditionals(command: str) -> None:
+    """A conditional's real command must never disappear behind guard recognition."""
+    justfile = f"gate:\n    {command}\n    {command}\n"
+    bodies = _platform_recipe_bodies(justfile, "windows")
+
+    assert Counter(_commands({"steps": [{"run": "just gate"}]}, bodies))[command] == 2
 
 
 def test_a_declared_default_is_substituted_when_no_argument_is_given() -> None:

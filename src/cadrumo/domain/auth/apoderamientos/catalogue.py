@@ -25,7 +25,7 @@ ALL_TOKEN = "ALL"
 ApoderadoScopeCode = Annotated[str, StringConstraints(min_length=1, max_length=32)]
 """The AEAT code naming one apoderamiento scope."""
 
-ApoderadoScopeName = Annotated[str, StringConstraints(min_length=1, max_length=200)]
+ApoderadoScopeName = Annotated[str, StringConstraints(min_length=1, max_length=256)]
 """One scope's printed name, in either catalogue language."""
 
 

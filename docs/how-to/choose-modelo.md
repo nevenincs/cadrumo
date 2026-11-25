@@ -21,7 +21,7 @@ Run `overview explain` with the modelo code. By default the tool answers for the
 :verify: Confirm the tool reports whether Modelo 303 applies and whether the profile is ready to file it.
 ```
 
-The explain answer has four parts:
+The `explain` answer has four parts:
 
 - **The verdict** - whether the modelo applies to you for that year.
 - **The rationale** - a plain-language explanation derived from the official rules.
@@ -34,7 +34,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 
 - **Applicable** - the form applies to you for that year. Plan to prepare and file it.
 - **Not applicable** - your taxpayer situation excludes it. The rationale tells you which fact rules it out.
-- **Attribution pass-through** - your entity is in régimen de atribución de rentas, such as a comunidad de bienes or a sociedad civil without a commercial object (sin objeto mercantil). The entity passes its income through to its members, so it doesn't file the income-tax self-assessment itself (Modelo 100, 130, 200, or 202). The members declare the attributed income on their own returns.
+- **Attribution pass-through** - your entity is in <span lang="es">régimen de atribución de rentas</span>, such as a <span lang="es">comunidad de bienes</span> or a <span lang="es">sociedad civil</span> without a commercial object (<span lang="es">sin objeto mercantil</span>). The entity passes its income through to its members, so it doesn't file the income-tax self-assessment itself (Modelo 100, 130, 200, or 202). The members declare the attributed income on their own returns.
 - **Incomplete** - the tool cannot decide and refuses to guess. Usually your profile is missing the facts needed; see [When the answer is incomplete](#when-the-verdict-is-incomplete). For a few forms the tool has not yet derived an applicability rule. The rationale says so, and in that case no profile change alters the answer.
 
 (when-the-verdict-is-incomplete)=
@@ -56,7 +56,7 @@ When you already know which modelo, year, and period you're aiming at, ask for a
 
 Readiness reports what still stands between you and working on that specific filing: the profile facts still missing, the version of the official form that applies, and any entries in your records that would block a calculation. Where `overview explain` answers whether the form applies, readiness answers whether you're ready to work on it.
 
-These two commands read different facts, so they can disagree for the same profile and modelo, and that is expected. `overview explain` checks applicability facts (taxpayer type, regime, income categories); on a profile that has not declared its taxpayer type it returns `applicable false / verdict incomplete` ("el tipo de contribuyente no está declarado"). `modelo readiness` checks whether you can work on that period. A `ready` result is not a confirmation that the form applies to you - read `overview explain` for applicability and `modelo readiness` for filing readiness, not one as a proxy for the other.
+These two commands read different facts, so they can disagree for the same profile and modelo, and that is expected. `overview explain` checks applicability facts (taxpayer type, regime, income categories); on a profile that has not declared its taxpayer type it returns `applicable false / verdict incomplete` ("<span lang="es">el tipo de contribuyente no está declarado</span>"). `modelo readiness` checks whether you can work on that period. A `ready` result is not a confirmation that the form applies to you - read `overview explain` for applicability and `modelo readiness` for filing readiness, not one as a proxy for the other.
 
 Readiness reports several checks separately, and a complete profile is only one of them. A freshly set up profile commonly returns `profile_ready True` alongside `binding_ready False`: your own details are in place, but the figures the form draws on - the sources listed under `missing_bindings` - are not yet available. Readiness exits with status `2` while any check is not ready, so read the line that is `False` rather than looking for one overall answer.
 
@@ -70,9 +70,9 @@ To see every form the tool knows, list the catalogue with `aeat app modelo list`
 :verify: Confirm the catalogue lists the known forms and describes Modelo 303 in detail.
 ```
 
-The list shows each modelo's code, official Spanish title, cadence, tax domain, and number of versions. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
+The list shows each modelo's code, official Spanish title, cadence, tax domain, and number of versions. Cadence values include `quarterly`, `annual`, `monthly`, `event` (filed only when something happens, such as a census change or a refundable operation), and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
 
-The description shows the form's official name (Spanish), domain, cadence, active version ID, the full list of version IDs, the valid period codes, and three structure counts - boxes (boxes), vinculaciones (values Cadrumo fills in), and fórmulas (formulas) - that describe how complex the form is. Keep both commands as lookup aids. Applicability always comes from `overview explain`.
+The description shows the form's official name (Spanish), domain, cadence, active version ID, the full list of version IDs, the valid period codes, and three structure counts - boxes, bindings (values Cadrumo fills in), and formulas - that describe how complex the form is. Keep both commands as lookup aids. Applicability always comes from `overview explain`.
 
 ## What these commands don't tell you
 

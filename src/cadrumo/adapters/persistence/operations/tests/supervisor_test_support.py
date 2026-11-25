@@ -80,24 +80,26 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 
-_NOW = datetime(2026, 8, 14, 15, tzinfo=UTC)
+SUPERVISOR_NOW = datetime(2026, 8, 14, 15, tzinfo=UTC)
 
 _CONTINUATION_DIGEST = "a" * 64
 
-_RESPONSE_TOKEN = "b" * 64
+RESPONSE_TOKEN = "b" * 64
 
 _REVIEWED_PROPOSAL_DIGEST = "c" * 64
 
-_BASELINE_DIGEST = "d" * 64
+BASELINE_DIGEST = "d" * 64
 
-_PROPOSED_EFFECT_DIGEST = "e" * 64
+PROPOSED_EFFECT_DIGEST = "e" * 64
 
-_SENSITIVE_EXCEPTION_DETAIL = (
-    f"B12345674 {REDACTION_TOKEN_QUERY_URL_CANARY} "
+SENSITIVE_EXCEPTION_DETAIL = (
+    f"B00015016 {REDACTION_TOKEN_QUERY_URL_CANARY} "
     "C:/Users/operator/private-key.p12 Bearer correct-horse-battery-staple"
 )
 
@@ -166,8 +168,8 @@ class DurableContinuationExecutor:
             continuation_digest=_CONTINUATION_DIGEST,
             expires_at=None,
             reviewed_operand=ReviewedOperand(observation="encrypted post-submission observation"),
-            baseline_digest=_BASELINE_DIGEST,
-            proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
+            baseline_digest=BASELINE_DIGEST,
+            proposed_effect_digest=PROPOSED_EFFECT_DIGEST,
         )
         return None
 
@@ -288,7 +290,7 @@ class UndeclaredInteractionExecutor:
     ) -> str | None:
         del request
         assert isinstance(context, SupervisorExecutorContext)
-        await context.interactions.request(_pending_interaction(context.identity))
+        await context.interactions.request(pending_interaction(context.identity))
         return None
 
 
@@ -302,7 +304,7 @@ class ReviewExecutor:
     ) -> str | None:
         del request
         assert isinstance(context, SupervisorExecutorContext)
-        await context.interactions.request(_pending_interaction(context.identity))
+        await context.interactions.request(pending_interaction(context.identity))
         return None
 
 
@@ -333,7 +335,7 @@ class ResumableReviewExecutor:
     ) -> str | None:
         del request
         assert isinstance(context, SupervisorExecutorContext)
-        await context.interactions.request(_pending_interaction(context.identity))
+        await context.interactions.request(pending_interaction(context.identity))
         return None
 
     async def resume(
@@ -498,7 +500,7 @@ class RegisteredRefusalExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request, context
-        raise AeatLiveReadNotEnabledError(_SENSITIVE_EXCEPTION_DETAIL)
+        raise AeatLiveReadNotEnabledError(SENSITIVE_EXCEPTION_DETAIL)
 
 
 class RegisteredErrorExecutor:
@@ -510,7 +512,7 @@ class RegisteredErrorExecutor:
         context: OperationExecutorContext,
     ) -> str | None:
         del request, context
-        raise CoreError(_SENSITIVE_EXCEPTION_DETAIL)
+        raise CoreError(SENSITIVE_EXCEPTION_DETAIL)
 
 
 class CancellableResourceExecutor:
@@ -552,16 +554,16 @@ class UnexpectedFailureExecutor:
         del request
         context.cleanup.own(self.resource, family=OperationOwnedResource.ASYNC_TASK)
         await context.events.effect(OperationEffect.UPDATED)
-        raise RuntimeError(_SENSITIVE_EXCEPTION_DETAIL)
+        raise RuntimeError(SENSITIVE_EXCEPTION_DETAIL)
 
 
-def _assert_sensitive_detail_absent_from_operation_bytes(storage_root: Path) -> None:
-    forbidden = _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8")
+def assert_sensitive_detail_absent_from_operation_bytes(storage_root: Path) -> None:
+    forbidden = SENSITIVE_EXCEPTION_DETAIL.encode("utf-8")
     persisted = b"".join(path.read_bytes() for path in scan_directory(storage_root, recursive=True) if path.is_file())
     assert forbidden not in persisted
 
 
-async def _close_host_over_live_executor(
+async def close_host_over_live_executor(
     supervisor: OperationSupervisor,
     operation_id: str,
     started: asyncio.Event,
@@ -581,7 +583,7 @@ async def _close_host_over_live_executor(
     return await supervisor.inspect(operation_id)
 
 
-def _pending_interaction(identity: OperationIdentity) -> OperationPendingInteraction:
+def pending_interaction(identity: OperationIdentity) -> OperationPendingInteraction:
     """Build the exact response checkpoint an executor may publish after start."""
     request = OperationInteractionRequest(
         interaction_id="f" * 64,
@@ -594,14 +596,14 @@ def _pending_interaction(identity: OperationIdentity) -> OperationPendingInterac
     )
     return OperationPendingInteraction.bind(
         request=request,
-        response_token=_RESPONSE_TOKEN,
+        response_token=RESPONSE_TOKEN,
         reviewed_proposal_digest=_REVIEWED_PROPOSAL_DIGEST,
-        baseline_digest=_BASELINE_DIGEST,
-        proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
+        baseline_digest=BASELINE_DIGEST,
+        proposed_effect_digest=PROPOSED_EFFECT_DIGEST,
     )
 
 
-def _capabilities(
+def supervisor_capabilities(
     *,
     cancellation: OperationCancellation = OperationCancellation.UNSUPPORTED,
     deadline: OperationDeadline = OperationDeadline.ABSENT,
@@ -646,12 +648,12 @@ def _definition(
         ),
         phase_codes=("operation.phase.declared",),
         interaction_kinds=interaction_kinds,
-        capabilities=_capabilities() if capabilities is None else capabilities,
+        capabilities=supervisor_capabilities() if capabilities is None else capabilities,
         reconciliation_policy=reconciliation_policy,
     )
 
 
-def _registry(
+def supervisor_registry(
     *,
     executor_type: type[object],
     build: Callable[[], object],
@@ -704,7 +706,7 @@ def _registry(
     )
 
 
-def _drifted_registry(registry: OperationRegistry) -> OperationRegistry:
+def drifted_registry(registry: OperationRegistry) -> OperationRegistry:
     item = registry.lookup("operation.supervisor.test").model_copy(
         update={"action_reference": ActionReference(action_id="operator.contract.drift")}
     )
@@ -724,7 +726,7 @@ def _drifted_registry(registry: OperationRegistry) -> OperationRegistry:
     return OperationRegistry(definitions=(item,), public_registrations=(registration,))
 
 
-def _supervisor(
+def operation_supervisor(
     *,
     registry: OperationRegistry,
     journal: OperationJournalRepository,
@@ -737,9 +739,11 @@ def _supervisor(
     execution_timeout: timedelta | None = None,
     cleanup_timeout: timedelta | None = timedelta(minutes=1),
     execution_authority: OperationExecutionAuthority | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
+    fixed_clock_instant: datetime | None = None,
 ) -> OperationSupervisor:
     return OperationSupervisor(
-        authority_operation=unread_authority_operation(),
+        authority_operation=unread_authority_operation() if authority_operation is None else authority_operation,
         registry=registry,
         journal=journal,
         event_stream=journal,
@@ -747,16 +751,50 @@ def _supervisor(
         operands=operands,
         owner_id=owner_id,
         lease_token_factory=lambda: token,
-        clock=(lambda: _NOW) if clock is None else clock,
+        clock=(lambda: SUPERVISOR_NOW) if clock is None else clock,
         lease_duration=lease_duration,
         execution_timeout=execution_timeout,
         cleanup_timeout=cleanup_timeout,
-        response_token_factory=lambda: _RESPONSE_TOKEN,
+        response_token_factory=lambda: RESPONSE_TOKEN,
         execution_authority=execution_authority,
+        fixed_clock_instant=fixed_clock_instant,
     )
 
 
-def _request(*, subject_ref: str = "subject:one", idempotency_key: str | None = None) -> OperationRequest[BaseModel]:
+def resumable_review_supervisor(
+    *,
+    executor_type: type[object],
+    build: Callable[[], object],
+    journal: OperationJournalRepository,
+    leases: OperationLeaseFilesystemRepository,
+    operands: OperationSecureReferenceStore,
+) -> tuple[OperationRegistry, OperationSupervisor]:
+    """Return a resumable review-capable registry and its first lease owner."""
+    registry = supervisor_registry(
+        executor_type=executor_type,
+        build=build,
+        capabilities=supervisor_capabilities(
+            durability=OperationDurability.RESUMABLE,
+            replay=OperationReplayPolicy.RESUMABLE,
+        ),
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+    )
+    owner = operation_supervisor(
+        registry=registry,
+        journal=journal,
+        leases=leases,
+        operands=operands,
+        owner_id="1" * 64,
+        token="2" * 64,
+        lease_duration=timedelta(minutes=1),
+    )
+    return registry, owner
+
+
+def supervisor_request(
+    *, subject_ref: str = "subject:one", idempotency_key: str | None = None
+) -> OperationRequest[BaseModel]:
     return OperationRequest[BaseModel](
         definition_id="operation.supervisor.test",
         subject_ref=subject_ref,
@@ -765,7 +803,7 @@ def _request(*, subject_ref: str = "subject:one", idempotency_key: str | None = 
     )
 
 
-def _repositories(
+def operation_repositories(
     *,
     storage_root: Path,
     profile_objects: SecureObjectRepository,
@@ -813,7 +851,7 @@ class SubclassResolvingOperands:
         return cast(OperandT, UnregisteredSupervisorRequestRefinement.model_validate(resolved.model_dump()))
 
 
-def _response(
+def supervisor_response(
     *,
     intent: str,
     operation_id: str,
@@ -824,30 +862,30 @@ def _response(
             interaction_id="f" * 64,
             operation_id=operation_id,
             revision=revision,
-            response_token=_RESPONSE_TOKEN,
+            response_token=RESPONSE_TOKEN,
             continuation_digest=_CONTINUATION_DIGEST,
             reviewed_proposal_digest=_REVIEWED_PROPOSAL_DIGEST,
             actor_ref="operator:reviewer",
-            responded_at=_NOW,
-            baseline_digest=_BASELINE_DIGEST,
-            proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
+            responded_at=SUPERVISOR_NOW,
+            baseline_digest=BASELINE_DIGEST,
+            proposed_effect_digest=PROPOSED_EFFECT_DIGEST,
         )
     if intent == "reject":
         return OperationRejectResponse(
             interaction_id="f" * 64,
             operation_id=operation_id,
             revision=revision,
-            response_token=_RESPONSE_TOKEN,
+            response_token=RESPONSE_TOKEN,
             continuation_digest=_CONTINUATION_DIGEST,
             reviewed_proposal_digest=_REVIEWED_PROPOSAL_DIGEST,
             actor_ref="operator:reviewer",
-            responded_at=_NOW,
+            responded_at=SUPERVISOR_NOW,
             reason_code="operation.review.rejected",
         )
     raise ValueError(f"unsupported test response intent: {intent}")
 
 
-def _admission_supervisor(
+def admission_supervisor(
     tmp_path: Path,
     profile_objects: SecureObjectRepository,
     *,
@@ -855,9 +893,11 @@ def _admission_supervisor(
     build: Callable[[], object],
     capabilities: OperationCapabilities | None = None,
 ) -> tuple[OperationSupervisor, OperationJournalRepository]:
-    journal, leases, operands = _repositories(storage_root=tmp_path / "durable-state", profile_objects=profile_objects)
-    supervisor = _supervisor(
-        registry=_registry(executor_type=executor_type, build=build, capabilities=capabilities),
+    journal, leases, operands = operation_repositories(
+        storage_root=tmp_path / "durable-state", profile_objects=profile_objects
+    )
+    supervisor = operation_supervisor(
+        registry=supervisor_registry(executor_type=executor_type, build=build, capabilities=capabilities),
         journal=journal,
         leases=leases,
         operands=operands,
@@ -867,18 +907,18 @@ def _admission_supervisor(
     return supervisor, journal
 
 
-def _start_and_walk_away(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> OperationPersistedSnapshot:
+def start_and_walk_away(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> OperationPersistedSnapshot:
     """Start a failing operation, never await it, and let every reference to its task go."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, journal = _admission_supervisor(
+        supervisor, journal = admission_supervisor(
             tmp_path, profile.repository, executor_type=UndeclaredPhaseExecutor, build=UndeclaredPhaseExecutor
         )
 
         async def scenario() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             await supervisor.start(operation_id)
             for _ in range(500):
-                if _failure_logged(caplog):
+                if failure_logged(caplog):
                     break
                 await asyncio.sleep(0.01)
             return await journal.load(operation_id)
@@ -886,20 +926,20 @@ def _start_and_walk_away(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> Op
         return asyncio.run(scenario())
 
 
-def _failure_logged(caplog: pytest.LogCaptureFixture) -> bool:
-    return any("stopped without settlement" in record.getMessage() for record in caplog.records)
+def failure_logged(caplog: pytest.LogCaptureFixture) -> bool:
+    return any("stopped without settlement" in record.getMessage() for record in delivered_records(caplog))
 
 
-_SHARED_SUBJECT = "subject:shared"
+SHARED_SUBJECT = "subject:shared"
 
 
-def _shared_scope_holder(
+def shared_scope_holder(
     leases: OperationLeaseFilesystemRepository,
     *,
     observed_at: datetime,
 ) -> OperationOwnerLease | None:
     """Return whichever lease currently holds the shared definition subject."""
-    request = _request(subject_ref=_SHARED_SUBJECT)
+    request = supervisor_request(subject_ref=SHARED_SUBJECT)
     observed = asyncio.run(
         leases.inspect(
             operation_conflict_scope_reference(definition_id=request.definition_id, subject_ref=request.subject_ref),
@@ -910,7 +950,7 @@ def _shared_scope_holder(
     return observed.current
 
 
-def _settle_failed(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
+def settle_failed(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
     created = asyncio.run(supervisor.inspect(operation_id))
     return asyncio.run(
         supervisor.settle(
@@ -920,13 +960,13 @@ def _settle_failed(supervisor: OperationSupervisor, operation_id: str) -> Operat
                 revision=created.revision + 1,
                 condition=OperationTerminalCondition.FAILED,
                 effect=OperationEffect.NONE,
-                settled_at=_NOW,
+                settled_at=SUPERVISOR_NOW,
             ),
         )
     )
 
 
-def _leave_settlement_lease_behind(
+def leave_settlement_lease_behind(
     leases: OperationLeaseFilesystemRepository,
     terminal: OperationPersistedSnapshot,
 ) -> OperationOwnerLease:
@@ -944,23 +984,25 @@ def _leave_settlement_lease_behind(
         ),
         owner_id="1" * 64,
         token="2" * 64,
-        acquired_at=_NOW,
-        expires_at=_NOW + timedelta(minutes=10),
+        acquired_at=SUPERVISOR_NOW,
+        expires_at=SUPERVISOR_NOW + timedelta(minutes=10),
     )
-    written = asyncio.run(leases.acquire(leftover, observed_at=_NOW))
+    written = asyncio.run(leases.acquire(leftover, observed_at=SUPERVISOR_NOW))
     assert written.disposition is OperationLeaseDisposition.ACQUIRED
     return leftover
 
 
-def _abandon_running_operation(
+def abandon_running_operation(
     tmp_path: Path, profile_objects: SecureObjectRepository
 ) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository, str]:
     """Leave a started operation whose host closed mid-run, with a one-minute lease nobody renews."""
-    journal, leases, operands = _repositories(storage_root=tmp_path / "durable-state", profile_objects=profile_objects)
+    journal, leases, operands = operation_repositories(
+        storage_root=tmp_path / "durable-state", profile_objects=profile_objects
+    )
     started = asyncio.Event()
     executor = WaitingExecutor(started=started, release=asyncio.Event())
-    owner = _supervisor(
-        registry=_registry(executor_type=WaitingExecutor, build=lambda: executor),
+    owner = operation_supervisor(
+        registry=supervisor_registry(executor_type=WaitingExecutor, build=lambda: executor),
         journal=journal,
         leases=leases,
         operands=operands,
@@ -968,13 +1010,13 @@ def _abandon_running_operation(
         token="2" * 64,
         lease_duration=timedelta(minutes=1),
     )
-    operation_id = asyncio.run(owner.submit(_request(subject_ref=_SHARED_SUBJECT), operation_id="3" * 64))
-    abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, started))
+    operation_id = asyncio.run(owner.submit(supervisor_request(subject_ref=SHARED_SUBJECT), operation_id="3" * 64))
+    abandoned = asyncio.run(close_host_over_live_executor(owner, operation_id, started))
     assert abandoned.lifecycle is OperationLifecycle.RUNNING
     return journal, leases, operands, operation_id
 
 
-def _lapse_settler(
+def lapse_settler(
     *,
     journal: OperationJournalRepository,
     leases: OperationLeaseFilesystemRepository,
@@ -982,8 +1024,10 @@ def _lapse_settler(
     at: datetime,
     registry: OperationRegistry | None = None,
 ) -> OperationSupervisor:
-    return _supervisor(
-        registry=_registry(executor_type=WaitingExecutor, build=IdleExecutor) if registry is None else registry,
+    return operation_supervisor(
+        registry=supervisor_registry(executor_type=WaitingExecutor, build=IdleExecutor)
+        if registry is None
+        else registry,
         journal=journal,
         leases=leases,
         operands=operands,

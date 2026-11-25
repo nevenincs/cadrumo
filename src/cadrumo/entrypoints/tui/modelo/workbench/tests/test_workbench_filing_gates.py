@@ -20,47 +20,41 @@ from decimal import Decimal
 import pytest
 from rich.cells import cell_len
 from textual.color import Color
-from textual.pilot import Pilot
 from textual.widgets import Static
 
 from ......application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
-from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
-    ModeloFormCalculationNote,
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormExport
+from ......application.modelo.work_form_field_vocabulary import (
     ModeloFormCasillaAddressV1,
-    ModeloFormExport,
     ModeloFormOrigin,
-    ModeloWorkForm,
 )
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_models import ModeloWorkForm
+from ......application.modelo.work_form_next_step import ModeloFormNextAction, blocking_count
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ......domain.modelos.verification_report import VerificationCompletenessStatus
 from ....components.host import ScreenHostApp
 from ....components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
+from ....tests.settling import settle
 from ..bulk_confirm import BulkConfirmScreen, TickBox
 from ..export import WorkbenchExportScreen
-from ..header import attention_chips, blocking_count
+from ..header import attention_chips
 from ..issue_projection import issue_lines
-from ..issue_scale import IssueLevel
 from ..issues import WorkbenchIssuesScreen
-from ..progress import NextAction, next_action_text, workbench_progress
+from ..progress import next_action_text
 from ..review import EditReviewScreen, ReviewNote
 from ..screen import ModeloWorkbenchScreen
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK
 from .declaration_states import with_findings
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, served_progress, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 40)
 _WITHHOLDING = "06"
-
-
-async def _settle[ResultT](pilot: Pilot[ResultT], times: int = 4) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 def _notice(screen: ModeloWorkbenchScreen) -> str:
@@ -113,17 +107,17 @@ async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_whi
         screen = ModeloWorkbenchScreen(FakeReader(form=_cause(cause), verified=True), actions=actions)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             await pilot.press("e")
-            await _settle(pilot)
+            await settle(pilot)
             after_export = app.screen
             export_notice = _notice(screen)
             offered = after_export.fields if isinstance(after_export, BulkConfirmScreen) else ()
             await pilot.press("escape")
-            await _settle(pilot)
+            await settle(pilot)
             # F8 runs the one action the next-action line names, and never passes what withholds the filing.
             await pilot.press("f8")
-            await _settle(pilot)
+            await settle(pilot)
             after_f8 = app.screen
             app.exit(None)
 
@@ -132,11 +126,11 @@ async def test_the_file_and_the_recording_are_withheld_by_each_cause_and_say_whi
     if cause == "one-assumed":
         assert isinstance(after_export, BulkConfirmScreen), "the confirm step is offered in place of the export"
         assert [field.address for field in offered] == [ModeloFormCasillaAddressV1(casilla_id=_WITHHOLDING)]
-        assert export_notice == tr("tui.modelo.workbench.export.confirm_first", locale="en", count=1)
+        assert export_notice == f"{tr('workspace.modelo.export.confirm_first', locale='en', count=1)} [n]"
         assert isinstance(after_f8, BulkConfirmScreen), "F8 goes to the confirm step"
     elif cause in {"one-blocking", "one-blocking-note"}:
         assert isinstance(after_export, WorkbenchIssuesScreen), "what blocks filing is shown in place of the export"
-        assert export_notice == tr("tui.modelo.workbench.export.resolve_first", locale="en", count=1)
+        assert export_notice == f"{tr('workspace.modelo.export.resolve_first', locale='en', count=1)} [i]"
         assert isinstance(after_f8, WorkbenchIssuesScreen), "F8 goes to what blocks filing"
     else:
         assert isinstance(after_export, WorkbenchExportScreen)
@@ -154,17 +148,17 @@ def _with_current_file(form: ModeloWorkForm) -> ModeloWorkForm:
 
 def test_recording_comes_after_the_file_and_is_withheld_as_the_file_is() -> None:
     clear = _cause("nothing-withholds")
-    file_first = workbench_progress(clear, staged=0, verified=True, filed=False)
-    record_next = workbench_progress(_with_current_file(clear), staged=0, verified=True, filed=False)
-    assumed = workbench_progress(_with_current_file(_cause("one-assumed")), staged=0, verified=True, filed=False)
-    blocking = workbench_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
-    filed = workbench_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
+    file_first = served_progress(clear, staged=0, verified=True, filed=False)
+    record_next = served_progress(_with_current_file(clear), staged=0, verified=True, filed=False)
+    assumed = served_progress(_with_current_file(_cause("one-assumed")), staged=0, verified=True, filed=False)
+    blocking = served_progress(_with_current_file(_cause("one-blocking")), staged=0, verified=True, filed=False)
+    filed = served_progress(_cause("one-blocking"), staged=0, verified=True, filed=True)
 
-    assert file_first.next_action is NextAction.EXPORT and not file_first.filing_withheld
-    assert record_next.next_action is NextAction.RECORD_AFTER_FILE and not record_next.filing_withheld
-    assert assumed.filing_withheld and assumed.assumed == 1 and assumed.next_action is NextAction.CONFIRM
-    assert blocking.filing_withheld and blocking.blocking == 1 and blocking.next_action is NextAction.RESOLVE
-    assert not filed.filing_withheld
+    assert file_first.next_action is ModeloFormNextAction.EXPORT
+    assert record_next.next_action is ModeloFormNextAction.RECORD_AFTER_FILE
+    assert assumed.count == 1 and assumed.next_action is ModeloFormNextAction.CONFIRM
+    assert blocking.count == 1 and blocking.next_action is ModeloFormNextAction.RESOLVE
+    assert filed.next_action is not ModeloFormNextAction.RESOLVE
 
 
 def _blocked() -> ModeloWorkForm:
@@ -174,13 +168,13 @@ def _blocked() -> ModeloWorkForm:
 
 def test_resolving_counts_what_blocks_filing_as_the_header_chip_does() -> None:
     form = _blocked()
-    progress = workbench_progress(form, staged=0, verified=False, filed=False)
+    progress = served_progress(form, staged=0, verified=False, filed=False)
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
         line = next_action_text(progress, OutputLanguage.EN)
 
     assert len(form.issues) == 3
-    assert progress.next_action is NextAction.RESOLVE
+    assert progress.next_action is ModeloFormNextAction.RESOLVE
     assert progress.count == chips["blocks"] == blocking_count(form) == 1
     assert line == "Resolve what blocks filing (to do: 1)"
 
@@ -202,7 +196,7 @@ async def test_every_blocker_mark_the_header_and_stepper_draw_is_in_the_error_co
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
             app.theme = theme
-            await _settle(pilot)
+            await settle(pilot)
             error = Color.parse(app.theme_variables["error"])
             foreground = Color.parse(app.theme_variables["foreground"])
             chips = _glyph_colours(screen.query_one("#wb-chips", Static), BLOCKS_MARK.glyph)
@@ -210,7 +204,7 @@ async def test_every_blocker_mark_the_header_and_stepper_draw_is_in_the_error_co
             check = _glyph_colours(screen.query_one("#wb-chips", Static), CHECK_MARK.glyph)
             # The larger help band names the symbols on screen, the blocker's among them.
             await pilot.press("question_mark")
-            await _settle(pilot)
+            await settle(pilot)
             named = _glyph_colours(screen.query_one("#wb-help", Static), BLOCKS_MARK.glyph)
             app.exit(None)
 
@@ -230,7 +224,7 @@ async def test_a_review_finding_that_blocks_is_marked_from_the_registry_in_the_e
         review = EditReviewScreen((), notes=notes)
         app = ScreenHostApp(review)
         async with app.run_test(size=_SIZE) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             findings = review.query_one("#review-findings", Static)
             text = str(findings.render())
             error = Color.parse(app.theme_variables["error"])
@@ -252,7 +246,7 @@ async def test_with_no_result_the_chips_start_where_the_other_header_lines_start
         screen = ModeloWorkbenchScreen(FakeReader(form=form), actions=FakeActions())
         app = ScreenHostApp(screen)
         async with app.run_test(size=(width, 30)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             chips = screen.query_one("#wb-chips", Static)
             chips_x = chips.content_region.x
             stepper_x = screen.query_one("#wb-stepper", Static).content_region.x
@@ -273,16 +267,16 @@ async def test_the_bulk_confirm_tick_reads_unticked_until_the_filer_ticks_it() -
         dialog = BulkConfirmScreen(fields)
         app = ScreenHostApp(dialog)
         async with app.run_test(size=(80, 24)) as pilot:
-            await _settle(pilot)
+            await settle(pilot)
             tick = dialog.query_one("#bulk-tick", TickBox)
             unticked = str(tick.render())
             await pilot.click("#bulk-tick")
-            await _settle(pilot)
+            await settle(pilot)
             ticked = str(tick.render())
             value = tick.value
             app.exit(None)
 
-    label = tr("tui.modelo.workbench.bulk_confirm.tick", locale="en")
+    label = tr("workspace.modelo.bulk_confirm.tick", locale="en")
     assert unticked.startswith("[ ]") and label in unticked
     assert "✓" not in unticked and "X" not in unticked
     assert value
@@ -297,13 +291,13 @@ def test_a_value_the_calculation_inferred_is_worth_checking_and_never_promised_a
     form = _declaration(assumed=False).model_copy(update={"calculation_notes": (note,)})
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
-        progress = workbench_progress(form, staged=0, verified=True, filed=False)
+        progress = served_progress(form, staged=0, verified=True, filed=False)
         lines = issue_lines(form)
 
     assert note.attention is ModeloFormAttention.CHECK
     assert "confirm" not in chips
-    assert progress.next_action is NextAction.EXPORT
-    assert [line.level for line in lines if line.from_calculation] == [IssueLevel.CHECK]
+    assert progress.next_action is ModeloFormNextAction.EXPORT
+    assert [line.level for line in lines if line.from_calculation] == [ModeloFormAttention.CHECK]
     assert blocking_count(form) == 0
 
 
@@ -312,7 +306,7 @@ def test_an_assumed_box_is_still_counted_to_confirm_and_offered_next() -> None:
     form = _declaration(assumed=True)
     with override_settings(cadrumo_output_language="en"):
         chips = {chip.level.value: chip.count for chip in attention_chips(form, recorded=False)}
-    progress = workbench_progress(form, staged=0, verified=True, filed=False)
+    progress = served_progress(form, staged=0, verified=True, filed=False)
 
     assert chips["confirm"] == 1
-    assert progress.next_action is NextAction.CONFIRM and progress.count == 1
+    assert progress.next_action is ModeloFormNextAction.CONFIRM and progress.count == 1

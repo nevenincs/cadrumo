@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from itertools import product
 
 import pytest
@@ -13,6 +14,7 @@ from .....core.aggregation import (
     BindingSourceKind,
 )
 from .....core.modelo import Modelo
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..binding_provider_registration import validator_for
 from ..binding_selector_utils import binding_row_set_selector
 from ..binding_value_contract import (
@@ -22,10 +24,19 @@ from ..binding_value_contract import (
 )
 from ..inventory_bindings import InventoryProvider, validate_inventory_binding
 from ..schema import BindingDefinition
+from .authored_editions import filing_year_envelope, newest_authored_edition
 
 _MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(autouse=True)
+def _pinned_authority() -> Iterator[None]:
+    """Hold the authority the runtime holds, so code that reads a form fact has it."""
+    with bundled_indexed_authority().operation():
+        yield
+
 
 _OPERATION_DESTINATIONS = {
     "complete_acquisition_cost": "0181",
@@ -85,19 +96,28 @@ def test_inventory_selector_accepts_each_exact_operation_destination(
         if _OPERATION_DESTINATIONS[operation] != destination
     ),
 )
-def test_inventory_selector_refuses_crossed_operation_destination_identity(
+def test_inventory_binding_validator_refuses_crossed_operation_destination_identity(
     operation: str,
     destination: str,
 ) -> None:
-    with pytest.raises(ValidationError, match="must target casilla"):
-        InventoryProvider.model_validate(_selector(operation, destination))
+    binding = BindingDefinition.model_construct(
+        id="inventory-crossed",
+        provider=_constructed_provider(operation, destination),
+        value=_MONEY_VALUE,
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+    )
+
+    failures = validate_inventory_binding(binding)
+
+    assert len(failures) == 1
+    assert "must target casilla" in failures[0]
 
 
 @pytest.mark.parametrize(
     "mutation",
     [
-        {"filing_year": 2024},
-        {"filing_year": "2025"},
+        {"filing_year": filing_year_envelope().floor},
+        {"filing_year": str(filing_year_envelope().horizon)},
         {"modelo": "130"},
         {"projection_grain": "taxpayer_year"},
         {"actividad_id": "literal-activity-forbidden"},
@@ -107,7 +127,6 @@ def test_inventory_selector_refuses_crossed_operation_destination_identity(
         {"grouping": "taxpayer_year"},
         {"operation": "complete_acquisition_cost"},
         {"row_field": "signed_stock_variation"},
-        {"target_casilla_id": "0155"},
         {"signed": True},
         {"source_ready": True},
     ],
@@ -140,9 +159,8 @@ def test_inventory_selector_roundtrips_without_taxpayer_activity_identity() -> N
 def test_inventory_binding_validator_preserves_the_operation_destination_failure() -> None:
     binding = BindingDefinition.model_construct(
         id="inventory-stock-increase",
-        # ``model_construct`` on both levels: the crossed operation/destination
-        # pair is exactly what the provider's own validator refuses, and this
-        # test proves the binding-level validator reports it too.
+        # ``model_construct`` on both levels: the binding-level validator owns
+        # the registry's destination for the operation.
         provider=_constructed_provider("closing_minus_opening_positive", "0182"),
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
@@ -174,7 +192,7 @@ def test_inventory_binding_reuses_the_canonical_row_set_projection() -> None:
         value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=("rd-439-2007:art-75",),
-        source_refs=("aeat-renta-2025-inventory",),
+        source_refs=(f"aeat-renta-{newest_authored_edition('100')}-inventory",),
     )
 
     row_set = binding_row_set_selector(binding)

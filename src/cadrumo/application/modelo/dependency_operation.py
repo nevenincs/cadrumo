@@ -1,12 +1,16 @@
-"""Registered cross-period dependency inspection under one authority pin."""
+"""Registered cross-period dependency inspection under one authority pin.
+
+It reads a :class:`CalculationRevision` against the pinned :class:`RegistrySnapshot`.
+"""
 
 from __future__ import annotations
 
+from datetime import date
 from functools import partial
-from typing import Annotated, Literal, Self
+from typing import Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
@@ -15,12 +19,19 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
+from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_prior_value_rules import set_aside_binding_ids
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.codes import ModeloCodeText
+from ...domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ..calculations.cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
 )
+from ..calculations.cross_period_models import operator_value_attestations
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     LIFECYCLE_SELECTED_PERIODS_REGISTERED_RESULT_TAX_VALUES_ACCESS,
@@ -42,7 +53,11 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .dependency_projection import DependencyCleanStateSnapshot, DependencyInventoryItemSnapshot
 from .dependency_read_ports import DependencyReadPorts, DependencyReadPortsFactory
-from .verification_cross_period import cross_period_expected_member_sets_from_profile
+from .verification_cross_period import (
+    Modelo202ResolverStores,
+    cross_period_expected_member_sets_from_profile,
+    modelo_202_instalment_resolver_for_snapshot,
+)
 
 MODELO_DEPENDENCY_OPERATION_DEFINITION_ID = "modelo.work.dependencies"
 
@@ -52,7 +67,7 @@ class ModeloDependencyRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     filing_year: FilingYear
-    modelo: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None = None
+    modelo: ModeloCodeText | None = None
     period: PublicPeriod | None = None
 
     @model_validator(mode="after")
@@ -67,7 +82,7 @@ class ModeloDependencySnapshot(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     filing_year: FilingYear
-    modelo_filter: Annotated[str, Field(pattern=r"^[0-9]{3}$")] | None
+    modelo_filter: ModeloCodeText | None
     period_filter: PublicPeriod | None
     target_modelos: tuple[str, ...]
     source_modelos: tuple[str, ...]
@@ -141,7 +156,7 @@ def dependency_access_periods(
         return frozenset[Period]()
     if payload.modelo is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    snapshot = operation.snapshot(payload.modelo, filing_year=payload.filing_year, period=payload.period.code)
+    snapshot = operation.reading_snapshot(payload.modelo, filing_year=payload.filing_year, period=payload.period.code)
     requirements = cross_period_dependency_requirements(snapshot)
     return frozenset({payload.period.to_period(), *(item.period for item in requirements)})
 
@@ -155,9 +170,39 @@ def _require_dependency_profile_ports(ports: DependencyReadPorts, profile_id: st
             repositories.calculation,
             repositories.filing,
             repositories.verification,
+            repositories.transaction,
         )
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+def _declaration_revision(
+    snapshot: RegistrySnapshot,
+    *,
+    modelo: str,
+    period: Period,
+    bucket_id: str,
+    work_catalogue: WorkUnitCatalogue,
+    ports: DependencyReadPorts,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision | None:
+    """The current calculation of the declaration these coordinates address, when one is kept.
+
+    Its operator layer holds the figures the filer stated for earlier returns, so
+    the dependency read judges an attested dependency exactly as verification does.
+    """
+    unit = work_catalogue.get(
+        derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=snapshot.revision.id,
+        )
+    )
+    if unit is None or unit.state is WorkUnitState.DESCARTADO or unit.current_calculation_revision_id is None:
+        return None
+    return ports.repositories.calculation.load(operation=operation).get(unit.current_calculation_revision_id)
 
 
 class ModeloDependencyExecutor:
@@ -179,7 +224,24 @@ class ModeloDependencyExecutor:
         )
         clean_state = None
         if payload.period is not None and payload.modelo is not None:
-            snapshot = operation.snapshot(payload.modelo, filing_year=payload.filing_year, period=payload.period.code)
+            snapshot = operation.reading_snapshot(
+                payload.modelo, filing_year=payload.filing_year, period=payload.period.code
+            )
+            work_catalogue = repositories.work_unit.load()
+            declaration = _declaration_revision(
+                snapshot,
+                modelo=payload.modelo,
+                period=payload.period.to_period(),
+                bucket_id=profile_id,
+                work_catalogue=work_catalogue,
+                ports=ports,
+                operation=operation,
+            )
+            # The modality is the one verification reads, at the close of the target's year.
+            modelo_202_modality = derive_modelo_202_modality(
+                ports.profile, effective_date=date(payload.filing_year, 12, 31)
+            ).modality
+            attestations = operator_value_attestations(declaration)
             verdict = evaluate_cross_period_clean_state(
                 snapshot,
                 operation=operation,
@@ -194,6 +256,25 @@ class ModeloDependencyExecutor:
                 activity_start_date=ports.profile.activity_start_date,
                 taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(ports.profile),
                 m111_no_retenciones_periods=ports.m111_no_retenciones_periods,
+                operator_value_attestations=attestations,
+                work_catalogue=work_catalogue,
+                modelo_202_modality=modelo_202_modality,
+                modelo_202_instalment_resolver=modelo_202_instalment_resolver_for_snapshot(
+                    snapshot,
+                    bucket_id=profile_id,
+                    stores=Modelo202ResolverStores(
+                        observations=repositories.observation,
+                        calculations=repositories.calculation,
+                        work_units=repositories.work_unit,
+                        transactions=repositories.transaction,
+                    ),
+                    activity_start_date=ports.profile.activity_start_date,
+                    modality=modelo_202_modality,
+                    operation=operation,
+                ),
+                set_aside_binding_ids=set_aside_binding_ids(
+                    snapshot.revision, {} if declaration is None else declaration.casilla_values
+                ),
             )
             allowed = dependency_access_periods(payload, operation)
             if verdict.bucket_id != profile_id or any(

@@ -63,7 +63,7 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 
 from ..compiler.authority import compiled_bundled_authority
 from .external_grounding import RentaWebOpenReplayPayload

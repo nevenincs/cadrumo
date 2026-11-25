@@ -34,12 +34,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
+from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
 from cadrumo.application.modelo.edit_admission import (
     ModeloEditRenewalResultV1,
     admit_modelo_edit_baseline,
     renew_modelo_edit_baseline,
 )
-from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
+from cadrumo.application.modelo.edit_apply_contracts import ModeloEditApplyPublicResultV1, ModeloEditApplySubmissionV1
 from cadrumo.application.modelo.edit_contract import ModeloEditMutationFamily
 from cadrumo.application.modelo.edit_models import (
     ModeloBindingEditIntentV1,
@@ -49,24 +50,27 @@ from cadrumo.application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from cadrumo.application.modelo.edit_operation import ModeloEditApplyExecutor
 from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from cadrumo.application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from cadrumo.application.modelo.edit_transient_operand import modelo_edit_financial_operand
 from cadrumo.application.modelo.iva_wallet_seed import seed_iva_compensation_period_for_bucket
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    ModeloEditApplyExecutor,
-    ModeloWorkCalculateExecutor,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from cadrumo.application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationEffect
 from cadrumo.core.period import Period
@@ -75,18 +79,24 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import (
     build_attachment_store,
-    build_calculation_action_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_iva_wallet_seed_ports,
+)
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
     build_work_lifecycle_ports,
 )
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+
+from .production_operation_registry import production_operation_registry
 
 SEEDED_AT = datetime(2026, 4, 2, 9, 0, tzinfo=UTC)
 _BUCKET_ID = "13000000-0000-4000-8000-000000000730"
 _ACTIVITY_START = UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1))
+# An activity in estimación directa always runs under one modality; the normal one leaves box 02
+# as the expenses the filer states, with no art. 30.2.ª provision added.
+_ESTIMATION_REGIME_PATH = "irpf.estimation_regime"
 
 
 @dataclass(slots=True)
@@ -144,11 +154,16 @@ class _ExecutorContext:
 
 @dataclass(frozen=True, slots=True)
 class AppliedEdit:
-    """One executor run: the settled revision id, or the registered refusal it raised."""
+    """One executor run: the settled revision id, or the registered refusal it raised.
+
+    ``calculation_revision_id`` is ``None`` on a refusal and on an applied edit
+    that withdrew the work unit's calculation.
+    """
 
     calculation_revision_id: str | None
     refusal: CadrumoError | None
     effects: tuple[OperationEffect, ...]
+    public_result: ModeloEditApplyPublicResultV1 | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,8 +199,10 @@ class SeededOperatorWork:
             work_catalogue=self.ports.work_unit_repository.load(),
             calculation_catalogue=self.ports.calculation_repository.load(),
             operation=self.operation,
-            operation_contracts=build_production_operation_registry().public_contract_set,
+            operation_contracts=production_operation_registry().public_contract_set,
             issued_at=issued_at,
+            observation_repository=self.ports.observation_repository,
+            filing_catalogue=self.ports.filing_repository.load(),
         )
 
     def renew(self, baseline: ModeloEditBaselineV1) -> ModeloEditRenewalResultV1:
@@ -195,7 +212,9 @@ class SeededOperatorWork:
             work_catalogue=self.ports.work_unit_repository.load(),
             calculation_catalogue=self.ports.calculation_repository.load(),
             operation=self.operation,
-            operation_contracts=build_production_operation_registry().public_contract_set,
+            operation_contracts=production_operation_registry().public_contract_set,
+            observation_repository=self.ports.observation_repository,
+            filing_catalogue=self.ports.filing_repository.load(),
         )
 
     def sibling(self, period_code: str) -> SeededOperatorWork:
@@ -247,7 +266,9 @@ class SeededOperatorWork:
         request = OperationRequest(
             definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
             subject_ref=self.work_unit_id,
-            payload=ModeloEditOperatorInputV2(submission=ModeloEditApplySubmissionV1.from_submission(submission)),
+            payload=ModeloEditOperatorInputV2(
+                submission=ModeloEditApplySubmissionV1.from_submission(submission), output_language=OutputLanguage.EN
+            ),
         )
         return self._run_edit(request, operation_id=new_operation_id())
 
@@ -274,6 +295,7 @@ class SeededOperatorWork:
             receipt_repository_factory=self.receipt_repository_factory,
         )
         events = _RecordedEvents()
+        operands = _RecordedOperands()
         identity = OperationIdentity(
             operation_id=operation_id,
             definition_id=request.definition_id,
@@ -292,6 +314,7 @@ class SeededOperatorWork:
                     identity=identity,
                     authority_operation=self.operation,
                     events=events,
+                    operands=operands,
                     typed_financial_operand=access,
                 )
                 await executor.execute(typed_request, cast(OperationExecutorContext, context))
@@ -302,9 +325,15 @@ class SeededOperatorWork:
             return AppliedEdit(calculation_revision_id=None, refusal=refused, effects=tuple(events.effects))
         finally:
             prepared.release()
-        head = self.require_head()
+        # A withdrawn calculation leaves the work unit with no current calculation.
+        head = self.head()
         return AppliedEdit(
-            calculation_revision_id=head.calculation_revision_id, refusal=None, effects=tuple(events.effects)
+            calculation_revision_id=None if head is None else head.calculation_revision_id,
+            refusal=None,
+            effects=tuple(events.effects),
+            public_result=next(
+                (result for result in operands.results if isinstance(result, ModeloEditApplyPublicResultV1)), None
+            ),
         )
 
     def recalculate(self) -> CalculationRevision:
@@ -370,11 +399,14 @@ def seeded_operator_work(
     filing_year: int = 2026,
     period_code: str = "1T",
     extra_facts: tuple[UserProfileFact, ...] = (),
+    estimation_regime: str | None = "directa_normal",
 ) -> Generator[SeededOperatorWork]:
     """Yield one seeded, not yet calculated work unit over isolated encrypted storage.
 
     ``extra_facts`` are profile facts the declaration needs beyond the
     modelo-ready baseline, such as an attestation the check reads.
+    ``estimation_regime`` is the activity's IRPF estimation regime; ``None``
+    leaves it unrecorded, as a profile that never answered it.
     """
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
@@ -386,7 +418,19 @@ def seeded_operator_work(
                 context=create_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=(*MODELO_READY_PROFILE_FACTS, _ACTIVITY_START, *extra_facts),
+                facts=persona_facts_beneath(
+                    (
+                        COLEGIO_CONCERTADO_ATTESTATION,
+                        _ACTIVITY_START,
+                        *(
+                            ()
+                            if estimation_regime is None
+                            else (UserProfileFact(path=_ESTIMATION_REGIME_PATH, value=estimation_regime),)
+                        ),
+                        *extra_facts,
+                    ),
+                    without=(_ESTIMATION_REGIME_PATH,) if estimation_regime is None else (),
+                ),
                 created_at=SEEDED_AT,
                 updated_at=SEEDED_AT,
             )

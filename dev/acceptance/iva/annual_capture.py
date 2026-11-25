@@ -8,31 +8,32 @@ from dev.acceptance.installed_cli import InstalledCli
 
 from .cli_journey import (
     SanitizedCommandReceipt,
-    _invoice_add_args,
-    _invoice_line,
-    _required_id,
-    _result,
-    _run,
+    invoice_add_args,
+    invoice_line,
+    required_id,
+    result,
+    run,
 )
 from .filing_year import IvaJourneyYear
 
 
-def _add_issued_invoice(
+def add_issued_invoice(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> str:
-    invoice = _result(
-        _run(
+    """Add the issued invoice for the annual capture journey and return its id."""
+    invoice = result(
+        run(
             cli,
             receipts,
             artifact,
-            _invoice_add_args(
+            invoice_add_args(
                 kind="issued",
                 counterparty_name="Synthetic annual-foundation client SL",
-                counterparty_nif="A58818501",
+                counterparty_nif="B00000281",
                 invoice_number=f"IVA-ISS-ANNUAL-FOUNDATION-{journey_year.year}-1T",
                 invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
-                line=_invoice_line(
+                line=invoice_line(
                     description="Synthetic annual-foundation sale",
                     subtotal="100.00",
                     iva_amount="21.00",
@@ -41,10 +42,10 @@ def _add_issued_invoice(
             result_keys=("invoice_id",),
         )
     )
-    return _required_id(invoice, "invoice_id")
+    return required_id(invoice, "invoice_id")
 
 
-def _add_documented_ledger_facts(
+def add_documented_ledger_facts(
     *,
     cli: InstalledCli,
     receipts: list[SanitizedCommandReceipt],
@@ -52,6 +53,7 @@ def _add_documented_ledger_facts(
     purchase_evidence_id: str,
     journey_year: IvaJourneyYear,
 ) -> tuple[str, ...]:
+    """Add the documented sales and purchase ledger facts for the annual capture journey."""
     year = journey_year.year
     sales = (
         ("1T", journey_year.iso_date(2, 10), "2420.00", "2000.00", "420.00"),
@@ -137,15 +139,15 @@ def _add_documented_transaction(
     if purchase_evidence_id is not None:
         args.extend(("--purchase-invoice-evidence-id", purchase_evidence_id))
     args.extend(("--source-jurisdiction", "ES", "--idempotency-key", idempotency_key))
-    return _required_id(
-        _result(_run(cli, receipts, artifact, tuple(args), result_keys=("transaction_id",))), "transaction_id"
+    return required_id(
+        result(run(cli, receipts, artifact, tuple(args), result_keys=("transaction_id",))), "transaction_id"
     )
 
 
 def _classify_purchase(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, transaction_id: str
 ) -> None:
-    _run(
+    run(
         cli,
         receipts,
         artifact,

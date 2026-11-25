@@ -7,12 +7,16 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.filing_year import FilingYear
+from ...core.decimal.constants import MONEY_ZERO
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.identity.digest import ContentDigest
+from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ...domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -21,13 +25,23 @@ from ...domain.contribuyente.inventory.closing_foundations import (
     PhysicalClosingObservation,
     PriorClosingContinuityEvidence,
 )
+from ...domain.contribuyente.inventory.closing_value_facts import (
+    InventoryClosingValueFacts,
+    InventoryPhysicalCountFacts,
+)
+from ...domain.contribuyente.inventory.corrections import InventoryCorrectionRefusalReason
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
+    InventoryCorrectionReason,
+    InventoryRetirementReason,
     MovementKind,
+    PurchaseLedgerRow,
+    ValuationMethod,
+    derive_inventory_acquisition_totals,
 )
 from ...domain.filing_evidence import FilingEvidenceReference
 from ..operations.public_scalar import PublicDecimal
@@ -40,13 +54,23 @@ INVENTORY_CREATE_OPERATION_DEFINITION_ID = "ledger.inventory.create"
 INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID = "ledger.inventory.movement.add"
 INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID = "ledger.inventory.valuation.preview"
 INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID = "ledger.inventory.closing-authority.record"
+INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID = "ledger.inventory.closing-value.record"
+INVENTORY_INSPECT_OPERATION_DEFINITION_ID = "ledger.inventory.inspect"
+INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID = "ledger.inventory.describe"
+INVENTORY_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.correct"
+INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID = "ledger.inventory.movement.correct"
+INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID = "ledger.inventory.movement.reverse"
+INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID = "ledger.inventory.movement.claim"
+INVENTORY_RETIRE_OPERATION_DEFINITION_ID = "ledger.inventory.retire"
+INVENTORY_RESTORE_OPERATION_DEFINITION_ID = "ledger.inventory.restore"
 
 INVENTORY_VALIDATION_REFUSAL_CODE = "REFUSED_PROFILE_INVENTORY_VALIDATION"
 INVENTORY_SERVICE_INPUT_REFUSAL_CODE = "REFUSED_INVENTORY_SERVICE_INPUT"
 INVENTORY_NOT_FOUND_REFUSAL_CODE = "REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND"
 INVENTORY_CONFLICT_REFUSAL_CODE = "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT"
 
-type InventoryRefusalReason = Literal[
+InventoryRefusalReason = Literal[
+    InventoryCorrectionRefusalReason,
     "activity_conflict",
     "activity_not_found",
     "invalid_valuation_method",
@@ -54,6 +78,8 @@ type InventoryRefusalReason = Literal[
     "inventory_validation",
     "closing_authority_conflict",
     "closing_authority_invalid",
+    "evidence_file_not_admitted",
+    "prior_closing_document_needed",
 ]
 type InventoryRefusalCode = Literal[
     "REFUSED_PROFILE_INVENTORY_VALIDATION",
@@ -61,8 +87,24 @@ type InventoryRefusalCode = Literal[
     "REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND",
     "REFUSED_INVENTORY_ACTIVIDAD_CONFLICT",
 ]
-type InventoryOperationId = Literal["list", "create", "movement.add", "valuation.preview", "closing-authority.record"]
-type InventoryMutationOperationId = Literal["create", "movement.add", "valuation.preview", "closing-authority.record"]
+InventoryLedgerChangeOperationId = Literal[
+    "describe",
+    "correct",
+    "movement.correct",
+    "movement.reverse",
+    "movement.claim",
+    "retire",
+    "restore",
+]
+InventoryMutationOperationId = Literal[
+    InventoryLedgerChangeOperationId,
+    "create",
+    "movement.add",
+    "valuation.preview",
+    "closing-authority.record",
+    "closing-value.record",
+]
+InventoryOperationId = Literal[InventoryMutationOperationId, "list", "inspect"]
 
 
 class _InventoryRequest(BaseModel):
@@ -81,9 +123,13 @@ class InventoryCreateRequest(_InventoryRequest):
     """Create one inventory ledger for the exact profile and activity."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: FourDigitYear
     valuation_method: str = Field(min_length=1)
     opening_stock: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
+
+
+def _stated_or(stated: PublicDecimal | None, derived: Decimal) -> Decimal:
+    return derived if stated is None else Decimal(stated.decimal)
 
 
 class InventoryAttributableCostComponentRequest(BaseModel):
@@ -125,10 +171,11 @@ class InventoryAcquisitionCostRequest(BaseModel):
     attributable_cost_components: tuple[InventoryAttributableCostComponentRequest, ...]
     evidence: tuple[InventoryAcquisitionEvidence, ...] = Field(min_length=1)
     completeness: InventoryAcquisitionCompleteness
-    directly_attributable_cost_total: PublicDecimal
-    nonrecoverable_iva_included: PublicDecimal
-    recoverable_iva_excluded: PublicDecimal
-    total_acquisition_cost: PublicDecimal
+    consideration_recargo_amount: PublicDecimal | None = None
+    directly_attributable_cost_total: PublicDecimal | None = None
+    nonrecoverable_iva_included: PublicDecimal | None = None
+    recoverable_iva_excluded: PublicDecimal | None = None
+    total_acquisition_cost: PublicDecimal | None = None
 
     @classmethod
     def from_domain(cls, acquisition: InventoryAcquisitionCost) -> InventoryAcquisitionCostRequest:
@@ -145,6 +192,11 @@ class InventoryAcquisitionCostRequest(BaseModel):
             ),
             evidence=acquisition.evidence,
             completeness=acquisition.completeness,
+            consideration_recargo_amount=(
+                None
+                if acquisition.consideration_recargo_amount == MONEY_ZERO
+                else PublicDecimal(decimal=str(acquisition.consideration_recargo_amount))
+            ),
             directly_attributable_cost_total=PublicDecimal(decimal=str(acquisition.directly_attributable_cost_total)),
             nonrecoverable_iva_included=PublicDecimal(decimal=str(acquisition.nonrecoverable_iva_included)),
             recoverable_iva_excluded=PublicDecimal(decimal=str(acquisition.recoverable_iva_excluded)),
@@ -152,28 +204,50 @@ class InventoryAcquisitionCostRequest(BaseModel):
         )
 
     def to_domain(self) -> InventoryAcquisitionCost:
-        """Build the existing canonical domain operand inside worker custody."""
+        """Build the canonical domain operand inside worker custody.
+
+        Totals the request omits are derived from its components; totals it states
+        are checked against that same derivation by the domain's validators.
+        """
+        components = tuple(
+            InventoryAttributableCostComponent(
+                component_id=component.component_id,
+                kind=component.kind,
+                taxable_base=Decimal(component.taxable_base.decimal),
+                iva_amount=Decimal(component.iva_amount.decimal),
+                deductible_iva_ratio=Decimal(component.deductible_iva_ratio.decimal),
+                evidence_references=component.evidence_references,
+            )
+            for component in self.attributable_cost_components
+        )
+        consideration = Decimal(self.consideration_excluding_iva.decimal)
+        iva = Decimal(self.consideration_iva_amount.decimal)
+        ratio = Decimal(self.consideration_deductible_iva_ratio.decimal)
+        stated_recargo = self.consideration_recargo_amount
+        recargo = MONEY_ZERO if stated_recargo is None else Decimal(stated_recargo.decimal)
+        derived = derive_inventory_acquisition_totals(
+            consideration_excluding_iva=consideration,
+            consideration_iva_amount=iva,
+            consideration_recargo_amount=recargo,
+            consideration_deductible_iva_ratio=ratio,
+            attributable_cost_components=components,
+        )
         return InventoryAcquisitionCost(
-            consideration_excluding_iva=Decimal(self.consideration_excluding_iva.decimal),
-            consideration_iva_amount=Decimal(self.consideration_iva_amount.decimal),
-            consideration_deductible_iva_ratio=Decimal(self.consideration_deductible_iva_ratio.decimal),
-            attributable_cost_components=tuple(
-                InventoryAttributableCostComponent(
-                    component_id=component.component_id,
-                    kind=component.kind,
-                    taxable_base=Decimal(component.taxable_base.decimal),
-                    iva_amount=Decimal(component.iva_amount.decimal),
-                    deductible_iva_ratio=Decimal(component.deductible_iva_ratio.decimal),
-                    evidence_references=component.evidence_references,
-                )
-                for component in self.attributable_cost_components
-            ),
+            consideration_excluding_iva=consideration,
+            consideration_iva_amount=iva,
+            consideration_recargo_amount=recargo,
+            consideration_deductible_iva_ratio=ratio,
+            attributable_cost_components=components,
             evidence=self.evidence,
             completeness=self.completeness,
-            directly_attributable_cost_total=Decimal(self.directly_attributable_cost_total.decimal),
-            nonrecoverable_iva_included=Decimal(self.nonrecoverable_iva_included.decimal),
-            recoverable_iva_excluded=Decimal(self.recoverable_iva_excluded.decimal),
-            total_acquisition_cost=Decimal(self.total_acquisition_cost.decimal),
+            directly_attributable_cost_total=_stated_or(
+                self.directly_attributable_cost_total, derived.directly_attributable_cost_total
+            ),
+            nonrecoverable_iva_included=_stated_or(
+                self.nonrecoverable_iva_included, derived.nonrecoverable_iva_included
+            ),
+            recoverable_iva_excluded=_stated_or(self.recoverable_iva_excluded, derived.recoverable_iva_excluded),
+            total_acquisition_cost=_stated_or(self.total_acquisition_cost, derived.total_acquisition_cost),
         )
 
 
@@ -181,7 +255,60 @@ class InventoryMovementAddRequest(_InventoryRequest):
     """Append one typed movement without putting source evidence on argv."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: FourDigitYear
+    movement_id: str = Field(min_length=1, max_length=64)
+    movement_date: date
+    kind: MovementKind
+    quantity: PublicDecimal
+    unit_cost: PublicDecimal | None = None
+    taxable_base: PublicDecimal | None = None
+    acquisition_cost: InventoryAcquisitionCostRequest | None = None
+    ledger_row: PurchaseLedgerRow = PurchaseLedgerRow.UNSTATED
+    claimed_transaction_id: TransactionId | None = None
+
+
+class InventoryValuationPreviewRequest(_InventoryRequest):
+    """Run and audit a valuation preview for one exact activity ledger."""
+
+    actividad_id: str = Field(min_length=1)
+    year: FourDigitYear
+
+
+class InventoryInspectRequest(_InventoryRequest):
+    """Read one exact activity ledger with its movements and retained history."""
+
+    actividad_id: str = Field(min_length=1)
+    year: FourDigitYear
+
+
+class InventoryLedgerChangeRequest(_InventoryRequest):
+    """One change to an exact ledger; repeating ``correction_id`` with the same request is a replay."""
+
+    actividad_id: str = Field(min_length=1)
+    year: FourDigitYear
+    correction_id: str = Field(min_length=1, max_length=64)
+
+
+class InventoryDescribeRequest(InventoryLedgerChangeRequest):
+    """Replace the descriptive facts, which never enter valuation."""
+
+    label: str = Field(min_length=1, max_length=128)
+    description: str | None = Field(default=None, min_length=1, max_length=1024)
+
+
+class InventoryCorrectRequest(InventoryLedgerChangeRequest):
+    """Rectify the opening value or the valuation method of an unconsumed ledger."""
+
+    reason: InventoryCorrectionReason
+    opening_stock: PublicDecimal | None = None
+    valuation_method: ValuationMethod | None = None
+
+
+class InventoryMovementCorrectRequest(InventoryLedgerChangeRequest):
+    """Supersede one movement with a replacement under a new ``movement_id``."""
+
+    target_movement_id: str = Field(min_length=1, max_length=64)
+    reason: InventoryCorrectionReason
     movement_id: str = Field(min_length=1, max_length=64)
     movement_date: date
     kind: MovementKind
@@ -191,11 +318,93 @@ class InventoryMovementAddRequest(_InventoryRequest):
     acquisition_cost: InventoryAcquisitionCostRequest | None = None
 
 
-class InventoryValuationPreviewRequest(_InventoryRequest):
-    """Run and audit a valuation preview for one exact activity ledger."""
+class InventoryMovementReverseRequest(InventoryLedgerChangeRequest):
+    """Take one movement out of the effective set, retaining it as evidence."""
+
+    target_movement_id: str = Field(min_length=1, max_length=64)
+    reason: InventoryCorrectionReason
+
+
+class InventoryMovementClaimRequest(InventoryLedgerChangeRequest):
+    """State which ledger transaction books one purchase, that none does, or clear the statement."""
+
+    movement_id: str = Field(min_length=1, max_length=64)
+    ledger_row: PurchaseLedgerRow
+    claimed_transaction_id: TransactionId | None = None
+
+    @model_validator(mode="after")
+    def _transaction_only_when_claimed(self) -> InventoryMovementClaimRequest:
+        if (self.ledger_row is PurchaseLedgerRow.CLAIMED) != (self.claimed_transaction_id is not None):
+            raise ValueError("a transaction is named exactly when the purchase claims one")
+        return self
+
+
+class InventoryRetireRequest(InventoryLedgerChangeRequest):
+    """Take the inventory out of the active register with every fact retained."""
+
+    reason: InventoryRetirementReason
+
+
+class InventoryRestoreRequest(InventoryLedgerChangeRequest):
+    """Bring a retired inventory back to the active register."""
+
+
+class InventoryPhysicalCountFactsInput(BaseModel):
+    """What a year-end count found, with the documents that show it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    observed_on: date
+    closing_value: PublicDecimal
+    valuation_basis: InventoryClosingValuationBasis
+    evidence: tuple[PhysicalClosingEvidence, ...] = Field(min_length=2)
+
+
+class InventoryClosingValueFactsInput(BaseModel):
+    """The plain facts of one closing value; every fingerprint is derived behind this boundary.
+
+    ``prior_evidence`` may stay empty only when the prior year's book holds its own closing.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    decision_id: str = Field(min_length=1, max_length=64)
+    authority: InventoryClosingAuthority
+    reason: str = Field(min_length=1, max_length=512)
+    decision_evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
+    physical_count: InventoryPhysicalCountFactsInput | None = None
+    prior_evidence: tuple[PriorClosingContinuityEvidence, ...] = ()
+
+    def to_domain(self, *, actividad_id: str, year: int) -> InventoryClosingValueFacts:
+        """Bind the facts to the book they close."""
+        count = self.physical_count
+        return InventoryClosingValueFacts(
+            decision_id=self.decision_id,
+            actividad_id=actividad_id,
+            year=year,
+            authority=self.authority,
+            reason=self.reason,
+            decision_evidence=self.decision_evidence,
+            physical_count=(
+                InventoryPhysicalCountFacts(
+                    observed_on=count.observed_on,
+                    closing_value=Decimal(count.closing_value.decimal),
+                    valuation_basis=count.valuation_basis,
+                    evidence=count.evidence,
+                )
+                if count is not None
+                else None
+            ),
+            prior_evidence=self.prior_evidence,
+        )
+
+
+class InventoryClosingValueRecordRequest(_InventoryRequest):
+    """Record one book's closing value from plain facts."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: FourDigitYear
+    facts: InventoryClosingValueFactsInput
 
 
 class InventoryClosingAuthorityDecisionRequest(BaseModel):
@@ -214,15 +423,14 @@ class InventoryClosingAuthorityDecisionRequest(BaseModel):
     physical_observation_id: str | None = Field(default=None, min_length=1, max_length=128)
     physical_observation_fingerprint: ContentDigest | None = None
     reason: str = Field(min_length=1, max_length=512)
-    actor: str = Field(min_length=1, max_length=64)
+    actor: str = Field(min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH)
     source_command: str = Field(min_length=1, max_length=128)
     decided_at: datetime
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
 
-    @model_validator(mode="after")
-    def _decision_timestamp_is_utc(self) -> InventoryClosingAuthorityDecisionRequest:
-        validate_utc_aware(self.decided_at)
-        return self
+    _decision_timestamp_is_utc = field_validator("decided_at", mode="after")(
+        pydantic_validation_boundary(validate_utc_aware)
+    )
 
 
 class InventoryPriorClosingLinkRequest(BaseModel):
@@ -231,8 +439,8 @@ class InventoryPriorClosingLinkRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    current_filing_year: int = Field(ge=2001, le=2100)
-    prior_filing_year: int = Field(ge=2000, le=2099)
+    current_filing_year: FilingYear
+    prior_filing_year: FilingYear
     prior_authoritative_closing_value: PublicDecimal
     current_opening_value: PublicDecimal
     prior_authoritative_source_fingerprint: ContentDigest
@@ -334,7 +542,7 @@ class InventoryClosingAuthorityRecordInput(BaseModel):
             reason=self.decision.reason,
             actor=self.decision.actor if actor is None else actor,
             source_command=self.decision.source_command,
-            decided_at=validate_utc_aware(self.decision.decided_at),
+            decided_at=self.decision.decided_at,
             evidence=self.decision.evidence,
         )
         physical = self.physical_observation
@@ -374,17 +582,25 @@ class InventoryClosingAuthorityRecordRequest(_InventoryRequest):
     """Record one complete typed closing-authority source in the profile."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900)
+    year: FourDigitYear
     authority_record: InventoryClosingAuthorityRecordInput
 
 
 __all__ = [
     "INVENTORY_CLOSING_AUTHORITY_RECORD_OPERATION_DEFINITION_ID",
     "INVENTORY_CONFLICT_REFUSAL_CODE",
+    "INVENTORY_CORRECT_OPERATION_DEFINITION_ID",
     "INVENTORY_CREATE_OPERATION_DEFINITION_ID",
+    "INVENTORY_DESCRIBE_OPERATION_DEFINITION_ID",
+    "INVENTORY_INSPECT_OPERATION_DEFINITION_ID",
     "INVENTORY_LIST_OPERATION_DEFINITION_ID",
     "INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID",
+    "INVENTORY_MOVEMENT_CLAIM_OPERATION_DEFINITION_ID",
+    "INVENTORY_MOVEMENT_CORRECT_OPERATION_DEFINITION_ID",
+    "INVENTORY_MOVEMENT_REVERSE_OPERATION_DEFINITION_ID",
     "INVENTORY_NOT_FOUND_REFUSAL_CODE",
+    "INVENTORY_RESTORE_OPERATION_DEFINITION_ID",
+    "INVENTORY_RETIRE_OPERATION_DEFINITION_ID",
     "INVENTORY_SERVICE_INPUT_REFUSAL_CODE",
     "INVENTORY_VALIDATION_REFUSAL_CODE",
     "INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID",
@@ -393,14 +609,24 @@ __all__ = [
     "InventoryClosingAuthorityDecisionRequest",
     "InventoryClosingAuthorityRecordInput",
     "InventoryClosingAuthorityRecordRequest",
+    "InventoryCorrectRequest",
     "InventoryCreateRequest",
+    "InventoryDescribeRequest",
+    "InventoryInspectRequest",
+    "InventoryLedgerChangeOperationId",
+    "InventoryLedgerChangeRequest",
     "InventoryListRequest",
     "InventoryMovementAddRequest",
+    "InventoryMovementClaimRequest",
+    "InventoryMovementCorrectRequest",
+    "InventoryMovementReverseRequest",
     "InventoryMutationOperationId",
     "InventoryOperationId",
     "InventoryPhysicalClosingObservationRequest",
     "InventoryPriorClosingLinkRequest",
     "InventoryRefusalCode",
     "InventoryRefusalReason",
+    "InventoryRestoreRequest",
+    "InventoryRetireRequest",
     "InventoryValuationPreviewRequest",
 ]

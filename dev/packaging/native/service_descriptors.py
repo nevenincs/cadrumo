@@ -3,28 +3,33 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE,
+    ATTACHMENT_RELEASE_LEDGER_NAMESPACE,
+    EXTENSION_SETTINGS_NAMESPACE,
+    LOCAL_MODEL_LIST_NAMESPACE,
+)
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.access_vocabulary import AccessAction
-from cadrumo_client.contracts.model_runs import MODEL_RUN_CAPABILITY
+from cadrumo_client.contracts.model_runs import MODEL_RUN_CAPABILITY, MODEL_RUN_LANE_ID_PATTERN
 
 from .hashing import digest
 from .layout import ApplicationImage, entrypoint_files
+
+if TYPE_CHECKING:
+    from cadrumo.application.operations.contract_manifest import ManifestOperationRegistry
 
 # The leading arguments that start the runtime console script as a role of the desktop image.
 _RUNTIME_ROLE = ("--role", "runtime")
 
 
-def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[ApplicationImage, ...]) -> str:
-    """Write immutable policy only after relocation has fixed executable hashes."""
-    from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
-
-    entrypoints = entrypoint_files(layout)
-    registry = build_manifest_operation_registry()
+def _public_operations(build_registry: Callable[[], ManifestOperationRegistry]) -> list[str]:
+    registry = build_registry()
     operations = sorted(
         contract.definition_id
         for contract in registry.public_contract_set.definitions
@@ -32,6 +37,15 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
             contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
         )
     )
+    return operations
+
+
+def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[ApplicationImage, ...]) -> str:
+    """Write immutable policy only after relocation has fixed executable hashes."""
+    from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+
+    entrypoints = entrypoint_files(layout)
+    operations = _public_operations(build_manifest_operation_registry)
     ceiling = {
         "operations": operations,
         "actions": sorted(action.value for action in AccessAction),
@@ -45,18 +59,50 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
     service: dict[str, Any] = {
         "service_id": "cadrumo-agent-service",
         "launch_image": entrypoints["cadrumo-agent-service"],
-        "launch_module": "cadrumo_agent_service.main",
+        "launch_module": "cadrumo_agent_service.bootstrap",
         "image_digest": digest(root / entrypoints["cadrumo-agent-service"]),
         "record_capabilities": [
             {
                 "capability": "provider-settings",
-                "namespace": "cadrumo.provider_settings",
-                "schema_version": 1,
-                "classification": "secret",
-                "key_pattern": "^[a-z][a-z0-9_]{0,39}$",
+                "namespace": EXTENSION_SETTINGS_NAMESPACE.namespace,
+                "schema_version": EXTENSION_SETTINGS_NAMESPACE.schema_version,
+                "classification": EXTENSION_SETTINGS_NAMESPACE.sensitivity.value,
+                # A provider-settings record is keyed by its lane id.
+                "key_pattern": MODEL_RUN_LANE_ID_PATTERN,
                 "maximum_bytes": 32768,
                 "actions": ["read", "write", "delete", "generation"],
-            }
+            },
+            # The person's local model list, in its own namespace so a list
+            # change never moves the provider-settings generation.
+            {
+                "capability": "model-role-selections",
+                "namespace": LOCAL_MODEL_LIST_NAMESPACE.namespace,
+                "schema_version": LOCAL_MODEL_LIST_NAMESPACE.schema_version,
+                "classification": LOCAL_MODEL_LIST_NAMESPACE.sensitivity.value,
+                "key_pattern": "^selections$",
+                "maximum_bytes": 32768,
+                "actions": ["read", "write", "delete", "generation"],
+            },
+            # The person's remembered attachment grants, and an append-only
+            # account of every release: its capability cannot delete a record.
+            {
+                "capability": "attachment-disclosure-grants",
+                "namespace": ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE.namespace,
+                "schema_version": ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE.schema_version,
+                "classification": ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE.sensitivity.value,
+                "key_pattern": "^remembered$",
+                "maximum_bytes": 32768,
+                "actions": ["read", "write", "delete", "generation"],
+            },
+            {
+                "capability": "attachment-release-ledger",
+                "namespace": ATTACHMENT_RELEASE_LEDGER_NAMESPACE.namespace,
+                "schema_version": ATTACHMENT_RELEASE_LEDGER_NAMESPACE.schema_version,
+                "classification": ATTACHMENT_RELEASE_LEDGER_NAMESPACE.sensitivity.value,
+                "key_pattern": "^release-[0-9a-f]{32}$",
+                "maximum_bytes": 2048,
+                "actions": ["read", "write"],
+            },
         ],
         # Hosted MCP processes attend through this service's session. The runtime
         # verifies their process ancestry and intersects their scope with this

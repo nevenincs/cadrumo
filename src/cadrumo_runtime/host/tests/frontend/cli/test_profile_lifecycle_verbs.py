@@ -57,8 +57,9 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.profile_lifecycle_support import seed
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
-from ._profile_cli_support import invoke_protected_profile
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+from .profile_cli_support import invoke_protected_profile
 
 __all__ = ["profile_storage_root_fixture"]
 
@@ -70,7 +71,7 @@ _UPDATED = tr("wizard.commands.status.updated", locale="en")
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(profile_storage_root: Path) -> Iterator[Path]:
+def isolated_backend(profile_storage_root: Path) -> Iterator[Path]:
     # open_test_profile_session (called inside seed) resolves the
     # file-backed master-key provider provisioned by this fixture. Sign-in and
     # every profile verb are hosted by the runtime, so the root is served by
@@ -156,34 +157,20 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
         log_in=False,
         label="alpha",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Alpha",
             "identity.surnames": "Operator",
             "activities.description": "alpha-design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     register_cli_profile(
         log_in=False,
         label="beta",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Beta",
             "identity.surnames": "Operator",
             "activities.description": "beta-consulting",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -334,7 +321,7 @@ def test_config_login_selects_profile_without_mutating_tax_history() -> None:
 
 
 @pytest.mark.windows_only
-def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path) -> None:
+def test_config_profile_view_emits_active_profile_facts(isolated_backend: Path) -> None:
     # Selection supplies the target; password proof authorizes its runtime read.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000000T"})
     result = invoke_protected_profile("operator", "view")
@@ -349,9 +336,9 @@ def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path)
 
 
 @pytest.mark.windows_only
-def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_backend: Path) -> None:
+def test_config_profile_view_named_profile_includes_canonical_facts(isolated_backend: Path) -> None:
     # A named target is authenticated independently of ambient selection.
-    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
+    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00001005Q"})
     register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
     result = invoke_protected_profile("spouse", "view", "spouse")
     assert result.exit_code == 0, result.output
@@ -361,7 +348,7 @@ def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_ba
     # fingerprint at the rendering boundary; raw value must not leak.
     assert "identity.tax_id\tsha256:" in result.output
     assert "00000000T" not in result.output
-    assert "00000001R" not in result.output
+    assert "00001005Q" not in result.output
     assert "iva.regime\tGENERAL" in result.output
     assert "tax_residence.ccaa\tmadrid" in result.output
 
@@ -369,12 +356,16 @@ def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_ba
 def test_config_profile_delete_requires_yes() -> None:
     seed("operator")
     result = _invoke_profile_app(("delete", "operator"))
-    assert result.exit_code != 0
+    assert result.exit_code == 0, result.output
+    assert "deleted\tfalse" in result.output
+    listed = _invoke_profile(("list",))
+    assert listed.exit_code == 0, listed.output
+    assert "operator" in listed.output
 
 
 def test_config_profile_delete_tombstones_with_yes() -> None:
-    # Registration selects the profile, and deleting the selected profile is
-    # refused, so the selection is cleared before the verb under test.
+    # Registration selects the profile; clearing the selection first keeps
+    # this case about an unselected profile.
     register_cli_profile(log_in=False, label="operator")
     _clear_selection()
     result = _invoke_profile_app(("delete", "operator", "--yes"))
@@ -392,8 +383,8 @@ def test_config_profile_list_excludes_a_tombstoned_profile() -> None:
     listing, indistinguishable from a live one.
     """
 
-    # Registration selects the profile, and deleting the selected profile is
-    # refused, so the selection is cleared before the verb under test.
+    # Registration selects the profile; clearing the selection first keeps
+    # this case about an unselected profile.
     register_cli_profile(log_in=False, label="operator")
     _clear_selection()
     assert _invoke_profile_app(("delete", "operator", "--yes")).exit_code == 0
@@ -429,8 +420,8 @@ def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> No
 
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
-    # Registration selects the profile, and deleting the selected profile is
-    # refused, so the selection is cleared before the verb under test.
+    # Registration selects the profile; clearing the selection first keeps
+    # this case about an unselected profile.
     register_cli_profile(log_in=False, label="operator")
     pointer = read_profile_bucket("operator")
     assert pointer is not None
@@ -447,7 +438,7 @@ def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> No
 
 
 @pytest.mark.windows_only
-def test_config_profile_view_runs_validation_inline(_isolated_backend: Path) -> None:
+def test_config_profile_view_runs_validation_inline(isolated_backend: Path) -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
     register_cli_profile(log_in=False, label="operator")
@@ -459,7 +450,7 @@ def test_config_profile_view_runs_validation_inline(_isolated_backend: Path) -> 
 
 
 @pytest.mark.windows_only
-def test_show_and_status_do_not_contradict_on_a_registered_profile(_isolated_backend: Path) -> None:
+def test_show_and_status_do_not_contradict_on_a_registered_profile(isolated_backend: Path) -> None:
     """``show`` and ``status`` report two distinct notions without colliding.
 
     A registered profile carries a schema-valid record but has not yet
@@ -512,20 +503,20 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile(_isolated_bac
     assert "readiness\tready" not in status_result.output
 
 
-def test_config_profile_view_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
+def test_config_profile_view_refuses_when_no_active_profile(isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
     from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
     from cadrumo.core.config import override_settings
 
-    write_pointer(_isolated_backend, BucketPointer.absent(transition_revision=1))
+    write_pointer(isolated_backend, BucketPointer.absent(transition_revision=1))
     with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("view",))
     assert result.exit_code != 0
 
 
 @pytest.mark.windows_only
-def test_config_profile_edit_quiet_emits_updated_confirmation(_isolated_backend: Path) -> None:
+def test_config_profile_edit_quiet_emits_updated_confirmation(isolated_backend: Path) -> None:
     """``profile edit --quiet`` must emit a confirmation line with ``Status\\tupdated``."""
 
     register_cli_profile(log_in=False, label="editme")
@@ -550,7 +541,7 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(_isolated_backend:
 
 
 @pytest.mark.windows_only
-def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(_isolated_backend: Path) -> None:
+def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(isolated_backend: Path) -> None:
     """A non-interactive ``profile edit`` (no flags) refuses with an edit-specific hint.
 
     The shared no-console message names ``profile create``, which reads
@@ -575,14 +566,14 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(_isolated_back
 # --- Fix 3: degraded profile status exits non-zero ---
 
 
-def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_backend: Path) -> None:
+def test_config_profile_status_exits_nonzero_for_dangling_pointer(isolated_backend: Path) -> None:
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
     from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
-    write_pointer(_isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))
+    write_pointer(isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))
 
     result = _invoke_profile(("status",))
 

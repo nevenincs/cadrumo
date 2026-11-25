@@ -94,7 +94,7 @@ def test_the_operation_result_is_the_document_the_command_prints(
 
     monkeypatch.setattr(handler, "emit_envelope", capture_envelope)
 
-    handler._render_reconciliation_report(
+    handler.render_reconciliation_report(
         cast(typer.Context, cast(object, None)), projection.to_report(), command="modelo.reconcile.pull"
     )
 

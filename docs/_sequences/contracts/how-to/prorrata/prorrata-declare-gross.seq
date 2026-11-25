@@ -1,0 +1,8 @@
+@step Record the gross deductible input VAT and the document that supports it.
+@result aeat --format json app ledger prorrata declare-gross --ejercicio 2026 --period 1T --amount 400.00 --evidence "operator-evidence:303-1T"
+@expect result.declaration.period == "1T"
+@expect result.declaration.gross_cuota == "400.00"
+@expect result.declaration.evidence_reference == "operator-evidence:303-1T"
+@expect result.declaration.provenance == "operator_declared"
+@expect result.count == 1
+@expect exit_code == 0

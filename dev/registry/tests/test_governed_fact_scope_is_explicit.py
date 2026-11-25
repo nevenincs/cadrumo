@@ -13,13 +13,14 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     validating_governed_facts,
 )
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.authority import compiled_bundled_authority
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_EFFECTIVE_DATE = date(2025, 6, 15)
+_EFFECTIVE_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 
 def test_token_construction_without_a_scope_refuses() -> None:

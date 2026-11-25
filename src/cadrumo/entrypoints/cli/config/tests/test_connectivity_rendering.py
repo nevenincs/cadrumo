@@ -31,7 +31,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
             html_fragment="<html></html>",
             detected_markers=("healthy",),
         ),
-        observed_at=datetime(2026, 5, 21, 12, 0, 0, tzinfo=UTC),
+        observed_at=datetime(1980, 5, 21, 12, 0, 0, tzinfo=UTC),
         retry_after_seconds=None,
     )
 

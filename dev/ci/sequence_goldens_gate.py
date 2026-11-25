@@ -3,14 +3,15 @@
 The gate re-executes every documented CLI sequence and compares each transcript
 with its committed golden. A pull request pays for it only when a changed path
 can alter documented output (:func:`dev.ci.change_scope.selects_sequence_goldens`),
-and even then a clean verdict already recorded for the identical input set is
-reused instead of executing again.
+and even then each sequence whose identical inputs already carry a recorded
+clean verdict is reused instead of executing again
+(:mod:`dev.docs.sequences.verdict_cache`).
 
 The verdict records live below the development cache root, which defaults to
 the checkout's own ``.cache`` and so dies with every fresh CI checkout. A CI step
 that points ``CADRUMO_DEV_CACHE_ROOT`` at runner-persistent storage keeps them
-between runs. Only a clean verdict is ever recorded, so a stale record can cost
-a re-run but can never turn a divergence green.
+between runs. Only a clean sequence is ever recorded, so a stale record can
+cost a re-run but can never turn a divergence green.
 """
 
 from __future__ import annotations
@@ -22,15 +23,13 @@ from pathlib import Path
 from typing import Final
 
 from dev.ci.change_scope import read_changed_files, selects_sequence_goldens
-from dev.docs.sequences.checks import check_sequences_in_subprocess, default_docs_root
+from dev.docs.sequences.checks import check_sequences_in_subprocess
 from dev.docs.sequences.errors import SequenceEngineError
 from dev.docs.sequences.golden_store import refresh_invocation
-from dev.docs.sequences.verdict_cache import check_reusing_verdict, published_verdict_key
 
 __all__ = [
     "DEFAULT_JOBS",
     "check_committed_goldens",
-    "committed_goldens_key",
     "main",
     "run_sequence_goldens_gate",
 ]
@@ -40,15 +39,6 @@ __all__ = [
 DEFAULT_JOBS: Final = 8
 
 
-def committed_goldens_key() -> str:
-    """Return the verdict key of the committed docs tree under the published authority.
-
-    The docs root and the absent goldens override match what a full docs build
-    passes, so a verdict recorded by either surface is reusable by the other.
-    """
-    return published_verdict_key(docs_root=default_docs_root(), goldens_root=None)
-
-
 def _check_committed_goldens(jobs: int) -> tuple[str, ...]:
     return check_sequences_in_subprocess(jobs=jobs)
 
@@ -56,15 +46,16 @@ def _check_committed_goldens(jobs: int) -> tuple[str, ...]:
 def check_committed_goldens(
     *,
     jobs: int = DEFAULT_JOBS,
-    input_key: Callable[[], str] = committed_goldens_key,
     check: Callable[[int], tuple[str, ...]] = _check_committed_goldens,
 ) -> tuple[str, ...]:
-    """Check the committed corpus through its one content-keyed verdict authority."""
-    problems, reused = check_reusing_verdict(input_key, lambda: check(jobs))
-    if reused is not None:
-        print(f"cli-sequence goldens: clean ({reused})")
-    elif not problems:
-        print("cli-sequence goldens: clean (recorded verdict)")
+    """Check the committed corpus through its one per-sequence verdict authority.
+
+    The docs root and the absent goldens override match what a full docs build
+    passes, so a verdict recorded by either surface is reusable by the other.
+    """
+    problems = check(jobs)
+    if not problems:
+        print("cli-sequence goldens: clean")
     return problems
 
 
@@ -72,7 +63,6 @@ def run_sequence_goldens_gate(
     changed_files: Iterable[str] | None,
     *,
     jobs: int = DEFAULT_JOBS,
-    input_key: Callable[[], str] = committed_goldens_key,
     check: Callable[[int], tuple[str, ...]] = _check_committed_goldens,
 ) -> int:
     """Run the gate for ``changed_files``; return 0 when clean or not selected, else 1."""
@@ -80,7 +70,7 @@ def run_sequence_goldens_gate(
         print("cli-sequence goldens: not selected; no changed path can alter documented output")
         return 0
     try:
-        problems = check_committed_goldens(jobs=jobs, input_key=input_key, check=check)
+        problems = check_committed_goldens(jobs=jobs, check=check)
     except SequenceEngineError as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1

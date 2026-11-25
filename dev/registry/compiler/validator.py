@@ -23,17 +23,23 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
+from datetime import date, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
+from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.calculations.registry.invoice_bindings import InvoiceProviderBase
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import ledger_iva_revision_vocabulary_failures
+from cadrumo.domain.calculations.registry.ledger_oss_bindings import ledger_oss_revision_vocabulary_failures
+from cadrumo.domain.calculations.registry.m347_threshold import resolve_counterpart_operation_claves
 from cadrumo.domain.calculations.registry.runtime_catalogues import RuntimeRegistryCatalogues
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
-from ._validate_helpers import missing_refs as _missing_refs
-from ._validate_producer_inventory import validate_producer_inventory
-from ._validate_revision_sections import validate_revision_definition
 from .corpus_catalogue import (
     compile_record_design_manifest_catalogue,
     verify_catalogue_identity_bindings,
@@ -52,9 +58,13 @@ from .source_evidence_fingerprint import (
     collect_source_evidence_fingerprints,
 )
 from .validate_evidence import EvidenceValidator, flush_corpus_text_cache
+from .validate_form_geometry import validate_form_geometry
+from .validate_helpers import missing_refs
+from .validate_household_row_owners import validate_household_row_owners
 from .validate_inherited_family_pairing import inherited_family_pairing_failures
 from .validate_layout_authority_content import validate_layout_authority_content
 from .validate_official_source_guidance_content import validate_suppression_notice_content
+from .validate_producer_inventory import validate_producer_inventory
 from .validate_record_design_epochs import (
     validate_record_design_epoch_uniqueness,
     validate_record_design_epoch_window,
@@ -68,6 +78,7 @@ from .validate_revision_rules import (
     validate_periodic_deadline_completeness,
     validate_revision_windows,
 )
+from .validate_revision_sections import validate_revision_definition
 from .validation_memoization import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
@@ -76,6 +87,7 @@ from .validation_memoization import (
 from .validation_verdict_cache import ValidationVerdictScope, is_validated, record_validated
 
 if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
     from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 
@@ -249,7 +261,7 @@ class RegistryValidator:
         return self._catalogue_failures
 
     def _runtime_catalogue_failures(self) -> list[str]:
-        return _missing_refs(
+        return missing_refs(
             "runtime catalogues",
             "published authority",
             runtime_legal_reference_ids(self._runtime),
@@ -326,8 +338,8 @@ class RegistryValidator:
         if validate_catalogues:
             failures.extend(self._validate_catalogues())
         failures.extend(iva_binding_cash_accounting_vocabulary_failures(modelo, self._facts))
-        failures.extend(_missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
-        failures.extend(_missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
+        failures.extend(missing_refs("modelo", modelo.id, modelo.legal_refs, self._legal, "legal"))
+        failures.extend(missing_refs("modelo", modelo.id, modelo.source_refs, self._sources, "source"))
         failures.extend(
             self._evidence.require_any_source_tier(
                 "modelo", modelo.id, modelo.source_refs, REGISTRY_SOURCE_GROUNDING_TIERS
@@ -446,6 +458,8 @@ class RegistryValidator:
         try:
             failures = self._validate_registry_modelos(modelo_tuple)
             failures.extend(validate_registry_scope(modelo_tuple))
+            failures.extend(validate_form_geometry(modelo_tuple))
+            failures.extend(validate_household_row_owners(modelo_tuple))
         finally:
             # Source-text extraction is the validation's dominant cold cost;
             # persisting it here is what lets the next process skip it.
@@ -484,7 +498,98 @@ class RegistryValidator:
         for failure in validate_producer_inventory(prefix, revision):
             if failure not in failures:
                 failures.append(failure)
+        failures.extend(self._invoice_clave_failures(modelo, revision, prefix=prefix))
+        failures.extend(self._ledger_selector_vocabulary_failures(revision, prefix=prefix))
         return failures
+
+    def _ledger_selector_vocabulary_failures(self, revision: ModeloRevision, *, prefix: str) -> list[str]:
+        """Validate ledger IVA and OSS/IOSS selector tokens against this candidate's facts on the revision's start."""
+        if not any(binding.source in _DATED_LEDGER_SELECTOR_SOURCES for binding in revision.bindings):
+            return []
+        if self._support is None:
+            return [f"{prefix}: ledger selector vocabularies require the candidate support envelope"]
+        authority = CandidateFactAuthority(self._facts, self._support)
+        return [
+            f"{prefix}: {failure}"
+            for failure in (
+                *ledger_iva_revision_vocabulary_failures(revision, authority=authority),
+                *ledger_oss_revision_vocabulary_failures(revision, authority=authority),
+            )
+        ]
+
+    def _invoice_clave_failures(self, modelo: ModeloDefinition, revision: ModeloRevision, *, prefix: str) -> list[str]:
+        """Validate selectors against this candidate's dated operation catalogue."""
+        if modelo.id not in ("347", "349"):
+            return []
+        selectors = tuple(
+            (binding.id, binding.provider.claves)
+            for binding in revision.bindings
+            if isinstance(binding.provider, InvoiceProviderBase) and binding.provider.claves
+        )
+        if not selectors:
+            return []
+        if self._support is None:
+            return [f"{prefix}: invoice operation claves require the candidate support envelope"]
+        authority = CandidateFactAuthority(self._facts, self._support)
+        return [
+            failure
+            for point in _candidate_clave_dates(modelo.id, revision, authority)
+            for failure in _candidate_clave_failures_at(modelo.id, selectors, point, authority, prefix)
+        ]
+
+
+_DATED_LEDGER_SELECTOR_SOURCES = frozenset(
+    {BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.LEDGER_OSS_AGGREGATION}
+)
+"""Binding families whose selector tokens are members of a dated registry vocabulary."""
+
+
+def _candidate_clave_dates(
+    modelo: str, revision: ModeloRevision, authority: CandidateFactAuthority
+) -> tuple[date, ...]:
+    """Cover the supported revision window and each fact start or end transition."""
+    support = authority.supported_filing_years()
+    floor = max(revision.valid_from, date(support.floor, 1, 1))
+    ceiling = revision.valid_to or date.max
+    if support.hard_ceiling is not None:
+        ceiling = min(ceiling, date(support.hard_ceiling, 12, 31))
+    if floor > ceiling:
+        return ()
+    points = {floor}
+    fact = authority.catalogue.facts.get(f"m{modelo}-operation-clave-vocabulary")
+    if fact is not None:
+        for variant in fact.variants:
+            points.update(point for point in _fact_transition_dates(variant) if floor <= point <= ceiling)
+    return tuple(sorted(points))
+
+
+def _fact_transition_dates(variant: GovernedFactVariant) -> tuple[date, ...]:
+    """Return the coordinates where this variant starts or ceases to apply."""
+    points = []
+    if variant.valid_from is not None:
+        points.append(variant.valid_from)
+    if variant.valid_to is not None and variant.valid_to < date.max:
+        points.append(variant.valid_to + timedelta(days=1))
+    return tuple(points)
+
+
+def _candidate_clave_failures_at(
+    modelo: Literal["347", "349"],
+    selectors: tuple[tuple[BindingId, tuple[str, ...]], ...],
+    point: date,
+    authority: CandidateFactAuthority,
+    prefix: str,
+) -> list[str]:
+    """Compare one candidate fact window with every authored selector."""
+    try:
+        vocabulary = resolve_counterpart_operation_claves(modelo, effective_date=point, authority=authority)
+    except RegistryValidationError as error:
+        return [f"{prefix}: invoice operation clave catalogue at {point}: {error}"]
+    return [
+        f"{prefix}: binding {binding_id!r} selects unknown operation claves {sorted(unknown)} at {point}"
+        for binding_id, claves in selectors
+        if (unknown := set(claves) - vocabulary)
+    ]
 
 
 def runtime_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> frozenset[str]:

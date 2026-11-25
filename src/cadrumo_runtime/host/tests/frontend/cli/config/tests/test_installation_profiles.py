@@ -16,7 +16,6 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.capsule_archive import (
     PROFILE_CAPSULE_ARCHIVE_SUFFIX,
@@ -24,8 +23,8 @@ from cadrumo.application.user_profile.capsule_archive import (
     inspect_profile_capsule_archive,
     read_restorable_profile_capsule,
 )
+from cadrumo.application.user_profile.custody_crypto_contracts import ProfileCustodyRecordIntegrityError
 from cadrumo.application.user_profile.custody_ports import (
-    ProfileCustodyRecordIntegrityError,
     load_profile_custody_password_material,
     unlock_profile_custody_password,
 )
@@ -37,6 +36,7 @@ from cadrumo.application.user_profile.recovery_custody import (
 )
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.command_line_rendering import (
     Printed,
@@ -46,6 +46,7 @@ from cadrumo.tests.command_line_rendering import (
     command_result,
     json_document,
 )
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.installation_requests import (
     ArchiveImportPrepareReply,
     ArchiveImportPrepareRequest,
@@ -151,7 +152,7 @@ def _import_with_the_command(
     source: Path, root: Path, *, reveal_identifiers: bool, invoke_cli: Callable[..., Result]
 ) -> dict[str, object]:
     """Run ``config profile archive import`` against a storage root of its own and return what it printed."""
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         try:
             return command_result(
                 "config",
@@ -276,8 +277,8 @@ def test_an_import_republishes_the_prepared_source_and_answers_what_the_command_
     assert published == (str(installation.profile_id),)
     assert not any(secret)
     assert PROFILE_INPUT not in imported.model_dump_json()
-    assert PROFILE_INPUT not in caplog.text
-    assert all(PROFILE_INPUT not in repr(record.__dict__) for record in caplog.records)
+    assert PROFILE_INPUT not in delivered_text(caplog)
+    assert all(PROFILE_INPUT not in repr(record.__dict__) for record in delivered_records(caplog))
 
 
 def test_an_import_under_a_wrong_passphrase_is_refused_and_publishes_nothing(
@@ -305,7 +306,7 @@ def test_an_import_under_a_wrong_passphrase_is_refused_and_publishes_nothing(
     assert refused.detail.error_code == get_registered_error_code(ProfileAuthenticationRefusedError).code
     assert published == ()
     assert wrong not in refused.model_dump_json()
-    assert wrong not in caplog.text
+    assert wrong not in delivered_text(caplog)
 
 
 def test_a_source_changed_after_it_was_prepared_is_refused_before_the_passphrase_is_asked_for(
@@ -412,8 +413,8 @@ def test_enrolment_hands_out_a_code_that_resets_the_passphrase_and_answers_what_
     assert not any(secret)
     for private in (PROFILE_INPUT, held[0], held[0].lower()):
         assert private not in reply.model_dump_json()
-        assert private not in caplog.text
-        assert all(private not in repr(record.__dict__) for record in caplog.records)
+        assert private not in delivered_text(caplog)
+        assert all(private not in repr(record.__dict__) for record in delivered_records(caplog))
 
 
 @pytest.mark.parametrize("read_back", ["another-code-entirely", "éè is no recovery code"])

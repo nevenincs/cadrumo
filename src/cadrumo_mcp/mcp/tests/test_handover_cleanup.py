@@ -10,23 +10,23 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_mcp.mcp.access_scope import surface_scope
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 
 from .. import runtime_adapter as mcp_runtime
 from ..runtime_adapter import RuntimeMcpAdapter
-from .test_authentication_handover import _Client
+from .test_authentication_handover import Client
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-class _CloseClient(_Client):
+class _CloseClient(Client):
     def __init__(self, profile_id: UUID, *, fail_once: bool = False, fail_status: bool = False) -> None:
         super().__init__(profile_id, fail_status=fail_status)
         self.fail_once = fail_once
@@ -53,7 +53,7 @@ def _admit(monkeypatch: pytest.MonkeyPatch, candidate: _CloseClient) -> None:
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == candidate.profile_id
         assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
@@ -119,7 +119,7 @@ async def test_opener_failure_transfers_retained_cleanup_to_adapter(
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == original.profile_id
         assert credential_reference == reference

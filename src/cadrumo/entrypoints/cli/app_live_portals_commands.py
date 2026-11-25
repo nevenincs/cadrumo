@@ -16,7 +16,7 @@ from ...domain.portals.errors import PortalRegistryError
 from .common import emit_envelope
 
 
-def _project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
+def project_portal_refusal(error: PortalRegistryError) -> PortalRegistryError:
     """Attach the application-owned no-action projection to one domain refusal."""
     from ...application.operator_actions.preconditions import no_action_precondition_verdict
     from .common import attach_cli_policy_verdict
@@ -48,7 +48,7 @@ def portals_list(
     except PortalFilterConflictError as exc:
         raise typer.BadParameter(str(exc)) from exc
     except PortalRegistryError as exc:
-        raise _project_portal_refusal(exc) from exc
+        raise project_portal_refusal(exc) from exc
 
     lines = [f"count\t{result.count}"]
     for row in result.rows:
@@ -64,7 +64,7 @@ def portals_show(
     try:
         result = view_portal(portal_id)
     except PortalRegistryError as exc:
-        raise _project_portal_refusal(exc) from exc
+        raise project_portal_refusal(exc) from exc
     lines = [f"{key}\t{value}" for key, value in result.model_dump().items() if value != ""]
     emit_envelope(ctx, command="app.live.portals.view", result=result, lines=lines)
 

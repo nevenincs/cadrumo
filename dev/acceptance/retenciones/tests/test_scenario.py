@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ..scenario import (
+    SUPPORTED_YEAR,
     Direction,
     EvidenceState,
     build_installed_annual_cli_slices,
@@ -21,8 +22,8 @@ def test_payment_date_owns_the_period_across_invoice_boundary() -> None:
     scenario = build_scenario()
     payment = next(row for row in scenario.payments if row.source_id == "professional-cross-quarter")
 
-    assert payment.invoice_date.isoformat() == "2025-03-31"
-    assert payment.paid_on.isoformat() == "2025-04-02"
+    assert payment.invoice_date.isoformat() == f"{SUPPORTED_YEAR}-03-31"
+    assert payment.paid_on.isoformat() == f"{SUPPORTED_YEAR}-04-02"
     assert payment.period == "2T"
 
 
@@ -92,16 +93,19 @@ def test_nonresident_boundary_is_not_forced_into_resident_models() -> None:
 
 
 def test_scenario_refuses_unreviewed_year_reuse() -> None:
-    with pytest.raises(ValueError, match="grounded only for 2025"):
-        build_scenario(2026)
+    with pytest.raises(ValueError, match=f"grounded only for {SUPPORTED_YEAR}"):
+        build_scenario(SUPPORTED_YEAR + 1)
 
 
 def test_installed_cli_slices_close_each_invoice_without_a_rate_engine() -> None:
     """The periodic public inputs are supplied evidence, not computed rates."""
     professional, rent = build_installed_periodic_cli_slices()
 
-    assert professional.invoice_date.isoformat() == "2025-03-31"
-    assert tuple(item.paid_on.isoformat() for item in professional.allocations) == ("2025-04-02", "2025-06-30")
+    assert professional.invoice_date.isoformat() == f"{SUPPORTED_YEAR}-03-31"
+    assert tuple(item.paid_on.isoformat() for item in professional.allocations) == (
+        f"{SUPPORTED_YEAR}-04-02",
+        f"{SUPPORTED_YEAR}-06-30",
+    )
     assert sum(item.allocated_withholding for item in professional.allocations) == Decimal("95.00")
     assert sum(item.allocated_settlement for item in professional.allocations) == professional.expected_settlement
     assert rent.property_reference == "1234567VK4713C0001XY"
@@ -142,10 +146,10 @@ def test_installed_annual_cli_slices_keep_allocations_and_no_activity_history_di
 
 
 def test_installed_cli_slices_refuse_unreviewed_year_reuse() -> None:
-    with pytest.raises(ValueError, match="grounded only for 2025"):
-        build_installed_periodic_cli_slices(2026)
+    with pytest.raises(ValueError, match=f"grounded only for {SUPPORTED_YEAR}"):
+        build_installed_periodic_cli_slices(SUPPORTED_YEAR + 1)
 
 
 def test_installed_annual_cli_slices_refuse_unreviewed_year_reuse() -> None:
-    with pytest.raises(ValueError, match="grounded only for 2025"):
-        build_installed_annual_cli_slices(2026)
+    with pytest.raises(ValueError, match=f"grounded only for {SUPPORTED_YEAR}"):
+        build_installed_annual_cli_slices(SUPPORTED_YEAR + 1)

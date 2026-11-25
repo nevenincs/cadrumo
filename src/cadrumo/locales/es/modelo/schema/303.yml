@@ -33,8 +33,6 @@ modelo:
           dr303-11:
             label: IVA devengado adquisiciones intracomunitarias bienes y servicios
               - Cuota
-          dr303-111:
-            label: Rectificativa - Importe de la rectificación
           dr303-112:
             help: Pago a cuenta por entregas de gasolinas, gasóleos y biocarburantes
               atribuido al Estado
@@ -200,8 +198,6 @@ modelo:
           dr303-70:
             label: Resultado - Resultados a ingresar de anteriores autoliquidaciones
               del ejercicio y periodo
-          dr303-71:
-            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           dr303-74:
             label: Información adicional - Adquisiciones criterio caja - Base imponible
           dr303-75:
@@ -231,6 +227,9 @@ modelo:
           iva-autoconsumo-promotor-super-reducido-base:
             label: Base imponible del autoconsumo del promotor inmobiliario al tipo
               super-reducido (4%) (parte de la casilla oficial 01)
+          iva-base-autorepercutida-interior-devengado:
+            label: Base imponible IVA autorepercutida en operaciones interiores con
+              inversión del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 12)
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: Suma la base imponible autorrepercutida devengada en adquisiciones
               intracomunitarias.
@@ -250,6 +249,12 @@ modelo:
           iva-base-imponible-soportada-interiores-bienes-inversion:
             label: Base imponible IVA soportado en operaciones interiores con bienes
               de inversión (parte de la casilla oficial 30)
+          iva-base-modificacion-bases-cuotas:
+            label: Base imponible de la modificación procedente de las facturas rectificativas
+              del periodo (LIVA art. 80 y art. 89; casilla oficial 14)
+          iva-base-modificacion-bases-cuotas-operador:
+            label: Base imponible de la modificación que indicas tú, para lo que no
+              consta documento en el catálogo (casilla oficial 14)
           iva-base-repercutida-general:
             label: Base imponible IVA repercutido al tipo general (21%) (parte de
               la casilla oficial 07)
@@ -305,6 +310,20 @@ modelo:
           iva-cuota-devengada-total:
             label: Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido
               en adquisiciones intracomunitarias)
+          iva-cuota-modificacion-bases-cuotas:
+            label: Cuota de la modificación procedente de las facturas rectificativas
+              del periodo (LIVA art. 80 y art. 89; casilla oficial 15)
+          iva-cuota-modificacion-bases-cuotas-operador:
+            label: Cuota de la modificación que indicas tú, para lo que no consta
+              documento en el catálogo (casilla oficial 15)
+          iva-cuota-modificacion-recargo:
+            label: Cuota de la modificación del recargo de equivalencia procedente
+              de las facturas rectificativas del periodo (LIVA art. 80 y art. 161;
+              casilla oficial 26)
+          iva-cuota-modificacion-recargo-operador:
+            label: Cuota de la modificación del recargo de equivalencia que indicas
+              tú, para lo que no consta documento en el catálogo (casilla oficial
+              26)
           iva-cuota-repercutida-general:
             help: Cuota total de IVA repercutido calculada al tipo general del 21%.
             label: Cuota IVA repercutido al tipo general (21%)
@@ -328,6 +347,8 @@ modelo:
           iva-cuota-soportada-interiores-bienes-inversion:
             label: Cuota IVA soportado en operaciones interiores con bienes de inversión
               (parte de la casilla oficial 31)
+          iva-importe-rectificacion:
+            label: Rectificativa - Importe de la rectificación
           iva-prorrata-porcentaje:
             label: Prorrata general - porcentaje (volumen con derecho / volumen total
               × 100)
@@ -335,6 +356,10 @@ modelo:
             label: Volumen anual de operaciones que originan derecho a deducción
           iva-prorrata-volumen-total:
             label: Volumen anual total de operaciones
+          iva-recargo-equivalencia-reducido-transitorio:
+            label: Recargo de equivalencia transitorio sobre el tipo reducido - Cuota
+          iva-recargo-equivalencia-super-reducido:
+            label: Recargo de equivalencia sobre el tipo superreducido del 4% - Cuota
           iva-rectificacion-deducciones-importaciones-base:
             label: Rectificación de deducciones en importaciones - Base (parte de
               la casilla oficial 40)
@@ -358,6 +383,8 @@ modelo:
           iva-regularizacion-inversiones:
             label: Regularización por bienes de inversión (LIVA arts. 107-110)
           iva-resultado-autoliquidacion:
+            help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
+          iva-resultado-final:
             help: Dato declarado en el modelo 303, tomado del diseño de registro oficial.
           iva-resultado-regimen-general:
             label: Resultado del régimen general (cuota devengada - cuota deducible)
@@ -805,6 +832,8 @@ modelo:
             heading: Ingreso, devolución y cuenta bancaria
           pais-banco:
             heading: Código del país
+          prorrata-especial-no:
+            heading: No / no se pregunta en este periodo
           reagp:
             heading: Compensaciones en régimen especial de agricultura, ganadería
               y pesca

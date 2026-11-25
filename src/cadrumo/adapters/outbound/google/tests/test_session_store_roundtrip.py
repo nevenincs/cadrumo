@@ -7,17 +7,19 @@ from pathlib import Path
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store
 from ..records import REQUIRED_SCOPES, DriveConfig, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 _BUCKET_ID = "1a92e8a0-9da5-4712-8b71-a8aadd4eed42"  # was 'google-session'
 
 
 def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: Path) -> None:
     profile = _BUCKET_ID
-    issued_at = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
+    issued_at = datetime(_YEAR, 5, 26, 9, 0, 0, tzinfo=UTC)
     opaque_refresh_token = " 1//refresh-token\t"
     token = OAuthToken(
         refresh_token=opaque_refresh_token,
@@ -47,7 +49,7 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         loaded_metadata = session_store.load_metadata(profile)
         assert loaded_metadata == metadata
         assert loaded_metadata is not None
-        assert loaded_metadata.issued_at.isoformat() == "2026-05-26T09:00:00+00:00"
+        assert loaded_metadata.issued_at.isoformat() == f"{_YEAR}-05-26T09:00:00+00:00"
         assert session_store.load_drive_config(profile) == drive_config
 
         assert session_store.delete_session(profile) == (True, True)

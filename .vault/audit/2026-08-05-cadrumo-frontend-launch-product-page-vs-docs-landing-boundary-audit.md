@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#cadrumo-frontend-launch'
 date: '2026-08-05'
-modified: '2026-10-21'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:90cf2b59e9745d76ac4deaf4b92c5e81148f699eb883a49411031682c62219f4'
+body_hash: 'sha256:08f4e3908ec437a434d00f63b3415b368fbcca0fb1c69198517d8ce076ec1a9d'
 related:
   - "[[2026-07-12-cadrumo-frontend-launch-audit]]"
 ---
@@ -30,8 +30,7 @@ published.
 Not examined: the live S3 bucket and CloudFront distribution state (no AWS
 session was opened, so every destination claim below is read from source
 expressions, not from the deployed objects); the rendered page as served at the
-canonical domain; the `infra/docs-static-site.yaml` CloudFormation template
-beyond its role as the single stack both publishers target; and the contents of
+canonical domain; and the contents of
 `frontend/dist/` and `frontend/node_modules/`, which are gitignored build
 output.
 

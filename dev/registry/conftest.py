@@ -7,13 +7,22 @@ compiler merely to clear its caches. Application-backed fixtures are discovered
 from the repository-root test host and are not forwarded through this conftest.
 """
 
+from __future__ import annotations
+
 from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 import pytest
 
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
+    from .filing_export_proof_authority import CanonicalTwoChannelFilingExportProofAuthority
+    from .tests.committed_authority_publication import RunPublishedAuthority
+
 
 @pytest.fixture(scope="session", autouse=True)
-def _isolate_registry_caches() -> Iterator[None]:
+def isolate_registry_caches() -> Iterator[None]:
     """Clear development compiler caches at each pytest session boundary."""
     from .compiler.loader import load_registry_tree_cached
     from .compiler.loader_fingerprints import clear_fingerprint_cache
@@ -38,8 +47,36 @@ def authored_history_fact_scope() -> Iterator[None]:
         yield
 
 
+@pytest.fixture(scope="session")
+def _worker_compiled_authority() -> ValidatedRegistryAuthority:
+    """Compile the bundled authority once per worker.
+
+    A test may not edit the bundled tree, so this snapshot stays correct for the
+    whole session; asking the compiler per test re-hashes the source tree each
+    time its fingerprint lapses. A test whose subject is recompilation asks the
+    compiler itself.
+    """
+    from .compiler.authority import compiled_bundled_authority
+
+    return compiled_bundled_authority()
+
+
+@pytest.fixture(scope="session")
+def committed_published_authority() -> RunPublishedAuthority:
+    """The one publication of the committed sources, shared by every worker and kept across runs.
+
+    Published by the first worker that asks while its inputs are unpublished,
+    then admitted by digest. A test reads it in place; one that must write gets
+    a file copy, never a republication. A test whose subject is a different
+    candidate publishes that candidate itself.
+    """
+    from .tests.committed_authority_publication import committed_authority_publication
+
+    return committed_authority_publication()
+
+
 @pytest.fixture
-def governed_fact_scope() -> Iterator[None]:
+def governed_fact_scope(_worker_compiled_authority: ValidatedRegistryAuthority) -> Iterator[None]:
     """Resolve registry tokens in one requesting test against the compiled authored facts.
 
     Governed-fact resolvers refuse to run without an explicit authority scope.
@@ -48,7 +85,23 @@ def governed_fact_scope() -> Iterator[None]:
     """
     from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
-    from .compiler.authority import compiled_bundled_authority
-
-    with validating_governed_facts(compiled_bundled_authority()):
+    with validating_governed_facts(_worker_compiled_authority):
         yield
+
+
+@pytest.fixture(scope="session")
+def canonical_filing_export_proof(
+    _worker_compiled_authority: ValidatedRegistryAuthority,
+) -> CanonicalTwoChannelFilingExportProofAuthority:
+    """Compose the canonical two-channel filing-export proof around the run's one enrollment.
+
+    Composition derives the strict conformance enrollment over every filing
+    revision, which costs tens of seconds, and several modules in several
+    workers assert against the same composition of the committed tree, so the
+    enrollment is derived once per run for each distinct input and every worker
+    binds it to its own compiled authority. Consumers only read it; a test whose
+    subject is composing a different candidate composes its own.
+    """
+    from .tests.shared_conformance_enrollment import committed_filing_export_proof
+
+    return committed_filing_export_proof(_worker_compiled_authority)

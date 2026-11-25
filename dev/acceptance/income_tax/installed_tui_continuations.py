@@ -12,8 +12,8 @@ from dev.acceptance.installed_cli import InstalledCliError
 from .cli_journey import (
     JourneyError,
 )
-from .continuation_contracts import _SCHEMA_VERSION, InstalledContinuationError, InstalledContinuationEvidence
-from .continuation_request import _requested_continuation_evidence
+from .continuation_contracts import SCHEMA_VERSION, InstalledContinuationError, InstalledContinuationEvidence
+from .continuation_request import requested_continuation_evidence
 from .installed_tui_child import (
     InstalledTuiChildError,
     write_installed_tui_failure_receipt,
@@ -39,7 +39,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Run a parent receipt or one stdin-credentialed installed TUI child."""
     args = _parser().parse_args(argv)
     try:
-        evidence = _requested_continuation_evidence(args)
+        evidence = requested_continuation_evidence(args)
         args.receipt.parent.mkdir(parents=True, exist_ok=True)
         args.receipt.write_text(
             json.dumps(
@@ -62,19 +62,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             trace = trace.tb_next
         write_installed_tui_failure_receipt(
             path=args.receipt,
-            schema_version=_SCHEMA_VERSION,
+            schema_version=SCHEMA_VERSION,
             error=InstalledTuiChildError(reason),
         )
         return 2
     except (InstalledContinuationError, InstalledTuiChildError) as exc:
         write_installed_tui_failure_receipt(
-            path=args.receipt, schema_version=_SCHEMA_VERSION, error=InstalledTuiChildError(str(exc))
+            path=args.receipt, schema_version=SCHEMA_VERSION, error=InstalledTuiChildError(str(exc))
         )
         return 2
     except Exception as exc:
         write_installed_tui_failure_receipt(
             path=args.receipt,
-            schema_version=_SCHEMA_VERSION,
+            schema_version=SCHEMA_VERSION,
             error=InstalledTuiChildError(f"unexpected continuation failure: {type(exc).__name__}"),
         )
         return 2

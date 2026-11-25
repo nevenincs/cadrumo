@@ -18,6 +18,7 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
     DeclarationsCalendarSourceStateV1,
 )
+from ....application.modelo.declarations_list import observed_text
 from ....application.modelo.declarations_workspace_contracts import (
     DECLARATIONS_WORKSPACE_CONTRACT_VERSION,
     DeclarationsWorkspaceAvailability,
@@ -25,14 +26,17 @@ from ....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneStateV1,
 )
+from ....application.modelo.work_form_wording import date_text
 from ....application.overview.calendar_models import (
     OverviewAeatSubmissionState,
+    OverviewCalendarScope,
     OverviewLocalFilingState,
     OverviewPeriodState,
 )
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
+from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, output_language, tr
 from ....core.period import Period
 from ....core.text_fold import fold_for_matching
@@ -49,7 +53,6 @@ from .action_guards import require_canonical_declarations_actions
 from .models import (
     CalendarEntryHandoffV1,
     CalendarRecoveryHandoffV1,
-    DeclarationsCalendarScopeV1,
     DeclarationsDestinationIdV1,
     DeclarationsRouteTargetV1,
     DeclarationsWorkspaceWiringV1,
@@ -63,56 +66,49 @@ _ZONE_BY_DESTINATION: Final = {
     "declarations.modelo_workspace": DeclarationsWorkspaceZone.DECLARATIONS,
 }
 _DESTINATION_LOCALE_KEYS: Final = {
-    "declarations.overview": "tui.declarations.destination.overview",
-    "declarations.revisions": "tui.declarations.destination.revisions",
-    "declarations.filing_history": "tui.declarations.destination.filing_history",
-    "declarations.calendar": "tui.declarations.destination.calendar",
-    "declarations.modelo_workspace": "tui.declarations.destination.modelo_workspace",
+    "declarations.overview": "workspace.declarations.destination.overview",
+    "declarations.revisions": "workspace.declarations.destination.revisions",
+    "declarations.filing_history": "workspace.declarations.destination.filing_history",
+    "declarations.calendar": "workspace.declarations.destination.calendar",
+    "declarations.modelo_workspace": "workspace.declarations.destination.modelo_workspace",
 }
 _REVISION_STATE_KEYS: Final = {
-    state: f"tui.declarations.revision_state.{state.value}" for state in CalculationRevisionState
+    state: f"workspace.declarations.revision_state.{state.value}" for state in CalculationRevisionState
 }
 _FILING_STATE_LOCALE_KEYS: Final = {
-    ModeloRecordStatus.VIGENTE: "tui.declarations.filing_state.vigente",
-    ModeloRecordStatus.SUPERSEDIDO: "tui.declarations.filing_state.supersedido",
+    ModeloRecordStatus.VIGENTE: "workspace.declarations.filing_state.vigente",
+    ModeloRecordStatus.SUPERSEDIDO: "workspace.declarations.filing_state.supersedido",
 }
 _EVIDENCE_LOCALE_KEYS: Final = {
-    ExternalEvidenceKind.AEAT_CSV_REGISTER: "tui.declarations.evidence.aeat_csv_register",
-    ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "tui.declarations.evidence.aeat_justificante_pdf",
-    ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "tui.declarations.evidence.aeat_live_capture",
-}
-
-
-_WORK_CREATE_REFUSAL_LOCALE_KEYS: Final = {
-    # The application's wording names the CLI command; here the same fix is a key away.
-    "application.modelo.errors.profile_readiness_setup_incomplete": (
-        "tui.declarations.calendar.recovery.setup_incomplete"
-    ),
+    ExternalEvidenceKind.AEAT_CSV_REGISTER: "workspace.declarations.evidence.aeat_csv_register",
+    ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF: "workspace.declarations.evidence.aeat_justificante_pdf",
+    ExternalEvidenceKind.AEAT_LIVE_CAPTURE: "workspace.declarations.evidence.aeat_live_capture",
 }
 
 
 def work_create_refusal_message(refusal: CadrumoError) -> str:
-    """Render a work-creation refusal as its own reason, worded for the TUI where the fix differs."""
-    tui_key = _WORK_CREATE_REFUSAL_LOCALE_KEYS.get(refusal.translated_message or "")
-    return tr(tui_key) if tui_key is not None else resolve_error_message(refusal)
+    """Render a work-creation refusal as the reason the application worded."""
+    return resolve_error_message(refusal)
 
 
 def natural_address(modelo: object, year: object, period: object) -> str:
     """Render the public Modelo/year/period coordinate."""
-    from ..modelo.workbench.wording import period_words
+    from ....application.modelo.work_form_wording import period_words
 
     words = period_words(period) if isinstance(period, Period) else f"{year} · {period}"
     return f"Modelo {modelo} · {words}"
 
 
 def timestamp_label(value: datetime) -> str:
-    """Render a deterministic minute-bearing UTC timestamp without locale ambiguity."""
-    return value.strftime("%d/%m/%Y %H:%M UTC")
+    """Render a deterministic minute-bearing UTC timestamp, as the list says one."""
+    return observed_text(value, OutputLanguage(output_language()))
 
 
 def calendar_date_label(value: date | None) -> str:
     """Render one non-ambiguous legal date."""
-    return tr("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
+    if value is None:
+        return tr("workspace.declarations.calendar.none")
+    return date_text(value, OutputLanguage(output_language()))
 
 
 def revision_state_label(value: CalculationRevisionState) -> str:
@@ -127,7 +123,7 @@ def filing_state_label(value: ModeloRecordStatus) -> str:
 
 def evidence_label(value: ExternalEvidenceKind | None) -> str:
     """Render separately observed AEAT evidence metadata."""
-    return tr("tui.declarations.evidence.none") if value is None else tr(_EVIDENCE_LOCALE_KEYS[value])
+    return tr("workspace.declarations.evidence.none") if value is None else tr(_EVIDENCE_LOCALE_KEYS[value])
 
 
 class DeclarationsWorkspaceController:
@@ -157,6 +153,7 @@ class DeclarationsWorkspaceController:
         self.modelo_workspace_factory = wiring.modelo_workspace_factory
         self.revision_handoff = wiring.revision_handoff
         self.filing_handoff = wiring.filing_handoff
+        self.filing_view_factory = wiring.filing_view_factory
         self.filing_export_factory = wiring.filing_export_factory
         self.filing_google_review_factory = wiring.filing_google_review_factory
         self.reconciliation_export_factory = wiring.reconciliation_export_factory
@@ -265,14 +262,14 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
     def populate_navigation(self) -> None:
         """Populate every closed internal destination exactly once."""
         table = cast("DataTable[str]", self.query_one("#declarations-navigation", DataTable))
-        table.add_column(tr("tui.declarations.column.destination"), key="destination")
-        table.add_column(tr("tui.declarations.column.availability"), key="availability")
+        table.add_column(tr("workspace.declarations.column.destination"), key="destination")
+        table.add_column(tr("workspace.declarations.column.availability"), key="availability")
         for raw_destination in _DESTINATION_LOCALE_KEYS:
             destination = cast("DeclarationsDestinationIdV1", raw_destination)
             availability = self.controller.destination_availability(destination)
             table.add_row(
                 tr(_DESTINATION_LOCALE_KEYS[destination]),
-                tr(f"tui.declarations.availability.{availability.value}"),
+                tr(f"workspace.declarations.availability.{availability.value}"),
                 key=destination,
             )
 
@@ -284,10 +281,7 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         destination = cast("DeclarationsDestinationIdV1", event.row_key.value)
         availability = self.controller.destination_availability(destination)
         notice = self.query_one("#declarations-refusal", Static)
-        if availability.value not in {
-            DeclarationsWorkspaceAvailability.AVAILABLE.value,
-            DeclarationsWorkspaceAvailability.STALE.value,
-        }:
+        if not availability.is_observable:
             notice.update(self._refusal_copy(destination))
             return True
         self.requested_target = self.controller.target(destination)
@@ -305,26 +299,23 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         """
         reason = self.controller.destination_reason_code(destination)
         if reason is not None:
-            key = f"tui.declarations.refusal.reason.{reason}"
+            key = f"workspace.declarations.refusal.reason.{reason}"
             if lookup_translation(key, locale=output_language()) is not None:
                 return tr(key)
-        return tr("tui.declarations.refusal.source")
+        return tr("workspace.declarations.refusal.source")
 
     def show_empty(self) -> None:
         """Say that a table has nothing in it, on the muted line, not the warning one."""
-        self.query_one("#declarations-empty", Static).update(tr("tui.declarations.empty"))
+        self.query_one("#declarations-empty", Static).update(tr("workspace.declarations.empty"))
 
     def refuse_handoff(self) -> None:
         """Show an explicit refusal when the host omitted a target."""
-        self.query_one("#declarations-refusal", Static).update(tr("tui.declarations.refusal.handoff"))
+        self.query_one("#declarations-refusal", Static).update(tr("workspace.declarations.refusal.handoff"))
 
     def action_back(self) -> None:
         """Return an area to the Declarations overview; leave the workspace only from the overview."""
         # An overview that cannot open would bounce Back straight back here.
-        overview_opens = self.controller.destination_availability("declarations.overview") in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
-        }
+        overview_opens = self.controller.destination_availability("declarations.overview").is_observable
         if self.IS_WORKSPACE_OVERVIEW or not overview_opens:
             self.dismiss(None)
             return
@@ -411,20 +402,14 @@ class DeclarationsCalendarController:
         self.projection = projection
 
     def visible_entries(
-        self, scope: DeclarationsCalendarScopeV1, query: str
+        self, scope: OverviewCalendarScope | None, query: str
     ) -> tuple[DeclarationsCalendarEntryRefV1, ...]:
-        """Apply closed scope semantics and Unicode AND search to safe fields only."""
-        aeat_observable = self.source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability in {
-            HomeAvailability.AVAILABLE,
-            HomeAvailability.STALE,
-        }
-        rows = [
-            row for row in self.projection.entries if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
-        ]
+        """Keep the rows served in *scope*, or all, in served order; then Unicode AND search safe fields."""
+        rows = [row for row in self.projection.entries if scope is None or scope in row.scopes]
         terms = tuple(part for part in fold_for_matching(query).split() if part)
         if terms:
             rows = [row for row in rows if all(term in _calendar_search_text(row) for term in terms)]
-        return tuple(sorted(rows, key=lambda row: (row.adjusted_closes_on, *row.semantic_key())))
+        return tuple(rows)
 
     def context_identity(self) -> str | None:
         """Resolve a safe natural row identity carried by the route focus key."""
@@ -466,6 +451,14 @@ def _validate_calendar_recovery_actions(projection: DeclarationsCalendarProjecti
             raise ValueError("calendar recovery action contradicts its natural address")
 
 
+CALENDAR_FOCUS_KEY: Final = "declarations.calendar"
+"""The focus that opens the calendar itself rather than one of its rows."""
+NEW_DECLARATION_FOCUS_KEY: Final = "declarations.new"
+"""The focus that opens the overview straight onto its new-declaration picker."""
+SEARCH_DECLARATIONS_FOCUS_KEY: Final = "declarations.search"
+"""The focus that opens the overview with its search field ready for typing."""
+
+
 def calendar_focus_key(row: DeclarationsCalendarEntryRefV1) -> str:
     """Return a NamespacedId-compatible public natural calendar focus key."""
     modelo, year, period = row.semantic_key()
@@ -505,48 +498,32 @@ def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
     return fold_for_matching(" ".join(values))
 
 
-def _scope_matches(
-    row: DeclarationsCalendarEntryRefV1,
-    scope: DeclarationsCalendarScopeV1,
-    as_of: date,
-    aeat_observable: bool,
-) -> bool:
-    if scope is DeclarationsCalendarScopeV1.ALL:
-        return True
-    if scope is DeclarationsCalendarScopeV1.PAST:
-        return row.adjusted_closes_on < as_of
-    if scope is DeclarationsCalendarScopeV1.UPCOMING:
-        return row.adjusted_closes_on >= as_of and row.user_state is OverviewPeriodState.DUE
-    if scope is DeclarationsCalendarScopeV1.OVERDUE:
-        return row.adjusted_closes_on < as_of and row.user_state is OverviewPeriodState.LATE
-    if scope is DeclarationsCalendarScopeV1.FILED:
-        return row.user_state is OverviewPeriodState.FILED
-    return not aeat_observable
-
-
 def calendar_legal_label(value: ObligationStatus) -> str:
     """Render legal deadline status."""
-    return tr(f"tui.declarations.calendar.legal.{value.value.lower()}")
+    return tr(f"workspace.declarations.calendar.legal.{value.value.lower()}")
 
 
 def calendar_user_label(value: OverviewPeriodState) -> str:
     """Render the safe derived user-facing schedule state."""
-    return tr(f"tui.declarations.calendar.user.{value.value}")
+    return tr(f"workspace.declarations.calendar.user.{value.value}")
 
 
 def calendar_local_label(value: OverviewLocalFilingState | None) -> str:
     """Render local filing state without implying AEAT acceptance."""
     key = "unknown" if value is None else value.value
-    return tr(f"tui.declarations.calendar.local.{key}")
+    return tr(f"workspace.declarations.calendar.local.{key}")
 
 
 def calendar_aeat_label(value: OverviewAeatSubmissionState | None) -> str:
     """Render observed AEAT evidence state without inference."""
     key = "unknown" if value is None else value.value
-    return tr(f"tui.declarations.calendar.aeat.{key}")
+    return tr(f"workspace.declarations.calendar.aeat.{key}")
 
 
 __all__ = [
+    "CALENDAR_FOCUS_KEY",
+    "NEW_DECLARATION_FOCUS_KEY",
+    "SEARCH_DECLARATIONS_FOCUS_KEY",
     "DeclarationsCalendarController",
     "DeclarationsProjectionScreen",
     "DeclarationsRouteRequested",

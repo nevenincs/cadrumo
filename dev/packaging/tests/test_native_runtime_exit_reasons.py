@@ -13,9 +13,9 @@ from cadrumo_client.contracts.contracts import (
     ExitReason,
     ReservedExitCodes,
 )
-from dev._paths import REPO_ROOT
 from dev.packaging.native import runtime_exit_reasons
 from dev.packaging.native.generate import generate
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

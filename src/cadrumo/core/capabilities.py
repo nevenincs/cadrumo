@@ -1,25 +1,19 @@
 """Closed set of operator-selectable service capabilities.
 
 A *capability* is a per-profile opt-in/opt-out of an external service the app can
-use. It is operator intent, distinct from (a) the global safety posture (gestor
-mode, the secure-storage invariant) and (b) dependency availability (is Ollama
-running?). The three axes are ANDed at the gate, and a capability may only NARROW
-the global safety floor, never widen it.
+use. It is operator intent, distinct from the global safety posture (gestor
+mode, the secure-storage invariant). The two axes are ANDed at the gate, and a
+capability may only NARROW the global safety floor, never widen it.
 
 The set is declared here in ``core/`` — the innermost hexagonal ring — so the
 Typer boundary renders the accepted-value ``Choice([...])`` from the enum,
-production code routes on members, and the profile schema / resolver / doctor
+production code routes on members, and the profile schema and resolver
 share one authority for the capability identifiers.
 
 The :class:`ServiceCapability` members are consumed by
 :func:`~application.user_profile.capabilities.resolve_capability`,
 :func:`~application.user_profile.capabilities.resolve_active_capability`, and by the
-setup wizard's capability questions. The product doctor renders those same
-members beside :class:`~application.provisioning.DependencyStatus` rows
-from :func:`~application.local_reader.probe_local_reader`,
-:func:`~application.provisioning.probe_model_runtime_hardware_floor`, and
-:func:`~application.provisioning.probe_optional_extras`, keeping operator
-intent separate from dependency availability.
+setup wizard's capability questions.
 
 This enum is deliberately separate from
 :attr:`domain.calculations.registry.schema.ModeloDefinition.capabilities` and
@@ -41,8 +35,7 @@ class ServiceCapability(StrEnum):
     resolver agree on one identifier. Optional package availability is modeled
     separately through :class:`~core.optional_extras.OptionalExtra` and
     :func:`~core.optional_extras.require_optional_extra`; a capability records whether the
-    profile permits the service, not whether its import/runtime dependency is
-    installed.
+    profile permits the service.
 
     See Also:
         :class:`~application.user_profile.capabilities.CapabilityDecision`
@@ -53,9 +46,12 @@ class ServiceCapability(StrEnum):
             values directly.
 
     Members:
-        LLM_VISION: Whether this profile may read scanned/image evidence on-host
-            with the local Ollama vision model. Default ON (on-host, no byte
-            leaves the machine); opting out disables the vision read entirely.
+        LLM_VISION: Whether this profile may read scanned/image evidence with
+            the model the person picked, when it reads images. Default ON; opting out
+            disables the image read entirely. It does not decide where the read
+            runs: the selected lane's ``reads_off_host`` does, and an off-host
+            read additionally needs CLOUD_EVIDENCE_UPLOAD eligibility and the
+            digest-bound per-read consent.
         GOOGLE_EXPORT: Whether this profile may export modelo workbooks to Google
             Sheets/Drive. Default ON; opting out keeps exports offline-only.
         CLOUD_EVIDENCE_UPLOAD: Whether this profile is ELIGIBLE to be offered the
@@ -79,10 +75,13 @@ class ServiceCapability(StrEnum):
     def default_enabled(self) -> bool:
         """Return the conservative default posture when no profile fact is set.
 
-        On-host vision and Google export default ON: both are local or
-        non-sensitive by construction, so an unanswered question costs the
-        operator a working feature and nothing else.
-        :attr:`CLOUD_EVIDENCE_UPLOAD` is the one member that defaults OFF, and
+        Image reading and Google export default ON. Image reading can stay on
+        because it does not by itself move a document off this computer: an
+        off-host read is gated by :attr:`CLOUD_EVIDENCE_UPLOAD` and the
+        per-read consent, and a read that stays on this computer needs neither.
+        Google export is non-sensitive by construction. An unanswered question
+        on either therefore costs the operator a working feature and nothing
+        else. :attr:`CLOUD_EVIDENCE_UPLOAD` is the one member that defaults OFF, and
         for the opposite reason -- an unanswered question there would decide,
         by silence, that a taxpayer's document may leave the machine. The
         resolver ANDs the global safety floor on top, yielding a

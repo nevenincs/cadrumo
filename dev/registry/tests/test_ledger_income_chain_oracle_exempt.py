@@ -62,6 +62,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.components import category_cuota_is_zero_by_law
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -69,7 +70,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.retencion_facts import load_retencion_actividades_rates
 
-from ._ledger_income_chain_oracle_support import modelo_130_revision
+from .ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -83,7 +84,7 @@ _CASH = _TOTAL - _RETENCION
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 
-_FILING_YEAR = 2026
+_FILING_YEAR = filing_year_envelope().horizon
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "1T")
 _VALUE_DATE = date(_FILING_YEAR, 3, 4)
 _BUCKET = "eeb87dd1-12bd-4e70-8f3e-751d9bb85455"  # was 'bucket-oracle-exempt'
@@ -173,8 +174,10 @@ def test_the_declared_category_is_what_makes_the_cuota_zero() -> None:
     table rather than testing for nullness is what separates them, so the
     premise is asserted rather than assumed.
     """
-    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory("domestic_general"), InvoiceKind.ISSUED)
+    assert category_cuota_is_zero_by_law(IvaCategory("domestic_exempt"), InvoiceKind.ISSUED, effective_date=_VALUE_DATE)
+    assert not category_cuota_is_zero_by_law(
+        IvaCategory("domestic_general"), InvoiceKind.ISSUED, effective_date=_VALUE_DATE
+    )
 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:

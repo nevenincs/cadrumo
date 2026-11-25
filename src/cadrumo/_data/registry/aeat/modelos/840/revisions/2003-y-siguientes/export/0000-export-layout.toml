@@ -1,0 +1,6 @@
+[[revisions.2003-y-siguientes.export_layouts]]
+id = "generated-modelo-840-2003-y-siguientes-fichero"
+format = "fixed_width"
+source_refs = ["aeat-dr-840"]
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+dictionary_path_overrides = []

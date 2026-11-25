@@ -24,6 +24,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
     percepcion_observation_key,
@@ -31,10 +33,8 @@ from .....application.aggregation.percepciones_observations_repository import (
 from .....core.aggregation import AggregationCaptureKind, RetencionClave
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.period import Period
-from .....domain.calculations.registry.withholding_bindings import (
-    WithholdingObservation,
-    aggregate_withholding_by_clave,
-)
+from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from .....domain.calculations.registry.withholding_clave_breakdown import aggregate_withholding_by_clave
 from ...storage.crypto.encrypted_columns import secure_object_key_digest
 from ...storage.envelope.tests.record_set_authoring import replace_records
 from ...storage.errors import PathContainmentError, SecureObjectRowIdentityError
@@ -75,16 +75,7 @@ def _observation(
         percibido_especie=Decimal("50"),
         retencion_practicada=dinerario * Decimal("0.19"),
         ingreso_a_cuenta=Decimal("5"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("0"),
     )
 
@@ -92,7 +83,7 @@ def _observation(
 def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """A populated WithholdingObservation roundtrips byte-for-byte through the encrypted repo."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        original = _observation(nif="11111111H", clave="A", subclave="01")
+        original = _observation(nif="00001500M", clave="A", subclave="01")
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
         save_percepcion_observation(
@@ -121,7 +112,7 @@ def test_corrupt_clave_or_subclave_refused_on_reload() -> None:
     numeric. If this ever passes with a corrupt token, every roundtrip above is
     tautological.
     """
-    valid = _observation(nif="11111111H", clave="A", subclave="01")
+    valid = _observation(nif="00001500M", clave="A", subclave="01")
 
     corrupt_clave = valid.model_dump()
     corrupt_clave["clave"] = "ZZ"  # not an AEAT clave letter (A-L)
@@ -140,10 +131,10 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
         records = (
-            _observation(nif="11111111H", clave="A"),
-            _observation(nif="22222222J", clave="A"),
+            _observation(nif="00001500M", clave="A"),
+            _observation(nif="00001501Y", clave="A"),
             # Same NIF as the first, different clave — a distinct percepción, not an overwrite.
-            _observation(nif="11111111H", clave="G"),
+            _observation(nif="00001500M", clave="G"),
         )
         for record in records:
             save_percepcion_observation(
@@ -155,13 +146,13 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             )
         loaded = repo.load_observations("190", period)
-        # All three rows survive (no key collision); the two 11111111H rows are
+        # All three rows survive (no key collision); the two 00001500M rows are
         # distinct because the clave is part of the key.
         assert len(loaded) == 3
         assert {(o.perceptor_tax_id, o.clave, o.subclave) for o in loaded} == {
-            ("11111111H", "A", ""),
-            ("22222222J", "A", ""),
-            ("11111111H", "G", ""),
+            ("00001500M", "A", ""),
+            ("00001501Y", "A", ""),
+            ("00001500M", "G", ""),
         }
         # Distinct percepciones = 3; distinct perceptores = 2 (the percepciones-count
         # vs perceptor-count delta).
@@ -170,16 +161,16 @@ def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Pat
 
 def test_object_key_hashes_the_nif_never_cleartext() -> None:
     """The object key carries the sha256 of the NIF, never the plaintext; clave/subclave stay plain."""
-    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "11111111H", "A", "01")
-    assert "11111111H" not in key
-    digest = hashlib.sha256("11111111H".encode(UTF_8_ENCODING)).hexdigest()
+    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "00001500M", "A", "01")
+    assert "00001500M" not in key
+    digest = hashlib.sha256("00001500M".encode(UTF_8_ENCODING)).hexdigest()
     assert digest in key
     assert key == f"190:2024:0A:{digest}:A:01"
 
 
 def test_blank_subclave_keys_as_dash() -> None:
     """A blank subclave is keyed as '-' so the grammar segment is never empty."""
-    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "11111111H", "B", "")
+    key = percepcion_observation_key("190", 2024, Period.from_year_and_code(2024, "0A"), "00001500M", "B", "")
     assert key.endswith(":B:-")
 
 
@@ -187,7 +178,7 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
     """load_observations returns only the requested (modelo, year, period)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
-        obs = _observation(nif="33333333P", clave="C")
+        obs = _observation(nif="00001502F", clave="C")
         save_percepcion_observation(
             repo,
             modelo="190",
@@ -208,7 +199,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
         "modelo": "190",
         "filing_year": 2024,
         "period": Period.from_year_and_code(2024, "0A"),
-        "observation": _observation(nif="44444444A", clave="A"),
+        "observation": _observation(nif="00001503P", clave="A"),
         "captured_at": datetime.now(UTC),
         "source_kind": AggregationCaptureKind.AGGREGATE_PULL,
     }
@@ -224,9 +215,9 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
         full = (
-            _observation(nif="11111111H", clave="A"),
-            _observation(nif="11111111H", clave="G"),
-            _observation(nif="22222222J", clave="A"),
+            _observation(nif="00001500M", clave="A"),
+            _observation(nif="00001500M", clave="G"),
+            _observation(nif="00001501Y", clave="A"),
         )
         replace_percepcion_observations(
             repo,
@@ -237,7 +228,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert len(repo.load_observations("190", period)) == 3
-        # Re-pull dropped the 11111111H/clave-G percepción.
+        # Re-pull dropped the 00001500M/clave-G percepción.
         replace_percepcion_observations(
             repo,
             modelo="190",
@@ -248,7 +239,7 @@ def test_replace_observations_drops_removed_percepcion_no_stale_row(tmp_path: Pa
         )
         loaded = repo.load_observations("190", period)
         assert len(loaded) == 2
-        assert {(o.perceptor_tax_id, o.clave) for o in loaded} == {("11111111H", "A"), ("22222222J", "A")}
+        assert {(o.perceptor_tax_id, o.clave) for o in loaded} == {("00001500M", "A"), ("00001501Y", "A")}
 
 
 def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:
@@ -265,9 +256,9 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
         declared = (
-            _observation(nif="11111111H", clave="A"),
-            _observation(nif="22222222J", clave="A"),
-            _observation(nif="33333333P", clave="B"),
+            _observation(nif="00001500M", clave="A"),
+            _observation(nif="00001501Y", clave="A"),
+            _observation(nif="00001502F", clave="B"),
         )
         replace_percepcion_observations(
             repo,
@@ -282,7 +273,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             modelo="190",
             filing_year=2024,
             period=period,
-            observation=_observation(nif="44444444A", clave="A"),
+            observation=_observation(nif="00001503P", clave="A"),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
@@ -309,10 +300,10 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
             modelo="190",
             filing_year=2024,
             period=period,
-            observations=(_observation(nif="11111111H", clave="A"), _observation(nif="22222222J", clave="A")),
+            observations=(_observation(nif="00001500M", clave="A"), _observation(nif="00001501Y", clave="A")),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        carried = _observation(nif="11111111H", clave="A", dinerario=Decimal("2500"))
+        carried = _observation(nif="00001500M", clave="A", dinerario=Decimal("2500"))
         replace_percepcion_observations(
             repo,
             modelo="190",
@@ -383,8 +374,8 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = _repository()
         period = Period.from_year_and_code(2024, "0A")
-        row_a = _observation(nif="11111111H", clave="A")
-        row_b = _observation(nif="22222222J", clave="B")
+        row_a = _observation(nif="00001500M", clave="A")
+        row_b = _observation(nif="00001501Y", clave="B")
         replace_percepcion_observations(
             repo,
             modelo="190",
@@ -443,7 +434,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
             modelo="190",
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
-            observation=_observation(nif="11111111H", clave="A"),
+            observation=_observation(nif="00001500M", clave="A"),
             captured_at=captured_at,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
@@ -455,7 +446,7 @@ def test_envelope_accepts_a_utc_capture_instant() -> None:
         modelo="190",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "0A"),
-        observation=_observation(nif="11111111H", clave="A"),
+        observation=_observation(nif="00001500M", clave="A"),
         captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )

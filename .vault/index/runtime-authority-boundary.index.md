@@ -4,13 +4,11 @@ tags:
   - '#index'
   - '#runtime-authority-boundary'
 date: '2026-10-18'
-modified: '2026-10-18'
+modified: '2026-11-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:7c1a1060052666a21d59116db50284419f2923e9dbb558b44a563171ce206361'
+body_hash: 'sha256:215af43adfc2b85071ac529ab4357f17ef72366947e27eb03d4fa7a74dfbbac6'
 related:
   - '[[2026-10-18-runtime-authority-boundary-adr]]'
-  - '[[2026-10-18-runtime-authority-boundary-ledger]]'
-  - '[[2026-10-18-runtime-authority-boundary-plan]]'
   - '[[2026-10-18-runtime-authority-boundary-reference]]'
 ---
 
@@ -23,14 +21,6 @@ Auto-generated index of all documents tagged with `#runtime-authority-boundary`.
 ### adr
 
 - `2026-10-18-runtime-authority-boundary-adr` - `runtime-authority-boundary` adr: `Runtime owns login, session, lease and custody authority` | (**status:** `accepted`)
-
-### exec
-
-- `2026-10-18-runtime-authority-boundary-ledger` - `runtime-authority-boundary` ledger
-
-### plan
-
-- `2026-10-18-runtime-authority-boundary-plan` - `runtime-authority-boundary` plan
 
 ### reference
 

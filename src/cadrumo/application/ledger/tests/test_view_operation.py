@@ -5,14 +5,15 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
+from ....core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -24,7 +25,7 @@ from ....domain.transactions.m210_income_classification import (
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger.action_ports import LedgerActionPorts
-from ...ledger.actions_manual import ledger_transaction_payload
+from ...ledger.manual_read import ledger_transaction_payload
 from ...ledger.models import LedgerTransactionPayload
 from ...ledger.transaction_projection import LedgerM210IncomeProjection, LedgerTransactionProjection
 from ...ledger.view_operation import (
@@ -37,11 +38,11 @@ from ...ledger.view_operation import (
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
 from ...user_profile.access_errors import ProfileAccessRefusedError
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -82,14 +83,7 @@ def _request(*, profile_id: UUID = _PROFILE, subject_profile_id: UUID | None = N
 def _access_context(
     registration: OperationPublicDefinitionRegistrationV1, *, profile_id: UUID = _PROFILE
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.RESULT)
 
 
 def _m210_canonical_payload(operation: PinnedAuthorityOperation) -> LedgerTransactionPayload:
@@ -208,9 +202,10 @@ def test_transaction_projection_roundtrips_the_live_canonical_m210_field_set(
     canonical = _m210_canonical_payload(authority_operation)
     projection = LedgerTransactionProjection.from_payload(canonical)
 
-    assert set(LedgerTransactionPayload.model_fields) == set(LedgerTransactionProjection.model_fields)
+    # The link fields are the one field the projection derives: they restate the stored link values with their words.
+    assert set(LedgerTransactionPayload.model_fields) == set(LedgerTransactionProjection.model_fields) - {"link_fields"}
     assert set(M210IncomeClassification.model_fields) == set(LedgerM210IncomeProjection.model_fields)
-    assert projection.model_dump(mode="json") == canonical.model_dump(mode="json")
+    assert projection.model_dump(mode="json", exclude={"link_fields"}) == canonical.model_dump(mode="json")
     assert canonical.m210_income_classification is not None
     assert projection.m210_income_classification is not None
     assert projection.m210_income_classification.gross_income_amount == str(
@@ -232,3 +227,26 @@ def test_transaction_projection_rejects_a_future_canonical_field(
 
     with pytest.raises(ValidationError):
         LedgerTransactionProjection.from_payload(expanded)
+
+
+def test_the_view_request_names_the_language_the_link_fields_are_said_in() -> None:
+    request = LedgerViewRequest(profile_id=_PROFILE, transaction_prefix="a" * 12)
+    english = LedgerViewRequest(profile_id=_PROFILE, transaction_prefix="a" * 12, output_language=OutputLanguage.EN)
+
+    assert request.output_language is DEFAULT_OUTPUT_LANGUAGE
+    assert english.output_language is OutputLanguage.EN
+    assert LedgerViewRequest.model_validate_json(english.model_dump_json()) == english
+
+
+def test_the_projection_the_view_serves_names_every_link_field_in_the_requested_language(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    canonical = _m210_canonical_payload(authority_operation)
+
+    projection = LedgerTransactionProjection.from_payload(canonical, language=OutputLanguage.EN)
+
+    assert [(item.field, item.value, item.field_words) for item in projection.link_fields] == [
+        ("arrendamiento_ref", None, "Linked lease"),
+        ("inmueble_ref", None, "Linked property"),
+        ("gasto_capital_inmobiliario", None, "Rental expense concept"),
+    ]

@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-100` · **Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
+**Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
 
 <!-- preserved:article -->
 **Scope:** 8 files under `src/cadrumo/application/storage_management` and `src/cadrumo/application/transactions`, totaling 1,420 lines, 53,834 bytes, and 11,402 measured `o200k_base` proxy tokens. All three bounded-reader pages and assigned ranges were read. Static inspection only; no storage was initialized or reclaimed, and no application execution or tests were run.

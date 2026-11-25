@@ -18,7 +18,8 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     validating_governed_facts,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 from dev.registry.compiler.compilation_catalogues import compiling_catalogues
@@ -184,7 +185,7 @@ def compile_structural_authority(
     )
 
 
-def _compile_validated_authority_uncached(
+def compile_validated_authority_uncached(
     registry_root: Path,
     source_root: Path,
     *,
@@ -307,7 +308,7 @@ def compile_validated_authority(
     )
     pair = receipt.pair
     if complete_validation:
-        authority = _compile_validated_authority_uncached(
+        authority = compile_validated_authority_uncached(
             pair.registry_root,
             pair.source_root,
             identity=receipt.identity,
@@ -326,7 +327,7 @@ def compile_validated_authority(
             registry_identity_digest=receipt.identity.digest,
             source_receipt=receipt.source_receipt,
             compiler_source_tree_digest=receipt.compiler_source_tree_digest,
-            build=lambda: _compile_validated_authority_uncached(
+            build=lambda: compile_validated_authority_uncached(
                 pair.registry_root,
                 pair.source_root,
                 identity=receipt.identity,

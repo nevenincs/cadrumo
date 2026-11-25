@@ -6,7 +6,7 @@ import json
 import re
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .hashing import digest
 
@@ -14,6 +14,16 @@ DELEGATED_INVENTORIES = "delegated_inventories"
 # The manifest's explicit statement of whether the user documentation tree ships.
 USER_DOCS = "user_docs"
 _RESERVED_STEM = re.compile(r"(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])")
+
+
+def _validate_component(part: str, relative: str) -> None:
+    if (
+        part in {"", ".", ".."}
+        or part.endswith((".", " "))
+        or _RESERVED_STEM.fullmatch(part.split(".")[0].upper())
+        or any(character in part for character in '<>"|?*')
+    ):
+        raise ValueError(f"Unsafe package-relative path component: {relative!r}")
 
 
 def checked_member(relative: str) -> str:
@@ -25,13 +35,7 @@ def checked_member(relative: str) -> str:
     ):
         raise ValueError(f"Unsafe package-relative path: {relative!r}")
     for part in relative.split("/"):
-        if (
-            part in {"", ".", ".."}
-            or part.endswith((".", " "))
-            or _RESERVED_STEM.fullmatch(part.split(".")[0].upper())
-            or any(character in part for character in '<>"|?*')
-        ):
-            raise ValueError(f"Unsafe package-relative path component: {relative!r}")
+        _validate_component(part, relative)
     return relative
 
 
@@ -47,7 +51,7 @@ def _digests(value: object, owner: str) -> dict[str, str]:
     if not isinstance(value, dict):
         raise ValueError(f"{owner} must map package paths to SHA-256 digests")
     digests: dict[str, str] = {}
-    for key, item in value.items():
+    for key, item in cast(dict[object, object], value).items():
         if not isinstance(key, str) or not isinstance(item, str):
             raise ValueError(f"{owner} must map package paths to SHA-256 digests")
         digests[key] = item
@@ -59,6 +63,7 @@ def user_docs_bundled(manifest: Mapping[str, Any]) -> bool:
     statement = manifest.get(USER_DOCS)
     if not isinstance(statement, dict):
         raise ValueError("The package manifest must state whether the user documentation is bundled")
+    statement = cast(dict[str, object], statement)
     directory, bundled = statement.get("directory"), statement.get("bundled")
     if not isinstance(directory, str) or not isinstance(bundled, bool):
         raise ValueError("The package manifest must state whether the user documentation is bundled")

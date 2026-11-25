@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from functools import lru_cache
 from typing import cast
@@ -41,15 +42,17 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.overview.calendar_models import OverviewPeriodState
 from cadrumo.application.overview.next_actions import declare_next_action
 from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -82,12 +85,13 @@ class _Client:
         self.session_id = session_id
         self.frontend = OperationFrontendProjection.TUI
         self.result_requests: list[OperationResultProjectionRequestV1] = []
+        self.result_budgets: list[tuple[float, float, float]] = []
         self.result_document: dict[str, object] | None = None
 
     def read_result_document(
-        self, request: OperationResultProjectionRequestV1, *, deadline: float
+        self, request: OperationResultProjectionRequestV1, *, deadline: float, timeout: float, page_timeout: float
     ) -> dict[str, object]:
-        del deadline
+        self.result_budgets.append((deadline, timeout, page_timeout))
         self.result_requests.append(request)
         assert self.result_document is not None
         return self.result_document
@@ -145,7 +149,12 @@ def _refusal_result(*, profile_id: UUID = _PROFILE, period: Period = _PERIOD) ->
     return ModeloWorkCreateProjection(
         profile_id=profile_id,
         period=PublicPeriod.from_period(period),
-        outcome=ModeloWorkCreateRefusal(modelo="303", reason="taxpayer category excludes this form"),
+        outcome=ModeloWorkCreateRefusal(
+            modelo="303",
+            reason="taxpayer category excludes this form",
+            refusal_words="Modelo 303 does not apply: " + "taxpayer category excludes this form",
+            refusal_words_language=OutputLanguage.EN,
+        ),
     )
 
 
@@ -201,23 +210,17 @@ def _observation(
     )
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
+    observation: OperationObservationSuccessV1
+    result: ModeloWorkCreateProjection
+    after_result: Callable[[], None] | None = field(default=None, kw_only=True)
+    started: bool = field(default=False, init=False)
+    result_reads: list[tuple[type[object], int, bool]] = field(default_factory=list, init=False)
     # The client it was submitted through, as the real controller keeps it.
-    client: _Client
-
-    def __init__(
-        self,
-        observation: OperationObservationSuccessV1,
-        result: ModeloWorkCreateProjection,
-        *,
-        after_result: Callable[[], None] | None = None,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.after_result = after_result
-        self.started = False
-        self.result_reads: list[tuple[type[object], int, bool]] = []
+    client: _Client = field(default_factory=_Client, kw_only=True)
+    deadline: float | None = field(default=None, kw_only=True)
 
     async def start(self) -> str:
         self.started = True
@@ -449,7 +452,7 @@ def test_runtime_create_refresh_failure_keeps_the_known_success_receipt(monkeypa
 
     def fail_refresh() -> None:
         raise ModeloLifecycleActionUnavailableError(
-            translated_message="tui.declarations.refusal.handoff",
+            translated_message="workspace.declarations.refusal.handoff",
             context={"operation_id": "different-operation"},
         )
 
@@ -511,7 +514,7 @@ def test_runtime_controller_requires_explicit_refusal_detail_optin() -> None:
         client=cast(FrontendClient, client),
         operation_id=_OPERATION_ID,
         session_id=_SESSION,
-        deadline=time.monotonic() + 30,
+        deadline=time.monotonic() + 120,
     )
 
     with pytest.raises(RefusalError) as raised:
@@ -532,6 +535,10 @@ def test_runtime_controller_requires_explicit_refusal_detail_optin() -> None:
 
     assert allowed == result
     assert len(client.result_requests) == 1
+    deadline, timeout, page_timeout = client.result_budgets[0]
+    assert deadline == controller.deadline
+    assert 30 < timeout <= 120
+    assert page_timeout == 30
     request = client.result_requests[0]
     assert request.operation_id == _OPERATION_ID
     assert request.terminal_revision == observation.projection.revision

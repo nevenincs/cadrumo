@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_production_registry_matches_default_schema_generator(monkeypatch: pytest.MonkeyPatch) -> None:
-    generate = registry_schema_validation._generate_closed_model_schema
+    generate = registry_schema_validation.generate_closed_model_schema
     schemas: dict[type[BaseModel], bytes] = {}
     checked: set[type[BaseModel]] = set()
 
@@ -25,7 +25,7 @@ def test_production_registry_matches_default_schema_generator(monkeypatch: pytes
         return schema
 
     settings = Settings(_env_file=None, cadrumo_profile_kdf_measure_calibration=False)
-    monkeypatch.setattr(registry_schema_validation, "_generate_closed_model_schema", record_schema)
+    monkeypatch.setattr(registry_schema_validation, "generate_closed_model_schema", record_schema)
     optimized = build_production_operation_registry(settings=settings)
 
     def compare_default_schema(model_type: type[BaseModel]) -> dict[str, object]:
@@ -34,8 +34,8 @@ def test_production_registry_matches_default_schema_generator(monkeypatch: pytes
         checked.add(model_type)
         return schema
 
-    monkeypatch.setattr(registry_schema_validation, "_UnambiguousDefinitionsSchemaGenerator", GenerateJsonSchema)
-    monkeypatch.setattr(registry_schema_validation, "_generate_closed_model_schema", compare_default_schema)
+    monkeypatch.setattr(registry_schema_validation, "UnambiguousDefinitionsSchemaGenerator", GenerateJsonSchema)
+    monkeypatch.setattr(registry_schema_validation, "generate_closed_model_schema", compare_default_schema)
     default = build_production_operation_registry(settings=settings)
     assert schemas
     assert checked == schemas.keys()

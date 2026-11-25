@@ -18,18 +18,14 @@ from cadrumo.application.invoices.catalogue_add_operation import (
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPortsFactory
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.domain.iva.schema import InvoiceKind
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.operation_access import OperationAcknowledged, OperationControl, OperationSubmit, OperationSubmitted
 from ..frontend_client import FrontendClient
-from ..operation_controller import OperationController
+from ..operation_controller import OperationController, await_terminal_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -156,7 +152,7 @@ def test_submit_refuses_invalid_deadline_before_contract_or_operation_io(
     with pytest.raises(RefusalError) as raised:
         _submit(client, deadline)
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert client.contract_deadlines == []
     assert client.operation_deadlines == []
 
@@ -177,7 +173,7 @@ def test_retained_exchange_refuses_invalid_deadline_before_operation_io(
     with pytest.raises(RefusalError) as raised:
         asyncio.run(controller.start())
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert client.contract_deadlines == []
     assert client.operation_deadlines == []
 
@@ -214,3 +210,61 @@ def test_retained_exchange_bounds_call_budget_without_replacing_original_deadlin
     assert asyncio.run(controller.start()) == _OPERATION_ID
     assert client.operation_deadlines == [expected]
     assert controller.deadline == deadline
+
+
+@pytest.mark.parametrize(("deadline", "expected"), [(110.0, 110.0), (200.0, 200.0), (None, 130.0)])
+def test_result_collection_keeps_owned_deadline_or_bounded_fallback(
+    monkeypatch: pytest.MonkeyPatch, deadline: float | None, expected: float
+) -> None:
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    client = _RecordingClient()
+    controller = OperationController(
+        client=cast(FrontendClient, client), operation_id=_OPERATION_ID, session_id=client.session_id, deadline=deadline
+    )
+    assert controller._result_deadline() == expected
+
+
+@pytest.mark.parametrize("deadline", [float("nan"), float("inf"), float("-inf"), 99.0])
+def test_result_collection_refuses_invalid_owned_deadline(monkeypatch: pytest.MonkeyPatch, deadline: float) -> None:
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    client = _RecordingClient()
+    controller = OperationController(
+        client=cast(FrontendClient, client), operation_id=_OPERATION_ID, session_id=client.session_id, deadline=deadline
+    )
+    with pytest.raises(RefusalError) as refused:
+        controller._result_deadline()
+    assert refused.value.reason is RefusalCode.TIMEOUT
+
+
+@pytest.mark.parametrize(("original", "expected"), [(None, 110.0), (105.0, 105.0), (120.0, 110.0)])
+def test_terminal_wait_applies_its_deadline_to_the_wire_exchange(
+    monkeypatch: pytest.MonkeyPatch, original: float | None, expected: float
+) -> None:
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    client = _RecordingClient()
+
+    def unavailable(_request: object, *, deadline: float) -> None:
+        client.operation_deadlines.append(deadline)
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+
+    monkeypatch.setattr(client, "operation", unavailable)
+    controller = OperationController(
+        client=cast(FrontendClient, client),
+        operation_id=_OPERATION_ID,
+        session_id=client.session_id,
+        deadline=original,
+    )
+    contract = client.registry.lookup_public_contract(INVOICE_ADD_OPERATION_DEFINITION_ID)
+    with pytest.raises(RefusalError) as raised:
+        asyncio.run(
+            await_terminal_projection(
+                controller,
+                definition_id=contract.definition_id,
+                subject_ref=profile_operation_subject(str(client.profile_id)),
+                request_schema=contract.request_schema,
+                deadline=110.0,
+            )
+        )
+    assert raised.value.reason is RefusalCode.UNAVAILABLE
+    assert client.operation_deadlines == [expected]
+    assert controller.deadline == original

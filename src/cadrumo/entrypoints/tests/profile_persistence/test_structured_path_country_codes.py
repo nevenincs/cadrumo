@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -54,26 +55,24 @@ from cadrumo.application.ledger.invoice_extraction_authority import default_invo
 from cadrumo.core.config import Settings
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.establishment import country_code_for_stated_country_code, territorial_scope_for_country
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
 from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 
 from ....adapters.persistence.profile.tests.evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from ....adapters.persistence.profile.tests.evidence_test_support import (
+    BUCKET_ID,
     isolated_settings,
+    make_svc,
     repository,
     secure_objects,
 )
-from ....adapters.persistence.profile.tests.evidence_test_support import (
-    make_svc as _make_svc,
-)
 from ....adapters.persistence.profile.tests.evidence_test_support import runtime_profile as runtime_profile
 from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects"]
@@ -146,15 +145,15 @@ def _stored(
 ) -> str:
     staged = tmp_path / name
     staged.write_text(xml, encoding="utf-8")
-    return _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
+    return make_svc(settings, objects).add(bucket_id=BUCKET_ID, source_path=staged).record.evidence_id
 
 
 def _draft(evidence_id: str, settings: Settings, *, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     return extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
-        ports=invoice_draft_extraction_ports(evidence_ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID)),
+        ports=invoice_draft_extraction_ports(evidence_ports=build_ledger_evidence_ports(bucket_id=BUCKET_ID)),
         operation=operation,
         legends=_registry_legends(operation),
     )
@@ -376,7 +375,7 @@ class TestTheStructuredPathOpensThePostalRung:
         with no country evidence the postal rung stayed shut. The postal code it
         consults was already in the draft the whole time.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 _corpus(_FACTURAE_WITH_ADDRESSES),
                 settings=isolated_settings,
@@ -386,7 +385,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -414,7 +413,7 @@ class TestTheStructuredPathOpensThePostalRung:
         changed, so nothing but the postal rung's own reading can explain the
         different answer.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             canarian = _corpus(_FACTURAE_WITH_ADDRESSES).replace(
                 f"<PostCode>{_PRINTED_SUPPLIER_CODE}</PostCode>",
                 f"<PostCode>{_CANARIAS_CODE}</PostCode>",
@@ -431,7 +430,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -452,7 +451,7 @@ class TestTheStructuredPathOpensThePostalRung:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """The alpha-2 leg reaches the same rung, so neither format is left behind."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 _ubl_with_addresses(_corpus(_UBL_INVOICE)),
                 settings=isolated_settings,
@@ -462,7 +461,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -488,7 +487,7 @@ class TestTheStructuredPathOpensThePostalRung:
         selection that reached for the supplier's block would return Canarias
         here instead of the peninsula.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 _ubl_with_addresses(_corpus(_UBL_INVOICE)),
                 settings=isolated_settings,
@@ -498,7 +497,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
@@ -526,7 +525,7 @@ class TestTheStructuredPathOpensThePostalRung:
         element was read this document resolved no territory while carrying
         every value needed to.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 _corpus(_CII_INVOICE),
                 settings=isolated_settings,
@@ -536,7 +535,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -564,7 +563,7 @@ class TestTheStructuredPathOpensThePostalRung:
         party's block returns Spain here, which is the under-declaration
         direction -- a domestic treatment for an export.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 _corpus(_CII_INVOICE),
                 settings=isolated_settings,
@@ -574,7 +573,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
@@ -601,7 +600,7 @@ class TestTheStructuredPathOpensThePostalRung:
         specimen states none, so the ladder exhausts and the operator is asked
         once, which is the honest outcome.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 _corpus(_FACTURAE_WITHOUT_ADDRESSES),
                 settings=isolated_settings,
@@ -611,7 +610,7 @@ class TestTheStructuredPathOpensThePostalRung:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -728,7 +727,7 @@ class TestTheOverseasAddressIsRead:
         element in the overseas block is the only evidence available, and the
         territory coming out the far end is what proves it was read.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             evidence_id = _stored(
                 self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES)),
                 settings=isolated_settings,
@@ -738,7 +737,7 @@ class TestTheOverseasAddressIsRead:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=_draft(evidence_id, isolated_settings, operation=operation),
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -751,7 +750,7 @@ class TestTheOverseasAddressIsRead:
             # The same answer reached from the country alone, so the case reads
             # as a statement about the ladder's source rather than about France.
             assert territorial_scope_for_country(
-                "FR", operation=_authority_operation_for_test
+                "FR", operation=_authority_operation_for_test, effective_date=_ON_DATE
             ) == IvaTerritorialScope.from_registry("eu_member")
 
     def test_the_envelope_names_the_overseas_block_it_was_read_from(

@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-10-03'
+modified: '2026-10-25'
 body_schema: 'body-v2'
-body_hash: 'sha256:54f5a9f3b96721df90627a2898cb78a83edd9dacec7eaa586ae6b9c8163081c7'
+body_hash: 'sha256:205b2c07685d85d2ee64abc8b9a0d44a84a458ae635cbe75ef3d5d462112d632'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-adr]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"
@@ -189,8 +189,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
 authority = bundled_authority()
-authority.snapshot("303", filing_year=2025, period="1T",
-                   grade=RegistryAuthorityGrade.APPLICABILITY)
+authority.snapshot("303", filing_year=2025, period="1T", grade=RegistryAuthorityGrade.APPLICABILITY)
 ```
 
 For timing, measure imports separately, time the first `bundled_authority()` in a fresh process, then median 50 warm lookups and five warm snapshots per coordinate. Parse section sizes from `authority.json` using compact UTF-8 JSON. Use `cProfile` only for attribution, separately from wall-time runs. Recheck these measurements after the in-flight work settles; do not freeze corpus counts as correctness assertions.

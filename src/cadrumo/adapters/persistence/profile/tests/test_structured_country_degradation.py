@@ -75,8 +75,8 @@ from cadrumo.application.ledger.classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
-    resolve_ingestion_iva_category,
 )
+from cadrumo.application.ledger.classification_category_resolution import resolve_ingestion_iva_category
 from cadrumo.application.ledger.classifier_inputs import collect_classifier_inputs
 from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -92,10 +92,9 @@ from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
+    bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
-)
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.establishment import StatedCountryCodeStatus, record_country_code_status
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.domain.iva.schema import IvaCategory
@@ -104,20 +103,18 @@ from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2, a
 
 from .....domain.iva.classification import CustomerTaxStatus
 from .....domain.iva.schema import InvoiceKind, IvaTerritorialScope
-from ._invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
 from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .evidence_test_support import (
+    BUCKET_ID,
     isolated_settings,
+    make_svc,
     repository,
     secure_objects,
 )
-from .evidence_test_support import (
-    make_svc as _make_svc,
-)
 from .evidence_test_support import runtime_profile as runtime_profile
 from .evidence_test_support import seeded_filer_profile as seeded_filer_profile
+from .invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "repository", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -209,13 +206,13 @@ def _draft(
 ) -> InvoiceDraft:
     staged = tmp_path / name
     staged.write_text(xml, encoding="utf-8")
-    evidence_id = _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
+    evidence_id = make_svc(settings, objects).add(bucket_id=BUCKET_ID, source_path=staged).record.evidence_id
     authority = InvoiceAuthorityFixture(operation=operation, legends=_registry_legends(operation))
     return extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 
@@ -247,7 +244,7 @@ class TestTheProbeStillMeansWhatItSays:
         through to ``None``. Both are real ways the selection could stop meaning
         what the cases below read it as, and neither follows from the resolver.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 record_country_code_status(_UNCATALOGUED_ALPHA2, operation=_authority_operation_for_test)
                 is StatedCountryCodeStatus.UNCATALOGUED
@@ -266,7 +263,7 @@ class TestTheProbeStillMeansWhatItSays:
         recognised, a reserved code would report as our catalogue gap and this
         suite would happily use it as a stand-in for a real country.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 record_country_code_status(_UNASSIGNED_ALPHA2, operation=_authority_operation_for_test)
                 is StatedCountryCodeStatus.UNASSIGNED
@@ -294,7 +291,7 @@ class TestTheProbeStillMeansWhatItSays:
         -- an advisory suppressed because nothing was stated rather than because
         the country resolved.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 record_country_code_status(_CATALOGUED_ALPHA3, operation=_authority_operation_for_test)
                 is StatedCountryCodeStatus.CATALOGUED
@@ -487,7 +484,7 @@ class TestTheOperatorIsTold:
         re-reads an invoice that reads perfectly. It is our vocabulary that is
         short, and the sentence has to say so.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _stating(_UNCATALOGUED_ALPHA3),
                 settings=isolated_settings,
@@ -497,7 +494,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.fields == ("supplier_stated_country_code",)
@@ -521,7 +520,7 @@ class TestTheOperatorIsTold:
         a route that reached only one of them would leave the population it
         missed exactly as silent as before.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _stating(_UNCATALOGUED_ALPHA2),
                 settings=isolated_settings,
@@ -531,7 +530,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.parties[0].status is StatedCountryCodeStatus.UNCATALOGUED
@@ -546,7 +547,7 @@ class TestTheOperatorIsTold:
         operation: PinnedAuthorityOperation,
     ) -> None:
         """The two kinds stay apart on the real path, not only on hand-built drafts."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _stating(_UNASSIGNED_ALPHA2),
                 settings=isolated_settings,
@@ -556,7 +557,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
@@ -583,7 +586,7 @@ class TestTheOperatorIsTold:
         Facturae states the country in alpha-3 and is the format most of this
         corpus arrives in, so this is not the rare spelling.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _stating(_UNASSIGNED_ALPHA3),
                 settings=isolated_settings,
@@ -593,7 +596,9 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            advisory = country_vocabulary_advisory(draft, operation=_authority_operation_for_test)
+            advisory = country_vocabulary_advisory(
+                draft, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
 
             assert advisory is not None
             assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
@@ -614,7 +619,7 @@ class TestTheOperatorIsTold:
         would pass against an advisory that fired on every document, and the
         operator would be no better off than with one that fired on none.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _corpus(_WITHOUT_ADDRESSES),
                 settings=isolated_settings,
@@ -624,7 +629,10 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
+            assert (
+                country_vocabulary_advisory(draft, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
     def test_a_catalogued_country_raises_no_advisory(
         self,
@@ -640,7 +648,7 @@ class TestTheOperatorIsTold:
         places. An advisory here would be noise on the majority population and
         would train the operator to clear the channel unread.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _corpus(_WITH_ADDRESSES),
                 settings=isolated_settings,
@@ -650,7 +658,10 @@ class TestTheOperatorIsTold:
                 operation=operation,
             )
 
-            assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is None
+            assert (
+                country_vocabulary_advisory(draft, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
+            )
 
 
 class TestTheTwoDocumentsAreNoLongerIdentical:
@@ -672,7 +683,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         The seller's projection is compared field by field so the difference has
         to be in the country surface rather than anywhere else in the draft.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             unplaceable = _draft(
                 _stating(_UNCATALOGUED_ALPHA3),
                 settings=isolated_settings,
@@ -699,8 +710,14 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
                 silent,
                 "supplier_stated_country_code",
             )
-            assert (country_vocabulary_advisory(unplaceable, operation=_authority_operation_for_test) is None) != (
-                country_vocabulary_advisory(silent, operation=_authority_operation_for_test) is None
+            assert (
+                country_vocabulary_advisory(
+                    unplaceable, operation=_authority_operation_for_test, effective_date=_ON_DATE
+                )
+                is None
+            ) != (
+                country_vocabulary_advisory(silent, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+                is None
             )
 
     def test_the_unplaceable_country_still_resolves_no_territory(
@@ -721,7 +738,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
         On the issued side a wrongly-settled third country is zero-rated export
         treatment, so the direction this guards is the one that costs money.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _stating(_UNCATALOGUED_ALPHA3),
                 settings=isolated_settings,
@@ -732,7 +749,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
             )
 
             resolved = resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=draft,
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
@@ -746,7 +763,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
             # as a refusal about the unplaceable token rather than a ladder that
             # stopped answering.
             assert resolve_draft_counterparty_establishment(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 draft=draft,
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
@@ -834,7 +851,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         # never reaching the guard at all.
         assert draft.iva_category == IvaCategory("export_third_country_zero_rated").value
         return resolve_confirmed_establishment(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             draft=draft,
             kind=InvoiceKind.ISSUED,
             repository=repository,
@@ -1046,7 +1063,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         never carry it and a fixture that withheld it would be testing an
         unfinished setup rather than the country axis.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _export_billed_to(_UNCATALOGUED_ALPHA2),
                 settings=isolated_settings,
@@ -1116,7 +1133,7 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         at all, which is to say this row opened it -- so it is gated beside the
         row rather than left for a later reader to find.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             draft = _draft(
                 _export_billed_to(_UNCATALOGUED_ALPHA2),
                 settings=isolated_settings,

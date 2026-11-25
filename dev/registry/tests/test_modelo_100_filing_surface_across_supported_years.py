@@ -24,14 +24,20 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_provider_registration import registration_for
-from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
-from cadrumo.domain.calculations.registry.export_parse import decode_dictionary_text
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_dictionary_text
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.modelo_100_profile_binding_tables import (
+    FAMILY_ROW_BINDINGS,
+    PERSONAL_FAMILY_CASILLA_TO_BINDING,
+)
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
 
 from ..compiler.loader import load_shared_catalogues
 
@@ -47,38 +53,6 @@ def _supported_years() -> tuple[int, ...]:
 
 SUPPORTED_YEARS = _supported_years()
 
-_IDENTITY_CASILLA_BINDINGS: Mapping[str, str] = {
-    "DPNIF_D": "renta-profile-tax-id",
-    "DP_APENOM_D": "renta-profile-display-name",
-    "ZCCAD": "renta-profile-tax-residence-ccaa",
-    "TIPOTRIBUTACION": "renta-profile-declaration-type",
-    "SEXO_D": "renta-profile-taxpayer-sex",
-    "ECIVIL": "renta-profile-marital-status",
-    "DPFNAC_D": "renta-profile-taxpayer-birth-date",
-    "DPNIF_C": "renta-profile-spouse-tax-id",
-    "DP_APENOM_C": "renta-profile-spouse-display-name",
-    "DPFNAC_C": "renta-profile-spouse-birth-date",
-    "SEXO_C": "renta-profile-spouse-sex",
-    "DPGMIN_D": "renta-profile-taxpayer-disability-grade",
-    "DECFAL": "renta-profile-taxpayer-death-date",
-    "DPGMIN_C": "renta-profile-spouse-disability-grade",
-    "NORESIDENTE": "renta-profile-spouse-non-resident-irpf",
-    "RESIDENTEUE": "renta-profile-spouse-eu-eea-resident",
-    "ZRUE2": "renta-profile-spouse-eu-eea-country",
-    "HIJOSUE": "renta-profile-family-descendants-eu-eea-deduction",
-    "PH18": "renta-profile-family-minor-children-in-unit",
-    "NIFDLG": "renta-family-descendant-tax-id",
-    "APENOMDLG": "renta-family-descendant-display-name",
-    "FNACDLG": "renta-family-descendant-birth-date",
-    "MINUSDLG": "renta-family-descendant-disability-grade",
-    "FALLDLG": "renta-family-descendant-death-date",
-    "DNIASDLG": "renta-family-ascendant-tax-id",
-    "APENOMDLG_ASC": "renta-family-ascendant-display-name",
-    "ANOASDLG": "renta-family-ascendant-birth-date",
-    "PCTMINASDLG": "renta-family-ascendant-disability-grade",
-    "CONVASDLG": "renta-family-ascendant-cohabiting-descendant-count",
-    "FALLASDLG": "renta-family-ascendant-death-date",
-}
 
 _LEDGER_CASILLA_BINDINGS: Mapping[str, str] = {
     "0171": "renta-ledger-income-0171",
@@ -101,6 +75,9 @@ _LEDGER_CASILLA_BINDINGS: Mapping[str, str] = {
             "0217",
         )
     },
+    "1380": "renta-base-liquidable-negativa-general-em4-pendiente-inicio",
+    "1382": "renta-base-liquidable-negativa-general-em3-pendiente-inicio",
+    "1385": "renta-base-liquidable-negativa-general-em2-pendiente-inicio",
     "1388": "renta-base-liquidable-negativa-general-anterior",
 }
 
@@ -111,13 +88,22 @@ _SETTLEMENT_FORMULAS: Mapping[str, str] = {
     "0670": "renta-resultado-declaracion",
 }
 
-# The official label of the resultado casilla signs these maternity-deduction
-# carry-ins for earlier ejercicios as additions, while the AEAT manual treats
-# them as increments of a deduction. An edition whose label names one of them
-# withholds the resultado formula until that contradiction is ruled on.
-_CONTESTED_RESULTADO_CARRY_INS = frozenset({"1912", "1913", "1915", "1916"})
+# A settlement formula may add a figure the form prints in no casilla of its own.
+# Casilla 0598 credits urban-rental withholding whether or not the rental is an
+# activity, but the label prints only the capital inmobiliario box 0153; the
+# activity component comes from the payer records of the activity-rental class.
+_UNPRINTED_FORMULA_OPERANDS: Mapping[str, frozenset[str]] = {
+    "0598": frozenset({"binding:renta-retencion-soportada-arrendamiento-actividad"}),
+}
 
-_WORK_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+# The record-design dictionary prints some of these maternity-deduction catch-up
+# increments for earlier ejercicios as additions to the resultado. The approving
+# order's form and the AEAT manual subtract every one of them as an increment of
+# a deduction, and the order prevails, so the oracle corrects only a label term
+# whose sign disagrees with the form.
+_RESULTADO_DEDUCTION_INCREMENTS = frozenset({"1912", "1913", "1915", "1916"})
+
+_WORK_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _WORK_RETENCIONES_CASILLA = "0596"
 _TOTAL_PAGOS_A_CUENTA = "0609"
 _CUOTA_RESULTANTE = "0595"
@@ -143,7 +129,7 @@ def test_identity_casillas_are_bound_to_their_profile_bindings(
     casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
-    for casilla_id, binding_id in _IDENTITY_CASILLA_BINDINGS.items():
+    for casilla_id, binding_id in PERSONAL_FAMILY_CASILLA_TO_BINDING.items():
         casilla = casillas[casilla_id]
         assert casilla.input_kind is InputKind.BOUND, (filing_year, casilla_id)
         assert casilla.binding == binding_id, (filing_year, casilla_id)
@@ -165,7 +151,7 @@ def test_identity_evidence_cites_the_edition_that_governs_the_year(
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     authored_year = int(snapshot.revision.id)
 
-    for binding_id in _IDENTITY_CASILLA_BINDINGS.values():
+    for binding_id in PERSONAL_FAMILY_CASILLA_TO_BINDING.values():
         cited = {str(ref) for ref in bindings[binding_id].source_refs}
         stale = {ref for ref in cited if re.search(r"-(20\d\d)-", ref) and f"-{authored_year}-" not in ref}
         assert not stale, (filing_year, binding_id, sorted(stale))
@@ -193,12 +179,12 @@ def test_ledger_targets_are_bound_wherever_the_edition_declares_them(
 def test_work_certificate_is_the_only_source_of_suffered_work_retenciones(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
-    """Casilla 0596 is filled from the certificate the payer issued, and from nothing else.
+    """Casilla 0596 is filled from the certificates the payers issued, and from nothing else.
 
     The retencion credited here is the one the declarant SUFFERED on its salary.
-    Only the payer's certificate evidences that figure for this taxpayer, so the
-    casilla names it as its single source: an alternate would let a second,
-    weaker source fill the same credit.
+    Only the payers' certificates evidence that figure for this taxpayer, so the
+    casilla names their payer-record family as its single source: an alternate
+    would let a second, weaker source fill the same credit.
     """
     snapshot = edition(filing_year)
     casilla = next(item for item in snapshot.revision.casillas if item.id == _WORK_RETENCIONES_CASILLA)
@@ -232,9 +218,11 @@ def _label_coefficients(label: str) -> dict[str, int]:
 
 
 def _expression_coefficients(expression: FormulaExpression) -> dict[str, int]:
-    """Linear casilla coefficients of a sum/negate/subtract/copy expression."""
+    """Linear coefficients of a sum/negate/subtract/copy expression, a binding keyed ``binding:<id>``."""
     if expression.casilla_id is not None:
         return {str(expression.casilla_id): 1}
+    if expression.binding is not None:
+        return {f"binding:{expression.binding}": 1}
     op = str(expression.op or "")
     children = [_expression_coefficients(arg) for arg in expression.args]
     total: dict[str, int] = {}
@@ -251,6 +239,26 @@ def _expression_coefficients(expression: FormulaExpression) -> dict[str, int]:
     return {key: value for key, value in total.items() if value}
 
 
+def _resultado_label_sign_corrections(official: Mapping[str, int]) -> dict[str, int]:
+    """The form's sign for each deduction increment the resultado label prints with the opposite sign."""
+    return {key: -1 for key in official.keys() & _RESULTADO_DEDUCTION_INCREMENTS if official[key] != -1}
+
+
+def test_the_resultado_label_sign_correction_fires_in_some_supported_edition(
+    edition: Callable[[int], RegistrySnapshot],
+    registry_tree: tuple[tuple[object, ...], RegistryCatalogues],
+) -> None:
+    """The correction stays only while a supported edition's label still disagrees with its form."""
+    corrected = {
+        filing_year
+        for filing_year in SUPPORTED_YEARS
+        if _resultado_label_sign_corrections(
+            _label_coefficients(_dictionary_labels(edition(filing_year), registry_tree[1])[_RESULTADO])
+        )
+    }
+    assert corrected
+
+
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
 def test_settlement_formulas_reproduce_the_official_label_arithmetic(
     edition: Callable[[int], RegistrySnapshot],
@@ -265,12 +273,16 @@ def test_settlement_formulas_reproduce_the_official_label_arithmetic(
         official = _label_coefficients(labels[casilla_id])
         assert official, (filing_year, casilla_id, labels[casilla_id])
         formula = formulas.get(casilla_id)
-        if casilla_id == _RESULTADO and official.keys() & _CONTESTED_RESULTADO_CARRY_INS:
-            assert formula is None, (filing_year, "resultado is authored over a contested label")
-            continue
+        if casilla_id == _RESULTADO:
+            official |= _resultado_label_sign_corrections(official)
         assert formula is not None, (filing_year, casilla_id)
         assert formula.id == formula_id
-        assert _expression_coefficients(formula.expression) == official, (filing_year, casilla_id)
+        coefficients = _expression_coefficients(formula.expression)
+        unprinted = {key for key in coefficients if key.startswith("binding:")}
+        assert unprinted == _UNPRINTED_FORMULA_OPERANDS.get(casilla_id, frozenset()), (filing_year, casilla_id)
+        assert all(coefficients[key] == 1 for key in unprinted), (filing_year, casilla_id)
+        printed = {key: value for key, value in coefficients.items() if key not in unprinted}
+        assert printed == official, (filing_year, casilla_id)
 
 
 def _binding_inputs(
@@ -278,32 +290,20 @@ def _binding_inputs(
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, bool], dict[BindingId, date], dict[BindingId, str]]:
     """Neutral inputs for every scalar binding the edition declares.
 
-    The work certificate is excluded: its binding is operator-keyed, so the
-    figure enters at the casilla it names rather than on the binding channel,
-    and supplying both would assert one value through two channels.
+    The work certificates' family is excluded here and supplied by the caller,
+    so the figure under test is the only one on that binding.
     """
-    decimals: dict[BindingId, Decimal] = {}
-    booleans: dict[BindingId, bool] = {}
-    dates: dict[BindingId, date] = {}
-    enums: dict[BindingId, str] = {}
-    for binding in snapshot.revision.bindings:
-        if binding.id == _WORK_CERTIFICATE:
-            continue
-        channel = binding.value.channel
-        if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            decimals[binding.id] = Decimal("0")
-        elif channel is BindingValueChannel.BOOLEAN:
-            booleans[binding.id] = False
-        elif channel is BindingValueChannel.DATE:
-            dates[binding.id] = date(1975, 6, 15)
-        elif channel is BindingValueChannel.ENUM:
-            enums[binding.id] = "madrid"
+    decimals, booleans, dates, enums = neutral_binding_values(
+        binding for binding in snapshot.revision.bindings if binding.id != _WORK_CERTIFICATE
+    )
     decimals["renta-profile-declaration-type"] = Decimal("1")
     return decimals, booleans, dates, enums
 
 
 def _settle(snapshot: RegistrySnapshot, filing_year: int, *, work_certificate: Decimal) -> Mapping[str, Decimal | None]:
     decimals, booleans, dates, enums = _binding_inputs(snapshot)
+    # The value the calculation's source mesh resolves from the payer records reaches the engine on the binding.
+    decimals[_WORK_CERTIFICATE] = work_certificate
     relations: dict[RelationId, Decimal] = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -311,7 +311,10 @@ def _settle(snapshot: RegistrySnapshot, filing_year: int, *, work_certificate: D
     }
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"0003": Decimal("30000.00"), _WORK_RETENCIONES_CASILLA: work_certificate},
+        inputs={
+            "0003": Decimal("30000.00"),
+            **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, {_WORK_CERTIFICATE: work_certificate}),
+        },
         date_context={"filing_period": date(filing_year, 12, 31)},
         binding_values=decimals,
         enum_binding_values=enums,
@@ -340,29 +343,7 @@ def test_settlement_chain_credits_the_work_certificate_against_the_cuota(
     assert credited[_CUOTA_RESULTANTE] == resultante
     assert credited[_CUOTA_DIFERENCIAL] == resultante - retencion
 
-    formulas = {formula.target_casilla_id for formula in snapshot.revision.formulas}
-    if _RESULTADO in formulas:
-        assert credited[_RESULTADO] == credited[_CUOTA_DIFERENCIAL]
-    else:
-        # Withheld over a contested label, the resultado stays a manual box the
-        # filer must state; the engine never derives it.
-        resultado = next(item for item in snapshot.revision.casillas if item.id == _RESULTADO)
-        assert resultado.input_kind is InputKind.MANUAL, filing_year
-
-
-_REPEATING_FAMILY_ROWS: Mapping[str, tuple[str, str]] = {
-    "renta-family-descendant-tax-id": ("descendants", "tax_id"),
-    "renta-family-descendant-display-name": ("descendants", "display_name"),
-    "renta-family-descendant-birth-date": ("descendants", "birth_date"),
-    "renta-family-descendant-disability-grade": ("descendants", "disability_grade"),
-    "renta-family-descendant-death-date": ("descendants", "death_date"),
-    "renta-family-ascendant-tax-id": ("ascendants", "tax_id"),
-    "renta-family-ascendant-display-name": ("ascendants", "display_name"),
-    "renta-family-ascendant-birth-date": ("ascendants", "birth_date"),
-    "renta-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
-    "renta-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
-    "renta-family-ascendant-death-date": ("ascendants", "death_date"),
-}
+    assert credited[_RESULTADO] == credited[_CUOTA_DIFERENCIAL], filing_year
 
 
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
@@ -376,16 +357,19 @@ def test_profile_bindings_dispatch_through_the_single_profile_provider(
 
 
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
-def test_family_rows_are_repeating_profile_collections(
+def test_family_rows_read_the_canonical_stored_row_objects(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
     bindings = {binding.id: binding for binding in edition(filing_year).revision.bindings}
-    for binding_id, (collection, field) in _REPEATING_FAMILY_ROWS.items():
+    for binding_id, (object_path, leaf, count_path) in FAMILY_ROW_BINDINGS.items():
         provider = bindings[binding_id].provider
         assert isinstance(provider, ProfileProvider)
-        assert provider.profile_model == "RentaFamilyProfile"
-        assert provider.collection == collection
-        assert provider.field == field
+        assert provider.rows is not None
+        assert (provider.rows.object_path, provider.rows.leaf, provider.rows.count_path) == (
+            object_path,
+            leaf,
+            count_path,
+        )
         assert provider.repeating is True
 
 

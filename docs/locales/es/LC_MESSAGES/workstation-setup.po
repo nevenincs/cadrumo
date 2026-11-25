@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 12:18+0200\n"
+"POT-Creation-Date: 2026-10-31 11:25+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -39,28 +39,30 @@ msgstr ""
 
 #: ../../workstation-setup.md:9
 msgid ""
-"Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, and cloud LLM upload are all optional, and so is connecting an AI"
-" assistant. The core filing workflow runs with none of them."
+"Cadrumo works without any optional service. Google export, reading "
+"scanned or image documents with a model you select, and cloud LLM upload "
+"are all optional, and so is connecting an AI assistant. The core filing "
+"workflow runs with none of them."
 msgstr ""
 "Cadrumo funciona sin ningún servicio opcional. La exportación a Google, "
-"la visión LLM en el equipo y la subida a un LLM en la nube son "
-"opcionales, y también lo es conectar un asistente de IA. El flujo de "
-"trabajo básico de presentación funciona sin ninguno de ellos."
+"la lectura de documentos escaneados o en imagen con un modelo que elijas "
+"y la subida a un LLM en la nube son opcionales, y también lo es conectar "
+"un asistente de IA. El flujo de trabajo básico de presentación funciona "
+"sin ninguno de ellos."
 
-#: ../../workstation-setup.md:13
+#: ../../workstation-setup.md:14
 msgid "Before you start"
 msgstr "Antes de empezar"
 
-#: ../../workstation-setup.md:15
+#: ../../workstation-setup.md:16
 msgid "You need:"
 msgstr "Necesitas:"
 
-#: ../../workstation-setup.md:17
+#: ../../workstation-setup.md:18
 msgid "Python 3.13 or newer."
 msgstr "Python 3.13 o posterior."
 
-#: ../../workstation-setup.md:18
+#: ../../workstation-setup.md:19
 msgid ""
 "Several hundred megabytes of free disk space for Cadrumo and its "
 "dependencies. The package download alone is about 76 MB."
@@ -68,11 +70,11 @@ msgstr ""
 "Varios cientos de megabytes de espacio libre en disco para Cadrumo y sus "
 "dependencias. Solo la descarga del paquete ocupa unos 76 MB."
 
-#: ../../workstation-setup.md:21
+#: ../../workstation-setup.md:22
 msgid "Install the CLI"
 msgstr "Instalar la CLI"
 
-#: ../../workstation-setup.md:23
+#: ../../workstation-setup.md:24
 msgid ""
 "Pick one channel from the table in [Get Cadrumo](download.md#install-"
 "channels) and run the command it lists. A `uv` tool install keeps Cadrumo"
@@ -86,7 +88,7 @@ msgstr ""
 "de Homebrew y Scoop todavía no están publicados, así que por ahora usa en"
 " todas las plataformas un canal de paquete de Python."
 
-#: ../../workstation-setup.md:28
+#: ../../workstation-setup.md:29
 msgid ""
 "The Python package installs both the `aeat` command and the `cadrumo-mcp`"
 " server."
@@ -94,71 +96,124 @@ msgstr ""
 "El paquete de Python instala tanto el comando `aeat` como el servidor "
 "`cadrumo-mcp`."
 
-#: ../../workstation-setup.md:31
+#: ../../workstation-setup.md:32
 msgid "If you contribute to Cadrumo, work from a source checkout instead:"
 msgstr "Si contribuyes a Cadrumo, trabaja mejor desde una copia del código fuente:"
 
-#: ../../workstation-setup.md:40
+#: ../../workstation-setup.md:41
 msgid "Confirm the install"
 msgstr "Confirmar la instalación"
 
-#: ../../workstation-setup.md:42
+#: ../../workstation-setup.md:43
 msgid ""
-"No taxpayer profile is needed for these checks; you create one with `aeat"
-" config profile create` after installing. See [Set up a profile](how-to"
-"/profile-setup.md)."
+"The version check needs no taxpayer profile. Create a profile with `aeat "
+"config profile create` when you are ready to use Cadrumo. See [Set up a "
+"profile](how-to/profile-setup.md)."
 msgstr ""
-"No hace falta ningún perfil de contribuyente para estas comprobaciones; "
-"puedes crear uno con `aeat config profile create` después de instalar. "
-"Consulta [Configurar un perfil](how-to/profile-setup.md)."
+"La comprobación de versión no necesita ningún perfil de contribuyente. "
+"Crea un perfil con `aeat config profile create` cuando estés listo para "
+"usar Cadrumo. Consulta [Configurar un perfil](how-to/profile-setup.md)."
 
-#: ../../workstation-setup.md:46
+#: ../../workstation-setup.md:47
+msgid "Confirm the command is on your path:"
+msgstr "Confirma que el comando está en tu PATH:"
+
+#: ../../workstation-setup.md:53
+msgid "Open the macOS app"
+msgstr "Abrir la app de macOS"
+
+#: ../../workstation-setup.md:55
 msgid ""
-"Confirm the command is on your path and the capability posture is "
-"readable. Then run the workstation check on your own machine. Its "
-"dependency and platform rows intentionally reflect that workstation, "
-"including tools on your path, installed browser assets, and operating-"
-"system settings. Use the machine-readable form for scripted setup checks "
-"(`--format json` is a global flag, so it goes before the command):"
+"The macOS app, `Cadrumo.app`, is not notarized by Apple. Cadrumo is an "
+"open-source project with no Apple Developer ID, and it will not get one, "
+"so every copy carries only an ad-hoc signature. That signature lets macOS"
+" check that the app has not changed since it was built. It does not tell "
+"macOS who built it."
 msgstr ""
-"Confirma que el comando está en tu PATH y que el estado de capacidades es"
-" legible. Luego ejecuta la comprobación de la estación de trabajo en tu "
-"propia máquina. Sus filas de dependencias y de plataforma reflejan a "
-"propósito esa estación de trabajo, incluidas las herramientas de tu PATH,"
-" los recursos de navegador instalados y los ajustes del sistema "
-"operativo. Usa la forma legible por máquina para las comprobaciones de "
-"configuración automatizadas (`--format json` es una opción global, así "
-"que va antes del comando):"
+"La app de macOS, `Cadrumo.app`, no está notarizada por Apple. Cadrumo es "
+"un proyecto de código abierto sin Apple Developer ID y no va a tenerlo, "
+"así que cada copia lleva solo una firma ad hoc. Esa firma permite a macOS"
+" comprobar que la app no ha cambiado desde que se compiló. No le indica a"
+" macOS quién la compiló."
 
-#: ../../workstation-setup.md:56
+#: ../../workstation-setup.md:60
+msgid ""
+"If you build the app yourself from a source checkout, macOS opens it "
+"without a warning. The native build and its prerequisites are described "
+"in `native/CONTRACT.md` in the source repository."
+msgstr ""
+"Si compilas la app tú mismo a partir de una copia del código fuente, "
+"macOS la abre sin ningún aviso. La compilación nativa y sus requisitos se"
+" describen en `native/CONTRACT.md`, en el repositorio del código fuente."
+
+#: ../../workstation-setup.md:64
+msgid ""
+"macOS quarantines a copy that you download as a disk image (DMG) or ZIP, "
+"and refuses to open it the first time. Drag `Cadrumo.app` to your "
+"Applications folder, then do one of the following:"
+msgstr ""
+"macOS pone en cuarentena una copia que descargas como imagen de disco "
+"(DMG) o ZIP, y se niega a abrirla la primera vez. Arrastra `Cadrumo.app` "
+"a tu carpeta Aplicaciones y haz una de estas dos cosas:"
+
+#: ../../workstation-setup.md:68
+msgid ""
+"Open the app once and choose **Done** in the warning. Go to **System "
+"Settings** > **Privacy & Security**, choose **Open Anyway** next to the "
+"message about Cadrumo, and confirm with your password."
+msgstr ""
+"Abre la app una vez y cierra el aviso con **Done** (o el botón "
+"equivalente en tu idioma). Ve a **Ajustes del Sistema** > **Privacidad y "
+"seguridad**, elige **Abrir igualmente** junto al mensaje sobre Cadrumo y "
+"confirma con tu contraseña."
+
+#: ../../workstation-setup.md:71
+msgid "Remove the quarantine in Terminal:"
+msgstr "Quita la cuarentena en Terminal:"
+
+#: ../../workstation-setup.md:77
+msgid ""
+"Do this only for a copy that comes from Cadrumo's own release channel. "
+"After the first run, the app opens normally."
+msgstr ""
+"Hazlo solo con una copia que proceda del canal de publicación propio de "
+"Cadrumo. Después de la primera ejecución, la app se abre con normalidad."
+
+#: ../../workstation-setup.md:80
+msgid ""
+"When the app runs from an Applications folder, its background manager "
+"starts when you sign in to your Mac, and macOS lists it under Login "
+"Items. To stop that, turn off **Start at sign-in** in the manager's menu "
+"bar item."
+msgstr ""
+"Cuando la app se ejecuta desde una carpeta Aplicaciones, su gestor en "
+"segundo plano se inicia al iniciar sesión en tu Mac, y macOS lo muestra "
+"entre los ítems de inicio de sesión. Para evitarlo, desactiva **Iniciar "
+"al iniciar sesión** en el elemento de la barra de menús del gestor."
+
+#: ../../workstation-setup.md:84
 msgid "Install optional extras"
 msgstr "Instalar extras opcionales"
 
-#: ../../workstation-setup.md:58
+#: ../../workstation-setup.md:86
 msgid "The core install is lean. Each optional extra adds one capability:"
 msgstr "La instalación básica es ligera. Cada extra opcional añade una capacidad:"
 
-#: ../../workstation-setup.md:60
+#: ../../workstation-setup.md:88
 msgid "`google` - Google Drive and Sheets export."
 msgstr "`google`: exportación a Google Drive y Google Sheets."
 
-#: ../../workstation-setup.md:61
+#: ../../workstation-setup.md:89
 msgid "`browser` - live AEAT reads through browser automation."
 msgstr ""
 "`browser`: lecturas en vivo de la AEAT mediante automatización del "
 "navegador."
 
-#: ../../workstation-setup.md:62
+#: ../../workstation-setup.md:90
 msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx`: importación de extractos bancarios OFX y QFX."
 
-#: ../../workstation-setup.md:63
-msgid "`llm` - on-host document reading with a local model runtime."
-msgstr ""
-"`llm`: lectura de documentos en el propio equipo con un entorno de "
-"ejecución de modelos local."
-
-#: ../../workstation-setup.md:64
+#: ../../workstation-setup.md:91
 msgid ""
 "`pdf` - writing the calculation-summary PDF. Reading and verifying a "
 "summary needs no extra."
@@ -166,11 +221,11 @@ msgstr ""
 "`pdf`: generación del PDF del resumen del cálculo. Leer y verificar un "
 "resumen no requiere ningún extra."
 
-#: ../../workstation-setup.md:66
+#: ../../workstation-setup.md:93
 msgid "`all` - every extra in this list."
 msgstr "`all`: todos los extras de esta lista."
 
-#: ../../workstation-setup.md:68
+#: ../../workstation-setup.md:95
 msgid ""
 "Name the extras you need when you install: in your channel's install "
 "command, write the package as `cadrumo[google,browser]` instead of "
@@ -184,136 +239,19 @@ msgstr ""
 " que usa el canal con el que lo instalaste. En una copia del código "
 "fuente, añade extras con `uv sync --extra google --extra browser`."
 
-#: ../../workstation-setup.md:73
+#: ../../workstation-setup.md:100
 msgid ""
-"`aeat config check` reports each extra as `extra:<name>` available or "
-"missing. Install a missing one by repeating your channel's install "
-"command with that extra named."
+"Install a missing extra by repeating your channel's install command with "
+"that extra named."
 msgstr ""
-"`aeat config check` indica de cada extra, como `extra:<name>`, si está "
-"disponible o falta. Instala el que falte repitiendo el comando de "
-"instalación de tu canal con ese extra indicado."
+"Instala el extra que falte repitiendo el comando de instalación de tu "
+"canal con ese extra indicado."
 
-#: ../../workstation-setup.md:77
-msgid "Two extras need a further provisioning step after the install:"
-msgstr ""
-"Dos extras necesitan un paso de aprovisionamiento adicional después de la"
-" instalación:"
-
-#: ../../workstation-setup.md:79
-msgid ""
-"The `browser` extra drives a Chromium build for live AEAT reads. Download"
-" the exact build the installed extra launches with:"
-msgstr ""
-"El extra `browser` utiliza una compilación de Chromium para lecturas en "
-"directo de la AEAT. Descarga la compilación exacta que lanza el extra "
-"instalado con:"
-
-#: ../../workstation-setup.md:85
-msgid ""
-"It does nothing when that build is already present. With the browser "
-"channel set to `chromium`, a browser read that finds the build missing "
-"refuses and names this command."
-msgstr ""
-"No hace nada cuando esa compilación ya está presente. Con el canal de "
-"navegador fijado en `chromium`, una lectura de navegador que no encuentre"
-" la compilación se rechaza y nombra este comando."
-
-#: ../../workstation-setup.md:89
-msgid ""
-"On-host invoice reading uses a local model runtime (Ollama) with one "
-"model for each reader role: vision transcription, text extraction, "
-"tabular mapping, and supply-nature proposal. Run `aeat config provision "
-"status` to see where you stand: whether the runtime is installed, whether"
-" it answers, and which reader models are present."
-msgstr ""
-"La lectura de facturas en el propio equipo utiliza un entorno de "
-"ejecución de modelos local (Ollama) con un modelo para cada rol de "
-"lectura: transcripción por visión, extracción de texto, asignación de "
-"columnas de tablas y propuesta de la naturaleza de la operación. Ejecuta "
-"`aeat config provision status` para ver tu situación: si el entorno de "
-"ejecución está instalado, si responde y qué modelos de lectura están "
-"presentes."
-
-#: ../../workstation-setup.md:95
-msgid ""
-"To close every gap in one run, use `aeat config provision setup`. It "
-"installs the runtime, starts it, downloads every role's model, loads the "
-"models, and verifies them. Steps that are already done report unchanged, "
-"and the first step that fails stops the run. Setup installs the runtime "
-"only when you pass `--confirm`."
-msgstr ""
-"Para cerrar todas las carencias de una vez, usa `aeat config provision "
-"setup`. Instala el entorno de ejecución, lo inicia, descarga el modelo de"
-" cada rol, carga los modelos y los verifica. Los pasos que ya están "
-"hechos se notifican como sin cambios, y el primer paso que falle detiene "
-"la ejecución. La configuración solo instala el entorno de ejecución "
-"cuando pasas `--confirm`."
-
-#: ../../workstation-setup.md:101
-msgid ""
-"To set up only the local AI, run `aeat config provision pull`. The local "
-"AI is one component: the runtime and every reader role's model. The "
-"command installs the runtime when it is missing, through `winget` on "
-"Windows or Homebrew on macOS, starts it, and downloads the models that "
-"are not ready yet, a few GB in total. `--model` names one catalogue model"
-" to use instead of the ones Cadrumo chooses. On Linux, install Ollama "
-"with its upstream installer, which needs root. `aeat config provision "
-"start` starts an installed runtime that is not answering, and does "
-"nothing when it already answers. `aeat config provision verify --item "
-"local_ai` confirms the runtime answers and each model loads and answers."
-msgstr ""
-"Para configurar solo la IA local, ejecuta `aeat config provision pull`. "
-"La IA local es un componente: el entorno de ejecución y el modelo de cada"
-" función de lectura. El comando instala el entorno de ejecución cuando "
-"falta, mediante `winget` en Windows o Homebrew en macOS, lo inicia y "
-"descarga los modelos que aún no están listos, unos pocos GB en total. "
-"`--model` indica un modelo del catálogo que se usará en lugar de los que "
-"elige Cadrumo. En Linux, instala Ollama con su instalador oficial, que "
-"necesita permisos de root. `aeat config provision start` inicia un "
-"entorno de ejecución instalado que no responde y no hace nada si ya "
-"responde. `aeat config provision verify --item local_ai` confirma que el "
-"entorno de ejecución responde y que cada modelo se carga y responde."
-
-#: ../../workstation-setup.md:112
-msgid ""
-"The commands work with or without a signed-in profile and with or without"
-" a running Cadrumo. The same work is also available as the registered "
-"operations `local-reader.provision`, `local-reader.status` and `local-"
-"reader.report`, and the browser build as `browser-runtime.provision`. The"
-" full-screen app lists them under **Operations** and an agent runs them "
-"with `execute`."
-msgstr ""
-"Los comandos funcionan con o sin un perfil con la sesión iniciada, y con "
-"o sin Cadrumo en ejecución. El mismo trabajo está también disponible como"
-" las operaciones registradas `local-reader.provision`, `local-"
-"reader.status` y `local-reader.report`, y la descarga del navegador como "
-"`browser-runtime.provision`. La aplicación a pantalla completa las "
-"enumera en **Operaciones** y un agente las ejecuta con `execute`."
-
-#: ../../workstation-setup.md:118
-msgid ""
-"LLM classification runs only on this local reader; no cloud provider is "
-"involved. See [Classify transactions with an LLM](how-to/classify-with-"
-"llm.md#set-up-the-local-reader)."
-msgstr ""
-"La clasificación con un LLM se ejecuta solo en este lector local; no "
-"interviene ningún proveedor en la nube. Consulta [Clasificar movimientos "
-"con un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
-
-#: ../../workstation-setup.md:122
-msgid ""
-"Run `aeat config check` again after each change to confirm the gap is "
-"closed."
-msgstr ""
-"Ejecuta `aeat config check` de nuevo tras cada cambio para confirmar que "
-"la carencia se ha resuelto."
-
-#: ../../workstation-setup.md:124
+#: ../../workstation-setup.md:103
 msgid "Connect an AI assistant"
 msgstr "Conectar un asistente de IA"
 
-#: ../../workstation-setup.md:126
+#: ../../workstation-setup.md:105
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -328,7 +266,7 @@ msgstr ""
 "que está en tu ruta de búsqueda. En una copia de trabajo del código "
 "fuente, comprueba el punto de entrada instalado con:"
 
-#: ../../workstation-setup.md:137
+#: ../../workstation-setup.md:116
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -336,11 +274,11 @@ msgstr ""
 "[Conectar un agente](how-to/connect-an-agent.md) muestra las dos formas "
 "de conectarse y el flujo de solicitud de autorizaciones."
 
-#: ../../workstation-setup.md:140
+#: ../../workstation-setup.md:119
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../workstation-setup.md:142
+#: ../../workstation-setup.md:121
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -348,7 +286,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:144
+#: ../../workstation-setup.md:123
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -357,10 +295,10 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:146
+#: ../../workstation-setup.md:125
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:147
+#: ../../workstation-setup.md:126
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"

@@ -98,11 +98,11 @@ from .casilla_lineage_seed_ledger import (
     render_ledger,
     run_identifier,
 )
-from .casilla_lineage_seed_paths import _MODELOS_ROOT, _REGISTRY_ROOT, _UTF_8, LEDGER_PATH
+from .casilla_lineage_seed_paths import LEDGER_PATH, MODELOS_ROOT, REGISTRY_ROOT, UTF_8
 from .casilla_lineage_seed_planner import plan_corpus, residual_plan
 from .casilla_lineage_seed_rules import load_rulings
 from .casilla_lineage_seed_types import (
-    _EVIDENCE_ADVISORY,
+    EVIDENCE_ADVISORY,
     EXCLUDED_MODELOS,
     SCHEMA_EVIDENCE_LIMIT,
     LineagePlan,
@@ -122,8 +122,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--modelo", action="append", help="limit to these modelos (repeatable)")
     args = parser.parse_args(argv)
 
-    loaded, load_failures = load_corpus(discover_modelo_sources(_MODELOS_ROOT))
-    oracle = DesignOracle(load_shared_catalogues(_REGISTRY_ROOT).sources)
+    loaded, load_failures = load_corpus(discover_modelo_sources(MODELOS_ROOT))
+    oracle = DesignOracle(load_shared_catalogues(REGISTRY_ROOT).sources)
     rulings = load_rulings()
     modelo_ids, selected = _select_scope(loaded, load_failures, rulings, args.modelo)
     plans, partial_stampings = _plan_scope(selected, modelo_ids, loaded, oracle, rulings, args.modelo)
@@ -222,7 +222,7 @@ def _print_evidence_advisory(plans: Sequence[LineagePlan]) -> None:
         return
     longest = max(long_evidence, key=lambda entry: entry.length)
     print(
-        f"warning: {len(long_evidence)} evidence string(s) longer than {_EVIDENCE_ADVISORY} characters, within "
+        f"warning: {len(long_evidence)} evidence string(s) longer than {EVIDENCE_ADVISORY} characters, within "
         f"the schema cap of {SCHEMA_EVIDENCE_LIMIT}; longest {longest.length} at "
         f"{longest.modelo} {longest.revision}/{longest.casilla}"
     )
@@ -305,7 +305,7 @@ def _write_ledger(plans, checks, load_failures, partial_stampings, excluded_cont
             judged_at=run_identifier(),
         )
         + "\n",
-        encoding=_UTF_8,
+        encoding=UTF_8,
         newline="\n",
     )
 

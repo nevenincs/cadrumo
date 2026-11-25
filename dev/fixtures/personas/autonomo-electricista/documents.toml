@@ -1,0 +1,66 @@
+format = 1
+persona = "autonomo-electricista"
+
+[[documents]]
+id = "factura-ele-mat-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-MAT-1"]
+relation = "source"
+note = "The supply invoice ME-0101 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-ges-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-GES-1"]
+relation = "source"
+note = "The accounting invoice ACC-101 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-mat-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-MAT-2"]
+relation = "source"
+note = "The supply invoice ME-0102 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-ges-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-GES-2"]
+relation = "source"
+note = "The accounting invoice ACC-102 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-mat-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-MAT-3"]
+relation = "source"
+note = "The supply invoice ME-0103 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-ges-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-GES-3"]
+relation = "source"
+note = "The accounting invoice ACC-103 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-mat-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-MAT-4"]
+relation = "source"
+note = "The supply invoice ME-0104 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-ele-ges-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["ELE-GES-4"]
+relation = "source"
+note = "The accounting invoice ACC-104 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

@@ -12,17 +12,13 @@ It runs BEFORE the virtual environment exists.
     So it is invoked on an ephemeral interpreter
     (``uv run --isolated --no-project --python <pin> -- python -m dev.init``) and imports
     only the standard library plus :mod:`dev.exit_codes`, which is itself
-    stdlib-only. It must never import :mod:`dev.toolchain`, :mod:`dev.runner`,
-    or anything reached through ``uv run --no-sync python -m dev``: those
-    presume the environment this package is responsible for creating.
+    stdlib-only. It must never import anything that presumes the environment
+    this package is responsible for creating.
 
-It is the same command in every repository.
-    Every module here except :mod:`dev.init.plan` is byte-identical across
-    ``vaultspec-core``, ``vaultspec-rag``, ``vaultspec-dashboard``,
-    ``vaultspec-a2a`` and ``cadrumo``. :mod:`dev.init.plan` is the one file
-    that states what THIS repository's bootstrap actually is, declaratively, as
-    data. A repository's initialization differs in its steps, never in its
-    contract.
+Its steps are data.
+    :mod:`dev.init.plan` is the one file that states what this repository's
+    bootstrap actually is, declaratively; every other module is the generic
+    machinery that runs, stamps and reports it.
 
 Its failures are read by machines.
     A provisioner needs to tell "your workstation is missing Node" apart from

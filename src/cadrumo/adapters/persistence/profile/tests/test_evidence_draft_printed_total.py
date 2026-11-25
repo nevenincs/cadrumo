@@ -37,25 +37,25 @@ from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     invoice_draft_extraction_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
     serving_a_loopback_reader,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 # A real Spanish CIF (AEAT checksum-valid).
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 # base 100,00 + cuota 21,00 = 121,00. The printed total equals the derived one.
 _COHERENT_INVOICE_LINES = (
@@ -158,10 +158,10 @@ def _operator_attestations(
     the test suite.
     """
     draft = extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
     return tuple(
         FindingResolution(
@@ -170,35 +170,6 @@ def _operator_attestations(
             note="the document prints a total its stated components do not reach",
         )
         for blocker in confirmation_blockers(draft)
-    )
-
-
-def _confirm(
-    lines: tuple[str, ...],
-    *,
-    isolated_settings: Settings,
-    secure_objects: SecureObjectRepository,
-    tmp_path: Path,
-    filename: str,
-    authority: InvoiceAuthorityFixture,
-):
-    pdf_path = tmp_path / filename
-    pdf_path.write_bytes(text_pdf_bytes(lines))
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
-    return confirm_invoice_draft_from_evidence(
-        counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
-        kind=InvoiceKind.RECEIVED,
-        evidence_id=record.evidence_id,
-        counterparty_name="Acme Suministros SL",
-        settings=isolated_settings,
-        resolutions=_operator_attestations(
-            evidence_id=record.evidence_id,
-            isolated_settings=isolated_settings,
-            authority=authority,
-        ),
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
     )
 
 
@@ -215,7 +186,7 @@ def test_an_unexplained_printed_total_is_reported_against_the_record(
     without this check the difference would vanish behind a valid-looking
     invoice.
     """
-    result = _confirm(
+    result = _confirm_with(
         _UNEXPLAINED_TOTAL_INVOICE_LINES,
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
@@ -246,7 +217,7 @@ def test_a_coherent_invoice_reports_no_discrepancy(
     The negative control: base + cuota equals the printed total, so there is
     nothing to report and nothing is reported.
     """
-    result = _confirm(
+    result = _confirm_with(
         _COHERENT_INVOICE_LINES,
         isolated_settings=isolated_settings,
         secure_objects=secure_objects,
@@ -274,8 +245,8 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     """
     pdf_path = tmp_path / "factura_total_sin_desglose.pdf"
     pdf_path.write_bytes(text_pdf_bytes(_UNEXPLAINED_TOTAL_INVOICE_LINES))
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
 
     attestations = _operator_attestations(
         evidence_id=record.evidence_id,
@@ -286,13 +257,13 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     def _run():
         return confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
             resolutions=attestations,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
         )
 
     first = _run()
@@ -317,11 +288,11 @@ def _confirm_with(
     """Confirm with operator overrides, the boundary's widened parameter set."""
     pdf_path = tmp_path / filename
     pdf_path.write_bytes(text_pdf_bytes(lines))
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
     return confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         counterparty_name="Acme Suministros SL",
@@ -331,7 +302,7 @@ def _confirm_with(
             isolated_settings=isolated_settings,
             authority=authority,
         ),
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
         **overrides,
     )
 

@@ -17,13 +17,13 @@ from cadrumo.application.auth.catalogue import get_auth_provider
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import OperationEffect, profile_operation_subject
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.contracts.contracts import RefusalError
 
-from .presentation import activate_subcommand_output_language
 from .profile_language import resolve_runtime_profile_output_language
 from .profile_support import require_active_profile_pointer
 

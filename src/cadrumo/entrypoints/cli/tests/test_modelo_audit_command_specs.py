@@ -12,9 +12,9 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import SchemaState
 
-from .._modelo_audit_command_specs import MODELO_AUDIT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC
-from .._modelo_readiness_command_specs import MODELO_READINESS_COMMAND_SPECS
-from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..modelo_audit_command_specs import MODELO_AUDIT_COMMAND_SPECS, MODELO_ROOT_COMMAND_SPEC
+from ..modelo_readiness_command_specs import MODELO_READINESS_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -49,7 +49,7 @@ def test_modelo_audit_specs_own_public_handlers_and_schema_identities() -> None:
 
 def test_importing_modelo_audit_specs_does_not_import_behavior() -> None:
     sys.modules.pop("cadrumo.entrypoints.cli.modelo_audit_commands", None)
-    importlib.reload(importlib.import_module(".._modelo_audit_command_specs", __package__))
+    importlib.reload(importlib.import_module("..modelo_audit_command_specs", __package__))
     assert "cadrumo.entrypoints.cli.modelo_audit_commands" not in sys.modules
 
 

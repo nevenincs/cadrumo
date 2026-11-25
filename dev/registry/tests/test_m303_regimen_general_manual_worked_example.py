@@ -168,11 +168,11 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .authored_edition_support import manual_oracle_payloads
 from .ledger_iva_aggregation_support import (
-    _category,
-    _deduction_kind,
-    _deduction_provenance,
-    _flow,
-    _rate_kind,
+    deduction_kind,
+    ledger_iva_aggregation_category,
+    ledger_iva_aggregation_deduction_provenance,
+    ledger_iva_aggregation_flow,
+    ledger_iva_aggregation_rate_kind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -223,19 +223,21 @@ _PERIOD = "1T"
 _DEVENGO_DATE = date(_MANUAL_EXERCISE, 3, 31)
 
 with validating_governed_facts(compiled_bundled_authority()):
-    _GENERAL_RATE_KIND = _rate_kind("general", effective_date=_DEVENGO_DATE)
-    _DOMESTIC_GENERAL_CATEGORY = _category("domestic_general", effective_date=_DEVENGO_DATE)
-    _INTRA_COMMUNITY_ACQUISITION_CATEGORY = _category(
+    _GENERAL_RATE_KIND = ledger_iva_aggregation_rate_kind("general", effective_date=_DEVENGO_DATE)
+    _DOMESTIC_GENERAL_CATEGORY = ledger_iva_aggregation_category("domestic_general", effective_date=_DEVENGO_DATE)
+    _INTRA_COMMUNITY_ACQUISITION_CATEGORY = ledger_iva_aggregation_category(
         "intra_community_acquisition_reverse_charge",
         effective_date=_DEVENGO_DATE,
     )
-    _IMPORT_THIRD_COUNTRY_CATEGORY = _category("import_third_country", effective_date=_DEVENGO_DATE)
-    _SOPORTADO_FLOW = _flow("soportado", effective_date=_DEVENGO_DATE)
-    _REPERCUTIDO_FLOW = _flow("repercutido", effective_date=_DEVENGO_DATE)
-    _REVERSE_CHARGE_FLOW = _flow("inversion_sujeto_pasivo", effective_date=_DEVENGO_DATE)
-    _DOMESTIC_CURRENT_DEDUCTION = _deduction_kind("domestic_current", effective_date=_DEVENGO_DATE)
-    _INTRA_EU_CURRENT_DEDUCTION = _deduction_kind("intra_eu_current", effective_date=_DEVENGO_DATE)
-    _IMPORT_CURRENT_DEDUCTION = _deduction_kind("import_current", effective_date=_DEVENGO_DATE)
+    _IMPORT_THIRD_COUNTRY_CATEGORY = ledger_iva_aggregation_category(
+        "import_third_country", effective_date=_DEVENGO_DATE
+    )
+    _SOPORTADO_FLOW = ledger_iva_aggregation_flow("soportado", effective_date=_DEVENGO_DATE)
+    _REPERCUTIDO_FLOW = ledger_iva_aggregation_flow("repercutido", effective_date=_DEVENGO_DATE)
+    _REVERSE_CHARGE_FLOW = ledger_iva_aggregation_flow("inversion_sujeto_pasivo", effective_date=_DEVENGO_DATE)
+    _DOMESTIC_CURRENT_DEDUCTION = deduction_kind("domestic_current", effective_date=_DEVENGO_DATE)
+    _INTRA_EU_CURRENT_DEDUCTION = deduction_kind("intra_eu_current", effective_date=_DEVENGO_DATE)
+    _IMPORT_CURRENT_DEDUCTION = deduction_kind("import_current", effective_date=_DEVENGO_DATE)
 
 
 def _op(
@@ -251,7 +253,7 @@ def _op(
     deduction_fact_kind: IvaDeductionFactKind | None = None,
 ) -> IvaLedgerObservation:
     deduction_provenance = (
-        _deduction_provenance(
+        ledger_iva_aggregation_deduction_provenance(
             deduction_fact_kind,
             source_locator=f"test-ledger:{ledger_id}",
         )

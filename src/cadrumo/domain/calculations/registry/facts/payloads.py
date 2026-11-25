@@ -206,13 +206,15 @@ class MultiOutputFactRow(RegistryModel):
 
     lower_bound: DecimalValue
     upper_bound: DecimalValue | None = None
-    outputs: tuple[NamedFactValue, ...] = Field(min_length=2)
+    outputs: tuple[NamedFactValue, ...]
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_row(self) -> MultiOutputFactRow:
         if self.upper_bound is not None and self.upper_bound <= self.lower_bound:
             raise RegistryValidationError("multi-output upper_bound must be greater than lower_bound")
+        if len(self.outputs) < 2:
+            raise RegistryValidationError("a multi-output band produces more than one value")
         names = [output.name for output in self.outputs]
         if len(set(names)) != len(names):
             raise RegistryValidationError("multi-output names must be unique within a band")

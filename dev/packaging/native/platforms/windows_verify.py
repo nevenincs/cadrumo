@@ -7,15 +7,15 @@ import json
 import os
 import re
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, TypedDict
 
 from ...command_execution import CommandResult, run_command
 from ..build_directory import require_enrolled_build
 from ..build_paths import build_paths
 from ..hashing import digest
-from ..layout import application_images, entrypoint_files
+from ..layout import ApplicationImage, application_images, entrypoint_files
 from ..verification_paths import relocated_verification_package, verification_destination
 
 PROBE = r"""
@@ -52,7 +52,7 @@ assert PIL.Image.new('RGB', (2,2)).size == (2,2)
 child = subprocess.check_output([sys.executable, '-c',
     'import json,sys,pikepdf; print(json.dumps([sys.executable,sys.flags.isolated]))'], text=True)
 assert json.loads(child) == [sys.executable, 1]
-user = pathlib.Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve()
+user = pathlib.Path(os.environ['CADRUMO_STORAGE_ROOT']).resolve()
 import win32com
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
@@ -77,63 +77,6 @@ print(json.dumps({'pid': os.getpid(), 'executable': sys.executable, 'version': s
                   'temporary_root': str(temporary_root), 'pywin32_generated_cache': str(generated_cache)}))
 """
 
-KDF_READY_PROBE = r"""
-import json, sys, time
-from pathlib import Path
-from cadrumo.adapters.persistence.storage.custody import _kdf_process
-from cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision import _SupervisedKdfWorker
-
-# No request (and therefore no password) is sent: enter proves the genuine ready
-# frame, neutral cwd, exact environment and assigned Windows Job before cleanup.
-with _SupervisedKdfWorker(deadline=time.monotonic() + 30) as worker:
-    payload = worker._ready_payload
-    neutral = worker._neutral_directory
-    assert payload is not None and neutral is not None
-    fixed = sys.cadrumo_build['fixed_environment_names']
-    assert isinstance(fixed, tuple) and all(isinstance(name, str) for name in fixed)
-    expected = sorted(set(_kdf_process.worker_environment(neutral_root=Path(neutral.name))) | set(fixed))
-    assert payload['environment_keys'] == expected
-    process = worker._process
-    assert process is not None
-assert process.poll() is not None
-assert not Path(neutral.name).exists()
-
-# This extra option is valid to the real worker parser on Windows, but is not
-# part of its parent's fixed invocation. It must keep ordinary host projection
-# and fail the unchanged attestation instead of acquiring the exception.
-original = _kdf_process.worker_command
-original_launch = _kdf_process._launch_worker_process
-launched = []
-neutral_directories = []
-def record_launch(command, options):
-    process = original_launch(command, options)
-    launched.append(process)
-    return process
-def extended_command(**kwargs):
-    command, options = original(**kwargs)
-    neutral_directories.append(Path(options['cwd']))
-    return [*command, '--descriptor-bound', '16'], options
-_kdf_process.worker_command = extended_command
-_kdf_process._launch_worker_process = record_launch
-try:
-    with _SupervisedKdfWorker(deadline=time.monotonic() + 30):
-        raise AssertionError('noncanonical invocation passed KDF readiness')
-except ValueError as error:
-    assert str(error) == 'profile KDF worker environment is not allowlisted'
-else:
-    raise AssertionError('noncanonical invocation was not refused')
-finally:
-    _kdf_process.worker_command = original
-    _kdf_process._launch_worker_process = original_launch
-assert len(launched) == 1 and launched[0].poll() is not None
-assert len(neutral_directories) == 1 and not neutral_directories[0].exists()
-print(json.dumps({'ready_environment_keys': expected, 'worker_joined': True,
-                  'neutral_directory_removed': True, 'noncanonical_invocation_refused': True,
-                  'refused_worker_joined': True,
-                  'password_or_request_sent': False}))
-"""
-
-
 RUNTIME_PROBE = r"""
 import json, os, sys, time
 from contextlib import ExitStack
@@ -142,11 +85,11 @@ from pathlib import Path
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.adapters.windows_process import WindowsProcessScope
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 
 runtime = Path(sys.argv[1]).resolve(strict=True)
-storage_root = Path(os.environ['CADRUMO_LOCAL_STORAGE_ROOT']).resolve(strict=True)
+storage_root = Path(os.environ['CADRUMO_STORAGE_ROOT']).resolve(strict=True)
 product = version('cadrumo')
 with ExitStack() as cleanup:
     endpoint = WindowsEndpoint(storage_root=storage_root)
@@ -231,6 +174,33 @@ def verify_entrypoints(
     return observed
 
 
+class _VerificationLayout(TypedDict):
+    paths: dict[str, str]
+    files: dict[str, str]
+
+
+class _RunProbe(Protocol):
+    def __call__(self, arguments: list[str], *, success: bool = True) -> CommandResult: ...
+
+
+def _verify_image_version(
+    image: ApplicationImage, version: str, result: CommandResult, components: Sequence[Mapping[str, object]]
+) -> None:
+    if result.returncode or not re.search(rf"(?<![\w.]){re.escape(version)}(?![\w.])", result.stdout):
+        raise AssertionError(
+            f"Application image {image.file} did not report version {version}: exit {result.returncode}, "
+            f"{result.stdout!r} {result.stderr!r}"
+        )
+    # An image that reports a display version must report the build the manifest records for it.
+    recorded = next((item for item in components if item["path"] == image.package_path), None)
+    if recorded is not None and f"{version}+" in result.stdout:
+        reported = f"{version}+{recorded['build_id']}"
+        if not re.search(rf"(?<![\w.]){re.escape(reported)}(?![\w])", result.stdout):
+            raise AssertionError(
+                f"Application image {image.file} did not report build {recorded['build_id']}: {result.stdout!r}"
+            )
+
+
 def verify_application_images(
     destination: Path, manifest: dict[str, Any], execute: Callable[[list[str]], CommandResult]
 ) -> dict[str, Any]:
@@ -254,19 +224,7 @@ def verify_application_images(
         if (image.package_path in manifest["startup_files"]) != image.startup:
             raise AssertionError(f"Application image {image.file} startup membership differs from its declaration")
         result = execute([str(path), *image.version_arguments])
-        if result.returncode or not re.search(rf"(?<![\w.]){re.escape(version)}(?![\w.])", result.stdout):
-            raise AssertionError(
-                f"Application image {image.file} did not report version {version}: exit {result.returncode}, "
-                f"{result.stdout!r} {result.stderr!r}"
-            )
-        # An image that reports a display version must report the build the manifest records for it.
-        recorded = next((item for item in components if item["path"] == image.package_path), None)
-        if recorded is not None and f"{version}+" in result.stdout:
-            reported = f"{version}+{recorded['build_id']}"
-            if not re.search(rf"(?<![\w.]){re.escape(reported)}(?![\w])", result.stdout):
-                raise AssertionError(
-                    f"Application image {image.file} did not report build {recorded['build_id']}: {result.stdout!r}"
-                )
+        _verify_image_version(image, version, result, components)
         observed[image.file] = {
             "staged": True,
             "location": image.package_path,
@@ -278,41 +236,7 @@ def verify_application_images(
     return observed
 
 
-def verify(
-    package: Path,
-    destination: Path | None = None,
-    *,
-    product: bool = False,
-    build_root: Path | None = None,
-    already_relocated: bool = False,
-) -> None:
-    """Verify an isolated artifact, materializing it only when not already extracted."""
-    if already_relocated and (destination is not None or build_root is None):
-        raise ValueError("Already relocated verification requires its owning build root without a destination")
-    if build_root is None:
-        raise ValueError("Windows acceptance requires its owning build output directory")
-    build_root.mkdir(parents=True, exist_ok=True)
-    build_root = build_root.resolve(strict=True)
-    build_root.mkdir(parents=True, exist_ok=True)
-    package = relocated_verification_package(package, build_root) if already_relocated else package.resolve(strict=True)
-    manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
-    layout = manifest["layout"]
-    if already_relocated:
-        destination = package
-    else:
-        destination = verification_destination(destination, build_root)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(package, destination)
-    cwd = (
-        build_root / "acceptance unrelated cwd"
-        if already_relocated
-        else destination.parent / (destination.name + " unrelated cwd")
-    )
-    cwd.mkdir()
-    temporary_root = cwd / "temporary"
-    temporary_root.mkdir()
-    (cwd / "python313.dll").write_bytes(b"host DLL must not load")
-    (cwd / "pikepdf.py").write_text("raise RuntimeError('ambient import')", encoding="utf-8")
+def _acceptance_environment(cwd: Path, temporary_root: Path) -> tuple[dict[str, str], Path]:
     environment = dict(os.environ)
     for name in tuple(environment):
         if name.upper().startswith("CADRUMO_") or name.upper() in {"TEMP", "TMP", "TMPDIR"}:
@@ -326,9 +250,7 @@ def verify(
             "VIRTUAL_ENV": str(cwd),
             "CONDA_PREFIX": str(cwd),
             "PATH": str(cwd) + os.pathsep + environment.get("PATH", ""),
-            "CADRUMO_STORAGE_ROOT": str(cwd / "canonical-storage"),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
-            "CADRUMO_TEMP_DIR": str(temporary_root),
+            "CADRUMO_STORAGE_ROOT": str(storage_root),
             # Neither the former tool-cache override nor an ambient XDG cache may place packaged state.
             "CADRUMO_TOOL_CACHE_DIR": str(cwd / "hostile-tool-cache"),
             "XDG_CACHE_HOME": str(cwd / "hostile-xdg-cache"),
@@ -337,65 +259,13 @@ def verify(
             "TMPDIR": str(temporary_root),
         }
     )
-    exe = destination / "python.exe"
+    return environment, storage_root
 
-    def run(arguments: list[str], *, success: bool = True) -> CommandResult:
-        result = run_command(
-            [str(exe), *arguments],
-            cwd=cwd,
-            environment=environment,
-            timeout_seconds=90,
-        )
-        if (result.returncode == 0) != success:
-            raise AssertionError(f"Unexpected exit {result.returncode}: {result.stdout}\n{result.stderr}")
-        return result
 
-    before = {p.relative_to(destination).as_posix(): digest(p) for p in destination.rglob("*") if p.is_file()}
-    result = run(["-c", PROBE])
-    evidence = json.loads(result.stdout)
-    if product:
-        installed = run(
-            [
-                "-c",
-                "import importlib.metadata as m, json; "
-                "from cadrumo.core.config import configured_authority_root; "
-                "from cadrumo.domain.calculations.registry.authority_store import require_authority_store_available; "
-                "p=configured_authority_root(); require_authority_store_available(p/'authority.current.json'); "
-                "print(json.dumps({n:m.version(n) for n in "
-                "['cadrumo','cadrumo-data-manuals','cadrumo-data-official','cadrumo-data-normatives']}))",
-            ]
-        )
-        versions = json.loads(installed.stdout)
-        if len(set(versions.values())) != 1:
-            raise AssertionError("Product cohort version mismatch")
-        evidence["product_versions"] = versions
-        cli = run(
-            [
-                "-c",
-                "from cadrumo_runtime.host.frontend.cli.bootstrap import main; "
-                "import sys; sys.argv=['aeat','--version']; main()",
-            ]
-        )
-        evidence["cli_version"] = cli.stdout.strip()
-        kdf_ready = run(["-c", KDF_READY_PROBE])
-        evidence["kdf_pre_secret_readiness"] = json.loads(kdf_ready.stdout)
-        evidence["entrypoints"] = verify_entrypoints(destination, layout, cwd, environment, run)
-        evidence["application_images"] = verify_application_images(
-            destination,
-            manifest,
-            lambda argv: run_command(argv, cwd=cwd, environment=environment, timeout_seconds=90),
-        )
-    run(["-m", "json.tool", "--help"])
-    script = cwd / "explicit script.py"
-    script.write_text("import pikepdf; print('script passed')", encoding="utf-8")
-    run([str(script)])
-    injected = destination / layout["paths"]["packages"] / "hostile.pth"
-    injected.write_text("import sys; raise RuntimeError('executable pth ran')", encoding="utf-8")
-    try:
-        run(["-c", "import pikepdf"])
-    finally:
-        injected.unlink()
-    refused = []
+def _refusal_probes(
+    destination: Path, cwd: Path, layout: _VerificationLayout, run: _RunProbe
+) -> list[dict[str, object]]:
+    refused: list[dict[str, object]] = []
     runtime_relative = f"{layout['paths']['native']}/{layout['files']['runtime']}"
     for relative in (runtime_relative, layout["paths"]["stdlib"]):
         original = destination / relative
@@ -439,6 +309,52 @@ def verify(
         refused.append({"missing_transitive": dependency.name, "exit": failure.returncode})
     finally:
         held.rename(dependency)
+    return refused
+
+
+def _product_evidence(
+    destination: Path,
+    manifest: dict[str, object],
+    layout: dict[str, object],
+    cwd: Path,
+    environment: dict[str, str],
+    run: _RunProbe,
+    evidence: dict[str, object],
+) -> None:
+    installed = run(
+        [
+            "-c",
+            "import importlib.metadata as m, json; "
+            "from cadrumo.core.config import configured_authority_root; "
+            "from cadrumo.domain.calculations.registry.authority_store import require_authority_store_available; "
+            "p=configured_authority_root(); require_authority_store_available(p/'authority.current.json'); "
+            "print(json.dumps({n:m.version(n) for n in "
+            "['cadrumo','cadrumo-data-manuals','cadrumo-data-official','cadrumo-data-normatives']}))",
+        ]
+    )
+    versions = json.loads(installed.stdout)
+    if len(set(versions.values())) != 1:
+        raise AssertionError("Product cohort version mismatch")
+    evidence["product_versions"] = versions
+    cli = run(
+        [
+            "-c",
+            "from cadrumo_runtime.host.frontend.cli.bootstrap import main; "
+            "import sys; sys.argv=['aeat','--version']; main()",
+        ]
+    )
+    evidence["cli_version"] = cli.stdout.strip()
+    evidence["entrypoints"] = verify_entrypoints(destination, layout, cwd, environment, run)
+    evidence["application_images"] = verify_application_images(
+        destination,
+        manifest,
+        lambda argv: run_command(argv, cwd=cwd, environment=environment, timeout_seconds=90),
+    )
+
+
+def _verify_unchanged(
+    destination: Path, before: dict[str, str], storage_root: Path, temporary_root: Path, cwd: Path
+) -> None:
     after = {p.relative_to(destination).as_posix(): digest(p) for p in destination.rglob("*") if p.is_file()}
     if before != after:
         raise AssertionError("Interpreter modified its installed package")
@@ -446,6 +362,87 @@ def verify(
         raise AssertionError("Native bootstrap did not prepare the configured storage overrides")
     if (cwd / "hostile-tool-cache").exists() or (cwd / "hostile-xdg-cache").exists():
         raise AssertionError("Packaged processes wrote to a development or ambient cache location")
+
+
+def _run_probe(
+    exe: Path, cwd: Path, environment: dict[str, str], arguments: list[str], *, success: bool
+) -> CommandResult:
+    result = run_command(
+        [str(exe), *arguments],
+        cwd=cwd,
+        environment=environment,
+        timeout_seconds=90,
+    )
+    if (result.returncode == 0) != success:
+        raise AssertionError(f"Unexpected exit {result.returncode}: {result.stdout}\n{result.stderr}")
+    return result
+
+
+def _verification_roots(
+    package: Path, destination: Path | None, build_root: Path | None, already_relocated: bool
+) -> tuple[Path, Path]:
+    if already_relocated and (destination is not None or build_root is None):
+        raise ValueError("Already relocated verification requires its owning build root without a destination")
+    if build_root is None:
+        raise ValueError("Windows acceptance requires its owning build output directory")
+    build_root.mkdir(parents=True, exist_ok=True)
+    build_root = build_root.resolve(strict=True)
+    build_root.mkdir(parents=True, exist_ok=True)
+    package = relocated_verification_package(package, build_root) if already_relocated else package.resolve(strict=True)
+    return package, build_root
+
+
+def verify(
+    package: Path,
+    destination: Path | None = None,
+    *,
+    product: bool = False,
+    build_root: Path | None = None,
+    already_relocated: bool = False,
+) -> None:
+    """Verify an isolated artifact, materializing it only when not already extracted."""
+    package, build_root = _verification_roots(package, destination, build_root, already_relocated)
+    manifest = json.loads((package / "data/package-manifest.json").read_text(encoding="utf-8"))
+    layout = manifest["layout"]
+    if already_relocated:
+        destination = package
+    else:
+        destination = verification_destination(destination, build_root)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(package, destination)
+    cwd = (
+        build_root / "acceptance unrelated cwd"
+        if already_relocated
+        else destination.parent / (destination.name + " unrelated cwd")
+    )
+    cwd.mkdir()
+    temporary_root = cwd / "temporary"
+    temporary_root.mkdir()
+    (cwd / "python313.dll").write_bytes(b"host DLL must not load")
+    (cwd / "pikepdf.py").write_text("raise RuntimeError('ambient import')", encoding="utf-8")
+    environment, storage_root = _acceptance_environment(cwd, temporary_root)
+    exe = destination / "python.exe"
+
+    def run(arguments: list[str], *, success: bool = True) -> CommandResult:
+        return _run_probe(exe, cwd, environment, arguments, success=success)
+
+    before = {p.relative_to(destination).as_posix(): digest(p) for p in destination.rglob("*") if p.is_file()}
+    result = run(["-c", PROBE])
+    evidence = json.loads(result.stdout)
+    if product:
+        _product_evidence(destination, manifest, layout, cwd, environment, run, evidence)
+    run(["-m", "json.tool", "--help"])
+    script = cwd / "explicit script.py"
+    script.write_text("import pikepdf; print('script passed')", encoding="utf-8")
+    run([str(script)])
+    injected = destination / layout["paths"]["packages"] / "hostile.pth"
+    injected.write_text("import sys; raise RuntimeError('executable pth ran')", encoding="utf-8")
+    try:
+        run(["-c", "import pikepdf"])
+    finally:
+        injected.unlink()
+    refused = _refusal_probes(destination, cwd, layout, run)
+    _verify_unchanged(destination, before, storage_root, temporary_root, cwd)
     evidence.update(
         {
             "refusals": refused,

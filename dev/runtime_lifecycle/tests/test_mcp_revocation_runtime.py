@@ -6,12 +6,14 @@ import asyncio
 import json
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 from uuid import UUID
 
 import pytest
 from click.testing import Result
+from mcp import ClientSession
 from mcp.types import CallToolResult
 from pydantic import JsonValue
 
@@ -57,7 +59,7 @@ from cadrumo_mcp.mcp.server import build_server
 from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
-from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
+from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 pytestmark = [
     pytest.mark.integration,
@@ -117,6 +119,173 @@ def _assert_access_fenced(response: CallToolResult) -> None:
     assert value["code"] in _REVOKED_CODES, value
 
 
+@dataclass(frozen=True)
+class _ReleasedResult:
+    """The requests the revoked connection must later be refused."""
+
+    execute_args: dict[str, JsonValue]
+    observation: OperationObservationRequestV1
+    result_args: dict[str, JsonValue]
+    page_args: dict[str, JsonValue]
+
+
+async def _authenticate(sdk: ClientSession) -> ProfileAccessStatus:
+    authenticated = await sdk.call_tool("status", {})
+    assert authenticated.is_error is False, _structured(authenticated)
+    assert _structured(authenticated)["session"] == "key", _structured(authenticated)
+    authenticated_status = ProfileAccessStatus.model_validate_json(
+        canonical_json_bytes(_structured(authenticated)["status"])
+    )
+    assert authenticated_status.session_id is not None
+    return authenticated_status
+
+
+async def _discover_contract(sdk: ClientSession) -> OperationPublicDefinitionContractV1:
+    found = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert found.is_error is False, _structured(found)
+    assert _structured(found)["outcome"] == "found"
+    described = await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert described.is_error is False, _structured(described)
+    description = _structured(described)["description"]
+    assert isinstance(description, dict)
+    contract = OperationPublicDefinitionContractV1.model_validate_json(canonical_json_bytes(description["contract"]))
+    assert contract.result_schema is not None
+    return contract
+
+
+async def _execute_to_terminal(
+    sdk: ClientSession, execute_args: dict[str, JsonValue]
+) -> tuple[OperationSubmissionReceiptV1, OperationObservationRequestV1, OperationObservationSuccessV1]:
+    submitted = await sdk.call_tool("execute", execute_args)
+    assert submitted.is_error is False, _structured(submitted)
+    receipt_value = _structured(submitted)["receipt"]
+    assert isinstance(receipt_value, dict)
+    receipt = OperationSubmissionReceiptV1.model_validate_json(canonical_json_bytes(receipt_value))
+    observation = OperationObservationRequestV1(operation_id=receipt.operation_id, after_cursor=0, page_limit=32)
+    terminal: OperationObservationSuccessV1 | None = None
+    for _ in range(80):
+        observed = await sdk.call_tool("observe", {"observation": observation.model_dump(mode="json")})
+        assert observed.is_error is False, _structured(observed)
+        reply = _structured(observed)["reply"]
+        assert isinstance(reply, dict)
+        candidate = OperationObservationSuccessV1.model_validate_json(canonical_json_bytes(reply["observation"]))
+        if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
+            terminal = candidate
+            break
+        await asyncio.sleep(0.05)
+    assert terminal is not None
+    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.projection.effect is OperationEffect.NONE
+    return receipt, observation, terminal
+
+
+async def _release_result(
+    sdk: ClientSession,
+    contract: OperationPublicDefinitionContractV1,
+    receipt: OperationSubmissionReceiptV1,
+    terminal: OperationObservationSuccessV1,
+    profile_id: UUID,
+) -> tuple[dict[str, JsonValue], dict[str, JsonValue]]:
+    assert contract.result_schema is not None
+    result_request = OperationResultProjectionRequestV1(
+        operation_id=receipt.operation_id,
+        terminal_revision=terminal.projection.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+    result_args: dict[str, JsonValue] = {"result": result_request.model_dump(mode="json")}
+    released = await sdk.call_tool("result", result_args)
+    assert released.is_error is False, _structured(released)
+    document = _structured(released)["document"]
+    result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(canonical_json_bytes(document))
+    assert result.definition_contract_digest == contract.definition_contract_digest
+    assert result.projection.profile_id == profile_id
+    assert result.projection.kind == "status"
+    assert result.projection.status is not None
+    page_args: dict[str, JsonValue] = {
+        "result": result_args["result"],
+        "page": ProjectionPageRequest().model_dump(mode="json"),
+    }
+    paged = await sdk.call_tool("result_page", page_args)
+    assert paged.is_error is False, _structured(paged)
+    page = ProjectionPage.model_validate(_structured(paged)["page"])
+    assert page.decode() == canonical_json_bytes(document)
+    return result_args, page_args
+
+
+async def _assert_still_admitted(sdk: ClientSession, authenticated_status: ProfileAccessStatus) -> None:
+    still_admitted = await sdk.call_tool("status", {})
+    assert still_admitted.is_error is False, _structured(still_admitted)
+    status_value = _structured(still_admitted)["status"]
+    status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(status_value))
+    assert status.denial is None
+    assert status.session_id == authenticated_status.session_id
+    assert status.session_expires_at is not None and status.session_expires_at > now()
+
+
+async def _deny_all_automation(enrolled: NativeApiCliSession[None], storage_root: Path) -> dict[str, JsonValue]:
+    delete_profile_session(storage_root=storage_root, profile_id=enrolled.profile_id)
+    denied_output = await asyncio.to_thread(
+        invoke_typer_app,
+        build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+        (
+            "--format",
+            "json",
+            "--profile",
+            str(enrolled.profile_id),
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "automation",
+            "deny",
+            "all",
+        ),
+        input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+    )
+    assert denied_output.exit_code == 0, denied_output.output
+    assert PROFILE_INPUT not in denied_output.output
+    denied = _successful_cli(denied_output.stdout, command="config.profile.automation.deny")
+    assert denied["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert denied["kind"] == "all"
+    assert denied["target_id"] is None
+    receipt_document = denied["receipt"]
+    assert isinstance(receipt_document, dict)
+    assert receipt_document["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
+    assert receipt_document["access_denied"] is True
+    return denied
+
+
+async def _assert_every_route_fenced(sdk: ClientSession, released: _ReleasedResult) -> None:
+    # Discovery also requires admission; a revoked grant exposes no operation contracts.
+    for tool, arguments in (
+        ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID}),
+        ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
+    ):
+        discovered = await sdk.call_tool(tool, arguments)
+        _assert_access_fenced(discovered)
+    _assert_access_fenced(await sdk.call_tool("execute", released.execute_args))
+    _assert_access_fenced(await sdk.call_tool("observe", {"observation": released.observation.model_dump(mode="json")}))
+    _assert_access_fenced(await sdk.call_tool("result", released.result_args))
+    _assert_access_fenced(await sdk.call_tool("result_page", released.page_args))
+
+
+async def _assert_fresh_admission_refused(enrolled: NativeApiCliSession[None]) -> None:
+    fresh_adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
+    try:
+        await fresh_adapter.bootstrap_reference(enrolled.credential_reference)
+        async with connected_server_and_client_session(build_server(fresh_adapter)) as sdk:
+            refused = await sdk.call_tool("status", {})
+            response = _structured(refused)
+            assert response["outcome"] == "status" and response["authenticated"] is False, response
+            assert response["denial"] in {"missing", "key_inactive", "grant_inactive"}
+            assert str(enrolled.credential_reference) not in repr(response)
+            private = await sdk.call_tool("observe", {"observation": {}})
+            assert private.is_error is True
+            assert _structured(private)["code"] == response["denial"]
+    finally:
+        await fresh_adapter.close()
+
+
 @pytest.mark.anyio
 async def test_native_mcp_automation_revocation_fences_live_execution_and_result_release(
     tmp_path: Path,
@@ -139,145 +308,25 @@ async def test_native_mcp_automation_revocation_fences_live_execution_and_result
             async with connected_server_and_client_session(build_server(adapter)) as sdk:
                 # What serve does with the key the launch configuration names; no tool takes one.
                 await adapter.bootstrap_reference(enrolled.credential_reference)
-                authenticated = await sdk.call_tool("status", {})
-                assert authenticated.is_error is False, _structured(authenticated)
-                assert _structured(authenticated)["session"] == "key", _structured(authenticated)
-                authenticated_status = ProfileAccessStatus.model_validate_json(
-                    canonical_json_bytes(_structured(authenticated)["status"])
-                )
-                assert authenticated_status.session_id is not None
+                authenticated_status = await _authenticate(sdk)
 
                 request = AuthReadRequest(profile_id=enrolled.profile_id, kind="status")
                 subject_ref = profile_operation_subject(str(enrolled.profile_id))
-                execute_args = {
+                execute_args: dict[str, JsonValue] = {
                     "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
                     "subject_ref": subject_ref,
                     "payload": request.model_dump(mode="json"),
                 }
-                found = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                assert found.is_error is False, _structured(found)
-                assert _structured(found)["outcome"] == "found"
-                described = await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
-                assert described.is_error is False, _structured(described)
-                description = _structured(described)["description"]
-                assert isinstance(description, dict)
-                contract = OperationPublicDefinitionContractV1.model_validate_json(
-                    canonical_json_bytes(description["contract"])
-                )
-                assert contract.result_schema is not None
+                contract = await _discover_contract(sdk)
+                receipt, observation, terminal = await _execute_to_terminal(sdk, execute_args)
+                result_args, page_args = await _release_result(sdk, contract, receipt, terminal, enrolled.profile_id)
+                await _assert_still_admitted(sdk, authenticated_status)
 
-                submitted = await sdk.call_tool("execute", execute_args)
-                assert submitted.is_error is False, _structured(submitted)
-                receipt_value = _structured(submitted)["receipt"]
-                assert isinstance(receipt_value, dict)
-                receipt = OperationSubmissionReceiptV1.model_validate_json(canonical_json_bytes(receipt_value))
-                observation = OperationObservationRequestV1(
-                    operation_id=receipt.operation_id, after_cursor=0, page_limit=32
-                )
-                terminal: OperationObservationSuccessV1 | None = None
-                for _ in range(80):
-                    observed = await sdk.call_tool("observe", {"observation": observation.model_dump(mode="json")})
-                    assert observed.is_error is False, _structured(observed)
-                    reply = _structured(observed)["reply"]
-                    assert isinstance(reply, dict)
-                    candidate = OperationObservationSuccessV1.model_validate_json(
-                        canonical_json_bytes(reply["observation"])
-                    )
-                    if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
-                        terminal = candidate
-                        break
-                    await asyncio.sleep(0.05)
-                assert terminal is not None
-                assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                assert terminal.projection.effect is OperationEffect.NONE
-                result_request = OperationResultProjectionRequestV1(
-                    operation_id=receipt.operation_id,
-                    terminal_revision=terminal.projection.revision,
-                    definition_contract_digest=contract.definition_contract_digest,
-                    result_schema=contract.result_schema,
-                )
-                result_args = {"result": result_request.model_dump(mode="json")}
-                released = await sdk.call_tool("result", result_args)
-                assert released.is_error is False, _structured(released)
-                document = _structured(released)["document"]
-                result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-                    canonical_json_bytes(document)
-                )
-                assert result.definition_contract_digest == contract.definition_contract_digest
-                assert result.projection.profile_id == enrolled.profile_id
-                assert result.projection.kind == "status"
-                assert result.projection.status is not None
-                page_args = {"result": result_args["result"], "page": ProjectionPageRequest().model_dump(mode="json")}
-                paged = await sdk.call_tool("result_page", page_args)
-                assert paged.is_error is False, _structured(paged)
-                page = ProjectionPage.model_validate(_structured(paged)["page"])
-                assert page.decode() == canonical_json_bytes(document)
-
-                still_admitted = await sdk.call_tool("status", {})
-                assert still_admitted.is_error is False, _structured(still_admitted)
-                status_value = _structured(still_admitted)["status"]
-                status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(status_value))
-                assert status.denial is None
-                assert status.session_id == authenticated_status.session_id
-                assert status.session_expires_at is not None and status.session_expires_at > now()
-
-                delete_profile_session(storage_root=tmp_path / "cadrumo-storage", profile_id=enrolled.profile_id)
-                denied_output = await asyncio.to_thread(
-                    invoke_typer_app,
-                    build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                    (
-                        "--format",
-                        "json",
-                        "--profile",
-                        str(enrolled.profile_id),
-                        "--profile-secrets-stdin",
-                        "config",
-                        "profile",
-                        "automation",
-                        "deny",
-                        "all",
-                    ),
-                    input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                )
-                assert denied_output.exit_code == 0, denied_output.output
-                assert PROFILE_INPUT not in denied_output.output
-                denied = _successful_cli(denied_output.stdout, command="config.profile.automation.deny")
-                assert denied["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-                assert denied["kind"] == "all"
-                assert denied["target_id"] is None
-                receipt_document = denied["receipt"]
-                assert isinstance(receipt_document, dict)
-                assert receipt_document["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
-                assert receipt_document["access_denied"] is True
-
-                # Discovery also requires admission; a revoked grant exposes no operation contracts.
-                for tool, arguments in (
-                    ("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID}),
-                    ("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID}),
-                ):
-                    discovered = await sdk.call_tool(tool, arguments)
-                    _assert_access_fenced(discovered)
-                _assert_access_fenced(await sdk.call_tool("execute", execute_args))
-                _assert_access_fenced(
-                    await sdk.call_tool("observe", {"observation": observation.model_dump(mode="json")})
-                )
-                _assert_access_fenced(await sdk.call_tool("result", result_args))
-                _assert_access_fenced(await sdk.call_tool("result_page", page_args))
+                denied = await _deny_all_automation(enrolled, tmp_path / "cadrumo-storage")
+                released = _ReleasedResult(execute_args, observation, result_args, page_args)
+                await _assert_every_route_fenced(sdk, released)
                 assert str(enrolled.credential_reference) not in repr(denied)
         finally:
             await adapter.close()
 
-        fresh_adapter = RuntimeMcpAdapter(profile_id=enrolled.profile_id, client=None)
-        try:
-            await fresh_adapter.bootstrap_reference(enrolled.credential_reference)
-            async with connected_server_and_client_session(build_server(fresh_adapter)) as sdk:
-                refused = await sdk.call_tool("status", {})
-                response = _structured(refused)
-                assert response["outcome"] == "status" and response["authenticated"] is False, response
-                assert response["denial"] in {"missing", "key_inactive", "grant_inactive"}
-                assert str(enrolled.credential_reference) not in repr(response)
-                private = await sdk.call_tool("observe", {"observation": {}})
-                assert private.is_error is True
-                assert _structured(private)["code"] == response["denial"]
-        finally:
-            await fresh_adapter.close()
+        await _assert_fresh_admission_refused(enrolled)

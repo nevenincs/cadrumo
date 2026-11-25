@@ -23,7 +23,7 @@ import pytest
 
 from ......core.storage_taxonomy import StorageCategory
 from ...errors import PathContainmentError
-from ..capsule_discovery import _canonical_profile_id
+from ..capsule_discovery import canonical_profile_id
 from ..paths import profile_custody_directory_name, profile_custody_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -172,7 +172,7 @@ class TestAcceptedIdentifiers:
         rejects is undiscoverable while its material sits on disk.
         """
         built = profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, root=tmp_path)
-        assert _canonical_profile_id(built.parent.name) == profile_id
+        assert canonical_profile_id(built.parent.name) == profile_id
 
     @pytest.mark.parametrize("profile_id", _mintable_profile_ids())
     def test_directory_name_helper_agrees_with_the_builder(self, profile_id: UUID, tmp_path: Path) -> None:
@@ -181,4 +181,4 @@ class TestAcceptedIdentifiers:
 
     @pytest.mark.parametrize("candidate", [*_SYSTEM_SENTINELS, *_NON_CANONICAL_UUID_SPELLINGS])
     def test_discoverer_rejects_names_the_builder_cannot_emit(self, candidate: str) -> None:
-        assert _canonical_profile_id(candidate) is None
+        assert canonical_profile_id(candidate) is None

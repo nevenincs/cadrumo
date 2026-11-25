@@ -15,6 +15,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ....adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -25,6 +26,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
+from ....application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from ....application.filing.export_producer import m303_rectificativa_motive_producer_values
 from ....application.filing.producer_snapshot import (
     AmendmentEvidence,
@@ -37,11 +39,14 @@ from ....application.filing.producer_snapshot import (
 )
 from ....application.modelo.action_errors import AmendmentM303RectificativaMotiveError
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
+from ....core.field_origin import FieldOrigin
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
+from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -72,7 +77,6 @@ from ....domain.modelos.calculation_revision_aggregate import (
 )
 from ....domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
     m303_rectificativa_motive_is_applicable,
     m303_rectificativa_record_design_from_snapshot,
@@ -96,10 +100,8 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ...adapter_composition import (
-    build_amendment_action_ports,
-    build_modelo_export_ports,
-)
+from ...adapter_composition_ports import build_invoice_lifecycle_ports, build_modelo_export_ports
+from ...adapter_composition_work_ports import build_amendment_action_ports
 from ...calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 from ...ledger_action_composition import compose_ledger_action_ports
 from .cli_runner import invoke_cached_cli
@@ -107,7 +109,7 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "0479178a-6678-4c43-8b7d-46fba6483f11"  # was 'm303-rectificativa-motive'
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _CSV = "S92RECTIFICA2025"
 _RECEIPT = "1234567890123"
 _NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)
@@ -242,7 +244,7 @@ def _authorities(
         expected_taxpayer_tax_id=_TAX_ID,
     )
     identity = CalculationRevisionAmendmentIdentity(
-        kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+        kind=FilingDeclarationKind.RECTIFICATIVA,
         amends_filing_record_id=target.filing_record_id,
         m303_rectificativa_motive=motive,
     )
@@ -294,24 +296,24 @@ def test_identifier_refuses_invalid_syntax_and_every_identity_axis_diverges(
     _, _, target, _, _, revision = _authorities(operation=operation)
     with pytest.raises(ValidationError):
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             amends_filing_record_id=target.filing_record_id,
             m303_rectificativa_motive="other",  # type: ignore[arg-type]
         )
     identities = (
         revision.amendment_identity,
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             amends_filing_record_id=target.filing_record_id,
             m303_rectificativa_motive=M303RectificativaMotive.DISCREPANCIA_CRITERIO_ADMINISTRATIVO,
         ),
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             amends_filing_record_id=target.filing_record_id,
             m303_rectificativa_motive=None,
         ),
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             amends_filing_record_id="f" * 64,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
         ),
@@ -401,6 +403,10 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
         (context.model_copy(update={"justificantes": ()}), "exactly one justificante"),
         (context.model_copy(update={"justificantes": (receipt, receipt)}), "exactly one justificante"),
         (
+            context.model_copy(update={"expected_taxpayer_tax_id": None}),
+            "requires the authoritative taxpayer tax id",
+        ),
+        (
             context.model_copy(update={"justificantes": (receipt.model_copy(update={"tax_id": "12345678Z"}),)}),
             "disagrees with the taxpayer or filing coordinate",
         ),
@@ -427,11 +433,15 @@ def test_every_persisted_target_and_justificante_join_refusal_is_biting(*, opera
     )
     assert work_unit.modelo == Modelo("303").value
     for variant, message in variants:
-        with pytest.raises(ValidationError, match=message):
+        with pytest.raises(ValidationError, match=message) as refused:
             CalculationRevision.model_validate(
                 payload,
                 context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: variant},
             )
+        verdict = nested_terminal_precondition_verdict(refused.value)
+        assert verdict is not None, message
+        assert verdict.action is None, message
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL, message
 
 
 def test_encrypted_persistence_reloads_and_revalidates_joined_authority(
@@ -535,6 +545,49 @@ def test_ledger_action_composition_revalidates_persisted_identity_from_profile(
                 mismatched_ports.calculation_repository.load(operation=operation)
 
 
+def test_invoice_lifecycle_scan_reads_a_sealed_rectificativa_only_with_the_profile_tax_id(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The invoice guard scans every stored revision, and a rectificativa decodes only against its taxpayer."""
+    work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        seed_test_profile_record(_taxpayer_profile_record(operation=operation, tax_id=_TAX_ID))
+        WorkUnitCatalogueRepository(objects=runtime.repository).save(build_work_unit_catalogue((work_unit,)))
+        ModeloRecordCatalogueRepository(objects=runtime.repository).save(
+            ModeloRecordCatalogue(records={target.filing_record_id: target})
+        )
+        JustificanteRepository(objects=runtime.repository).save(receipt)
+        CalculationRevisionCatalogueRepository(
+            objects=runtime.repository, m303_rectificativa_taxpayer_tax_id=_TAX_ID
+        ).save(
+            CalculationRevisionCatalogue.model_validate(
+                {
+                    "revisions": {
+                        baseline_revision.calculation_revision_id: baseline_revision,
+                        revision.calculation_revision_id: revision,
+                    }
+                },
+                context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: context},
+            )
+        )
+
+        with open_test_profile_session(_BUCKET_ID):
+            without_identity = build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID)
+            with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
+                without_identity.sealed_revisions.sealed_revisions()
+
+            # Both stored revisions are drafts, so none is cited: what is proven is that the scan
+            # decodes the catalogue holding the rectificativa instead of refusing it.
+            assert build_invoice_lifecycle_ports(bucket_id=_BUCKET_ID).sealed_revisions.sealed_revisions() == ()
+
+        seed_test_profile_record(_taxpayer_profile_record(operation=operation, tax_id="12345678Z"))
+        with open_test_profile_session(_BUCKET_ID):
+            mismatched = build_invoice_lifecycle_ports(bucket_id=_BUCKET_ID)
+            with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
+                mismatched.sealed_revisions.sealed_revisions()
+
+
 def test_calculation_binding_refuses_profile_record_from_another_bucket(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
@@ -601,7 +654,7 @@ def test_public_amend_service_refuses_missing_motive_before_identity_with_real_p
             amend_modelo_revision(
                 from_filing_record_id=target.filing_record_id,
                 overrides={},
-                amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
                 m303_rectificativa_motive=None,
                 reason="rectificaciones and a lower result are only operator prose",
                 actor="operator",
@@ -691,7 +744,7 @@ def test_two_motive_producer_keys_have_the_complete_truth_table(
 ) -> None:
     evidence = (
         AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=motive,
             original_aeat_receipt=_RECEIPT,
         )
@@ -719,7 +772,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(
         JustificanteRepository(objects=objects).save(receipt)
         justificante_repo = JustificanteRepository(objects=objects)
         exact = AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            kind=FilingDeclarationKind.RECTIFICATIVA,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
             original_aeat_receipt=_RECEIPT,
         )
@@ -762,7 +815,7 @@ def test_export_refuses_command_substitution_and_derives_persisted_receipt(
                 }
             ),
             exact.model_copy(update={"original_aeat_receipt": "9999999999999"}),
-            exact.model_copy(update={"kind": CalculationRevisionAmendmentKind.SUSTITUTIVA}),
+            exact.model_copy(update={"kind": FilingDeclarationKind.SUSTITUTIVA}),
         )
         for replacement in substitutions:
             substituted = command.model_copy(update={"amendment_evidence": replacement})
@@ -815,6 +868,8 @@ def test_public_export_requires_injected_persisted_justificante_authority(
 ) -> None:
     """Persisted receipt state does not bypass the application port boundary."""
     work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
+    # A calculation makes its revision the work unit's current one; export refuses a work unit without one.
+    work_unit = work_unit.model_copy(update={"current_calculation_revision_id": revision.calculation_revision_id})
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="S92 public export") as runtime:
         objects = runtime.repository
         work_repo = WorkUnitCatalogueRepository(objects=objects)
@@ -874,7 +929,9 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
                 full_name="Ana Prueba",
             ),
             presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-            model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+            model_profile=Modelo111ProfileFacts(
+                colegio_concertado=False, colegio_concertado_origin=FieldOrigin.OPERATOR
+            ),
             elections=FilingElectionFacts(
                 result_disposition=ResultDisposition.NEGATIVA,
                 payment=PaymentElection.INGRESO,
@@ -882,7 +939,7 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
                 prior_domiciliation=PriorDomiciliationElection.KEEP,
             ),
             amendment_evidence=AmendmentEvidence(
-                kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+                kind=FilingDeclarationKind.RECTIFICATIVA,
                 m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
                 original_aeat_receipt=_RECEIPT,
             ),
@@ -895,7 +952,7 @@ def test_m303_motive_is_refused_for_another_modelo_snapshot() -> None:
 def test_non_rectificativa_motive_state_refuses() -> None:
     with pytest.raises(ModeloValidationError, match="valid only for amendment kind rectificativa"):
         CalculationRevisionAmendmentIdentity(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            kind=FilingDeclarationKind.COMPLEMENTARIA,
             amends_filing_record_id="f" * 64,
             m303_rectificativa_motive=M303RectificativaMotive.RECTIFICACIONES,
         )

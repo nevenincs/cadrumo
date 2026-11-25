@@ -1,7 +1,7 @@
 """Colocated unit tests for site-health models and parsers.
 
 Drives :func:`cadrumo.adapters.outbound.aeat.browser.evaluate_response` and the
-underlying :mod:`._site_health_parsers` against real HTML strings loaded off disk
+underlying :mod:`.site_health_parsers` against real HTML strings loaded off disk
 under ``src/cadrumo/tests/fixtures/site_health/``. No test doubles — the parsers are exercised
 end-to-end so a fixture-side regression surfaces here first.
 
@@ -26,8 +26,9 @@ from pydantic import ValidationError
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
 from ......core.errors.hierarchy import SiteHealthState
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.inventory import FIXTURES_DIR
-from .._site_health_parsers import (
+from ..site_health_parsers import (
     evaluate_response,
     parse_mantenimiento_banner,
     parse_rate_limit_response,
@@ -36,6 +37,7 @@ from .._site_health_parsers import (
 from ..site_health_records import SiteHealthEvidence, SiteHealthStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
@@ -45,7 +47,7 @@ _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 # query dropped. Asserting the origin under its own key (rather than as a bare
 # substring of the whole rendering) is what proves the path and query went.
 _REDACTED_URL_ORIGIN = "https://example.test"
-_OBSERVED_AT = datetime(2026, 5, 28, 14, 45, 0, tzinfo=UTC)
+_OBSERVED_AT = datetime(_YEAR, 5, 28, 14, 45, 0, tzinfo=UTC)
 
 
 def _load_case(path: Path, *, default_status: int) -> tuple[int, dict[str, str], str]:
@@ -253,11 +255,11 @@ class TestMantenimientoTitleOnlyGuard:
             "<body><p>Welcome to our tax portal. All services are up.</p>"
             "<p>Please log in to continue.</p></body></html>"
         )
-        from .._site_health_parsers import _extract_title, _matches_mantenimiento
+        from ..site_health_parsers import extract_title, matches_mantenimiento
 
         lowered = html.lower()
-        title = _extract_title(html, lowered)
-        hits = _matches_mantenimiento(lowered, title)
+        title = extract_title(html, lowered)
+        hits = matches_mantenimiento(lowered, title)
         assert any(h.startswith("title:") for h in hits)
         assert not any(not h.startswith("title:") for h in hits)
 
@@ -288,12 +290,12 @@ class TestMantenimientoTitleOnlyGuard:
         excludes the title element, so the single piece of evidence is
         counted once.
         """
-        from .._site_health_parsers import _extract_title, _matches_mantenimiento
+        from ..site_health_parsers import extract_title, matches_mantenimiento
 
         html = "<html><head><title>mantenimiento</title></head><body><p>Welcome</p></body></html>"
         lowered = html.lower()
 
-        hits = _matches_mantenimiento(lowered, _extract_title(html, lowered))
+        hits = matches_mantenimiento(lowered, extract_title(html, lowered))
 
         assert hits == ("title:mantenimiento",)
         assert (
@@ -346,14 +348,14 @@ class TestMantenimientoTitleOnlyGuard:
         document's title, so it is scanned as body — otherwise the exclusion
         would be a hole a marker could hide in.
         """
-        from .._site_health_parsers import _body_outside_title
+        from ..site_health_parsers import body_outside_title
 
         html = (
             "<html><head><title>Agencia Tributaria</title></head>"
             "<body><svg><title>mantenimiento</title></svg></body></html>"
         )
 
-        outside = _body_outside_title(html.lower())
+        outside = body_outside_title(html.lower())
 
         assert "agencia tributaria" not in outside
         assert "mantenimiento" in outside
@@ -403,7 +405,7 @@ class TestRateLimitRetryAfter:
 
     def test_http_date_retry_after_computes_delta(self) -> None:
         """An RFC 9110 HTTP-date ``Retry-After`` yields a positive delta."""
-        now = datetime(2026, 4, 13, 12, 0, 0, tzinfo=UTC)
+        now = datetime(_YEAR, 4, 13, 12, 0, 0, tzinfo=UTC)
         future = now + timedelta(seconds=180)
         http_date = format_datetime(future, usegmt=True)
         body = "<html><body>slow down</body></html>"
@@ -421,7 +423,7 @@ class TestRateLimitRetryAfter:
 
     def test_http_date_retry_after_in_past_falls_back_to_default(self) -> None:
         """A past HTTP-date clamps to zero and falls back to the default."""
-        now = datetime(2026, 4, 13, 12, 0, 0, tzinfo=UTC)
+        now = datetime(_YEAR, 4, 13, 12, 0, 0, tzinfo=UTC)
         past = now - timedelta(seconds=600)
         http_date = format_datetime(past, usegmt=True)
         body = "<html><body>slow down</body></html>"

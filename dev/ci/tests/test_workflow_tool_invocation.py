@@ -1,7 +1,7 @@
 """A packaged tool invoked as a script cannot import its own package.
 
 `python3 dev/ci/some_tool.py` sets `__package__` to None, so a
-module-level `from .._paths import ...` raises
+module-level `from ..paths import ...` raises
 
     ImportError: attempted relative import with no known parent package
 
@@ -25,7 +25,7 @@ from typing import Any
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..workflow_run_text import executed_text
 
@@ -155,7 +155,7 @@ def test_direct_script_detector_has_detector_teeth(tmp_path: Path) -> None:
     """An isolated relative-importing tool called by path is rejected."""
     tool = tmp_path / "dev" / "ci" / "offender.py"
     tool.parent.mkdir(parents=True)
-    tool.write_text("from .._paths import REPO_ROOT\n", encoding="utf-8")
+    tool.write_text("from ..paths import REPO_ROOT\n", encoding="utf-8")
     workflow = tmp_path / "offender.yml"
     workflow.write_text(
         "name: offender\n"

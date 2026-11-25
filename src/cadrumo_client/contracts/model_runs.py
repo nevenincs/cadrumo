@@ -9,11 +9,12 @@ travels as bounded secret frames because it may hold taxpayer evidence.
 from __future__ import annotations
 
 import base64
+import json
 from enum import StrEnum
 from typing import Annotated, Final, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import BaseModel, Field, JsonValue, NonNegativeInt, field_validator, model_validator
 
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -32,10 +33,42 @@ MODEL_RUN_MAX_DEADLINE_SECONDS: Final = 900
 
 MODEL_RUN_MAX_ATTACHMENTS: Final = 64
 
-_LANE_ID = r"^[a-z][a-z0-9_]{0,39}$"
+MODEL_RUN_MIN_CONTEXT_TOKENS: Final = 512
+MODEL_RUN_MAX_CONTEXT_TOKENS: Final = 1_048_576
+"""The context window bounds the agent admits for a background run."""
+
+MODEL_RUN_MAX_SCHEMA_BYTES: Final = 32_768
+"""Upper bound on a response schema, as compact UTF-8 JSON."""
+
+MODEL_RUN_MODEL_ID_MAX_LENGTH: Final = 512
+"""The longest model id, in characters, the agent's catalogues carry."""
+
+MODEL_RUN_MODEL_ID_PATTERN: Final = r"^[^\x00-\x1f\x7f]{1,512}$"
+"""A model id as the agent's catalogues carry it: 1 to 512 characters, none a C0 control or DEL."""
+
+MODEL_RUN_PROVIDER_ID_MAX_LENGTH: Final = 64
+"""The longest provider identity id, in characters: the agent's provider metadata key bound."""
+
+MODEL_RUN_PROVIDER_ID_PATTERN: Final = rf"^[a-z][a-z0-9_]{{0,{MODEL_RUN_PROVIDER_ID_MAX_LENGTH - 1}}}$"
+"""A provider identity id: a lowercase storage-safe slug of 1 to 64 characters."""
+
+MODEL_RUN_LANE_ID_MAX_LENGTH: Final = MODEL_RUN_PROVIDER_ID_MAX_LENGTH + len("_api")
+"""The longest lane id, in characters: a provider id, an underscore and its three-letter transport."""
+
+MODEL_RUN_LANE_ID_PATTERN: Final = rf"^[a-z][a-z0-9_]{{0,{MODEL_RUN_LANE_ID_MAX_LENGTH - 1}}}$"
+"""A lane id: a lowercase storage-safe slug of 1 to 68 characters; ids stored under the earlier 40 still match."""
+
+_PROVIDER_ID = MODEL_RUN_PROVIDER_ID_PATTERN
 _TRANSPORT = r"^[a-z][a-z0-9_]{0,15}$"
-_MODEL = r"^[\x21-\x7e]{1,256}$"
+_MODEL = MODEL_RUN_MODEL_ID_PATTERN
 _ROLE = r"^[a-z][a-z0-9_]{0,63}$"
+
+
+_ContextTokens = Annotated[int, Field(ge=MODEL_RUN_MIN_CONTEXT_TOKENS, le=MODEL_RUN_MAX_CONTEXT_TOKENS)]
+
+
+def _compact_json(value: dict[str, JsonValue]) -> bytes:
+    return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
 
 
 class ModelRunRefusalCode(StrEnum):
@@ -45,13 +78,41 @@ class ModelRunRefusalCode(StrEnum):
     NOT_SIGNED_IN = "not_signed_in"
     PROFILE_LOCKED = "profile_locked"
     NO_SELECTION = "no_selection"
+    """No model is selected to read with, or a local one is no longer on its lane's list: the person picks one."""
+    UNKNOWN_ROLE = "unknown_role"
+    """The request named a role outside the role vocabulary: a caller defect, not a missing selection."""
     LANE_UNAVAILABLE = "lane_unavailable"
+    MODEL_NOT_INSTALLED = "model_not_installed"
+    """The selected model is not on the lane's local server: the person downloads it."""
+    MODEL_CANNOT_READ_IMAGES = "model_cannot_read_images"
+    """The role reads images and the catalogue does not state that the selected model can: the person picks another."""
+    MODEL_DOES_NOT_FIT = "model_does_not_fit"
+    """The lane's local server could not load the model with the memory this computer has free.
+
+    The agent decides it when it loads the model; sending the same run again
+    straight away meets the same memory, so a caller does not retry it.
+    """
     INPUT_NOT_SUPPORTED = "input_not_supported"
+    OPTION_NOT_SUPPORTED = "option_not_supported"
+    """The run named a reply option its lane does not honour, or an effort the lane does not offer its model."""
     RUN_FAILED = "run_failed"
     OUTPUT_INVALID = "output_invalid"
-    DEADLINE_EXCEEDED = "deadline_exceeded"
+    TIMEOUT = "timeout"
     REFUSED_BY_PROVIDER = "refused_by_provider"
     CONSENT_MISSING = "consent_missing"
+
+
+class ModelRunTaskKind(StrEnum):
+    """The kind of task a run does, in cadrumo-agent's background task kind vocabulary.
+
+    The values are the agent's pinned API spelling. A run that names a kind
+    runs on the lane, model and effort the person set for that kind in the
+    agent's settings, else on the model documents are read with. The agent
+    service owns that setting; a run names only its kind.
+    """
+
+    CLASSIFICATION = "classification"
+    EXTRACTION = "extraction"
 
 
 class ModelRunMediaKind(StrEnum):
@@ -72,7 +133,11 @@ def model_run_media_kind(media_type: str) -> ModelRunMediaKind | None:
 
 
 class ModelRunLane(BaseModel):
-    """The lane and model the service resolved for one role; nothing here is secret.
+    """The lane and model a role runs with: the person's selected model; nothing here is secret.
+
+    ``reads_off_host`` is the lane's catalogue declaration of whether a run on
+    it sends material off this computer. It has no default: a lane whose
+    catalogue entry says nothing is not a lane, so it cannot read as on-host.
 
     ``accepted_media`` is what the provider catalog reports the lane accepts in
     a background run. ``None`` means the catalog says nothing, and the agent
@@ -81,19 +146,24 @@ class ModelRunLane(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
+    reads_off_host: bool
     accepted_media: tuple[ModelRunMediaKind, ...] | None = None
 
 
 class ModelRunConsentBinding(BaseModel):
-    """The lane a person's off-host consent was recorded for, carried with the run it permits."""
+    """The lane a person's off-host consent was recorded for, carried with the run it permits.
+
+    Only a run on a lane that reads off-host carries one, and the service
+    refuses such a run without it.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     evidence_content_address: Hex64Str
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
 
@@ -107,7 +177,7 @@ class ModelRunAttachment(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    media_type: Annotated[str, Field(min_length=3, max_length=127, pattern=r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")]
+    media_type: Annotated[str, Field(min_length=1, max_length=128, pattern=r"^[a-z0-9.+-]+/[a-z0-9.+-]+$")]
     base64_data: Annotated[str, Field(min_length=1)]
 
     @field_validator("base64_data")
@@ -125,18 +195,47 @@ class ModelRunBody(BaseModel):
     system: str | None = None
     prompt: Annotated[str, Field(min_length=1)]
     attachments: tuple[ModelRunAttachment, ...] = Field(default=(), max_length=MODEL_RUN_MAX_ATTACHMENTS)
-    max_output_tokens: Annotated[int, Field(ge=1, le=65_536)]
+    max_output_tokens: Annotated[int, Field(ge=1, le=65_536)] | None = None
+    """The reply bound the caller states; ``None`` states none and the run carries none."""
     temperature: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
+    context_tokens: _ContextTokens | None = None
+    """The context window the run needs; only a lane that honours it receives it."""
+    response_schema: dict[str, JsonValue] | None = None
+    """A JSON Schema object the reply is constrained to; the caller still extracts and validates the reply."""
+
+    @field_validator("response_schema")
+    @classmethod
+    def _schema_within_bound(cls, value: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
+        if value is not None and len(_compact_json(value)) > MODEL_RUN_MAX_SCHEMA_BYTES:
+            raise ValueError("response schema exceeds its bound")
+        return value
 
 
 class ModelRunHeader(BaseModel):
-    """The non-secret part of a run: the role, the bound on its time and the consent it carries."""
+    """The non-secret part of a run: the role, its task kind, the bound on its time and the consent it carries.
+
+    ``consent`` is required when the lane the role resolves to reads
+    off-host, and must then name that lane. ``task_kind`` is ``None`` for a
+    run that names no kind, which runs on the model documents are read with.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     role: Annotated[str, Field(pattern=_ROLE)]
+    task_kind: ModelRunTaskKind | None = None
     deadline_seconds: Annotated[int, Field(ge=1, le=MODEL_RUN_MAX_DEADLINE_SECONDS)]
     consent: ModelRunConsentBinding | None = None
+
+    def consent_admits(self, lane: ModelRunLane) -> bool:
+        """Return whether this run's consent admits it on ``lane``, the lane its role resolves to now.
+
+        A lane that reads off-host admits only a run carrying consent recorded
+        for that lane. A lane that stays on this computer needs none, but
+        consent recorded for another lane never admits a run.
+        """
+        if self.consent is None:
+            return not lane.reads_off_host
+        return self.consent.matches(lane)
 
 
 class ModelRunOutput(BaseModel):
@@ -145,7 +244,7 @@ class ModelRunOutput(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     text: str
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     agent_version: Annotated[str, Field(min_length=1, max_length=64)]
@@ -164,14 +263,16 @@ class ModelRunServed(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     agent_version: Annotated[str, Field(min_length=1, max_length=64)]
 
 
 class ModelRunOutcome(BaseModel):
-    """Exactly one answer to a lookup or a run: a lane, a served run, or a refusal.
+    """Exactly one answer to a lookup or a run.
+
+    The answer is a lane, a served run, or a refusal.
 
     ``text_byte_count`` is the length of the reply text that follows a served
     run on secret frames, and zero otherwise.
@@ -187,7 +288,7 @@ class ModelRunOutcome(BaseModel):
     @model_validator(mode="after")
     def _exactly_one_answer(self) -> Self:
         if sum(value is not None for value in (self.lane, self.served, self.refusal)) != 1:
-            raise ValueError("a model run outcome carries exactly one of a lane, a served run or a refusal")
+            raise ValueError("a model run outcome carries exactly one lane, served run or refusal")
         if (self.served is None) != (self.text_byte_count == 0):
             raise ValueError("reply text follows a served run and nothing else")
         return self
@@ -222,8 +323,23 @@ class ModelRunFetchRequest(BaseModel):
     run_id: UUID
 
 
+def require_run_carries_a_body(
+    *, header: ModelRunHeader | None, role: str, task_kind: ModelRunTaskKind | None, body_byte_count: int
+) -> None:
+    """Refuse a run whose body and header disagree, on every hop that carries one."""
+    if (header is None) != (body_byte_count == 0):
+        raise ValueError("a run carries a body and a lookup carries none")
+    if header is not None and header.role != role:
+        raise ValueError("a run names the role its header names")
+    if header is not None and header.task_kind != task_kind:
+        raise ValueError("a run names the task kind its header names")
+
+
 class ModelRunFetched(BaseModel):
-    """The waiting request: a lookup when ``header`` is absent, otherwise a run whose body follows."""
+    """The waiting request: a run when ``header`` is present, whose body follows, otherwise a lookup.
+
+    A lookup asks for ``role`` and ``task_kind``; a run's header names the same pair.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -233,13 +349,15 @@ class ModelRunFetched(BaseModel):
     connection_id: UUID
     run_id: UUID
     role: Annotated[str, Field(pattern=_ROLE)]
+    task_kind: ModelRunTaskKind | None = None
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 
     @model_validator(mode="after")
     def _run_carries_a_body(self) -> Self:
-        if (self.header is None) != (self.body_byte_count == 0):
-            raise ValueError("a run carries a body and a lookup carries none")
+        require_run_carries_a_body(
+            header=self.header, role=self.role, task_kind=self.task_kind, body_byte_count=self.body_byte_count
+        )
         return self
 
 
@@ -288,10 +406,16 @@ def decode_model_run_body(encoded: bytes | bytearray) -> ModelRunBody:
 
 __all__ = [
     "MODEL_RUN_CAPABILITY",
+    "MODEL_RUN_LANE_ID_MAX_LENGTH",
+    "MODEL_RUN_LANE_ID_PATTERN",
     "MODEL_RUN_MAX_ATTACHMENTS",
     "MODEL_RUN_MAX_BODY_BYTES",
     "MODEL_RUN_MAX_DEADLINE_SECONDS",
     "MODEL_RUN_MAX_OUTPUT_BYTES",
+    "MODEL_RUN_MODEL_ID_MAX_LENGTH",
+    "MODEL_RUN_MODEL_ID_PATTERN",
+    "MODEL_RUN_PROVIDER_ID_MAX_LENGTH",
+    "MODEL_RUN_PROVIDER_ID_PATTERN",
     "ModelRunAttachment",
     "ModelRunBody",
     "ModelRunCompleteRequest",
@@ -308,7 +432,9 @@ __all__ = [
     "ModelRunRefusalCode",
     "ModelRunRequested",
     "ModelRunServed",
+    "ModelRunTaskKind",
     "decode_model_run_body",
     "encode_model_run_body",
     "model_run_media_kind",
+    "require_run_carries_a_body",
 ]

@@ -22,6 +22,7 @@ from cadrumo.entrypoints.tui import historical_export, reconciliation_export
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.modelo.workbench.ports import WorkbenchExportRequest
 from cadrumo.entrypoints.tui.operations import settled_submission
+from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport import operation_reads
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -70,7 +71,7 @@ async def test_selected_history_export_submits_exact_saved_identity(
     )
     async with ScreenHostApp[None](screen).run_test() as pilot:
         await screen._publish(request)
-        await pilot.pause()
+        await settle(pilot)
     assert len(submitted) == 1
     call = submitted[0]
     assert call["subject_ref"] == profile_operation_subject(str(profile))
@@ -113,7 +114,7 @@ async def test_historical_tui_resolves_saved_filing_before_offering_export(monke
     monkeypatch.setattr(historical_export, "read_filing_view", read)
     screen = historical_export.HistoricalFilingExportScreen(cast(FrontendClient, client), "a" * 64)
     async with ScreenHostApp[None](screen).run_test() as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert reads == ["a" * 64]
         assert screen._revision_id == ("b" * 64 if available else None)
         assert isinstance(screen.app.screen, historical_export.WorkbenchExportScreen) is available

@@ -26,12 +26,11 @@ from cadrumo.application.operations.persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.core.config import override_settings
-from cadrumo.core.operations import OperationLifecycle
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
@@ -150,9 +149,7 @@ def test_native_worker_refuses_private_submit_when_startup_journal_is_unreadable
         )
 
         authority = BoundaryAuthority(deny_commit=False)
-        with override_settings(
-            cadrumo_local_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)
-        ):
+        with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(identity.binding.profile_id)):
             worker = ProfileWorkerProcess(identity, storage_root=root, authorization=authority)
             try:
                 admitted = lease(identity)

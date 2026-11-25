@@ -52,7 +52,7 @@ class StrictUniqueKeyLoader(yaml.CSafeLoader):
         return mapping
 
 
-def _parse_raw_locale(source: IO[str] | str) -> dict[str, object]:
+def parse_raw_locale(source: IO[str] | str) -> dict[str, object]:
     """Parse catalogue YAML keeping every scalar leaf so the audit can report its type."""
     loader = StrictUniqueKeyLoader(source)
     try:
@@ -71,7 +71,7 @@ def _parse_raw_locale(source: IO[str] | str) -> dict[str, object]:
     return root
 
 
-def _parse_locale(source: IO[str] | str) -> dict[str, LocaleNode]:
+def parse_locale(source: IO[str] | str) -> dict[str, LocaleNode]:
     """Parse catalogue YAML strictly from an open handle or an in-memory string.
 
     The string form is what a guarded read produces: the bytes are read and
@@ -107,11 +107,11 @@ def _is_locale_mapping(value: object) -> TypeGuard[dict[str, LocaleNode]]:
     )
 
 
-def _deep_merge_dicts(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+def deep_merge_dicts(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
     """Recursively merge overlay dictionary into base dictionary in place."""
     for k, v in overlay.items():
         if k in base and isinstance(base[k], dict) and isinstance(v, dict):
-            _deep_merge_dicts(base[k], v)
+            deep_merge_dicts(base[k], v)
         else:
             base[k] = v
     return base
@@ -169,7 +169,7 @@ def discover_locale_codes(locales_dir: Path) -> set[str]:
     return locales
 
 
-def _rewrite_locale_mapping(guard: CatalogueWriteGuard, path: Path, data: dict[str, LocaleNode]) -> None:
+def rewrite_locale_mapping(guard: CatalogueWriteGuard, path: Path, data: dict[str, LocaleNode]) -> None:
     """Replace a locale mapping after strict parsing, through the write guard.
 
     The locale CLI may be interrupted by an operator or orchestration timeout.

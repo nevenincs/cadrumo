@@ -8,10 +8,12 @@ import pytest
 from typer.testing import CliRunner
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...terminology_handbook.loader import load_terminology_handbook
-from .._synonym_cli import app
-from .._synonym_mining import (
+from ..sweep_runner import enumerate_query_vocabulary
+from ..synonym_cli import app
+from ..synonym_mining import (
     RatificationAction,
     RatificationStatus,
     SynonymCandidateEntry,
@@ -21,7 +23,6 @@ from .._synonym_mining import (
     mine_synonym_candidates,
     validate_ratification_queue,
 )
-from ..sweep_runner import enumerate_query_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -105,7 +106,7 @@ def test_ratified_candidate_must_land_in_handbook() -> None:
                 competing_concept_id="prorrata-especial",
                 status=RatificationStatus.RATIFIED,
                 review_reason="Reviewer accepted this candidate for the test queue.",
-                reviewed_at=date(2026, 6, 10),
+                reviewed_at=date(filing_year_envelope().horizon, 6, 10),
             ),
         ),
     )

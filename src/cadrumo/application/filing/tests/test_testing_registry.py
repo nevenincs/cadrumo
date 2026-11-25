@@ -26,7 +26,7 @@ _ANNUAL_2026 = _period(2026, "0A")
 _Q1_2024 = _period(2024, "1T")
 _Q1_2026 = _period(2026, "1T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
-_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
+_M130_GASTOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("gastos-deducibles-previos")
 _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("05")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M130_RENDIMIENTO_NETO_PREVIO_CASILLA: CasillaId = validated_casilla_id("08")
@@ -41,7 +41,7 @@ _RENTA_MINIMO_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0511")
 def _valid_inputs(*, ingresos: Decimal = Decimal("10000")) -> dict[CasillaId, Decimal]:
     return {
         _M130_INGRESOS_CASILLA: ingresos,
-        _M130_GASTOS_CASILLA: Decimal("4000"),
+        _M130_GASTOS_PREVIOS_CASILLA: Decimal("4000"),
         _M130_PAGO_FRACCIONADO_CASILLA: Decimal("250"),
         _M130_RETENCIONES_CASILLA: Decimal("100"),
         _M130_RENDIMIENTO_NETO_PREVIO_CASILLA: Decimal("2000"),
@@ -49,6 +49,10 @@ def _valid_inputs(*, ingresos: Decimal = Decimal("10000")) -> dict[CasillaId, De
         _M130_DEDUCCION_ART_110_3_CASILLA: Decimal("0"),
         _M130_RETENCIONES_ARRENDAMIENTOS_CASILLA: Decimal("0"),
     }
+
+
+# The normal modality keeps box 02 equal to the supplied expenses.
+_NORMAL_MODALITY = {"modelo-130-estimacion-directa-modalidad": "directa_normal"}
 
 
 def _valid_bindings() -> dict[str, Decimal]:
@@ -66,6 +70,7 @@ def test_builds_frozen_draft_through_registry_runtime(operation: PinnedAuthority
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
     )
 
     assert isinstance(draft, ModeloDraft)
@@ -82,6 +87,7 @@ def test_approved_status_uses_application_approval_path(operation: PinnedAuthori
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
     )
 
     assert draft.status is ModeloDraftStatus.APROBADO
@@ -106,6 +112,7 @@ def test_typed_period_input_is_passed_to_draft_without_string_roundtrip(
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -123,6 +130,7 @@ def test_string_period_input_is_rejected_at_helper_boundary(operation: PinnedAut
             operation=operation,
             casilla_values=_valid_inputs(),
             binding_values=_valid_bindings(),
+            text_binding_values=_NORMAL_MODALITY,
             status=ModeloDraftStatus.BORRADOR,
         )
 
@@ -134,6 +142,7 @@ def test_non_approved_status_clears_approval_fields(operation: PinnedAuthorityOp
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -164,6 +173,7 @@ def test_duplicate_casilla_and_binding_ids_are_rejected(operation: PinnedAuthori
             operation=operation,
             casilla_values=_valid_inputs(),
             binding_values={**_valid_bindings(), _M130_INGRESOS_CASILLA: Decimal("99")},
+            text_binding_values=_NORMAL_MODALITY,
         )
 
 
@@ -174,6 +184,7 @@ def test_values_are_registry_projected_and_sorted(operation: PinnedAuthorityOper
         operation=operation,
         casilla_values=_valid_inputs(ingresos=Decimal("12000")),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -198,6 +209,7 @@ def test_draft_id_is_deterministic_for_same_registry_inputs(operation: PinnedAut
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
     )
     b = build_registry_filing_draft(
         modelo="130",
@@ -205,6 +217,7 @@ def test_draft_id_is_deterministic_for_same_registry_inputs(operation: PinnedAut
         operation=operation,
         casilla_values=_valid_inputs(),
         binding_values=_valid_bindings(),
+        text_binding_values=_NORMAL_MODALITY,
     )
 
     assert a.draft_id == b.draft_id
@@ -232,6 +245,7 @@ def test_decimal_inputs_are_coerced_before_registry_build(
         operation=operation,
         casilla_decimals=casilla_decimals,
         binding_decimals={key: str(value) for key, value in _valid_bindings().items()},
+        text_binding_values=_NORMAL_MODALITY,
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -253,6 +267,7 @@ def test_decimal_helper_rejects_noncanonical_casilla_keys(operation: PinnedAutho
             operation=operation,
             casilla_decimals=bad_inputs,
             binding_decimals=_valid_bindings(),
+            text_binding_values=_NORMAL_MODALITY,
         )
 
 
@@ -272,4 +287,5 @@ def test_invalid_decimal_strings_raise(raw_value: str, operation: PinnedAuthorit
             operation=operation,
             casilla_decimals=bad_inputs,
             binding_decimals=_valid_bindings(),
+            text_binding_values=_NORMAL_MODALITY,
         )

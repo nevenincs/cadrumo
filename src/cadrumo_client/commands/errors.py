@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
+from typing import override
 
 from pydantic import BaseModel, ValidationError
 
@@ -11,12 +12,40 @@ from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.errors.failure_report import log_boundary_failure, raising_product_frame
 from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from cadrumo.core.errors.record_fault import internal_record_fault_context
+from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 
 from ..contracts.contracts import RefusalError
 
 
 class CliRefusedBoundaryError(CadrumoError):
     """Refuse a command without exposing a success-shaped JSON result."""
+
+
+#: The refusal reason a stale operation contract carries, apart from a malformed frame.
+OPERATION_CONTRACT_STALE_REASON = "operation_contract_stale"
+
+
+class CliOperationContractStaleError(CliRefusedBoundaryError):
+    """Refuse an operation whose runtime contract differs from the command's typed models.
+
+    The runtime answered with a well-formed contract for the requested
+    operation, but its schemas or secret and operand requirements are not the
+    ones this command was built against, so one side is out of date. Nothing
+    was submitted. Only the public operation ID and the differing contract
+    field are named; no payload or schema content is carried.
+    """
+
+    def __init__(self, *, definition_id: str, field: str) -> None:
+        """Name the operation and the first contract field that differs."""
+        super().__init__(
+            translated_message="errors.refused.refused_cli_operation_contract_stale",
+            context={
+                "reason": OPERATION_CONTRACT_STALE_REASON,
+                "operation": definition_id,
+                "field": field,
+                "effect": "none",
+            },
+        )
 
 
 class CliUnexpectedBoundaryError(CadrumoError):
@@ -38,32 +67,52 @@ def _raising_product_frame(error: BaseException) -> str:
 def boundary_failure_level(error: BaseException) -> int:
     """Return the log level for a failure a frontend ends its command with.
 
-    Internal faults and local-runtime transport refusals are errors: the
-    runtime could not be used at all. Any other registered refusal, such as a
-    signed-out session, is an expected outcome of the profile's state and is a
-    warning.
+    Internal faults, local-runtime transport refusals and a stale operation
+    contract are errors: the runtime could not be used at all. A registered refusal that changed nothing,
+    such as a signed-out session or a failed readiness gate, is an expected
+    outcome of the profile's state and is informational. A refusal that
+    carries an applied, partial or unknown effect, or a settlement other than
+    ``REFUSED``, and any other registered category, is a warning.
     """
     from cadrumo.core.errors.error_codes import ErrorCategory, get_registered_error_code
 
     seen: set[int] = set()
     link: BaseException | None = error
     while link is not None and id(link) not in seen:
-        if isinstance(link, RefusalError):
+        if isinstance(link, RefusalError | CliOperationContractStaleError):
             return logging.ERROR
         seen.add(id(link))
         link = link.__cause__ or link.__context__
     try:
-        internal = get_registered_error_code(error).category is ErrorCategory.INTERNAL
+        category = get_registered_error_code(error).category
     except Exception:
-        internal = True
-    return logging.ERROR if internal else logging.WARNING
+        return logging.ERROR
+    if category is ErrorCategory.INTERNAL:
+        return logging.ERROR
+    if category is ErrorCategory.REFUSED and _refusal_changed_nothing(error):
+        return logging.INFO
+    return logging.WARNING
+
+
+def _refusal_changed_nothing(error: BaseException) -> bool:
+    """Read the settled condition and effect a refusal carries; absent facts mean nothing was attempted."""
+    context = error.context if isinstance(error, CadrumoError) else None
+    if not isinstance(context, Mapping):
+        return True
+    try:
+        condition = context.get("terminal_condition")
+        if condition is not None and OperationTerminalCondition(condition) is not OperationTerminalCondition.REFUSED:
+            return False
+        effect = context.get("effect")
+        return effect is None or OperationEffect(effect) is OperationEffect.NONE
+    except ValueError:
+        return False
 
 
 def log_cli_boundary_failure(boundary: str, error: BaseException, *, durable: bool = True) -> str:
     """Log a failure a command frontend is about to render, returning its correlation id.
 
-    The level comes from :func:`boundary_failure_level`; never below WARNING,
-    since the command ends here with an error document. ``durable=False`` is
+    The level comes from :func:`boundary_failure_level`. ``durable=False`` is
     for a refusal raised before any command ran, which must not configure
     process state just to be logged. The record stays off stderr, which
     carries the error document.
@@ -104,15 +153,22 @@ class CliRecordedOperationError(CliRefusedBoundaryError, RecordedRegisteredError
         precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         """Retain the registered failure context and optional precondition result."""
-        super().__init__(registered_code, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
+        super().__init__(
+            registered_code,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
 
     @property
+    @override
     def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
         """Return the terminal precondition result, if one was recorded."""
-        return self._terminal_precondition_verdict
+        verdict = self._terminal_precondition_verdict
+        return verdict if isinstance(verdict, PreconditionVerdict) else None
 
     @terminal_precondition_verdict.setter
+    @override
     def terminal_precondition_verdict(self, verdict: PreconditionVerdict | None) -> None:
         """Attach a follow-up verdict while retaining this recorded failure."""
         self._terminal_precondition_verdict = verdict
@@ -137,6 +193,8 @@ class CliOperationStillRunningError(CadrumoError):
 
 
 __all__ = [
+    "OPERATION_CONTRACT_STALE_REASON",
+    "CliOperationContractStaleError",
     "CliOperationStillRunningError",
     "CliOutboundPayloadBoundaryError",
     "CliRecordedOperationError",

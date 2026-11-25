@@ -67,6 +67,7 @@ __all__ = [
     "bundled_modelo_100_xsds",
     "compilerecord_design_schema",
     "compilerecord_design_schemas",
+    "record_design_schema_violations",
     "repair_xsd_regex_escapes",
 ]
 
@@ -204,3 +205,28 @@ def compilerecord_design_schemas(xsds: Iterable[Path]) -> Mapping[Path, XMLSchem
             f"compiled {len(compiled)} of {len(requested)} record-design schemas; failures: " + "; ".join(failures),
         )
     return compiled
+
+
+def record_design_schema_violations(payload: bytes, *, xsd: Path) -> tuple[str, ...]:
+    """Validate a rendered declaration against one bundled schema, the real one or none.
+
+    libxml2 reports the first failure of each content model and stops reading that
+    model, so an empty answer is complete while a non-empty one is a lower bound.
+
+    Args:
+        payload: The declaration's bytes.
+        xsd: The schema of the declaration's edition.
+
+    Returns:
+        One ``path: message`` per violation; empty when the document is valid.
+
+    Raises:
+        SchemaCompilationError: when the schema does not compile, so a failure to read
+            the schema can never read as a clean document.
+    """
+    from lxml import etree
+
+    schema = compilerecord_design_schema(xsd)
+    if schema.validate(etree.fromstring(payload)):
+        return ()
+    return tuple(f"{error.path}: {error.message}" for error in schema.error_log)

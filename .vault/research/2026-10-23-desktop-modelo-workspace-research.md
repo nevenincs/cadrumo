@@ -1,0 +1,32 @@
+---
+tags:
+  - '#research'
+  - '#desktop-modelo-workspace'
+date: '2026-10-23'
+modified: '2026-10-23'
+body_schema: 'body-v2'
+body_hash: 'sha256:8fd0d203939b07f8b816a68f2a4e50c77493874bb82f97b34da4bdf08f9afaa2'
+related: []
+---
+
+# `desktop-modelo-workspace` research: `Desktop Modelo workspace design study and prototype rounds`
+
+Discovery for this study ran with semantic code and vault search (vaultspec-rag), eight read-only summarisation agents, and direct reads of the owning modules. The design was then prototyped as Storybook stories over real application data and reviewed in three adversarial rounds by three independent reviewers (visual design, usability walkthrough, data fidelity).
+
+## Findings
+
+- **The application already owns the editor's semantics.** The form read model joins the declared registry layout with values, origin (13 states), editability (11 states), source family and policy, counts, progress, issues, result, deadline, export and filing state, and every frontend only renders it (`src/cadrumo/application/modelo/work_form_models.py:919`, `src/cadrumo/application/modelo/work_form.py:103`). The registered read `modelo.work.form` returns it as a public envelope with the admitted edit baseline or a typed refusal (`src/cadrumo/application/modelo/workbench_projection.py:366`, `src/cadrumo/application/modelo/workbench_operations.py:85`). Rendering this envelope, not the registry layout, is the generation mechanism for every modelo's editor.
+- **Layout coverage is total but unreviewed.** 58 modelos and 161 revisions each have a declared form layout (`src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/form_layouts/0001-form-layout.toml`), all `generated`, none `reviewed`; placements are 40,092 on form, 1,145 working figures and 2,104 unplaced, with 2,004 grid blocks and 140 repeating blocks (counted from the filesystem by the layout summary agent).
+- **The workbook export is a second renderer, not a source.** The Sheets/XLSX compiler walks the raw layout and fuses value resolution with cell geometry and a hex palette (`src/cadrumo/application/storage/calc_sheets/form_workbook.py:361`, `src/cadrumo/application/storage/calc_sheets/theme.py:87`). Its transport-neutral parts (layout declarations, the formula tree, style roles) are already reached through the read model; its role palette conflicts with the desktop's single colour authority. The desktop reuses nothing from it directly and offers its outputs as artefacts.
+- **The product's wording already exists in four languages.** 757 catalogue keys cover origins, origin by source family, held zero, legend meanings, editability and not-writable reasons, periods, results, next steps, review effects, verification findings and their actions, list states and groups, AEAT calendar words and lifecycle (`src/cadrumo/locales/{en,es,ca,hu}/application.yml`, `common.yml`, under `application.modelo.*`, `tui.modelo.workbench.*`, `tui.declarations.*`). Reusing them removed every invented sentence the first two rounds had; most of them sit under TUI-named keys and need a neutral home before a second frontend depends on them.
+- **Real fixtures come cheaply from the test seed.** `seeded_operator_work` plus `load_modelo_work_form` and `project_modelo_workbench_form` produce the true wire envelope for a synthetic taxpayer in a throwaway profile (`src/cadrumo/entrypoints/tests/modelo_operator_work_storage.py:366`), given a published authority root and composed profile persistence (`src/cadrumo/adapters/persistence/storage/profile_persistence_composition.py:35`). 130 and 347 calculate; 303 needs filing evidence, 111/115 a ledger aggregation and 390 a calculation-grade registry, so they load uncalculated (390 with a typed edit refusal).
+- **Host boundary.** The held person relay carries plain payloads only (`src/cadrumo_runtime/host/session_hold_operations.py:73`); edit preflight and apply take amounts through the runtime's transient financial-operand admission (`src/cadrumo/application/modelo/edit_operator_input.py:47`, `src/cadrumo_runtime/host/operation_host.py:849`). The largest form envelope is about 430 KB against a 1 MiB bridge reply line (`native/desktop/src-tauri/src/agent/person.rs:346`). The decision is recorded in `2026-10-23-desktop-modelo-workspace-adr`, on the terms of `2026-10-23-desktop-ledger-editor-adr`.
+- **What the desktop still has to guess.** Round-two and round-three fidelity reviews found the frontend re-deriving: whether a box asks the filer (`field_needs_filer`, today in `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`), value presentation and held-zero wording (`src/cadrumo/application/modelo/value_presentation.py`), `confirmable` and `edit_address` (`src/cadrumo/application/modelo/work_form_models.py:336`), the per-address input grammar, the next action, period and modelo words (`src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`), finding sentences, citation text (`src/cadrumo/application/modelo/casilla_help.py`) and a public declarations list row (`src/cadrumo/application/modelo/declarations_list.py:31`). Each belongs in the read model; until it is there, the desktop would be a second classifier.
+- **Design convergence.** Round one (form as a document with an inspector) was challenged on: contradictory next action and result, three ways to edit, missing drawn as zero, invented list fields, the wrong data contract and leaked identifiers. Round two adopted the wire envelope, one way to edit, a records-replacement prompt, origin-driven absence, catalogue-free tabs and a To-do rail, and was challenged on: remaining contradictions between views, intents not matching the contract, held zero drawn as empty, guessed causes, and repeated counts. Round three moved all product wording to the catalogue, derived every state from one ladder over the envelope, mapped edits to contract intents, folded failures in the rail and added a narrow overlay.
+
+## Sources
+
+- Prototype code: `native/desktop/frontend/src/dev/prototypes/modelo/` (stories `Prototypes/Modelo`).
+- Fixtures: `native/desktop/frontend/src/dev/fixtures/modelo/*.json` (wire envelopes and catalogue extract).
+- Screenshots and review briefs: session scratch, not retained (rounds r1, r2, r3; 1440x900 and 1100x800; light and dark; en, es, ca, hu).
+- Governing records: `2026-09-30-modelo-editor-workbench-adr`, `2026-09-07-tuimodelo-form-projection-adr`, `2026-08-24-modelo-edit-contract-adr`, `2026-10-05-desktop-design-system-adr`, `2026-10-04-desktop-shell-adr`, `2026-10-23-desktop-ledger-editor-adr`.

@@ -25,7 +25,7 @@
         "app",
         "ledger",
         "classify",
-        "e3eeac5e",
+        "1703f840",
         "--classification",
         "BUSINESS",
         "--category-id",
@@ -45,7 +45,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "ID\t1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -55,7 +55,7 @@
         "app",
         "ledger",
         "view",
-        "e3eeac5e"
+        "1703f840"
       ],
       "captures": [],
       "envelope": {
@@ -74,13 +74,16 @@
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
           "transaction": {
+            "accrual_date": null,
             "amount": "605",
+            "arrendamiento_ref": null,
             "attachment_ids": [],
             "booked_date": "2026-02-11",
             "business_classification": "BUSINESS",
             "business_pct": null,
             "category_id": "material_oficina",
             "classification_confidence": "1",
+            "classification_decided_by": "manual",
             "classification_reason": "aeat app ledger classify",
             "classified_at": "2026-04-01T09:00:00+00:00",
             "classified_by": "manual",
@@ -90,28 +93,59 @@
             "created_at": "2026-04-01T09:00:00+00:00",
             "currency": "EUR",
             "date": "2026-02-11",
-            "description": "Compra de material de oficina proveedor local",
+            "deduction_fact_kind": "domestic_current",
+            "description": "Compra de material de oficina",
             "direction": "OUTGOING",
+            "figures_derived": false,
             "fx_rate": null,
+            "gasto_capital_inmobiliario": null,
+            "inmueble_ref": null,
+            "investment_asset_id": null,
             "invoice_id": null,
             "irpf_category": null,
             "iva_amount": "105",
             "iva_category": null,
             "iva_rate": "0.21",
             "lifecycle_state": "ACTIVE",
+            "link_fields": [
+              {
+                "family": "rental_lease",
+                "field": "arrendamiento_ref",
+                "field_words": "Linked lease",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "rental_property",
+                "field": "inmueble_ref",
+                "field_words": "Linked property",
+                "field_words_language": "en",
+                "value": null
+              },
+              {
+                "family": "gasto_capital_inmobiliario",
+                "field": "gasto_capital_inmobiliario",
+                "field_words": "Rental expense concept",
+                "field_words_language": "en",
+                "value": null
+              }
+            ],
             "m210_income_classification": null,
             "modified_at": "2026-04-01T09:00:00+00:00",
             "notes": "",
+            "operation_date": null,
             "prorrata_reference": null,
             "purchase_invoice_evidence_id": null,
+            "recargo_amount": null,
             "source_jurisdiction": null,
+            "statement_reference": "ALT-MAT-01",
             "taxable_base": "500",
-            "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+            "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e",
             "usage_ratio_id": null,
             "value_date": "2026-02-11",
             "value_in_eur": null
           },
-          "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+          "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e"
         },
         "schema_version": "2",
         "status": "warning"

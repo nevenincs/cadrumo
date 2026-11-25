@@ -165,7 +165,8 @@ def _bound_ports(profile_id: UUID, factory: WorkflowRunReadPortsFactory) -> Work
     return ports
 
 
-def _read_exact_run(payload: WorkflowRunReadRequest, ports: WorkflowRunReadPorts) -> WorkflowResult:
+def read_exact_run(payload: WorkflowRunReadRequest, ports: WorkflowRunReadPorts) -> WorkflowResult:
+    """Load the requested workflow run, verifying its identifier and expected period."""
     run = ports.runs.load(payload.run_id)
     if run.run_id != payload.run_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -200,7 +201,7 @@ class WorkflowRunReadExecutor:
 
         def read() -> WorkflowRunReadResult:
             ports = _bound_ports(payload.profile_id, self._factory)
-            run = _read_exact_run(payload, ports)
+            run = read_exact_run(payload, ports)
             return WorkflowRunReadResult(
                 profile_id=payload.profile_id,
                 expected_period=payload.expected_period,
@@ -310,7 +311,7 @@ def build_workflow_run_read_registration(
         else:
             # SUBMIT and START revalidate current storage; RESULT never retargets.
             ports = _bound_ports(payload.profile_id, factory)
-            _read_exact_run(payload, ports)
+            read_exact_run(payload, ports)
         return _bind_run_access(context, request.definition_id, periods=periods, independent=independent)
 
     return OperationPublicDefinitionRegistrationV1.compose_request_result(

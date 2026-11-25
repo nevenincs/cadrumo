@@ -32,8 +32,8 @@ import pytest
 
 from ...i18n.render import tr
 from ..documents import IdentityError, SpanishTaxIdFormat
-from ..documents import nif_check_letter as _nif_check_letter
-from ..tax_id import validate_spanish_tax_id as _validate_spanish_tax_id
+from ..documents import nif_check_letter as documents_nif_check_letter
+from ..tax_id import validate_spanish_tax_id as tax_id_validate_spanish_tax_id
 from .tax_id_format_support import SPANISH_TAX_ID_FORMAT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -42,11 +42,11 @@ _SUPPORTED_LOCALES = ("en", "es", "ca", "hu")
 
 
 def nif_check_letter(number: int) -> str:
-    return _nif_check_letter(number, SPANISH_TAX_ID_FORMAT)
+    return documents_nif_check_letter(number, SPANISH_TAX_ID_FORMAT)
 
 
 def validate_spanish_tax_id(value: str) -> str:
-    return _validate_spanish_tax_id(value, SPANISH_TAX_ID_FORMAT)
+    return tax_id_validate_spanish_tax_id(value, SPANISH_TAX_ID_FORMAT)
 
 
 def test_kernel_obeys_an_entirely_altered_injected_format() -> None:
@@ -60,21 +60,22 @@ def test_kernel_obeys_an_entirely_altered_injected_format() -> None:
         nie_leaders="Q",
         cif_leaders="TU",
         nif_letters="EKCLHVQSZJNBXDPFYMGAWRT",
+        nif_check_modulus=23,
         nie_prefix_substitutions=(("Q", "5"),),
         cif_digit_only_kinds="T",
         cif_letter_only_kinds="U",
         cif_letter_table="ABCDEFGHIJ",
     )
-    assert _validate_spanish_tax_id("ZZ000000E", altered) == "000000E"
+    assert tax_id_validate_spanish_tax_id("ZZ000000E", altered) == "000000E"
     with pytest.raises(IdentityError):
-        _validate_spanish_tax_id("000000T", altered)
+        tax_id_validate_spanish_tax_id("000000T", altered)
 
 
 # Placeholder superset spanning every interpolation token any identity
 # translation carries; str.format ignores the unused kwargs, so one dict
 # renders every key without a per-key placeholder table.
 _PLACEHOLDER_FILL = {
-    "candidate": "X1234567L",
+    "candidate": "X0001500M",
     "length": 8,
     "leader": "Q",
     "digits": "12345678",
@@ -89,11 +90,11 @@ _PLACEHOLDER_FILL = {
 @pytest.mark.parametrize(
     ("candidate", "substituted"),
     (
-        pytest.param("X1234567L", 1234567, id="x-prefix"),
-        pytest.param("Y0000000Z", 10000000, id="y-zero-body"),
-        pytest.param("Z0000000M", 20000000, id="z-zero-body"),
-        pytest.param("Y5678901P", 15678901, id="y-nonzero-body"),
-        pytest.param("Z2345678M", 22345678, id="z-nonzero-body"),
+        pytest.param("X0001500M", 1500, id="x-prefix"),
+        pytest.param("Y0001007D", 10001007, id="y-small-counter-body"),
+        pytest.param("Z0001008R", 20001008, id="z-small-counter-body"),
+        pytest.param("Y0001502K", 10001502, id="y-nonzero-body"),
+        pytest.param("Z0001501B", 20001501, id="z-nonzero-body"),
     ),
 )
 def test_valid_nie_forms_are_accepted(candidate: str, substituted: int) -> None:
@@ -106,9 +107,9 @@ def test_valid_nie_forms_are_accepted(candidate: str, substituted: int) -> None:
 @pytest.mark.parametrize(
     ("raw", "expected"),
     (
-        pytest.param("x1234567l", "X1234567L", id="lowercase"),
-        pytest.param("  X-1234567-L  ", "X1234567L", id="punctuation-and-padding"),
-        pytest.param("ESX1234567L", "X1234567L", id="foreign-iva-prefix"),
+        pytest.param("x0001500m", "X0001500M", id="lowercase"),
+        pytest.param("  X-0001500-M  ", "X0001500M", id="punctuation-and-padding"),
+        pytest.param("ESX0001500M", "X0001500M", id="foreign-iva-prefix"),
     ),
 )
 def test_valid_nie_forms_are_normalised(raw: str, expected: str) -> None:

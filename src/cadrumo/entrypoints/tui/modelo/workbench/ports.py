@@ -13,12 +13,18 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
-from .....application.modelo.work_form_models import ModeloFormAddressV1, ModeloFormField, ModeloFormScalar
+from .....application.modelo.work_form_export_offer import ModeloFormElectionQuestion
+from .....application.modelo.work_form_field_vocabulary import (
+    ModeloFormAddressV1,
+    ModeloFormScalar,
+)
+from .....application.modelo.work_form_models import ModeloFormField
 from .....application.modelo.work_form_service import ModeloWorkFormLoadV1
 from .....core.casilla_id import CasillaId
 from .....core.external_constants import OutputLanguage
 from .....core.modelo_export_artefact import ModeloExportArtefact
 from .....core.payment_election import PaymentElection
+from .....core.payment_instalment_election import PaymentInstalmentElection
 from .....core.prior_domiciliation_election import PriorDomiciliationElection
 from .....core.refund_election import RefundElection
 from ..m303_evidence import OrdinaryM303FilingEvidenceSubmission
@@ -65,6 +71,10 @@ class WorkbenchChangeKind(StrEnum):
     CLEAR = "clear"
     #: Stop replacing the source's value; the source wins again.
     RESTORE = "restore"
+    #: State, by a statement the form serves, that the box holds no amount.
+    STATE_ABSENT = "state_absent"
+    #: State, by a statement the form serves, the figure a carry stands at for earlier returns the application lacks.
+    STATE_PRIOR_VALUE = "state_prior_value"
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +163,8 @@ class WorkbenchExportOffer:
     asks_elections: bool
     modelo: str = ""
     own_accounts: LedgerOwnAccountDoorV1 | None = None
+    #: The questions the declaration's read served, in their order; the dialog words none of them.
+    elections: tuple[ModeloFormElectionQuestion, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +180,7 @@ class WorkbenchExportRequest:
     #: Per-filing own-account choices by opaque id; ``None`` lets the export resolve the designations.
     charge_account_id: str | None = None
     refund_account_id: str | None = None
+    instalment_election: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE
 
 
 class ModeloWorkbenchActionsV1(Protocol):

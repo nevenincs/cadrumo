@@ -31,8 +31,10 @@ from ...application.modelo.reconciliation_records import (
     ModeloReconciliationRecord,
     bind_modelo_reconciliation_persistence_factory,
 )
-from ...application.modelo.tests.reconciliation_fixture import RECONCILIATION_PROFILE_FIXTURE as _PROFILE
-from ...application.modelo.tests.reconciliation_fixture import reconciliation_history_entry_fixture as _history_entry
+from ...application.modelo.tests.reconciliation_fixture import (
+    RECONCILIATION_PROFILE_FIXTURE,
+    reconciliation_history_entry_fixture,
+)
 from ...application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...application.operations.owner import OperationExecutorContext
 from ...application.operations.registry import OperationRegistry
@@ -50,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 class _Records:
     def iter_records(self) -> Iterator[ModeloReconciliationRecord]:
         for event_id, evidence_value in (("a" * 64, "101.00"), ("b" * 64, "999.00")):
-            entry = _history_entry(event_id=event_id)
+            entry = reconciliation_history_entry_fixture(event_id=event_id)
             yield ModeloReconciliationRecord(
                 bucket_event_id=entry.event_id,
                 bucket_id=entry.bucket_id,
@@ -98,7 +100,9 @@ def _run(
         @asynccontextmanager
         async def irreversible_section(self):
             with override_settings(
-                cadrumo_active_profile=str(UUID(int=1)) if change_profile_before_publish else str(_PROFILE)
+                cadrumo_active_profile=str(UUID(int=1))
+                if change_profile_before_publish
+                else str(RECONCILIATION_PROFILE_FIXTURE)
             ):
                 yield
 
@@ -110,7 +114,7 @@ def _run(
                 identity=OperationIdentity(
                     operation_id="c" * 64,
                     definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
-                    subject_ref=profile_operation_subject(str(_PROFILE)),
+                    subject_ref=profile_operation_subject(str(RECONCILIATION_PROFILE_FIXTURE)),
                 ),
                 authority_operation=operation,
                 events=Events(),
@@ -121,11 +125,11 @@ def _run(
     )
     request = OperationRequest[BaseModel](
         definition_id=RECONCILIATION_EXPORT_XLSX_OPERATION_DEFINITION_ID,
-        subject_ref=profile_operation_subject(str(_PROFILE)),
+        subject_ref=profile_operation_subject(str(RECONCILIATION_PROFILE_FIXTURE)),
         payload=payload,
     )
     with (
-        override_settings(cadrumo_active_profile=str(_PROFILE)),
+        override_settings(cadrumo_active_profile=str(RECONCILIATION_PROFILE_FIXTURE)),
         bind_modelo_reconciliation_persistence_factory(_Records),
     ):
         reference = asyncio.run(ReconciliationExportXlsxExecutor(factory).execute(request, context))
@@ -134,7 +138,9 @@ def _run(
 
 def test_registered_export_writes_only_the_selected_saved_comparison(tmp_path: Path) -> None:
     output = tmp_path / "reconciliation.xlsx"
-    payload = ReconciliationExportXlsxRequest(profile_id=_PROFILE, event_id="a" * 64, output_path=str(output))
+    payload = ReconciliationExportXlsxRequest(
+        profile_id=RECONCILIATION_PROFILE_FIXTURE, event_id="a" * 64, output_path=str(output)
+    )
     reference, results, effects = _run(payload)
     assert reference == "f" * 64
     assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
@@ -155,7 +161,9 @@ def test_export_refuses_before_publication_for_selection_identity_and_destinatio
     if defect == "existing_file":
         output.write_bytes(b"operator artifact")
     payload = ReconciliationExportXlsxRequest(
-        profile_id=_PROFILE, event_id=("e" * 64 if defect == "missing_record" else "a" * 64), output_path=str(output)
+        profile_id=RECONCILIATION_PROFILE_FIXTURE,
+        event_id=("e" * 64 if defect == "missing_record" else "a" * 64),
+        output_path=str(output),
     )
     with pytest.raises((ProfileAccessRefusedError, ModeloExportError)):
         _run(payload, foreign=defect == "foreign_ports", change_profile_before_publish=defect == "profile_changed")
@@ -166,14 +174,18 @@ def test_request_requires_explicit_narrow_or_whole_history_selection(tmp_path: P
     for selectors in ({}, {"event_id": "a" * 64, "all_history": True}, {"work_unit_id": "1" * 64, "all_history": True}):
         with pytest.raises(ValidationError):
             ReconciliationExportXlsxRequest.model_validate(
-                {"profile_id": _PROFILE, "output_path": str(tmp_path / "review.xlsx"), **selectors}
+                {
+                    "profile_id": RECONCILIATION_PROFILE_FIXTURE,
+                    "output_path": str(tmp_path / "review.xlsx"),
+                    **selectors,
+                }
             )
 
 
 def test_public_receipt_refuses_another_operation_and_unsettled_effect(tmp_path: Path) -> None:
     _, results, _ = _run(
         ReconciliationExportXlsxRequest(
-            profile_id=_PROFILE,
+            profile_id=RECONCILIATION_PROFILE_FIXTURE,
             event_id="a" * 64,
             output_path=str(tmp_path / "review.xlsx"),
         )
@@ -210,7 +222,7 @@ def test_public_receipt_refuses_another_operation_and_unsettled_effect(tmp_path:
 @pytest.mark.parametrize("scope", ["all", "work_unit"])
 def test_export_larger_sets_only_when_the_operator_explicitly_selects_them(tmp_path: Path, scope: str) -> None:
     payload = ReconciliationExportXlsxRequest(
-        profile_id=_PROFILE,
+        profile_id=RECONCILIATION_PROFILE_FIXTURE,
         all_history=scope == "all",
         work_unit_id="1" * 64 if scope == "work_unit" else None,
         output_path=str(tmp_path / "selected.xlsx"),

@@ -18,15 +18,15 @@ from .tree_publication_artifacts import verify_generated_export_package
 from .tree_publication_contracts import (
     GeneratedExportPublicationJournal,
     GeneratedExportTransactionPaths,
-    GeneratedExportTreePublicationContext,
     export_provenance_file_sha256,
 )
 
 
-def _journal_supersession_candidate_revision_path(
+def journal_supersession_candidate_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
+    """Return the journal's candidate staging path, refusing one that is not a staging sibling."""
     candidate = transaction_paths.transaction_root / journal.candidate_export
     if not candidate.name.startswith(transaction_paths.bundle_staging_prefix):
         raise RegistryValidationError("generated supersession candidate is not a transaction-root staging sibling")
@@ -35,10 +35,11 @@ def _journal_supersession_candidate_revision_path(
     return candidate
 
 
-def _journal_supersession_backup_revision_path(
+def journal_supersession_backup_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
+    """Return the journal's backup path, refusing one that is not a backup sibling."""
     backup = transaction_paths.transaction_root / journal.backup_export
     if not backup.name.startswith(transaction_paths.bundle_backup_prefix):
         raise RegistryValidationError("generated supersession backup is not a transaction-root backup sibling")
@@ -47,7 +48,8 @@ def _journal_supersession_backup_revision_path(
     return backup
 
 
-def _matches_journal_candidate(export_root: Path, journal: GeneratedExportPublicationJournal) -> bool:
+def matches_journal_candidate(export_root: Path, journal: GeneratedExportPublicationJournal) -> bool:
+    """Return whether an export root verifies and matches the journal candidate digest."""
     try:
         verify_generated_export_package(export_root)
         return (
@@ -58,11 +60,12 @@ def _matches_journal_candidate(export_root: Path, journal: GeneratedExportPublic
         return False
 
 
-def _journal_backup_path(
+def journal_backup_path(
     journal: GeneratedExportPublicationJournal,
     target_export_root: Path,
     target_root: Path,
 ) -> Path:
+    """Return the journal's backup path, refusing a name outside the transaction scope."""
     backup = target_root / journal.backup_export
     backup_prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
@@ -74,41 +77,8 @@ def _journal_backup_path(
     return backup
 
 
-def _retire_completed_legacy_orphan_journal(
-    *,
-    context: GeneratedExportTreePublicationContext,
-    journal: GeneratedExportPublicationJournal,
-    journal_path: Path,
-    target_export_root: Path,
-    backup_export_root: Path,
-) -> bool:
-    """Forget exactly one pre-staging transaction that provably changed nothing.
-
-    Before same-volume staging, an ``intent`` journal could point at a system
-    temporary candidate on another volume.  A failed replace may have already
-    restored (or never displaced) the target and removed both temporary
-    candidates before this process sees the journal.  This narrow shape has no
-    remaining mutation to recover.  Every live candidate, backup, target, or
-    different transaction state stays fail-closed for normal recovery.
-    """
-    expected = context.expected_target_state
-    recorded_candidate = context.target_root / journal.candidate_export
-    if not (
-        journal.state == "intent"
-        and expected is not None
-        and expected.manifest_sha256 is None
-        and expected.output_files == ()
-        and not target_export_root.exists()
-        and not backup_export_root.exists()
-        and not recorded_candidate.exists()
-        and not is_link_like(recorded_candidate)
-    ):
-        return False
-    _delete_journal(journal_path)
-    return True
-
-
-def _journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
+def journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
+    """Return the journal's staged candidate path, refusing a non-staging or linked one."""
     candidate = target_root / journal.candidate_export
     prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
@@ -162,17 +132,7 @@ def load_generated_export_publication_journal(path: Path) -> GeneratedExportPubl
 def _require_journal_supersession_shape(journal: GeneratedExportPublicationJournal) -> None:
     """Keep normal export journals distinct from complete supersession bundles."""
     if journal.retires_export_clearance is not None:
-        if (
-            journal.retires_export_clearance is not True
-            or journal.is_supersession
-            or journal.generated_layout_id is not None
-            or journal.superseded_construct_references is not None
-            or journal.supersession_source_sha256 is None
-            or journal.candidate_revision_sha256 is None
-        ):
-            raise RegistryValidationError("generated publication journal has an incomplete clearance retirement pin")
-        if journal.cleanup_started is not None and journal.state != "committed":
-            raise RegistryValidationError("generated clearance cleanup cannot begin before commit")
+        _require_clearance_journal_shape(journal)
         return
     supersession_values = (
         journal.generated_layout_id,
@@ -190,7 +150,22 @@ def _require_journal_supersession_shape(journal: GeneratedExportPublicationJourn
         raise RegistryValidationError("generated supersession cleanup cannot begin before commit")
 
 
-def _delete_journal(path: Path) -> None:
+def _require_clearance_journal_shape(journal: GeneratedExportPublicationJournal) -> None:
+    if (
+        journal.retires_export_clearance is not True
+        or journal.is_supersession
+        or journal.generated_layout_id is not None
+        or journal.superseded_construct_references is not None
+        or journal.supersession_source_sha256 is None
+        or journal.candidate_revision_sha256 is None
+    ):
+        raise RegistryValidationError("generated publication journal has an incomplete clearance retirement pin")
+    if journal.cleanup_started is not None and journal.state != "committed":
+        raise RegistryValidationError("generated clearance cleanup cannot begin before commit")
+
+
+def delete_journal(path: Path) -> None:
+    """Delete a publication journal file and sync its directory when it exists."""
     if path.exists():
         path.unlink()
         fsync_parent_dir(path)

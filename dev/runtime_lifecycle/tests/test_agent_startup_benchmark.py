@@ -9,14 +9,16 @@ from pathlib import Path
 import pytest
 
 from .. import agent_startup_benchmark
-from ..agent_startup_benchmark import _health_facts
+from ..agent_startup_benchmark import agent_startup_benchmark_health_facts
 from ..caller_owned_root import AcceptanceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_hosted_health_requires_a_live_probed_worker() -> None:
-    assert _health_facts({"service": "gateway", "status": "ok", "ready": True, "worker_status": "up"}) == {
+    assert agent_startup_benchmark_health_facts(
+        {"service": "gateway", "status": "ok", "ready": True, "worker_status": "up"}
+    ) == {
         "gateway_health": "ready",
         "worker_health": "up",
         "run_admission": "not measured",
@@ -24,7 +26,9 @@ def test_hosted_health_requires_a_live_probed_worker() -> None:
 
 
 def test_desktop_health_preserves_blocked_provider_admission() -> None:
-    assert _health_facts({"gateway_readiness": "ready", "worker_state": "ready", "run_admission": "blocked"}) == {
+    assert agent_startup_benchmark_health_facts(
+        {"gateway_readiness": "ready", "worker_state": "ready", "run_admission": "blocked"}
+    ) == {
         "gateway_health": "ready",
         "worker_health": "ready",
         "run_admission": "blocked",
@@ -43,7 +47,7 @@ def test_desktop_health_preserves_blocked_provider_admission() -> None:
 )
 def test_liveness_and_incomplete_startup_are_not_success(health: dict[str, object]) -> None:
     with pytest.raises(AcceptanceError):
-        _health_facts(health)
+        agent_startup_benchmark_health_facts(health)
 
 
 def test_interrupted_samples_resume_from_durable_observations_after_private_scratch_is_reclaimed(

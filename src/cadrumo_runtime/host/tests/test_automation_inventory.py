@@ -8,7 +8,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -22,47 +21,37 @@ from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
 )
-from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
-from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.operation_access import (
-    OperationAcknowledged,
     OperationContract,
     OperationContractReply,
-    OperationControl,
-    OperationObserve,
-    OperationObserved,
     OperationProjected,
     OperationResult,
     OperationSubmit,
     OperationSubmitted,
 )
-from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin, ProfileStatus, SessionRequest
-from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin, admit_session, connect_verified, start_and_settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -71,49 +60,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-class _LoginObservation:
-    login_id = "automation-inventory-native-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        """Supply only test-owned OS facts to the installed worker."""
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
-
-
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
-    return VerifiedConnection(
-        endpoint.connect(timeout=3),
-        expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
-    )
-
-
-def _login(
-    client: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    frontend: OperationFrontendProjection,
-    method: Literal["password", "receipt", "api_key"],
-    proof: bytes,
-) -> UUID:
-    secret = bytearray(proof)
-    result = client.login(
-        ProfileLogin(request_id=uuid4(), profile_id=profile_id, frontend=frontend, method=method),
-        secret,
-        deadline=time.monotonic() + 20,
-    )
-    assert secret == bytes(len(proof))
-    assert isinstance(result, ProfileStatus)
-    assert result.status.session_id is not None
-    return result.status.session_id
 
 
 def _inventory_request(profile_id: UUID) -> AutomationOperationRequest:
@@ -189,7 +135,7 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("automation-inventory-native-login"),
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()
@@ -200,17 +146,23 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                human, api = _connect(endpoint), _connect(endpoint)
+                human, api = connect_verified(endpoint), connect_verified(endpoint)
                 try:
-                    human_id = _login(
-                        human, profile_id, frontend=frontend, method="password", proof=PROFILE_INPUT.encode()
+                    human_id = admit_session(
+                        human,
+                        profile_id,
+                        frontend=frontend,
+                        method="password",
+                        proof=PROFILE_INPUT.encode(),
+                        deadline_seconds=20,
                     )
-                    api_id = _login(
+                    api_id = admit_session(
                         api,
                         profile_id,
                         frontend=frontend,
                         method="api_key",
                         proof=possession.get_secret_value(),
+                        deadline_seconds=20,
                     )
                     contract = human.operation(
                         OperationContract(
@@ -251,37 +203,7 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
                     submitted = human.operation(submit, deadline=time.monotonic() + 10)
                     assert isinstance(submitted, OperationSubmitted)
                     operation_id = submitted.receipt.operation_id
-                    started = human.operation(
-                        OperationControl(
-                            action="operation_start",
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_id,
-                            operation_id=operation_id,
-                        ),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert isinstance(started, OperationAcknowledged)
-                    deadline = time.monotonic() + 25
-                    while True:
-                        observed = human.operation(
-                            OperationObserve(
-                                request_id=uuid4(),
-                                profile_id=profile_id,
-                                session_id=human_id,
-                                observation=OperationObservationRequestV1(
-                                    operation_id=operation_id, after_cursor=0, page_limit=32
-                                ),
-                            ),
-                            deadline=deadline,
-                        )
-                        assert isinstance(observed, OperationObserved)
-                        assert isinstance(observed.observation, OperationObservationSuccessV1)
-                        projection = observed.observation.projection
-                        if projection.terminal_condition is not None:
-                            break
-                        assert time.monotonic() < deadline
-                        time.sleep(0.02)
+                    projection = start_and_settle(human, profile_id, human_id, operation_id, settle_seconds=25)
                     assert projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
                     result_request = OperationResult(
                         request_id=uuid4(),
@@ -351,7 +273,7 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+            capture_login=lambda _channel: SyntheticLogin("automation-inventory-native-login"),
             secret_store=lambda: enrollment.native,
         )
         profiles.prepare_registry()
@@ -362,14 +284,15 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
             running = pool.submit(server.serve)
             try:
                 assert server.ready.wait(3)
-                human = _connect(endpoint)
+                human = connect_verified(endpoint)
                 try:
-                    human_id = _login(
+                    human_id = admit_session(
                         human,
                         profile_id,
                         frontend=OperationFrontendProjection.CLI,
                         method="password",
                         proof=PROFILE_INPUT.encode(),
+                        deadline_seconds=20,
                     )
                     contract = human.operation(
                         OperationContract(
@@ -395,37 +318,7 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
                     )
                     assert isinstance(submitted, OperationSubmitted)
                     operation_id = submitted.receipt.operation_id
-                    started = human.operation(
-                        OperationControl(
-                            action="operation_start",
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_id,
-                            operation_id=operation_id,
-                        ),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert isinstance(started, OperationAcknowledged)
-                    deadline = time.monotonic() + 25
-                    while True:
-                        observed = human.operation(
-                            OperationObserve(
-                                request_id=uuid4(),
-                                profile_id=profile_id,
-                                session_id=human_id,
-                                observation=OperationObservationRequestV1(
-                                    operation_id=operation_id, after_cursor=0, page_limit=32
-                                ),
-                            ),
-                            deadline=deadline,
-                        )
-                        assert isinstance(observed, OperationObserved)
-                        assert isinstance(observed.observation, OperationObservationSuccessV1)
-                        projection = observed.observation.projection
-                        if projection.terminal_condition is not None:
-                            break
-                        assert time.monotonic() < deadline
-                        time.sleep(0.02)
+                    projection = start_and_settle(human, profile_id, human_id, operation_id, settle_seconds=25)
                     assert projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
                     released = human.operation(
                         OperationResult(
@@ -474,37 +367,7 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
                     )
                     assert isinstance(missing, OperationSubmitted)
                     unavailable_id = missing.receipt.operation_id
-                    started = human.operation(
-                        OperationControl(
-                            action="operation_start",
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_id,
-                            operation_id=unavailable_id,
-                        ),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert isinstance(started, OperationAcknowledged)
-                    deadline = time.monotonic() + 25
-                    while True:
-                        observed = human.operation(
-                            OperationObserve(
-                                request_id=uuid4(),
-                                profile_id=profile_id,
-                                session_id=human_id,
-                                observation=OperationObservationRequestV1(
-                                    operation_id=unavailable_id, after_cursor=0, page_limit=32
-                                ),
-                            ),
-                            deadline=deadline,
-                        )
-                        assert isinstance(observed, OperationObserved)
-                        assert isinstance(observed.observation, OperationObservationSuccessV1)
-                        projection = observed.observation.projection
-                        if projection.terminal_condition is not None:
-                            break
-                        assert time.monotonic() < deadline
-                        time.sleep(0.02)
+                    projection = start_and_settle(human, profile_id, human_id, unavailable_id, settle_seconds=25)
                     assert projection.terminal_condition is OperationTerminalCondition.REFUSED
                     assert projection.result_ref is None
                 finally:

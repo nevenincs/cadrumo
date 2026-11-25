@@ -2,6 +2,8 @@
 fact_id = "rirpf-art-95:retencion-actividades-profesionales-colectivos-especificos"
 family = "scalar"
 
+[fact.standing_rate]
+
 [[fact.variants]]
 variant_id = "rirpf-art-95:retencion-actividades-profesionales-colectivos-especificos:2007-04-01"
 date_axis = "filing_period"

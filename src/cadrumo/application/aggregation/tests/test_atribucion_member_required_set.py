@@ -34,19 +34,22 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
 
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..atribucion_member import (
-    _REQUIRED_FIELDS,
-    _detail_row_from_socio,
-    _missing_field_diagnostic,
-    _missing_fields,
-    _observation_from_socio,
-    _SocioFacts,
+    REQUIRED_FIELDS,
+    SocioFacts,
+    detail_row_from_socio,
+    missing_field_diagnostic,
+    missing_fields,
+    observation_from_socio,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_YEAR = filing_year_envelope().horizon
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SECTION = "attribution_entity_socios"
-_FILING_YEAR = 2024
+_FILING_YEAR = _YEAR
 
 # Fixture data, not a restatement of the required set: the properties below
 # derive their field sets from the resolver and the schema, and read this only
@@ -63,7 +66,6 @@ _SAMPLE_ROW: Mapping[str, object] = {
     # stop covering it.
     "participe_clave": "2",
     "country_of_residence": "US",
-    "role": "comunero",
     # clave D / subclave 03 is the one combination that exercises the
     # estimación-objetiva rendimiento-neto-previo field alongside the
     # shared clave-C/clave-D reducción field, without tripping the row
@@ -93,11 +95,11 @@ def _declared_fields() -> frozenset[str]:
     return frozenset(field.key for field in section.fields)
 
 
-def _socio_without(field: str) -> _SocioFacts:
-    return _SocioFacts(index=0, values={key: value for key, value in _SAMPLE_ROW.items() if key != field})
+def _socio_without(field: str) -> SocioFacts:
+    return SocioFacts(index=0, values={key: value for key, value in _SAMPLE_ROW.items() if key != field})
 
 
-def _builders_refusing(socio: _SocioFacts) -> set[str]:
+def _builders_refusing(socio: SocioFacts) -> set[str]:
     """Names of the row builders that cannot build this row.
 
     Both builders are exercised because they read the profile row
@@ -105,8 +107,8 @@ def _builders_refusing(socio: _SocioFacts) -> set[str]:
     """
     refusing: set[str] = set()
     for name, build in (
-        ("observation", lambda: _observation_from_socio(socio, filing_year=_FILING_YEAR)),
-        ("detail_row", lambda: _detail_row_from_socio(socio)),
+        ("observation", lambda: observation_from_socio(socio, filing_year=_FILING_YEAR)),
+        ("detail_row", lambda: detail_row_from_socio(socio)),
     ):
         try:
             build()
@@ -139,7 +141,7 @@ def test_every_required_field_is_one_the_row_builders_consume() -> None:
     asks for and no code reads.
     """
 
-    for field in sorted(_REQUIRED_FIELDS):
+    for field in sorted(REQUIRED_FIELDS):
         socio = _socio_without(field)
         assert _builders_refusing(socio), (
             f"{field!r} is required by the reader but both row builders build without it. "
@@ -156,9 +158,9 @@ def test_no_field_the_builders_consume_is_left_optional() -> None:
     where the design calls for a diagnostic and a skipped row.
     """
 
-    for field in sorted(_declared_fields() - _REQUIRED_FIELDS):
+    for field in sorted(_declared_fields() - REQUIRED_FIELDS):
         socio = _socio_without(field)
-        assert not _missing_fields(socio), f"{field!r} is outside the required set but was reported missing"
+        assert not missing_fields(socio), f"{field!r} is outside the required set but was reported missing"
         assert not _builders_refusing(socio), (
             f"{field!r} is consumed by a row builder but is not in the required set, so a row "
             "missing it passes the completeness check and then raises KeyError. Add it to the "
@@ -174,7 +176,7 @@ def test_a_required_field_is_reported_missing_and_named_to_the_operator() -> Non
     rot unnoticed.
     """
 
-    for field in sorted(_REQUIRED_FIELDS):
+    for field in sorted(REQUIRED_FIELDS):
         socio = _socio_without(field)
-        assert _missing_fields(socio) == frozenset({field})
-        assert field in _missing_field_diagnostic(socio).message
+        assert missing_fields(socio) == frozenset({field})
+        assert field in missing_field_diagnostic(socio).message

@@ -8,26 +8,38 @@ from uuid import UUID
 from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .activity_asset_contracts import (
     ActivityAssetAuthorityProvenance,
     ActivityAssetId,
     ActivityAssetRefusal,
-    ActivityAssetTaxYear,
+)
+from .activity_asset_read_models import (
+    ActivityAssetAcquisitionCandidate,
+    ActivityAssetDisposalCalculationView,
+    ActivityAssetElectionLimits,
+    ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
+    ActivityAssetPlanAdvisory,
+    ActivityAssetPlanRow,
+    ActivityAssetTimelineEvent,
 )
 from .activity_asset_results import (
-    ActivityAssetInspectionRevision,
     ActivityAssetM130Period,
-    require_claim_identity,
-    require_filing_frame,
-    require_inspected_asset_revisions,
 )
 from .operation_dtos import (
     ActivityAssetFilingHandoffSnapshot,
     ActivityAssetHistoryClaimResultSnapshot,
     ActivityAssetHistorySnapshot,
     ScheduledAmortizationChargeSnapshot,
+)
+from .result_requirements import (
+    ActivityAssetInspectionRevision,
+    require_claim_identity,
+    require_filing_frame,
+    require_inspected_asset_revisions,
 )
 
 
@@ -119,7 +131,7 @@ class ActivityAssetClaimProjection(_ActivityAssetOperationProjection):
 class ActivityAssetFilingHandoffProjection(_ActivityAssetOperationProjection):
     """Public typed filing handoff without recomputing or consuming claims."""
 
-    tax_year: ActivityAssetTaxYear | None = None
+    tax_year: FourDigitYear | None = None
     m130_period: ActivityAssetM130Period | None = None
     filing_handoff: ActivityAssetFilingHandoffSnapshot | None = None
 
@@ -133,4 +145,107 @@ class ActivityAssetFilingHandoffProjection(_ActivityAssetOperationProjection):
             m130_period=self.m130_period,
             filing_handoff=self.filing_handoff,
         )
+        return self
+
+
+class ActivityAssetDescribeProjection(_ActivityAssetOperationProjection):
+    """Public describe result with the complete persisted history."""
+
+    history: ActivityAssetHistorySnapshot | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetDisposeProjection(_ActivityAssetOperationProjection):
+    """Public baja result with the complete persisted history."""
+
+    history: ActivityAssetHistorySnapshot | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.history is not None)
+        return self
+
+
+class ActivityAssetDisposalCalculateProjection(_ActivityAssetOperationProjection):
+    """Public figures of one baja, recorded or previewed."""
+
+    asset_id: ActivityAssetId | None = None
+    calculation: ActivityAssetDisposalCalculationView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.calculation is not None)
+        return self
+
+
+class ActivityAssetListProjection(_ActivityAssetOperationProjection):
+    """Public summary of the register."""
+
+    rows: tuple[ActivityAssetListRow, ...] | None = None
+    years: tuple[int, ...] = ()
+    default_year: int | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetPlanProjection(_ActivityAssetOperationProjection):
+    """Public amortization plan of one element."""
+
+    asset_id: ActivityAssetId | None = None
+    rows: tuple[ActivityAssetPlanRow, ...] | None = None
+    limits: ActivityAssetElectionLimits | None = None
+    advisories: tuple[ActivityAssetPlanAdvisory, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.rows is not None)
+        return self
+
+
+class ActivityAssetTimelineProjection(_ActivityAssetOperationProjection):
+    """Public ordered history of one element."""
+
+    asset_id: ActivityAssetId | None = None
+    events: tuple[ActivityAssetTimelineEvent, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.events is not None)
+        return self
+
+
+class ActivityAssetFormOptionsProjection(_ActivityAssetOperationProjection):
+    """Public form options read from the registry."""
+
+    options: ActivityAssetFormOptionsView | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.options is not None)
+        return self
+
+
+class ActivityAssetAcquisitionCandidatesProjection(_ActivityAssetOperationProjection):
+    """Public list of ledger payments an element could name as its acquisition."""
+
+    candidates: tuple[ActivityAssetAcquisitionCandidate, ...] | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_result(self) -> Self:
+        self._require_outcome(has_payload=self.candidates is not None)
         return self

@@ -11,16 +11,16 @@ from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefi
 from dev.acceptance.income_tax.cli_journey import ArtifactEvidence
 from dev.acceptance.installed_cli import InstalledCli
 
-from .cli_contracts import _ACTOR, PeriodicSliceEvidence, RetencionesInstalledCliError
-from .cli_export_validation import _expected_casillas_from_result, _validate_export
-from .cli_invoice_capture import _capture_invoice_withholding
-from .cli_observations import _require_result, _required_nonnegative_int, _required_text
+from .cli_contracts import ACTOR, PeriodicSliceEvidence, RetencionesInstalledCliError
+from .cli_export_validation import expected_casillas_from_result, validate_export
+from .cli_invoice_capture import capture_invoice_withholding
+from .cli_observations import require_result, required_nonnegative_int, required_text
 from .scenario import (
     InstalledPeriodicCliSlice,
 )
 
 
-def _select_slices(
+def select_slices(
     available: tuple[InstalledPeriodicCliSlice, ...],
     *,
     requested_ids: tuple[str, ...] | None,
@@ -44,7 +44,7 @@ def _select_slices(
     return selected
 
 
-def _is_full_campaign(
+def is_full_campaign(
     selected: tuple[InstalledPeriodicCliSlice, ...],
     *,
     available: tuple[InstalledPeriodicCliSlice, ...],
@@ -55,7 +55,7 @@ def _is_full_campaign(
     }
 
 
-def _run_periodic_slice(
+def run_periodic_slice(
     *,
     cli: InstalledCli,
     slice_: InstalledPeriodicCliSlice,
@@ -64,16 +64,16 @@ def _run_periodic_slice(
     output_dir: Path,
 ) -> PeriodicSliceEvidence:
     """Run one invoice-backed public capture through periodic export validation."""
-    invoice_id = _capture_invoice_withholding(cli=cli, slice_=slice_, year=year)
+    invoice_id = capture_invoice_withholding(cli=cli, slice_=slice_, year=year)
 
     # This command includes no write option.  InstalledCli starts a separate
     # process for it, so this is the required fresh-process readback boundary.
-    reopened = _require_result(
+    reopened = require_result(
         cli,
         ("app", "modelo", "aggregate", "--modelo", slice_.modelo, "--year", str(year), "--period", slice_.period),
         stage=f"{slice_.slice_id}:fresh_reopen",
     )
-    observed_count = _required_nonnegative_int(
+    observed_count = required_nonnegative_int(
         reopened,
         key="observation_count",
         stage=f"{slice_.slice_id}:fresh_reopen",
@@ -84,7 +84,7 @@ def _run_periodic_slice(
             diagnostic_code="observation_count_mismatch",
         )
 
-    work = _require_result(
+    work = require_result(
         cli,
         (
             "app",
@@ -100,29 +100,29 @@ def _run_periodic_slice(
             "--revision",
             slice_.revision,
             "--by",
-            _ACTOR,
+            ACTOR,
         ),
         stage=f"{slice_.slice_id}:work_create",
     )
-    work_id = _required_text(work, key="work_unit_id", stage=f"{slice_.slice_id}:work_create")
-    calculation = _require_result(
+    work_id = required_text(work, key="work_unit_id", stage=f"{slice_.slice_id}:work_create")
+    calculation = require_result(
         cli,
-        ("app", "modelo", "work", "calculate", work_id, "--by", _ACTOR),
+        ("app", "modelo", "work", "calculate", work_id, "--by", ACTOR),
         stage=f"{slice_.slice_id}:work_calculate",
     )
-    calculated_casillas = _expected_casillas_from_result(
+    calculated_casillas = expected_casillas_from_result(
         calculation,
         expected=slice_.expected_casillas,
         stage=f"{slice_.slice_id}:work_calculate",
     )
-    revision_id = _required_text(
+    revision_id = required_text(
         calculation,
         key="calculation_revision_id",
         stage=f"{slice_.slice_id}:work_calculate",
     )
-    verification = _require_result(
+    verification = require_result(
         cli,
-        ("app", "modelo", "work", "verify", revision_id, "--by", _ACTOR),
+        ("app", "modelo", "work", "verify", revision_id, "--by", ACTOR),
         stage=f"{slice_.slice_id}:work_verify",
     )
     if verification.get("granted_verificado_completo") is not True:
@@ -132,15 +132,15 @@ def _run_periodic_slice(
         )
 
     target = output_dir / f"modelo-{slice_.modelo}-{year}-{slice_.period}.boe"
-    _require_result(
+    require_result(
         cli,
-        ("app", "modelo", "export", work_id, "--output", str(target), "--by", _ACTOR),
+        ("app", "modelo", "export", work_id, "--output", str(target), "--by", ACTOR),
         stage=f"{slice_.slice_id}:export",
     )
     if not target.is_file():
         raise RetencionesInstalledCliError(stage=f"{slice_.slice_id}:export", diagnostic_code="export_artifact_missing")
     payload = target.read_bytes()
-    validation = _validate_export(
+    validation = validate_export(
         layout=layouts[slice_.slice_id],
         payload=payload,
         expected=slice_.expected_casillas,

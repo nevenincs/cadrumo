@@ -66,12 +66,13 @@ COMPLETE_NATURAL_PERSON_FLAGS = (
     "--no-iva-cash-accounting-regime-enrolled",
     "--no-iva-voluntary-sii-enrolled",
     "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+    "--no-enrollment-large-company",
 )
 
 
 @pytest.fixture
 def config_check_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated storage/locale backend for the ``config check`` suites."""
+    """Isolated storage and locale backend for the ``config`` command suites."""
 
     with (
         override_settings(cadrumo_output_language="en"),
@@ -80,9 +81,9 @@ def config_check_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
+@pytest.fixture(name="isolated_backend", autouse=True)
 def config_check_isolated_backend(config_check_backend: None) -> None:
-    """Autouse variant of :func:`config_check_backend` for the ``config check`` suites."""
+    """Autouse variant of :func:`config_check_backend` for the ``config`` command suites."""
 
     return config_check_backend
 
@@ -113,7 +114,7 @@ def live_cli_profile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterato
     """
     declare_operator_terminal(monkeypatch)
     overrides = {
-        "cadrumo_local_storage_root": tmp_path / "cadrumo-storage",
+        "cadrumo_storage_root": tmp_path / "cadrumo-storage",
         "cadrumo_secret_passphrase": CREDENTIAL_INPUT,
     }
     with override_settings(**overrides):
@@ -169,6 +170,7 @@ def native_profile_view_server(
     """Host real native profile workers for explicit password-backed CLI reads."""
     if sys.platform != "win32":
         pytest.skip("requires native Windows profile workers")
+    storage_root.mkdir(parents=True, exist_ok=True)
     endpoint = WindowsEndpoint(storage_root=storage_root)
     installation(storage_root=storage_root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
     stop, boot, native = Event(), uuid4(), MemoryNativePort()

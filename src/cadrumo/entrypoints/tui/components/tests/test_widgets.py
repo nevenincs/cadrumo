@@ -16,6 +16,7 @@ import yaml
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
 
+from ...tests.settling import settle
 from ..theme import BASE_CSS, CADRUMO_CSS_TOKENS, tokenised
 from ..widgets import (
     DisclosureGroup,
@@ -40,7 +41,7 @@ class _RequirementHarness(App[None]):
 async def test_requirement_badges_are_distinguishable_by_text_not_colour_alone() -> None:
     app = _RequirementHarness()
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         missing = str(app.query_one("#badge-missing", RequirementBadge).render())
         not_applicable = str(app.query_one("#badge-not-applicable", RequirementBadge).render())
         optional = str(app.query_one("#badge-optional", RequirementBadge).render())
@@ -62,15 +63,15 @@ class _DisclosureHarness(App[None]):
 async def test_disclosure_group_starts_collapsed_and_opens_by_keyboard() -> None:
     app = _DisclosureHarness()
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         group = app.query_one("#group", DisclosureGroup)
         assert group.collapsed is True
         await pilot.press("tab")
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is not None
         assert app.focused.parent is group
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
         assert group.collapsed is False
 
 
@@ -99,13 +100,13 @@ async def test_source_action_card_button_is_reachable_and_pressable_by_keyboard(
     app = _SourceCardHarness()
 
     async with app.run_test(size=(80, 24)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         button = app.query_one("#btn-source-action", Button)
         button.focus()
-        await pilot.pause()
+        await settle(pilot)
         assert app.focused is button
         await pilot.press("enter")
-        await pilot.pause()
+        await settle(pilot)
 
     assert app.pressed_count == 1
 
@@ -142,7 +143,7 @@ async def test_every_grouping_mechanism_separates_its_groups_by_the_same_distanc
 
     app = _Probe()
     async with app.run_test(size=(80, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         measured = {}
         for mechanism, first, second in (
             ("DisclosureGroup", "#group-a", "#group-b"),
@@ -197,7 +198,7 @@ async def test_a_source_card_title_is_separated_from_the_card_above_it() -> None
 
     app = _Probe()
     async with app.run_test(size=(80, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         titles = list(app.screen.query(".cadrumo-source-card-title"))
         margins = [(node.styles.margin.top, node.styles.margin.bottom) for node in titles]
         app.exit(None)
@@ -249,7 +250,7 @@ async def test_no_declared_action_label_wraps_its_control() -> None:
 
     app = _Probe()
     async with app.run_test(size=(80, 24 + 3 * len(labels))) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         heights = {button.id: button.region.height for button in app.screen.query(Button)}
         app.exit(None)
 

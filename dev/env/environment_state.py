@@ -8,7 +8,7 @@ from pathlib import Path
 
 from dev.packaging.command_execution import run_command
 
-from ._install import sync_command, sync_environment
+from .install import sync_command, sync_environment
 
 
 def environment_is_current(repo_root: Path) -> bool:

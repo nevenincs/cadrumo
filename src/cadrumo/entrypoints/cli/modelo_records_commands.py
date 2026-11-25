@@ -20,6 +20,7 @@ from ...application.modelo.action_errors import (
 from ...application.modelo.local_observation_spreadsheet import (
     parse_casilla_value_spreadsheet,
 )
+from ...application.operator_output.text_transport import notice_lines
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
@@ -28,21 +29,21 @@ from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
-from ._filing_chain_payloads import (
+from .common import emit_envelope
+from .filing_chain_payloads import (
     filing_reconciliation_lines,
     filing_reconciliation_notices,
     observation_layers_lines,
 )
-from ._modelo_cli_support import (
+from .modelo_cli_support import (
     bad_parameter_from_error,
     parse_casilla_override,
     validate_work_unit_id,
 )
-from ._modelo_rendering import (
+from .modelo_rendering import (
     advisory_notice,
     filing_record_lines,
 )
-from .common import emit_envelope, notice_lines
 from .modelo_results import (
     FilingRecordLocalObservationResult,
     ModeloRecordListResult,

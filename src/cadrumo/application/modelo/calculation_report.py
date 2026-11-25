@@ -52,10 +52,11 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin, pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.hex import Hex16Str
 from ...core.i18n.render import lookup_translation
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import (
@@ -72,14 +73,15 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ...domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    CalculationSourceRef,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.credit_resolution import CreditResolutionRecord
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
+from .calculation_note_gate import SOURCE_DISAGREEMENT_FINDING_ID_LENGTH
+from .disagreement_words import disagreement_value_text
+from .refusal_door_verdicts import registry_defect_verdict
 from .settlement_casilla import DECLARATION_RESULT_SEMANTIC_ROLES, SETTLEMENT_SEMANTIC_ROLES
 from .work_review import ModeloWorkReviewCasilla
 
@@ -102,7 +104,7 @@ covers cannot silently produce the same digest for a different report.
 """
 
 
-class CalculationReportNoticeUnavailableError(CadrumoError):
+class CalculationReportNoticeUnavailableError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """The catalogue carries no local-calculation statement for the report.
 
     A refusal rather than a blank or a humanised key: the statement is what tells
@@ -179,7 +181,7 @@ class ModeloCalculationReportSourceProvenance(BaseModel):
     """One resolver-level source trace the revision recorded for a casilla.
 
     The report-facing projection of
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationSourceRef`,
+    :class:`~cadrumo.domain.modelos.calculation_revision_sources.CalculationSourceRef`,
     narrowed to what a reader needs in order to recognise the source object
     without learning who it belongs to: which resolver produced the row, the
     upstream taxonomy token it came from, a keyed digest of the reference to the
@@ -331,17 +333,51 @@ class ModeloCalculationReportHeader(BaseModel):
     local_calculation_notice: str = Field(min_length=1)
 
 
+class ModeloCalculationReportResolutionSource(BaseModel):
+    """One source of an accepted disagreement and what it stated."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    role: str = Field(min_length=1)
+    source_family: str = Field(min_length=1)
+    value: str
+
+
+class ModeloCalculationReportResolution(BaseModel):
+    """One acceptance the operator had made of a source disagreement when the report was produced."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    finding_id: Hex16Str
+    box: str = Field(min_length=1)
+    """The figure the sources disagreed on; the casilla for a credit."""
+    sources: tuple[ModeloCalculationReportResolutionSource, ...] = Field(min_length=2)
+    accepted_role: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    resolved_at: UtcInstant
+
+
 class ModeloCalculationReport(BaseModel):
-    """One sealed revision's header facts and its casilla rows.
+    """One sealed revision's header facts, its casilla rows and the resolutions applied to it.
 
     Rows are in the registry's own casilla order, which is its section order and
     casilla numbering.
+
+    ``credit_resolutions`` lists each acceptance of a source disagreement that
+    covered a finding of the revision when the report was produced. The report
+    attests to those resolutions as of its production: a later revocation, or a
+    resolution made afterwards, neither invalidates its signature or digest nor
+    makes a verification of the document fail, because verification checks the
+    document and not the current state of the resolutions. The section is left
+    out of the canonical payload when empty, so a report that applies none has
+    the bytes and the digest it had before the section existed.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     header: ModeloCalculationReportHeader
     rows: tuple[ModeloCalculationReportRow, ...]
+    credit_resolutions: tuple[ModeloCalculationReportResolution, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -359,11 +395,14 @@ class ModeloCalculationReport(BaseModel):
         enum, period -- into its stable string form, so the payload holds no
         Python object whose encoding could vary.
         """
-        return {
+        payload: dict[str, object] = {
             "content_version": CALCULATION_REPORT_CONTENT_VERSION,
             "header": self.header.model_dump(mode="json"),
             "rows": [row.model_dump(mode="json") for row in self.rows],
         }
+        if self.credit_resolutions:
+            payload["credit_resolutions"] = [item.model_dump(mode="json") for item in self.credit_resolutions]
+        return payload
 
     def canonical_bytes(self) -> bytes:
         """Return the report's canonical bytes: the exact input to its digest.
@@ -406,6 +445,7 @@ def local_calculation_report_notice(language: OutputLanguage) -> str:
         raise CalculationReportNoticeUnavailableError(
             translated_message="application.modelo.errors.calculation_report_notice_unavailable",
             context={"report_language": language.value, "translation_key": CALCULATION_REPORT_NOTICE_LOCALE_KEY},
+            precondition_verdict=registry_defect_verdict("calculation_report_notice_text"),
         )
     return notice
 
@@ -484,6 +524,7 @@ def build_modelo_calculation_report(
     provenance_key: CalculationReportProvenanceKey,
     report_language: OutputLanguage,
     exported_at: datetime,
+    credit_resolutions: tuple[CreditResolutionRecord, ...] = (),
 ) -> ModeloCalculationReport:
     """Assemble the calculation report for one sealed revision.
 
@@ -510,6 +551,8 @@ def build_modelo_calculation_report(
         report_language: Language the report's chrome is rendered in, and a fact
             the digest covers.
         exported_at: UTC instant the report was produced.
+        credit_resolutions: The active acceptances that cover a disagreement the
+            revision persisted; the report lists them as of its production.
 
     Returns:
         :class:`ModeloCalculationReport`: The header facts and the casilla rows.
@@ -561,6 +604,26 @@ def build_modelo_calculation_report(
             local_calculation_notice=local_calculation_report_notice(report_language),
         ),
         rows=rows,
+        credit_resolutions=tuple(_report_resolution(record) for record in credit_resolutions),
+    )
+
+
+def _report_resolution(record: CreditResolutionRecord) -> ModeloCalculationReportResolution:
+    fact = record.disagreement
+    return ModeloCalculationReportResolution(
+        finding_id=record.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH],
+        box=fact.key,
+        sources=tuple(
+            ModeloCalculationReportResolutionSource(
+                role=source.role.value,
+                source_family=source.source_family,
+                value=disagreement_value_text(source.value),
+            )
+            for source in fact.sources
+        ),
+        accepted_role=record.accepted_role.value,
+        reason=record.reason,
+        resolved_at=record.resolved_at,
     )
 
 
@@ -572,6 +635,8 @@ __all__ = [
     "CalculationReportValueState",
     "ModeloCalculationReport",
     "ModeloCalculationReportHeader",
+    "ModeloCalculationReportResolution",
+    "ModeloCalculationReportResolutionSource",
     "ModeloCalculationReportRow",
     "ModeloCalculationReportSourceProvenance",
     "build_modelo_calculation_report",

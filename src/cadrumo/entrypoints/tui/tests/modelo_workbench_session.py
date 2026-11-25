@@ -22,14 +22,18 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....application.modelo.carry_family_selection import prior_carry_binding_ids
 from ....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ....application.modelo.edit_admission import ModeloEditRenewalResultV1, renew_modelo_edit_baseline
@@ -57,8 +61,8 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
-from ...operation_composition import build_production_operation_registry
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
+from ...tests.production_operation_registry import production_operation_registry
 from ..modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from ..modelo.workbench.factory import InstalledModeloWorkbench
 
@@ -82,23 +86,14 @@ _BUCKET_ID = "13000000-0000-4000-8000-000000000451"
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _ACTOR = "operator:tui-modelo"
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Workspace"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="00000000T"),
+        UserProfileFact(path="identity.name", value="Test Operator"),
+        UserProfileFact(path="identity.surnames", value="Workspace"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
 )
 
 
@@ -218,6 +213,8 @@ def workbench_read_ports(bucket_id: str, operation: PinnedAuthorityOperation) ->
         calculations=ports.calculation_repository,
         verifications=VerificationReportCatalogueRepository(bucket_id=bucket_id),
         bucket_events=ports.bucket_event_repository,
+        filings=ports.filing_repository,
+        observations=ports.observation_repository,
     )
 
 
@@ -241,6 +238,8 @@ def application_lifecycle_door(
             calculation_catalogue=ports.calculations.load(),
             operation=operation,
             operation_contracts=contracts,
+            observation_repository=ports.observations,
+            filing_catalogue=None if ports.filings is None else ports.filings.load(),
         )
 
     def preflight(submission: ModeloEditSubmissionV1) -> ModeloEditPreflightResultV1:
@@ -249,6 +248,7 @@ def application_lifecycle_door(
             work_catalogue=ports.work_units.load(),
             calculation_catalogue=ports.calculations.load(),
             tax_id_format=runtime_tax_id_format(authority=operation),
+            prior_carry_bindings=prior_carry_binding_ids(operation, submission),
         )
 
     def prerequisite(
@@ -297,6 +297,17 @@ def declaration_of(unit: WorkUnit) -> DeclarationsWorkspaceDeclarationRefV1:
     )
 
 
+@cache
+def _production_public_contracts() -> OperationPublicContractSetV1:
+    """The eagerly composed production registry's public contracts, composed once per process.
+
+    Composing every operation group validates every schema and dominates a
+    workbench's construction; the contract set it yields is immutable and
+    depends on no profile, storage root or authority lease.
+    """
+    return production_operation_registry().public_contract_set
+
+
 def application_workbench(
     unit: WorkUnit,
     *,
@@ -306,7 +317,7 @@ def application_workbench(
     door_override: Callable[[ModeloWorkbenchFormReadV1 | None], ModeloWorkspaceLifecycleDoor] | None = None,
 ) -> InstalledModeloWorkbench:
     """The production workbench of one stored declaration, read and acted on through the application."""
-    contracts = build_production_operation_registry().public_contract_set
+    contracts = _production_public_contracts()
     ports = workbench_read_ports(unit.bucket_id, operation)
     recorded = submissions if submissions is not None else RecordedSubmissions()
 
@@ -342,8 +353,12 @@ def real_workbench(
     modelo: str = "130",
     filing_year: int = 2026,
     period_code: str = "1T",
+    extra_facts: tuple[UserProfileFact, ...] = (),
 ) -> Generator[InstalledModeloWorkbench]:
     """Yield the production reader and actions of one seeded declaration.
+
+    ``extra_facts`` are profile facts the declaration's applicability needs beyond the
+    ready baseline, such as a payer fact the filer states.
 
     Held open as a context manager because the profile runtime must stay live
     while a mounted workbench reads through it. The address picks the SHAPE of
@@ -358,7 +373,7 @@ def real_workbench(
             create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=_READY_PROFILE_FACTS,
+                facts=persona_facts_beneath((*_READY_PROFILE_FACTS, *extra_facts)),
                 created_at=_T0,
                 updated_at=_T0,
                 context=operation.profile_create_context(),

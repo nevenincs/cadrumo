@@ -1,4 +1,11 @@
-"""Execution stages for the existing guarded ledger LLM review workflow."""
+"""Execution stages for the existing guarded ledger LLM review workflow.
+
+A classification proposal the person accepted outside the interactive review,
+from a classification job, is written through the same reviewed decision
+terminal: :func:`apply_reviewed_classification` applies it against the exact
+movement the person accepted it for, and the guarded writer refuses it when
+the movement changed since.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +23,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -31,11 +38,13 @@ from ..operations.registry import OperationSchemaBindingV1, operation_public_sch
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts
 from .id_resolution import resolve_transaction_id
-from .llm_classification import saturate_llm_classification, suggest_evidence_split, suggest_llm_classification
+from .llm_classification import saturate_llm_classification, suggest_llm_classification
 from .llm_classification_ports import (
     LLMClassificationPorts,
+    LLMClassificationSuggestion,
     LLMSplitSuggestion,
 )
+from .llm_evidence_split import suggest_evidence_split
 from .llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,
@@ -44,10 +53,16 @@ from .llm_review_contracts import (
     LedgerLlmReviewResponse,
     LedgerLlmSuggestion,
     bound_ledger_llm_projection,
+    ledger_llm_review_subject,
 )
 from .llm_review_operand import LedgerLlmReviewedOperand
 from .llm_review_results import LedgerLlmExecutionResult, LedgerLlmOperationResult
-from .llm_review_workflow import LlmReviewDecision, LlmReviewInvocationOrigin, execute_reviewed_decision
+from .llm_review_workflow import (
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    LlmReviewResult,
+    execute_reviewed_decision,
+)
 from .llm_review_writer_projection import (
     project_ledger_llm_writer_result,
     validate_ledger_llm_writer_effect,
@@ -97,6 +112,43 @@ def project_captured_ledger_llm_review(operand: LedgerLlmReviewedOperand) -> Led
     )
 
 
+def apply_reviewed_classification(
+    suggestion: LLMClassificationSuggestion,
+    *,
+    bucket_id: str,
+    baseline: Transaction,
+    business_pct: Decimal | None,
+    actor: str,
+    ports: LedgerActionPorts,
+    operation: PinnedAuthorityOperation,
+) -> LlmReviewResult:
+    """Apply one classification the person accepted, through the reviewed decision terminal.
+
+    ``baseline`` is the movement exactly as the person accepted the proposal
+    for it; the guarded writer compares it with the stored row in the same
+    write and refuses a movement that changed since. Nothing here decides
+    whether to apply: the caller passes only what the person accepted.
+
+    Raises:
+        LedgerPersistenceConflictError: The movement changed since ``baseline``.
+        TransactionNotFoundError: The movement is gone.
+        TransactionValidationError: The movement is not active, or the business
+            share does not fit the classification.
+    """
+    with validating_governed_facts(operation):
+        return execute_reviewed_decision(
+            suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+            decision=LlmReviewDecision.APPLY,
+            bucket_id=bucket_id,
+            business_pct=business_pct,
+            reason=suggestion.reason,
+            actor=actor,
+            ports=ports,
+            expected_current=baseline,
+        )
+
+
 def _expected_review_definition_id(request: LedgerLlmReviewRequest) -> str:
     return LEDGER_SPLIT_REVIEW_DEFINITION_ID if request.mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
 
@@ -111,7 +163,7 @@ def _require_review_profile_binding(
     if (
         request.definition_id != definition_id
         or context.identity.definition_id != definition_id
-        or request.subject_ref != profile_operation_subject(profile)
+        or request.subject_ref != ledger_llm_review_subject(request.payload)
         or context.identity.subject_ref != request.subject_ref
         or require_active_bucket_id() != profile
     ):
@@ -181,6 +233,14 @@ def _review_decision(response_action: OperationResponseIntentValue, suggestion: 
     return LlmReviewDecision.APPLY
 
 
+async def _acknowledge_if_cancelled(context: OperationExecutorContext) -> bool:
+    """Stop at a point where nothing was written, when a cancellation is waiting."""
+    if not context.cancellation.cancellation_requested:
+        return False
+    await context.cancellation.acknowledge_cancellation()
+    return True
+
+
 async def _commit_reviewed_decision(
     *,
     context: OperationExecutorContext,
@@ -192,60 +252,73 @@ async def _commit_reviewed_decision(
     response_action: OperationResponseIntentValue,
     decision: LlmReviewDecision,
     actor: str,
-) -> str:
+) -> str | None:
     await context.events.phase("ledger.llm.commit")
 
-    async def commit() -> str:
-        async with context.cancellation.irreversible_section():
-            await context.events.effect(OperationEffect.UNKNOWN)
+    async def commit() -> str | None:
+        entered = False
+        try:
+            async with context.cancellation.irreversible_section():
+                entered = True
+                return await write_and_record()
+        except ValueError:
+            # A cancellation that arrived before the section began refuses its
+            # entry; nothing was written, so the stop is acknowledged instead.
+            if not entered and context.cancellation.cancellation_requested:
+                await context.cancellation.acknowledge_cancellation()
+                return None
+            raise
 
-            def write() -> BaseModel:
-                with validating_governed_facts(context.authority_operation):
-                    return execute_reviewed_decision(
-                        suggestion,
-                        origin=operand.request.origin,
-                        decision=decision,
-                        bucket_id=str(operand.request.profile_id),
-                        business_pct=Decimal(operand.request.business_pct)
-                        if operand.request.business_pct is not None
-                        else None,
-                        reason=operand.request.reason,
-                        actor=actor,
-                        ports=ports.ledger,
-                        settings=ports.settings,
-                        expected_current=baseline,
-                    )
+    async def write_and_record() -> str:
+        await context.events.effect(OperationEffect.UNKNOWN)
 
-            try:
-                written = await asyncio.to_thread(write)
-            except (LedgerPersistenceConflictError, TransactionNotFoundError, TransactionValidationError):
-                await context.events.effect(OperationEffect.NONE)
-                raise
-            effect = validate_ledger_llm_writer_effect(
-                written,
-                operand=operand,
-                baseline=baseline,
-                decision=decision,
-            )
-            await context.events.effect(effect)
+        def write() -> BaseModel:
+            with validating_governed_facts(context.authority_operation):
+                return execute_reviewed_decision(
+                    suggestion,
+                    origin=operand.request.origin,
+                    decision=decision,
+                    bucket_id=str(operand.request.profile_id),
+                    business_pct=Decimal(operand.request.business_pct)
+                    if operand.request.business_pct is not None
+                    else None,
+                    reason=operand.request.reason,
+                    actor=actor,
+                    ports=ports.ledger,
+                    settings=ports.settings,
+                    expected_current=baseline,
+                )
 
-            def project() -> LedgerLlmOperationResult:
-                with validating_governed_facts(context.authority_operation):
-                    return project_ledger_llm_writer_result(
-                        written,
-                        operand=operand,
-                        baseline=baseline,
-                        digest=digest,
-                    )
+        try:
+            written = await asyncio.to_thread(write)
+        except (LedgerPersistenceConflictError, TransactionNotFoundError, TransactionValidationError):
+            await context.events.effect(OperationEffect.NONE)
+            raise
+        effect = validate_ledger_llm_writer_effect(
+            written,
+            operand=operand,
+            baseline=baseline,
+            decision=decision,
+        )
+        await context.events.effect(effect)
 
-            result = await asyncio.to_thread(project)
-            execution = LedgerLlmExecutionResult(
-                identity=context.identity,
-                request=operand.request,
-                response=response_action,
-                result=result,
-            )
-            return await context.operands.put(execution, written_at=now())
+        def project() -> LedgerLlmOperationResult:
+            with validating_governed_facts(context.authority_operation):
+                return project_ledger_llm_writer_result(
+                    written,
+                    operand=operand,
+                    baseline=baseline,
+                    digest=digest,
+                )
+
+        result = await asyncio.to_thread(project)
+        execution = LedgerLlmExecutionResult(
+            identity=context.identity,
+            request=operand.request,
+            response=response_action,
+            result=result,
+        )
+        return await context.operands.put(execution, written_at=now())
 
     return await await_cancellation_complete(commit(), task_name="ledger-llm-reviewed-commit")
 
@@ -302,7 +375,6 @@ class LedgerLlmReviewExecutor:
                     operation=context.authority_operation,
                     transaction_repository=ports.ledger.transaction_repository,
                     read_evidence=payload.read_evidence,
-                    vision_model=payload.vision_model,
                     settings=ports.settings,
                     ports=ports.llm,
                     reviewed_transaction=baseline,
@@ -316,6 +388,10 @@ class LedgerLlmReviewExecutor:
                 )
 
         operand = await asyncio.to_thread(acquire)
+        # The model was asked and nothing was written: a cancellation that
+        # arrived meanwhile stops here, before a review or preview is kept.
+        if await _acknowledge_if_cancelled(context):
+            return None
         if payload.preview:
             digest = sha256_hex(serialize_operation_operand(operand))
             stored = await context.operands.put(operand, written_at=now())
@@ -362,6 +438,8 @@ class LedgerLlmReviewExecutor:
         """Validate the consumed continuation and invoke its original guarded writer."""
         if request.payload.preview:
             raise ValueError("terminal preview has no resumable response")
+        if await _acknowledge_if_cancelled(context):
+            return None
         if not checkpoint.consumed:
             return None
         digest, operand = await _resolve_reviewed_continuation(request, checkpoint, context)
@@ -374,6 +452,8 @@ class LedgerLlmReviewExecutor:
             context,
             supplied=operand.request.actor or str(operand.request.profile_id),
         )
+        if await _acknowledge_if_cancelled(context):
+            return None
         return await _commit_reviewed_decision(
             context=context,
             digest=digest,

@@ -17,7 +17,7 @@ re-implementing them:
   :class:`~domain.calculations.registry.schema_surfaces.CasillaContinuidadEvolutionDefinition`
   entries (the ``casilla_continuidad_evolutions`` field);
 * portal-compatibility tracking reads the revision's declared
-  :class:`~domain.calculations.registry.schema_verification.LiveCrossReferenceDecision` entries
+  :class:`~domain.calculations.registry.schema_live_verification.LiveCrossReferenceDecision` entries
   (surface kind and evidence tier).
 
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
@@ -50,6 +50,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from .authority import ValidatedRegistryAuthority
 from .ids import ModeloId, RevisionId
 from .record_design_coverage import calculation_closure_casilla_ids
+from .revision_order import ordered_revisions
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_base import CalculationClassField, EvidenceTierField
 from .schema_surfaces import CasillaContinuidadEvolutionDefinition
@@ -66,16 +67,6 @@ __all__ = [
     "build_support_matrix_from_directory_views",
     "revision_capability_probe",
 ]
-
-
-def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
-    """Return the revision with the most recent ``valid_from`` for ``modelo``.
-
-    A modelo always declares at least one revision
-    (:meth:`~domain.calculations.registry.schema.ModeloDefinition._validate_revisions`
-    enforces this at load time), so the max is always well-defined.
-    """
-    return max(modelo.revisions.values(), key=lambda revision: revision.valid_from)
 
 
 def _calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str):
@@ -162,7 +153,7 @@ class ModeloRenameRecord(BaseModel):
 class ModeloPortalCompatibilityRef(BaseModel):
     """One declared AEAT-portal cross-reference for a modelo revision.
 
-    Projects a :class:`~domain.calculations.registry.schema_verification.LiveCrossReferenceDecision`
+    Projects a :class:`~domain.calculations.registry.schema_live_verification.LiveCrossReferenceDecision`
     already declared on the revision — the registry's own record of which live
     AEAT surface the modelo has been cross-checked against and under what
     evidence tier.
@@ -249,7 +240,7 @@ def _rename_record(evolution: CasillaContinuidadEvolutionDefinition) -> ModeloRe
 
 
 def _entry_for_modelo(modelo: ModeloDefinition, supported_revision_ids: tuple[RevisionId, ...]) -> ModeloEntry:
-    revision = _latest_revision(modelo)
+    revision = ordered_revisions(modelo)[-1]
     capabilities = revision_capability_probe(revision, modelo_id=modelo.id)
     renames = tuple(_rename_record(evolution) for evolution in revision.casilla_continuidad_evolutions)
     portal_refs = tuple(

@@ -32,11 +32,16 @@ from .models import (
     LedgerInvoiceAddDoorV1,
     LedgerLinkSubmitterV1,
 )
+from .tools import require_unique_tool_keys
 
 if TYPE_CHECKING:
-    from .actividad_asset import ActivityAssetTuiActionsV1
+    from .evidence import LedgerEvidenceReviewListDoorV1
+    from .link_picker import LedgerLinkOptionsDoorV1
     from .models import LedgerRecordDoorsV1
+    from .models_actividad_asset import ActivityAssetTuiActionsV1
     from .own_accounts import LedgerOwnAccountDoorV1
+    from .review import LedgerReviewDoorV1
+    from .tools import LedgerToolV1
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,13 +65,19 @@ class LedgerWorkspaceInjection:
     """
 
     review_action: ActionReference
+    review_door: LedgerReviewDoorV1 | None = None
+    """The registered review read the Review area lists its queue from; absent means the area is not offered."""
     classify_action: ActionReference | None = None
     classification_submitter: LedgerClassificationSubmitterV1 | None = None
     classification_patch_builder: LedgerClassificationPatchBuilderV1 | None = None
     """Pure bounded request construction; absent retains the direct application's typed patch."""
+    link_options_door: LedgerLinkOptionsDoorV1 | None = None
+    """The served entry options a form's link pickers offer; absent means no link picker is offered."""
     import_door: LedgerImportDoorV1 | None = None
     evidence_action: ActionReference | None = None
     evidence_items: tuple[AttachmentReviewItem, ...] | None = None
+    evidence_review_door: LedgerEvidenceReviewListDoorV1 | None = None
+    """The registered read of drafts waiting for review, which the Evidence area lists."""
     link_action: ActionReference | None = None
     link_submitter: LedgerLinkSubmitterV1 | None = None
     invoice_add_door: LedgerInvoiceAddDoorV1 | None = None
@@ -81,15 +92,18 @@ class LedgerWorkspaceInjection:
     """Bucket-bound canonical invoice and transaction detail operations."""
     own_account_door: LedgerOwnAccountDoorV1 | None = None
     """Registered own bank account operations; absent means no account setup affordance."""
+    tools: tuple[LedgerToolV1, ...] = ()
+    """Further screens each area lists; an area with none lists nothing."""
 
     def __post_init__(self) -> None:
-        """Refuse a miswired action."""
+        """Refuse a miswired action or two tools sharing a key."""
         require_canonical_ledger_actions(
             review_action=self.review_action,
             classify_action=self.classify_action,
             evidence_action=self.evidence_action,
             link_action=self.link_action,
         )
+        require_unique_tool_keys(self.tools)
 
 
 __all__ = ["LedgerWorkspaceInjection", "LedgerWorkspaceRefreshDoorV1", "LedgerWorkspaceRefreshV1"]

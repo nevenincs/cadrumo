@@ -21,8 +21,7 @@ filing_year = 2026
 period = "2026 4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
-closes_on = 2027-01-20
-payment_cutoff_on = 2027-01-15
+closes_on = 2027-02-01
 legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-procedure"]
 [[revisions."2026-3t-4t".deadline_windows.applicability_conditions]]

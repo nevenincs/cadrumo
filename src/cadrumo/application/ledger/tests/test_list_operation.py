@@ -10,21 +10,16 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
 from ..list_operation import (
@@ -34,6 +29,7 @@ from ..list_operation import (
     build_ledger_list_definition,
     build_ledger_list_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,13 +73,11 @@ def _access_context(
     admitted_request: OperationAccessRequest | None = None,
 ) -> OperationAccessContext:
     """Build a result-disclosure context for the exact registered contract."""
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=destination_id or uuid4(),
         action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+        destination_id=destination_id,
         admitted_request=admitted_request,
     )
 

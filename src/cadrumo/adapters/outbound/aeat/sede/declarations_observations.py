@@ -29,7 +29,7 @@ from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
 from .....core.config import Settings
 from .....core.export_layout_format import ExportLayoutFormat
-from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
+from .....core.external_constants import JSON_MIME_TYPE
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n.render import tr
 from .....core.modelo import Modelo
@@ -37,6 +37,7 @@ from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.time.clock import now
 from .....domain.calculations.export_field_kind import CasillaFieldKind
+from .....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.errors import (
@@ -44,10 +45,10 @@ from .....domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
-from .....domain.calculations.registry.export_parse import (
-    ParsedExportFieldValue,
-    parse_filed_payload,
-)
+from .....domain.calculations.registry.export_parse import parse_filed_payload
+from .....domain.calculations.registry.export_parse_models import ParsedExportFieldValue
+from .....domain.calculations.registry.filing_kind_marker import FilingKindMarkerRole, filing_kind_marker_role
+from .....domain.calculations.registry.form_codes import form_for_role
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -69,6 +70,10 @@ from .....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
+from .....domain.modelos.filing_kind_evidence import (
+    SubmittedFileFilingKindMarker,
+    submitted_file_marker_reading,
+)
 from .errors import SedeParseError, SedeValidationError
 from .schema import (
     FiledDeclaracionArtefact,
@@ -82,21 +87,22 @@ if TYPE_CHECKING:
 
 __all__ = [
     "FiledDeclaracionArtefactSink",
-    "_declaration_pdf_extraction_profile_provisional",
-    "_observed_casillas_from_declaration_pdf",
-    "_read_guard_policy_from_snapshot",
-    "_register_row_artefact",
-    "_registry_snapshot_for_declaration",
-    "_store_artefact",
-    "_submitted_file_coverage_for_casillas",
     "_submitted_file_extraction_coverage",
-    "_submitted_file_layout_refusal",
-    "_verify_submitted_file_context",
-    "_with_derived_303_compensation_available_observation",
+    "declaration_pdf_extraction_profile_provisional",
     "non_numeric_observed_casillas",
+    "observed_casillas_from_declaration_pdf",
     "observed_casillas_from_submitted_file",
+    "observed_filing_kind_marker_from_submitted_file",
     "published_layout_source_payloads",
+    "read_guard_policy_from_snapshot",
+    "register_row_artefact",
     "registry_observation_from_filed_declaration",
+    "registry_snapshot_for_declaration",
+    "store_artefact",
+    "submitted_file_coverage_for_casillas",
+    "submitted_file_layout_refusal",
+    "verify_submitted_file_context",
+    "with_derived_303_compensation_available_observation",
 ]
 
 EXTERNAL = Settings.external_constants()
@@ -122,18 +128,19 @@ type FiledDeclaracionArtefactSink = Callable[
 ]
 
 
-def _register_row_artefact(
+def register_row_artefact(
     declaration: ExpedientesDeclaration,
     *,
     source_url: AnyHttpUrl,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
+    """Build the register-row artefact and its canonical JSON bytes for a declaration."""
     payload = canonical_json_bytes(declaration.model_dump(mode="json"))
     captured_at = now()
     return (
         FiledDeclaracionArtefact(
             kind="register_row",
             source_url=source_url,
-            content_type=_JSON_MIME_TYPE,
+            content_type=JSON_MIME_TYPE,
             byte_count=len(payload),
             sha256=sha256_hex(payload),
             captured_at=captured_at,
@@ -142,23 +149,25 @@ def _register_row_artefact(
     )
 
 
-def _store_artefact(
+def store_artefact(
     artefact_sink: FiledDeclaracionArtefactSink | None,
     *,
     observation_key: tuple[str, int, Period, str],
     artefact: FiledDeclaracionArtefact,
     body: bytes,
 ) -> FiledDeclaracionArtefact:
+    """Pass an artefact and body to the sink when one is supplied, else return the artefact."""
     if artefact_sink is None:
         return artefact
     return artefact_sink(observation_key, artefact, body)
 
 
-def _registry_snapshot_for_declaration(
+def registry_snapshot_for_declaration(
     declaration: ExpedientesDeclaration,
     *,
     operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
+    """Return the registry snapshot for a declaration or refuse when none exists."""
     try:
         return operation.snapshot(
             declaration.modelo,
@@ -193,7 +202,11 @@ def published_layout_source_payloads(
     return {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
 
 
-def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
+def read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
+    """Derive the declarations read guard policy from the snapshot's live cross reference.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
@@ -214,7 +227,7 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     )
 
 
-def _observed_value_kind(value: object) -> CasillaValueKind:
+def observed_value_kind(value: object) -> CasillaValueKind:
     """Classify an already-parsed casilla value by how a reader should treat it.
 
     This is the same dispatch :func:`_observed_value_token` makes when it decides
@@ -260,7 +273,7 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     the faithful reading there, and the raw token is the faithful reading only
     where the parser's own conversion discards the artefact's spelling.
     """
-    if _observed_value_kind(casilla.value) is CasillaValueKind.BOOLEAN:
+    if observed_value_kind(casilla.value) is CasillaValueKind.BOOLEAN:
         return casilla.raw
     return str(casilla.value)
 
@@ -309,6 +322,7 @@ def observed_header_facts_from_submitted_file(
             body,
             sources=snapshot.sources,
             source_payloads=source_payloads,
+            casillas=snapshot.revision.casillas,
         )
     except RegistryValidationError:
         return ()
@@ -338,6 +352,52 @@ def observed_header_facts_from_submitted_file(
     return tuple(facts)
 
 
+def observed_filing_kind_marker_from_submitted_file(
+    *,
+    snapshot: RegistrySnapshot,
+    body: bytes,
+    operation: PinnedAuthorityOperation,
+) -> SubmittedFileFilingKindMarker | None:
+    """Return the filing-kind readings AEAT's submitted fichero states, blank included.
+
+    Unlike :func:`observed_header_facts_from_submitted_file`, a blank marker is
+    recorded: the record design gives the blank a meaning (not a
+    complementaria), so dropping it would make "blank" and "not read" the same.
+    ``None`` means the marker was not read: the payload did not parse against
+    the pinned layout, or the layout declares no single declaration-level marker.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
+    resolved = resolve_export_layout(snapshot)
+    source_payloads = published_layout_source_payloads(snapshot=snapshot, operation=operation)
+    try:
+        parsed = parse_filed_payload(
+            resolved.layout,
+            body,
+            sources=snapshot.sources,
+            source_payloads=source_payloads,
+            casillas=snapshot.revision.casillas,
+        )
+    except RegistryValidationError:
+        return None
+    bindings_by_id = revision_bindings_by_id(snapshot.revision)
+    markers: list[ParsedExportFieldValue] = []
+    for field_value in parsed.fields:
+        definition = resolved.fields_by_id.get(field_value.field_id)
+        if definition is None:
+            continue
+        role = filing_kind_marker_role(definition, bindings_by_id=bindings_by_id)
+        if role is FilingKindMarkerRole.DECLARATION_MARKER:
+            markers.append(field_value)
+    if len(markers) != 1:
+        return None
+    (marker,) = markers
+    return SubmittedFileFilingKindMarker(
+        declaration_marker=submitted_file_marker_reading(marker.raw, source_locator=marker.source_locator),
+    )
+
+
 def observed_casillas_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
@@ -358,15 +418,16 @@ def observed_casillas_from_submitted_file(
             body,
             sources=snapshot.sources,
             source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
+            casillas=snapshot.revision.casillas,
         )
     except RegistryValidationError as exc:
-        raise _submitted_file_layout_refusal(
+        raise submitted_file_layout_refusal(
             snapshot=snapshot,
             declaration=declaration,
             artefact=artefact,
             reason=str(exc),
         ) from exc
-    _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
+    verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
     row_casilla_ids = row_binding_casilla_ids_by_field(snapshot.revision, resolved.layout)
     observations: list[ObservedCasillaValue] = []
     for casilla in parsed.fields:
@@ -377,7 +438,7 @@ def observed_casillas_from_submitted_file(
             ObservedCasillaValue(
                 casilla_id=casilla_id,
                 value=_observed_value_token(casilla),
-                value_kind=_observed_value_kind(casilla.value),
+                value_kind=observed_value_kind(casilla.value),
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,
@@ -388,7 +449,7 @@ def observed_casillas_from_submitted_file(
     return tuple(observations)
 
 
-def _submitted_file_layout_refusal(
+def submitted_file_layout_refusal(
     *,
     snapshot: RegistrySnapshot,
     declaration: ExpedientesDeclaration,
@@ -409,6 +470,8 @@ def _submitted_file_layout_refusal(
     The refusal names the modelo, the resolved revision and the parser's own
     reason -- which identifies the record the parse stopped on -- so the next
     reader can act on it rather than rediscover it.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return SedeParseError(
         f"submitted-file artefact {artefact.sha256[:16]} for modelo {snapshot.modelo.id} "
@@ -442,7 +505,7 @@ def _submitted_file_extraction_coverage(
     return len(observed_casillas.intersection(expected)) / len(expected) if expected else 0.0
 
 
-def _submitted_file_coverage_for_casillas(
+def submitted_file_coverage_for_casillas(
     *,
     snapshot: RegistrySnapshot,
     body: bytes,
@@ -458,6 +521,8 @@ def _submitted_file_coverage_for_casillas(
     otherwise the parsed export fields are scored against the resolved layout's
     ``fields_by_casilla`` map. A layout that will not resolve raises rather than
     scoring, so a modelo whose layout is missing cannot report full coverage.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     resolved_layout = resolve_export_layout(snapshot)
     if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY:
@@ -482,7 +547,7 @@ def _submitted_file_coverage_for_casillas(
     )
 
 
-def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -> bool:
+def declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -> bool:
     """Report whether any ``declaracion_pdf`` profile in ``snapshot`` is unconfirmed.
 
     A profile with ``provisional_pending_specimen = true`` has its
@@ -495,6 +560,8 @@ def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) 
     disclosure that the layout itself is unconfirmed. Callers stamp this signal
     into observation metadata (never silently) so an operator inspecting a live
     filed-declaration capture can see the extraction is not yet specimen-backed.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return any(
         profile.provisional_pending_specimen
@@ -503,12 +570,16 @@ def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) 
     )
 
 
-def _observed_casillas_from_declaration_pdf(
+def observed_casillas_from_declaration_pdf(
     *,
     snapshot: RegistrySnapshot,
     declaration: ExpedientesDeclaration,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
+    """Parse a declaration PDF in memory into observed casilla values against a snapshot.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     declaration_period = declaration.period.registry_token
     try:
         # The decrypted declaration bytes are parsed entirely in memory, including
@@ -546,7 +617,7 @@ def _observed_casillas_from_declaration_pdf(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
                 value=str(casilla.printed_value),
-                value_kind=_observed_value_kind(casilla.printed_value),
+                value_kind=observed_value_kind(casilla.printed_value),
                 source_artefact_kind="declaration_pdf",
                 source_locator=f"page:{casilla.source_page}:casilla:{casilla.casilla_id}",
                 confidence=casilla.extraction_confidence,
@@ -566,12 +637,13 @@ def _observed_casillas_from_declaration_pdf(
     return tuple(observations)
 
 
-def _verify_submitted_file_context(
+def verify_submitted_file_context(
     fields_by_id: Mapping[str, ExportFieldDefinition],
     parsed_fields: tuple[ParsedExportFieldValue, ...],
     *,
     declaration: ExpedientesDeclaration,
 ) -> None:
+    """Check that a submitted file's modelo, year and period match the declaration."""
     expected = {
         "modelo": declaration.modelo,
         "filing_year": str(declaration.ejercicio),
@@ -833,14 +905,16 @@ def _m303_compensation_source_metadata(
     )
 
 
-def _with_derived_303_compensation_available_observation(
+def with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
     *,
     operation: PinnedAuthorityOperation,
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from canonical filed casillas."""
     target_id = M303_COMPENSATION_AVAILABLE_CASILLA
-    if observation.modelo != Modelo("303") or any(casilla.casilla_id == target_id for casilla in observation.casillas):
+    if observation.modelo != form_for_role("iva.periodic") or any(
+        casilla.casilla_id == target_id for casilla in observation.casillas
+    ):
         return observation
     values = _m303_compensation_source_values(observation)
     # A fetched AEAT filing carries casillas only, and the compensación /
@@ -869,7 +943,7 @@ def _with_derived_303_compensation_available_observation(
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(derivation.available),
-        value_kind=_observed_value_kind(derivation.available),
+        value_kind=observed_value_kind(derivation.available),
         source_artefact_kind=source_artefact_kind,
         source_locator=source_locator,
         confidence=1.0,

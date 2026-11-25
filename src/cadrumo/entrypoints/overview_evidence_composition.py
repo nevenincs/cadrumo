@@ -20,7 +20,8 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ..application.calculations.revision_carry_gate import revision_carry_outcome
-from ..application.overview.calendar import build_overview_calendar_events, calendar_events_from_modelo_records
+from ..application.operator_actions.catalogue import next_action
+from ..application.overview.calendar_events import build_overview_calendar_events, calendar_events_from_modelo_records
 from ..application.overview.calendar_evidence import no_aeat_history_notice
 from ..application.overview.calendar_models import (
     OverviewCalendarEvent,
@@ -51,6 +52,10 @@ if TYPE_CHECKING:
     from ..domain.user_profile.values import UserProfileRecord
 
 logger = get_logger(__name__)
+
+_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_NOTICE_CODE = "deadline.windows_unavailable.explain"
+_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_LOCALE_KEY = "cli.overview.warning.explain_deadline_windows_unavailable"
+_OVERVIEW_STATUS_ACTION_ID = "operator.overview.status"
 
 
 def _justificante_capture_snapshots(bucket_id: str):
@@ -197,7 +202,7 @@ def local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notic
     """
     try:
         from ..application.modelo.work_lifecycle import list_work_units
-        from .adapter_composition import build_work_lifecycle_ports
+        from .adapter_composition_work_ports import build_work_lifecycle_ports
 
         return list_work_units(
             bucket_id=bucket_id,
@@ -258,6 +263,21 @@ def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | N
     return notice
 
 
+def overview_explain_deadline_windows_unavailable_notice(*, modelo: str, year: int) -> Notice:
+    """Say that the registry has no deadline windows, so an absent schedule or lateness is unknown.
+
+    Without it an explanation with no scheduling rationale and no out-of-plazo
+    warning reads as an on-time filing.
+    """
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_NOTICE_CODE,
+        message=tr(_EXPLAIN_DEADLINE_WINDOWS_UNAVAILABLE_LOCALE_KEY, modelo=modelo, year=year),
+        action=next_action(_OVERVIEW_STATUS_ACTION_ID),
+        context={"modelo": modelo, "filing_year": str(year)},
+    )
+
+
 def live_censo_verified_profile_keys(record: UserProfileRecord | None) -> tuple[str, ...]:
     """Return profile paths whose current value was stamped from live censo sync.
 
@@ -301,11 +321,12 @@ def local_calendar_filing_evidence(
         justificante_captures = _justificante_capture_snapshots(bucket_id)
         # Enrolled data-root location, not a hardcoded literal: this store holds
         # filed-declaration evidence and must move with the operator's
-        # CADRUMO_LOCAL_STORAGE_ROOT like every other durable output.
-        from ..core.config import load_settings
+        # CADRUMO_STORAGE_ROOT like every other durable output.
+        from ..core.storage_taxonomy import StorageCategory
+        from ..core.storage_taxonomy_locations import storage_path
 
         filed_observation_store = FiledDeclaracionObservationStore(
-            load_settings().cadrumo_filed_declarations_dir,
+            storage_path(StorageCategory.FILED_DECLARATIONS),
         )
         filed_declaration_observations, verified_filed_artefact_csvs = (
             _calendar_verified_filed_declaration_observations(

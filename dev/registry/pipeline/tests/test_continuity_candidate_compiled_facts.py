@@ -24,19 +24,21 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.loader import load_modelo_directory
-from .._tree_validation import GeneratedExportTreeValidationContext, _validated_target_snapshot
 from ..candidate_staging import stage_generated_export_candidate
-from ..cli import supporting_modelos
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
+from ..published_edition_staging import supporting_modelos
+from ..tree_validation import GeneratedExportTreeValidationContext, validated_target_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "210"
-_REVISION = "2026-y-siguientes"
-_FILING_YEAR = 2026
+_OPEN_ENDED = open_ended_revision(_MODELO)
+_REVISION = str(_OPEN_ENDED.id)
+_FILING_YEAR = _OPEN_ENDED.valid_from.year
 _PERIOD = "EVENT-1"
 _RETIRED_PROVIDER_FACT_ID = "lirpf-art-101:retencion-administrador-general"
 _RETIRED_PROVIDER_FACT_FILE = "0001-lirpf-art-101-retencion-administrador-general.toml"
@@ -72,7 +74,7 @@ def _validate(candidate_root: Path, witness: Path) -> str:
         continuity_metadata_modelo_root=witness,
         required_grade=RegistryAuthorityGrade.CALCULATION,
     )
-    snapshot = _validated_target_snapshot(
+    snapshot = validated_target_snapshot(
         context=context,
         registry_root=candidate_root,
         source_root=bundled_path(),

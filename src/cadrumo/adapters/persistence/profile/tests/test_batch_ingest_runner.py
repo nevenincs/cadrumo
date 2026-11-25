@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.inbound.einvoice.shape import probe_document_shape
+from cadrumo.adapters.outbound.llm.tests.model_run_support import serving_agent
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
@@ -37,24 +39,18 @@ from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from cadrumo.application.provisioning import (
-    AcceleratorDevice,
-    AcceleratorReading,
-    HardwareProfile,
-    SystemMemoryReading,
-    probe_hardware_profile,
-)
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
-from cadrumo.core.config import Settings, load_settings, override_settings
+from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
+from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.hardware import AcceleratorKind
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
+from .invoice_confirmation_test_support import invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -80,7 +76,7 @@ _POISON = "adversarial_malformed.pdf"
 _SCAN = "scanned_invoice_from_commons_1.pdf"
 
 _GIB = 1024**3
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 
 @pytest.fixture
@@ -107,8 +103,9 @@ def _batch_ports(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        document_shape_probe=probe_document_shape,
     )
-    return evidence_ports, _invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
+    return evidence_ports, invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
 
 
 def _service(profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation) -> PurchaseInvoiceEvidenceService:
@@ -122,15 +119,14 @@ def _run_batch(
     sources: list[Path],
     direction: InvoiceKind = InvoiceKind.RECEIVED,
     settings: Settings | None = None,
-    hardware_profile: HardwareProfile | None = None,
+    run_refusal: ModelRunRefusalCode | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
 ) -> BatchRunResult:
     """Run the application batch through ports composed by this outer test.
 
-    Without explicit settings the run reads through the loopback reader, never
-    the host's runtime: the profile's settings snapshot is aligned to the served
-    endpoint and to the models that endpoint reports installed, so the outcome
-    cannot depend on which models this machine happens to have pulled.
+    Without explicit settings the run reads through the loopback reader's
+    agent, never the host's runtime, which refuses every run at its start with
+    ``run_refusal`` when one is given.
     """
     if settings is not None:
         return _run_batch_with(
@@ -138,36 +134,14 @@ def _run_batch(
             sources=sources,
             direction=direction,
             settings=settings,
-            hardware_profile=hardware_profile,
             on_item=on_item,
         )
-    with serving_a_loopback_reader(replies=()):
-        served = load_settings()
-        # Admission inputs are pinned to their declared defaults, so a host's
-        # local configuration cannot open or close the lane under test.
-        declared = {
-            name: Settings.model_fields[name].default
-            for name in (
-                "cadrumo_llm_contention_safety_margin_bytes",
-                "cadrumo_llm_contention_check_override",
-                "cadrumo_llm_model_runtime_memory_floor_bytes",
-                "cadrumo_llm_local_inference_concurrency",
-            )
-        }
-        aligned = runtime.settings.model_copy(
-            update={
-                **declared,
-                "cadrumo_llm_ollama_chat_url": served.cadrumo_llm_ollama_chat_url,
-                "cadrumo_llm_ollama_text_model": served.cadrumo_llm_ollama_text_model,
-                "cadrumo_llm_ollama_vision_model": served.cadrumo_llm_ollama_vision_model,
-            },
-        )
+    with serving_a_loopback_reader(replies=(), run_refusal=run_refusal):
         return _run_batch_with(
             runtime,
             sources=sources,
             direction=direction,
-            settings=aligned,
-            hardware_profile=hardware_profile,
+            settings=runtime.settings,
             on_item=on_item,
         )
 
@@ -178,7 +152,6 @@ def _run_batch_with(
     sources: list[Path],
     direction: InvoiceKind,
     settings: Settings,
-    hardware_profile: HardwareProfile | None,
     on_item: Callable[[BatchItemResult], None] | None,
 ) -> BatchRunResult:
     period = default_invoice_extraction_period()
@@ -195,29 +168,18 @@ def _run_batch_with(
             operation=operation,
             legends=legends,
             on_item=on_item,
-            profile=hardware_profile,
         )
 
 
-def _measurable_headroom() -> HardwareProfile:
-    """A machine whose free memory is readable and ample, so admission admits.
+#: The agent's answer when the selected model does not fit this computer's free memory.
+_DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
 
-    Injected rather than probed, and that is the point. The host running these
-    tests reports no readable accelerator, so its admission check fails CLOSED —
-    correctly. Left to the host, every gate below would measure the pause path
-    and none would measure the behaviour it names.
-    """
-    return probe_hardware_profile(
-        memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
-        accelerator=AcceleratorReading(
-            kind=AcceleratorKind.NVIDIA_CUDA,
-            devices=(AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=12 * _GIB),),
-        ),
-    )
+#: The roles invoice evidence extraction reads with, text layer first.
+_EXTRACTION_READER_ROLES = (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
 
 
 def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
-    return _run_batch(profile, sources=[folder], hardware_profile=_measurable_headroom())
+    return _run_batch(profile, sources=[folder])
 
 
 def test_a_poisoned_document_does_not_end_the_run(
@@ -247,9 +209,9 @@ def test_the_refused_row_says_what_was_wrong_with_that_document(
     result = _run(runtime_profile, batch_dir)
     poison = next(item for item in result.items if item.source_name == _POISON)
 
-    assert poison.refusal_code is not None and poison.refusal_code
+    assert poison.refusal_code == "not_readable"
     assert poison.refusal_verdict is not None, "a refusal must name the condition that failed"
-    assert poison.refusal_verdict.failed_condition_id
+    assert poison.refusal_verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE.value
     facts = {key: value for evidence in poison.refusal_verdict.evidence for key, value in evidence.values.items()}
     assert facts, "a refusal an operator cannot act on is barely better than a silent drop"
 
@@ -369,11 +331,10 @@ def test_an_item_that_failed_to_read_is_retried_rather_than_stranded(
 ) -> None:
     """Evidence-without-draft is an incomplete item, not a completed one.
 
-    The subtle half of idempotency. The poisoned document's evidence record IS
-    written on the first pass — the bytes attach fine, it is the READ that
-    fails — so a runner treating "evidence exists" as completion would report
-    it as an untroubled ``no_op`` on every later run and never attempt it
-    again. It must stay a visible refusal.
+    The subtle half of idempotency. The poisoned document is refused before
+    custody on every pass, so a runner that reported "nothing new to do" for a
+    document it holds no evidence for would hide it forever. It must stay a
+    visible refusal.
     """
     _run(runtime_profile, batch_dir)
     second = _run(runtime_profile, batch_dir)
@@ -513,35 +474,37 @@ def test_the_same_document_under_two_directions_is_two_records(
     assert len(service.list_all(bucket_id=_BUCKET_ID)) == 2, "issued and received are genuinely two records"
 
 
+@pytest.mark.parametrize("direction", [InvoiceKind.RECEIVED, InvoiceKind.ISSUED])
+def test_the_stored_draft_carries_the_direction_the_import_was_declared_under(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+    direction: InvoiceKind,
+) -> None:
+    """The review opens on the operator's own choice, beside the reading's untouched suggestion.
+
+    A structured record states no direction, so the reading suggests none; the
+    declared kind is therefore the only statement the draft has, and it must be
+    kept on the stored record rather than dying in the idempotency key.
+    """
+    folder = tmp_path / "declared"
+    folder.mkdir()
+    (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
+
+    _run_batch(runtime_profile, sources=[folder], direction=direction)
+
+    (stored,) = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert stored.declared_kind is direction
+    assert stored.draft.suggested_kind is None
+
+
 class TestInferencePacing:
     """A contended machine must cost the batch its readable items, not its whole run.
 
-    Contention is produced from **injected measurements** driven through the real
-    `assess_model_load_contention`, which is the same seam that primitive's own
-    suite uses. Nothing here substitutes the admission decision: the production
-    function computes the refusal, from a hardware profile that states a
-    shortfall rather than one asserting the answer.
+    The agent owns load admission: it refuses the run at its start when the
+    selected model does not fit the free memory. That refusal is the only
+    double here, at the agent-service boundary; the dispatch mapping and the
+    batch's pacing are the production code.
     """
-
-    @staticmethod
-    def _contended() -> HardwareProfile:
-        """A machine with a real accelerator whose free figure cannot be read.
-
-        This shape rather than a small-free-memory one, because selection and
-        admission share the free-memory bar: a machine too small to admit a
-        model is also too small to select one, so it never reaches the pacing
-        decision at all. An unreadable free figure is the reachable state where
-        a model IS selected and the load is still refused — "could not tell" is
-        not evidence of headroom, and refusing it is the primitive's fail-closed
-        core.
-        """
-        return probe_hardware_profile(
-            memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
-            accelerator=AcceleratorReading(
-                kind=AcceleratorKind.NVIDIA_CUDA,
-                devices=(AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=None),),
-            ),
-        )
 
     def test_a_contended_machine_still_completes_every_deterministic_item(
         self,
@@ -561,7 +524,7 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            run_refusal=_DOES_NOT_FIT,
         )
 
         statuses = {item.source_name: item.status for item in result.items}
@@ -582,15 +545,13 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            run_refusal=_DOES_NOT_FIT,
         )
 
         assert [item.status for item in result.items] == ["paused"] * 3
         assert result.inference_pause is not None, "three paused documents must carry one stated cause"
-        assert result.inference_pause.precondition_verdict.failed_condition_id == (
-            ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value
-        )
-        assert result.inference_pause.facts["binding_free_measured"] is False
+        refusal_facts = result.inference_pause.precondition_verdict.evidence[0].values
+        assert refusal_facts["model_run_refusal"] == _DOES_NOT_FIT.value
         # No per-item refusal text: the model forbids a reason under a non-refused
         # status, so this also proves the pause did not smuggle one in per row.
         assert all(item.refusal_verdict is None for item in result.items)
@@ -611,7 +572,7 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            run_refusal=_DOES_NOT_FIT,
         )
 
         assert not result.any_failed, "a deferred document has not failed"
@@ -631,8 +592,8 @@ class TestInferencePacing:
         folder.mkdir()
         (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
 
-        def _over_the_folder(profile: HardwareProfile) -> BatchRunResult:
-            """Run the same folder twice, varying only the hardware it sees.
+        def _over_the_folder(refusal: ModelRunRefusalCode | None) -> BatchRunResult:
+            """Run the same folder twice, varying only whether the agent refuses the load.
 
             Spelled out rather than splatted from a shared dict, which widened
             every argument to the union of all of them and checked none of them.
@@ -640,31 +601,30 @@ class TestInferencePacing:
             return _run_batch(
                 runtime_profile,
                 sources=[folder],
-                hardware_profile=profile,
+                run_refusal=refusal,
             )
 
-        paused = _over_the_folder(self._contended())
-        # The contention clears; the same folder is re-run against a new
-        # measured outcome.
-        later = _over_the_folder(_measurable_headroom())
+        paused = _over_the_folder(_DOES_NOT_FIT)
+        # The memory frees up; the same folder is re-run and the agent loads.
+        later = _over_the_folder(None)
 
         assert paused.items[0].status == "paused"
-        assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"
+        assert later.items[0].status != "paused", "once the model fits, the deferred item must be attempted"
 
-    def test_a_machine_with_no_reader_pauses_every_document_on_one_typed_reason(
+    def test_a_role_with_no_selection_spends_one_document_and_pauses_the_rest_on_one_typed_reason(
         self,
         runtime_profile: TestRuntimeProfile,
         tmp_path: Path,
     ) -> None:
         """The other way the lane closes, and the one the operator meets most.
 
-        The reader is made genuinely unreachable by pointing the runtime at a
-        closed port — a real failure of the real client, not a substituted one.
-        Admission has nothing to refuse here (the machine has headroom). The
-        per-role reader probe already proves the runtime unreachable before any
-        document is spent, so no document pays for the discovery: every one is
-        deferred, and the run carries the typed reason once. An unavailable
-        machine is not an unreadable document, which a refusal would conflate.
+        The agent service answers the vision role's lookup with no selection,
+        before anything is sent. The first document of each role learns it and
+        is refused with that typed verdict; it closes the role, so every later
+        document of that role is deferred on the stated cause rather than
+        refused again. A role with no
+        selection is not an unreadable document, which a refusal per document
+        would conflate.
 
         Documents that need no model still complete on a closed lane; that half
         is pinned by
@@ -675,30 +635,32 @@ class TestInferencePacing:
         for name in (_SCAN, "com_2026_0005_camera_photo.jpg", "commons_invoice_1.jpg"):
             (folder / name).write_bytes((_CORPUS / name).read_bytes())
 
-        # Port 1 on loopback: reserved, never listening, so the client's connect
-        # genuinely fails rather than being told to fail.
-        with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-            result = _run_batch(
-                runtime_profile,
-                sources=[folder],
-                settings=load_settings(),
-                hardware_profile=_measurable_headroom(),
-            )
+        with serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+            result = _run_batch(runtime_profile, sources=[folder], settings=load_settings())
 
-        statuses = [item.status for item in result.items]
-        assert statuses == ["paused", "paused", "paused"], (
-            f"no document may be spent on a known-absent reader: {statuses}"
-        )
-        # The item model forbids a reason under a non-refused status, so each row
-        # is tied to the run's one stated cause by needing the closed lane.
-        assert all(item.refusal_verdict is None for item in result.items), "a paused item carries no per-item refusal"
+        refused = [item for item in result.items if item.status == "refused"]
+        paused = [item for item in result.items if item.status == "paused"]
+        # Each reader role learns it once: at most one document per role is spent.
+        assert 1 <= len(refused) <= len(_EXTRACTION_READER_ROLES), [item.status for item in result.items]
+        assert paused, "the rest wait on the closed roles"
+        assert len(refused) + len(paused) == 3
+        assert service.runs == [], "nothing is sent for a role with no selection"
+        for item in refused:
+            assert item.refusal_verdict is not None
+            values = {
+                key: value for evidence in item.refusal_verdict.evidence for key, value in evidence.values.items()
+            }
+            assert values["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+        assert all(item.refusal_verdict is None for item in paused), "a paused item carries no per-item refusal"
         assert all(item.needed_inference for item in result.items)
         assert result.inference_pause is not None
-        assert result.inference_pause.precondition_verdict.failed_condition_id == (
-            ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
-        )
-        assert result.inference_pause.facts["runtime_reachable"] is False
-        assert result.inference_pause.facts["runtime_url"] == "http://127.0.0.1:1/api/chat"
+        stated = {
+            key: value
+            for item in result.inference_pause.precondition_verdict.evidence
+            for key, value in item.values.items()
+        }
+        assert stated["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+        assert stated["role_selection_required"] is True
 
     def test_a_document_needing_a_reader_is_read_when_one_is_there(
         self,
@@ -751,7 +713,6 @@ class TestInferencePacing:
                 runtime_profile,
                 sources=[folder],
                 settings=load_settings(),
-                hardware_profile=_measurable_headroom(),
             )
 
         assert result.inference_pause is None, "a reachable reader must leave the lane open"
@@ -771,7 +732,7 @@ class TestInferencePacing:
     ) -> None:
         """Positive control for the whole class: pacing must not fire on work needing no model.
 
-        Deliberately run on the CONTENDED profile. Nothing here needs a reader,
+        Deliberately run with an agent that refuses every load. Nothing here needs a reader,
         so a closed lane is irrelevant to it — and a run that paused these
         anyway would be pacing on the machine's state rather than on the work's
         actual needs.
@@ -784,10 +745,10 @@ class TestInferencePacing:
         result = _run_batch(
             runtime_profile,
             sources=[folder],
-            hardware_profile=self._contended(),
+            run_refusal=_DOES_NOT_FIT,
         )
 
-        assert result.inference_pause is None, "a run with no model in its future must not probe the hardware"
+        assert result.inference_pause is None, "a run with no model in its future must not ask the agent"
         assert not result.any_deferred
         assert all(item.status != "paused" for item in result.items)
 

@@ -11,7 +11,7 @@ from dev.registry.compiler.record_design_schema import (
 from .casilla_shard_design import group_comment
 
 
-def _render_row(
+def render_row(
     *,
     members: Sequence[RecordDesignField],
     revision_id: str,
@@ -24,6 +24,7 @@ def _render_row(
     data_type: str,
     legal_refs: str,
 ) -> str:
+    """Render one casilla row as registry TOML from its record design field."""
     segmento_line = f'segmento = "{segmento}"\n' if (segmento is not None and segmento) else ""
     return (
         f"{group_comment(members, caption)}\n"
@@ -39,7 +40,7 @@ def _render_row(
     )
 
 
-def _filename_stem(block: str) -> str:
+def filename_stem(block: str) -> str:
     """The part of a rendered row's id that names it inside its file.
 
     Record-oriented ids are ``<SEGMENTO>:<number>`` and the segmento is already

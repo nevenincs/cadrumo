@@ -1,0 +1,28 @@
+[fact]
+fact_id = "cnae-classification-catalogue"
+family = "mapping"
+
+# The classifications of economic activities a Modelo 202 design names for the
+# C.N.A.E. de la actividad principal of page 01 (2025 design position 118, Num
+# 4), with the names the design prints. Nota 12 of the 2025 design names both:
+# "Ejercicio 2025: CNAE-2009", "Ejercicio 2026 y ss: CNAE-2025". A code is a
+# code of one classification only; no correspondence between the two is
+# declared, so none is ever applied.
+[[fact.variants]]
+variant_id = "cnae-classification-catalogue:design"
+date_axis = "filing_period"
+source_refs = ["aeat-dr-202-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-202-2025"
+required_text = ["Nota 12", "Ejercicio 2025: CNAE-2009", "Ejercicio 2026 y ss: CNAE-2025"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "codes", value = "cnae-2009,cnae-2025" },
+  { key = "name.cnae-2009", value = "CNAE-2009" },
+  { key = "name.cnae-2025", value = "CNAE-2025" },
+]

@@ -8,7 +8,7 @@ root for coarse handling or branch on the specific subclasses.
 
 from __future__ import annotations
 
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 
 class AttachmentError(CadrumoError):
@@ -19,7 +19,7 @@ class AttachmentError(CadrumoError):
     """
 
 
-class AttachmentValidationError(AttachmentError):
+class AttachmentValidationError(TerminalPreconditionErrorMixin[object], AttachmentError):
     """Raised when an attachment payload fails domain validation.
 
     Used both by pydantic-driven validation on :class:`domain.attachments.models.Attachment`

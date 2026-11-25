@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..advisory import audit_dead_code
 from ..report import Status, audit_layering

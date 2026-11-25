@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#rate-box-evidence-assertion'
 date: '2026-08-07'
-modified: '2026-10-07'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:122461d8086e8df76b53bc77a51dbfaa5b723422cfe050ae0f50ea4acf8ad040'
+body_hash: 'sha256:6eddb5237627f37fd1fabe8746c31a21c8366efd7c07e9364496624fe16640cb'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-research]]"
   - '[[2026-10-07-broad-test-failure-repair-rate-box-controls-adr]]'
@@ -98,10 +98,9 @@ covers that case by not discriminating, which is sufficient for this decision
 and adds no new expressiveness.
 
 The rate boxes depend on the registry rate catalogue for grounding, and that
-catalogue currently resolves only 2024 while the Modelo 390 revision declares a
-span beginning 2010. This does not block the decision, because the roles split
+catalogue currently holds published rates for only part of the span the Modelo 390 revision declares. This does not block the decision, because the roles split
 identically whatever the catalogue covers, but it bounds how far back the
-rate-specific boxes can be populated. It is tracked separately and deliberately
+rate-specific boxes can be grounded at filing grade; outside the published rates they resolve to the nearest published rate at calculation grade. It is tracked separately and deliberately
 not resolved here.
 
 This record governs the Reg. ordinario block. The four unmodelled régimen blocks
@@ -115,7 +114,7 @@ shape double-counts.
 
 Modelo 390 addresses its export slots by semantic casilla id (`iva.anual.*`)
 while the AEAT record design addresses them by official box number. The two sets
-do not intersect at all: the bundled 2024 design yields 311 distinct box numbers
+do not intersect at all: the bundled design yields 311 distinct box numbers
 and the layout declares none of them. The correspondence exists only as a
 position — the offset a field occupies inside an export record — and resolving
 it requires also disambiguating which régimen segment the record belongs to,

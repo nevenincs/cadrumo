@@ -48,7 +48,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.access_contracts import KEY_ROTATION_MAXIMUM_OVERLAP
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
@@ -57,6 +57,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
@@ -85,12 +86,12 @@ from cadrumo_runtime.host.frontend.tui.secret.automation_decision import Runtime
 from cadrumo_runtime.host.profile_host import RuntimeProfileHost
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
 
-from .records import _record
+from .records import record
 from .test_installed_authenticated_stdio import (
-    _installed_mcp_executable,
-    _native_backend_for_current_platform,
-    _scope_for_auth_read,
-    _unused_reference,
+    installed_mcp_executable,
+    native_backend_for_current_platform,
+    scope_for_auth_read,
+    unused_reference,
 )
 
 if TYPE_CHECKING:
@@ -161,7 +162,7 @@ type _ProgressStage = Literal[
 
 
 def _status(value: object, profile_id: UUID) -> ProfileAccessStatus:
-    document = _record(value)
+    document = record(value)
     assert document["outcome"] == "status" and "status" in document, document
     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(document["status"]))
     assert status.profile_id == profile_id
@@ -173,7 +174,7 @@ def _status(value: object, profile_id: UUID) -> ProfileAccessStatus:
 async def _private_read(client: ClientSession, profile_id: UUID) -> OperationResultProjectionRequestV1:
     described = await client.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
     assert not described.is_error
-    description = _record(_record(described.structured_content)["description"])
+    description = record(record(described.structured_content)["description"])
     contract = OperationPublicDefinitionContractV1.model_validate_json(canonical_json_bytes(description["contract"]))
     assert contract.definition_id == AUTH_READ_OPERATION_DEFINITION_ID and contract.result_schema is not None
     request = AuthReadRequest(profile_id=profile_id, kind="status")
@@ -186,7 +187,7 @@ async def _private_read(client: ClientSession, profile_id: UUID) -> OperationRes
         },
     )
     assert not submitted.is_error
-    document = _record(submitted.structured_content)
+    document = record(submitted.structured_content)
     assert document["outcome"] == "submitted"
     receipt = OperationSubmissionReceiptV1.model_validate_json(canonical_json_bytes(document["receipt"]))
     observation = OperationObservationRequestV1(operation_id=receipt.operation_id, after_cursor=0, page_limit=32)
@@ -195,7 +196,7 @@ async def _private_read(client: ClientSession, profile_id: UUID) -> OperationRes
         while terminal is None:
             observed = await client.call_tool("observe", {"observation": observation.model_dump(mode="json")})
             assert not observed.is_error
-            reply = _record(_record(observed.structured_content)["reply"])
+            reply = record(record(observed.structured_content)["reply"])
             current = OperationObservationSuccessV1.model_validate_json(canonical_json_bytes(reply["observation"]))
             if current.projection.lifecycle is OperationLifecycle.TERMINAL:
                 terminal = current
@@ -214,7 +215,7 @@ async def _private_read(client: ClientSession, profile_id: UUID) -> OperationRes
     released = await client.call_tool("result", {"result": result_request.model_dump(mode="json")})
     assert not released.is_error
     result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-        canonical_json_bytes(_record(_record(released.structured_content)["document"]))
+        canonical_json_bytes(record(record(released.structured_content)["document"]))
     )
     assert result.definition_contract_digest == contract.definition_contract_digest
     assert result.result_schema == contract.result_schema
@@ -306,7 +307,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
     original_preflight = RuntimeProfileHost.approval_preflight
     original_phase = RuntimeProfileHost.approval_phase
     original_publication = RuntimeProfileHost.approval_publication
-    original_store = NativeEnrollmentClient._store_candidate
+    original_store = NativeEnrollmentClient.store_candidate
     original_possession = NativeEnrollmentClient._possession
     original_poll = NativeEnrollmentClient.poll
     progress_guard = Lock()
@@ -415,10 +416,10 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
     monkeypatch.setattr(RuntimeProfileHost, "approval_preflight", traced_preflight)
     monkeypatch.setattr(RuntimeProfileHost, "approval_phase", traced_phase)
     monkeypatch.setattr(RuntimeProfileHost, "approval_publication", traced_publication)
-    backend = _native_backend_for_current_platform()
+    backend = native_backend_for_current_platform()
     native_store = native_automation_secret_store(backend)
     assert native_store.backend is backend
-    executable = _installed_mcp_executable()
+    executable = installed_mcp_executable()
     assert executable.is_file(), "the installed cadrumo-mcp executable is required"
     progress("fixture_enter")
     with (
@@ -426,7 +427,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
         native_api_cli_session(
             tmp_path,
             invoke_cli=invoke_runtime_cli,
-            scope_for_destination=_scope_for_auth_read,
+            scope_for_destination=scope_for_auth_read,
             prepare_profile=lambda _profile_id, _root: None,
             server_native_store=native_store,
         ) as profile,
@@ -443,7 +444,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
             client_id=original.client_id,
             destination_id=original.destination_id,
         )
-        reference = _unused_reference(protected)
+        reference = unused_reference(protected)
         initial = ClientCredentialMetadata(
             credential_reference=reference,
             profile_id=profile.profile_id,
@@ -462,7 +463,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                 args=["--profile-id", str(profile.profile_id), "--credential-reference", str(selected)],
                 cwd=tmp_path,
                 env={
-                    "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
+                    "CADRUMO_STORAGE_ROOT": str(tmp_path / "cadrumo-storage"),
                     "CADRUMO_AUTHORITY_ROOT": str(bundled_authority_descriptor_path().parent),
                     "PYDANTIC_DISABLE_PLUGINS": "__all__",
                 },
@@ -541,7 +542,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                 assert enrollment.prepared.client_id == initial.client_id
                 assert enrollment.prepared.destination_id == initial.destination_id
                 progress("requester_prepared")
-                monkeypatch.setattr(NativeEnrollmentClient, "_store_candidate", traced_store)
+                monkeypatch.setattr(NativeEnrollmentClient, "store_candidate", traced_store)
                 monkeypatch.setattr(NativeEnrollmentClient, "_possession", traced_possession)
                 monkeypatch.setattr(NativeEnrollmentClient, "poll", traced_poll)
 
@@ -558,7 +559,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     def remaining() -> float:
                         budget = deadline - time.monotonic()
                         if budget <= 0:
-                            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                            raise RefusalError(RefusalCode.TIMEOUT)
                         return budget
 
                     async def reconcile_fresh() -> AutomationReceiptProjection:
@@ -598,7 +599,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                 journey = AutomationRequesterJourney(enrollment, timeout=120, reconcile=reconcile)
                 proposal = EnrollmentProposal(
                     kind=EnrollmentKind.ROTATE,
-                    scope=_scope_for_auth_read(initial.destination_id),
+                    scope=scope_for_auth_read(initial.destination_id),
                     expires_at=grant.expires_at,
                     key_expires_at=min(now() + timedelta(days=15), grant.expires_at),
                     unattended=grant.unattended,
@@ -758,18 +759,18 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                         )
                     progress("cli_deny_exit")
                     assert denied.exit_code == 0, denied.output
-                    document = _record(json.loads(denied.stdout))
+                    document = record(json.loads(denied.stdout))
                     assert document["command"] == "config.profile.automation.deny"
-                    denial = _record(document["result"])
+                    denial = record(document["result"])
                     assert denial["kind"] == "grant" and denial["target_id"] == str(initial.grant_id)
-                    assert _record(denial["receipt"])["access_denied"] is True
+                    assert record(denial["receipt"])["access_denied"] is True
                     search = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
                     assert search.is_error
-                    search_refusal = _record(search.structured_content)
+                    search_refusal = record(search.structured_content)
                     assert search_refusal["outcome"] == "refused" and search_refusal["code"] in _FENCED
                     refused = await sdk.call_tool("result", {"result": result_request.model_dump(mode="json")})
                     assert refused.is_error
-                    refusal = _record(refused.structured_content)
+                    refusal = record(refused.structured_content)
                     assert refusal["outcome"] == "refused" and refusal["code"] in _FENCED
                     for answer in (refusal, search_refusal):
                         assert str(reference) not in repr(answer)
@@ -785,17 +786,17 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     progress("revoked_sdk_initialized")
                     status = await sdk.call_tool("status", {})
                     assert not status.is_error
-                    revoked = _record(status.structured_content)
+                    revoked = record(status.structured_content)
                     assert revoked["outcome"] == "status" and revoked["profile_id"] == str(profile.profile_id)
                     assert revoked["authenticated"] is False and revoked["denial"] in _REVOKED
                     search = await sdk.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert search.is_error and _record(search.structured_content) == {
+                    assert search.is_error and record(search.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],
                         "remedy": SIGN_IN_REMEDY,
                     }, search.structured_content
                     refused = await sdk.call_tool("observe", {"observation": {}})
-                    assert refused.is_error and _record(refused.structured_content) == {
+                    assert refused.is_error and record(refused.structured_content) == {
                         "outcome": "refused",
                         "code": revoked["denial"],
                         "remedy": SIGN_IN_REMEDY,

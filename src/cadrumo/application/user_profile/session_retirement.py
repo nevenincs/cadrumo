@@ -6,6 +6,8 @@ from uuid import UUID
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from .access_contracts import SessionKind
+
 
 class SessionRetirementKind(StrEnum):
     """Allowlisted changes a frontend must use to clear private views."""
@@ -23,5 +25,6 @@ class SessionRetirement:
     profile_id: UUID
     connection_id: UUID
     session_id: UUID
+    session_kind: SessionKind
     reason: AccessDenialCode
     kind: SessionRetirementKind = SessionRetirementKind.REVOKED

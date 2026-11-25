@@ -18,7 +18,7 @@ from ....application.user_profile.profile_operation_contracts import (
 )
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewItem, ProfileViewPageKind
 from ....application.wizard.patch_edit import WizardPatchPersister, validate_profile_patch
-from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 if TYPE_CHECKING:
     from ....application.wizard.models import WizardFlow

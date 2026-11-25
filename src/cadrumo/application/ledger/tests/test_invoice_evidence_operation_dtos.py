@@ -9,15 +9,12 @@ import pytest
 
 from cadrumo.application.exchange_rate_provider import exchange_rate_provider
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
-from cadrumo.application.ledger.classification_assembly import (
-    ClassificationAssembly,
-    DeclaredFact,
-    DeclaredFacts,
-    IvaCategoryResolution,
-)
+from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceDocumentIndex
+from cadrumo.application.ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts
+from cadrumo.application.ledger.classification_category_resolution import IvaCategoryResolution
+from cadrumo.application.ledger.closure_findings import closure_findings
 from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment
-from cadrumo.application.ledger.confirmation_gate import ConfirmationBlocker
+from cadrumo.application.ledger.confirmation_gate import ConfirmationBlocker, confirmation_blockers
 from cadrumo.application.ledger.counterparty_establishment import CounterpartyEstablishmentContradiction
 from cadrumo.application.ledger.establishment_ladder import (
     CounterpartyEstablishment,
@@ -36,8 +33,10 @@ from cadrumo.application.ledger.invoice_draft_records import (
     LabelReadingFallbackCause,
 )
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
+    ConfirmationBlockerProjectionV1,
     ConfirmedEstablishmentProjectionV1,
     CounterpartyEstablishmentProjectionV1,
+    DraftDiscrepancyProjectionV1,
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
     LabelReadingFallbackProjectionV1,
@@ -50,25 +49,29 @@ from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import OperationSchemaBindingV1
 from cadrumo.application.operations.registry_schema_validation import strict_model_json_schema
 from cadrumo.core.classifier_input_source import ClassifierInputSource
+from cadrumo.core.config import override_settings
 from cadrumo.core.confirmation_gate import ConfirmationBlockReason
-from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
+from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind, DraftFindingWording
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.i18n.render import tr
 from cadrumo.core.iva_category_resolution import IvaCategoryOutcome
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from cadrumo.domain.iva.supply_nature import SupplyNature
 
 from ....domain.iva.classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
 from ....domain.iva.schema import InvoiceKind, IvaTerritorialScope
+from .clean_invoice_draft_support import clean_invoice_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _draft() -> InvoiceDraft:
     draft = InvoiceDraft(
-        supplier_tax_id="A58818501",
+        supplier_tax_id="B00010157",
         supplier_name="Papeleria Sol SL",
-        customer_tax_id="B12345674",
+        customer_tax_id="B00015016",
         customer_name="Cliente Ejemplo SL",
         supplier_postal_code="08001",
         customer_postal_code="28001",
@@ -122,8 +125,8 @@ def _draft() -> InvoiceDraft:
                 field="supplier_tax_id",
                 origin=FieldOrigin.EXACT_STRUCTURED,
                 grounding=FieldGroundingOutcome.ANCHORED,
-                anchor="A58818501",
-                role_evidence="Proveedor A58818501",
+                anchor="B00010157",
+                role_evidence="Proveedor B00010157",
             ),
             FieldProvenance(
                 field="taxable_base",
@@ -189,7 +192,7 @@ def _establishment() -> ConfirmedEstablishment:
     )
     contradiction = CounterpartyEstablishmentContradiction(
         counterparty_key="b" * 64,
-        canonical_tax_identifier="B12345674",
+        canonical_tax_identifier="B00015016",
         confirmed_scope=other_scope,
         evidenced_scope=scope,
         detail="The remembered territory conflicts with this document.",
@@ -233,7 +236,7 @@ def _invoice():
         bucket_id="20202020-2020-4202-8202-202020202020",
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="F-2026-0142",
         issued_at=date(2026, 3, 10),
@@ -260,7 +263,7 @@ def test_invoice_draft_projection_carries_all_fields_and_private_facturae_class(
     assert projected.discrepancies[0].expected == PublicDecimal(decimal="166.07")
     assert projected.discrepancies[0].observed == PublicDecimal(decimal="166.08")
     assert projected.provenance[1].derived_from == ("lines.taxable_base",)
-    assert projected.provenance[0].role_evidence == "Proveedor A58818501"
+    assert projected.provenance[0].role_evidence == "Proveedor B00010157"
 
 
 @pytest.mark.parametrize("cause", list(LabelReadingFallbackCause))
@@ -269,7 +272,7 @@ def test_invoice_projection_preserves_label_fallback_across_json(cause: LabelRea
         cause=cause,
         unread_fields=("invoice_date", "supplier_tax_id"),
         reader_error_type="ReaderAdmissionRefusedError",
-        failed_condition_id="llm.inference_slot",
+        failed_condition_id="llm.agent.model_run_completed",
     )
     source = _draft().with_label_reading_fallback(fallback)
     assert source.label_reading_fallback is not None
@@ -307,11 +310,13 @@ def test_confirmation_projection_preserves_actual_rerun_and_resolution_facts(cre
         establishment=establishment,
     )
 
-    projected = InvoiceConfirmationProjectionV1.from_result(result)
+    projected = InvoiceConfirmationProjectionV1.from_result(result, documents=InvoiceDocumentIndex.from_manifests(()))
     decoded = InvoiceConfirmationProjectionV1.model_validate_json(projected.model_dump_json())
 
     assert decoded == projected
-    assert projected.invoice == CatalogueInvoiceSnapshot.from_invoice(result.invoice)
+    assert projected.invoice == CatalogueInvoiceSnapshot.from_invoice(
+        result.invoice, documents=InvoiceDocumentIndex.from_manifests(())
+    )
     assert projected.created is created
     assert projected.confirmation_id == result.confirmation_id
     assert projected.draft.facturae_invoice_class is not None
@@ -364,3 +369,40 @@ def test_public_dto_graphs_bind_to_closed_operation_schemas() -> None:
             schema_version=1,
             model_type=model,
         )
+
+
+@pytest.mark.parametrize("language", [language.value for language in OutputLanguage])
+def test_a_finding_and_its_blocker_serve_their_explanation_in_the_operator_language(language: str) -> None:
+    """The real closure check's finding reaches a frontend worded in the output language, quoting its figures."""
+    draft = clean_invoice_draft().model_copy(update={"grand_total": Decimal("126.20")})
+    (finding,) = closure_findings(draft)
+    (blocker,) = confirmation_blockers(draft.model_copy(update={"discrepancies": (finding,)}))
+
+    with override_settings(cadrumo_output_language=language):
+        served = DraftDiscrepancyProjectionV1.from_finding(finding)
+        served_blocker = ConfirmationBlockerProjectionV1.from_blocker(blocker)
+
+    expected = tr(
+        "application.ledger.draft_finding.total_not_closed", locale=language, total="126.20", computed="121.00"
+    )
+    assert served.words is not None
+    assert served.words.wording is DraftFindingWording.TOTAL_NOT_CLOSED
+    assert served.detail_words == expected
+    assert served.detail_words_language is OutputLanguage(language)
+    assert served_blocker.detail_words == expected
+    assert served.detail == served_blocker.detail == ""
+    assert "126.20" in expected
+    assert "121.00" in expected
+
+
+def test_the_spanish_explanation_is_not_the_english_one() -> None:
+    """Without this, a catalogue that copied English into Spanish would pass the test above."""
+    draft = clean_invoice_draft().model_copy(update={"grand_total": Decimal("126.20")})
+    (finding,) = closure_findings(draft)
+
+    worded: dict[str, str | None] = {}
+    for language in (OutputLanguage.EN, OutputLanguage.ES):
+        with override_settings(cadrumo_output_language=language.value):
+            worded[language.value] = DraftDiscrepancyProjectionV1.from_finding(finding).detail_words
+
+    assert worded["es"] != worded["en"]

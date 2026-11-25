@@ -39,7 +39,7 @@ call time, so a patched module attribute would not be observed by it anyway.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -51,26 +51,30 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
-from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from .eligible_descendants_support import eligible_descendants
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -93,24 +97,6 @@ _DERIVED_PATH = f"renta_family.descendientes_minimos_aggregate_{_YEAR}"
 _SENTINEL = Decimal("4321.37")
 
 
-def _descendants() -> tuple[DescendantInfo, ...]:
-    """Two descendants born well before the filing year, both living with the taxpayer.
-
-    An unambiguously Art. 58.1-eligible pair that produces a non-zero estatal
-    aggregate the sentinel has to visibly displace. Callers build it inside a
-    pinned authority scope because the default relationship is a registry
-    projection.
-    """
-    return (
-        DescendantInfo(birth_date=date(2010, 3, 4)),
-        DescendantInfo(birth_date=date(2014, 9, 18)),
-    )
-
-
-#: The single binding the M100 estimación-directa régimen predicate needs set for
-#: the annual revision to reach the mínimo casillas at all.
-_ESTIMACION_DIRECTA_NORMAL: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
-
 #: Sources the live mesh resolves from bucket state. Bindings owned by these are
 #: left to the mesh; everything else is zero-defaulted so the calculation reaches
 #: 0513 rather than failing on an unrelated unresolved slot.
@@ -123,28 +109,18 @@ _MESH_OWNED_SOURCES = frozenset(
         # Mesh-resolved rather than locked.
         "profile",
         "relation_prefill",
+        # The withholding credits are the payer records' to state, so a caller zero is refused.
+        BindingSourceKind.RETENCION_SOPORTADA.value,
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
-
-
-#: Profile-sourced bindings this profile leaves unresolved and that the M100
-#: formula chain nonetheless requires a value for. They are unrelated to the
-#: Art. 58 aggregate under test and are supplied as caller zeros -- exactly as
-#: the sibling engine test does -- so the calculation reaches casilla 0513. The
-#: two mínimo bindings are deliberately NOT in this set: caller-supplying either
-#: would decide the very question the probe asks.
-_UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = ("renta-profile-cotizaciones-ss-madre",)
 
 
 def _non_mesh_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100 binding the live bucket mesh does not own."""
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_PERIOD_CODE)
-    values: dict[BindingId, Decimal] = {
+    return {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _MESH_OWNED_SOURCES
     }
-    values[_ESTIMACION_DIRECTA_NORMAL] = Decimal("1")
-    values.update(dict.fromkeys(_UNRELATED_PROFILE_BINDINGS, Decimal("0")))
-    return values
 
 
 @pytest.fixture
@@ -159,7 +135,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET),
     ):
-        overrides = dict(descendant_facts_from_list(_descendants()))
+        overrides = dict(descendant_facts_from_list(eligible_descendants()))
         # The surrounding renta facts the M100 annual revision needs to evaluate at
         # all. None of them touches the Art. 58 aggregate; they exist so the
         # calculation reaches casilla 0513 rather than refusing earlier.

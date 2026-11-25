@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 import cadrumo.application.aggregation.iva_ledger as iva_ledger
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -27,8 +28,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_exclusions import Art104TresExclusion
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -269,7 +269,7 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(AggregationValidationError, match="bucket_mismatch"),
     ):
         aggregate_iva_ledger_observations_from_repositories(
@@ -283,6 +283,7 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
                 bucket_id=_OTHER_BUCKET_ID,
                 objects=secure_objects,
             ),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_OTHER_BUCKET_ID, objects=secure_objects),
             investment_asset_register=_TEST_ASSET_REGISTER,
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,
@@ -294,7 +295,7 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
 ) -> None:
     """IVA aggregation never combines a primary ledger with another bucket's register."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
     ):
         TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
@@ -312,12 +313,13 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
                 period=_Q2_2026,
                 prorrata_register_repository=foreign_prorrata_repository,
                 transaction_repository=TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id),
+                invoice_reader=InvoiceCatalogueRepository(bucket_id=runtime.primary.bucket_id),
                 operation=_authority_operation_for_test,
             )
 
 
 def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         transaction = _transaction("row-repository")
         repository = TransactionCatalogueRepository(
             bucket_id=_BUCKET_ID,
@@ -333,6 +335,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
                 bucket_id=_BUCKET_ID,
                 objects=secure_objects,
             ),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             investment_asset_register=_TEST_ASSET_REGISTER,
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,
@@ -340,6 +343,19 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
 
         assert result.issues == ()
         assert result.observations[0].ledger_id == transaction.transaction_id
+
+
+def _aggregate_q2_2026(secure_objects: SecureObjectRepository, operation: PinnedAuthorityOperation):
+    return aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id=_BUCKET_ID,
+        operation=operation,
+    )
 
 
 def test_repository_backed_projection_reports_out_of_period_catalogue_transactions(
@@ -352,21 +368,13 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
     visibility signal without allocating one row-level issue per excluded
     plaintext index entry.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
         out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
         repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
 
-        result = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            investment_asset_register=_TEST_ASSET_REGISTER,
-            investment_asset_profile_id=_BUCKET_ID,
-            operation=_authority_operation_for_test,
-        )
+        result = _aggregate_q2_2026(secure_objects, _authority_operation_for_test)
 
         assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
         assert result.issues == ()
@@ -386,7 +394,7 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
     repository-backed partition reports their count and date span instead of
     dropping them before aggregation.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
         excluded_out_of_period = _transaction(
             "row-excluded-out-of-period",
@@ -403,15 +411,7 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
             TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
         )
 
-        result = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            investment_asset_register=_TEST_ASSET_REGISTER,
-            investment_asset_profile_id=_BUCKET_ID,
-            operation=_authority_operation_for_test,
-        )
+        result = _aggregate_q2_2026(secure_objects, _authority_operation_for_test)
 
         assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
         assert result.issues == ()
@@ -431,11 +431,17 @@ def test_repository_backed_projection_partition_matches_full_scan(
     In-window observations and prorrata references must match; only the
     out-of-window issue taxonomy can differ between the two paths.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
-        q2_row_b = _transaction("row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"))
-        q1_row = _transaction("row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"))
-        q3_row = _transaction("row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"))
+        q2_row_b = _transaction(
+            "row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"), iva_amount=Decimal("42.00")
+        )
+        q1_row = _transaction(
+            "row-q1", value_date=date(2026, 2, 1), taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50")
+        )
+        q3_row = _transaction(
+            "row-q3", value_date=date(2026, 8, 1), taxable_base=Decimal("75.00"), iva_amount=Decimal("15.75")
+        )
         excluded_q3_row = _transaction(
             "row-q3-excluded",
             value_date=date(2026, 9, 1),
@@ -452,6 +458,7 @@ def test_repository_backed_projection_partition_matches_full_scan(
             period=_Q2_2026,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            invoice_reader=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
             investment_asset_register=_TEST_ASSET_REGISTER,
             investment_asset_profile_id=_BUCKET_ID,
             operation=_authority_operation_for_test,

@@ -6,17 +6,20 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ..enums import TransactionDirection
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
+
+_YEAR = filing_year_envelope().horizon
 
 
 def vision_transaction(evidence_id: str) -> Transaction:
     """Build a transaction that addresses one purchase-invoice evidence item."""
     raw = RawTransaction(
         provider_transaction_id="row-vision",
-        booked_date=date(2025, 5, 1),
-        value_date=date(2025, 5, 1),
+        booked_date=date(_YEAR, 5, 1),
+        value_date=date(_YEAR, 5, 1),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Acme SL",
@@ -26,7 +29,7 @@ def vision_transaction(evidence_id: str) -> Transaction:
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(_YEAR, 5, 1, 12, 0, tzinfo=UTC),
             provider_name="manual",
         ),
         raw_fields={"Concepto": "office supplies"},

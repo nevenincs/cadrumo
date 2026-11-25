@@ -8,13 +8,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.utc import validate_utc_aware
-from ...domain.calculations.registry.ids import LegalRefId
 from ..operations.models import OperationTerminalReceipt, require_terminal_receipt_match
-from .enums import ReviewSeverity, ReviewState, severity_rank
+from .enums import ReviewState, severity_rank
 from .operator import ReviewQueueRow
 from .read_contracts import (
     REVIEW_QUEUE_OPERATION_DEFINITION_ID,
@@ -26,27 +24,14 @@ from .read_contracts import (
 _QueueRows = Annotated[tuple["ReviewQueueRowProjection", ...], Field(max_length=4_096)]
 
 
-class ReviewQueueRowProjection(BaseModel):
+class ReviewQueueRowProjection(ReviewQueueRow):
     """Closed wire snapshot of every operator-facing review-row fact."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    item_id: str = Field(min_length=1)
-    kind: str = Field(min_length=1)
-    source_kind: str | None = None
-    affected_object_id: str = Field(min_length=1)
-    bucket_id: BucketId
-    modelo: str | None = None
-    period: str | None = None
-    severity: ReviewSeverity
-    state: ReviewState
-    blocking: bool
-    reason: str = ""
-    current_owner_surface: str = Field(min_length=1)
-    canonical_next_command: str = Field(min_length=1)
+    # Operation models may not carry the UtcInstant core-schema hook, so the
+    # wire row restates the inherited instant as a plain validated datetime.
     since: datetime
-    summary: str = Field(min_length=1)
-    legal_refs: tuple[LegalRefId, ...] = ()
 
     @field_validator("since")
     @classmethod

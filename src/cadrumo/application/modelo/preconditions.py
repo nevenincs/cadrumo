@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
+from typing import Final
 
 from pydantic import BaseModel, model_validator
 
@@ -13,16 +14,26 @@ from ...core.identifier_grammar import NamespacedId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import (
-    ActionArgumentSource,
-    ActionArgumentStatus,
-    ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
 from ...domain.modelos.work_unit import WorkUnit
-from ..operator_actions.catalogue import lookup_action
-from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
+from ..operator_actions.models import (
+    ActionReference,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 from ..operator_surface.models import ManifestActionProfile
+from .edit_refusal_profiles import EDIT_REFUSAL_PROFILES
+from .filing_import_refusal_profiles import FILING_IMPORT_REFUSAL_PROFILES
+from .iva_wallet_refusal_profiles import IVA_WALLET_REFUSAL_PROFILES
+from .precondition_action_bindings import (
+    AlternativeActionArguments,
+    action_argument_bindings,
+    alternative_recovery_actions,
+    recovery_conditionality,
+)
+from .prior_carry_refusal_profiles import PRIOR_CARRY_REFUSAL_PROFILES
 
 
 class ModeloPreconditionFailure(BaseModel):
@@ -49,6 +60,8 @@ class ModeloPreconditionFailure(BaseModel):
             raise ValueError("modelo precondition failure action contradicts its declaration")
         if profile.no_recovery_outcome != self.verdict.no_recovery_outcome:
             raise ValueError("modelo precondition failure no-recovery outcome contradicts its declaration")
+        if profile.alternative_actions != tuple(item.action for item in self.verdict.alternative_actions):
+            raise ValueError("modelo precondition failure alternative actions contradict its declaration")
         return self
 
 
@@ -59,6 +72,7 @@ def _profile(
     *,
     action_id: str | None = None,
     no_recovery_outcome: NoRecoveryOutcome = NoRecoveryOutcome.OPERATOR_DECISION,
+    alternative_action_ids: tuple[str, ...] = (),
 ) -> ManifestActionProfile:
     return ManifestActionProfile(
         subject_leaf_key=subject_leaf_key,
@@ -66,58 +80,72 @@ def _profile(
         scenario_id=scenario_id,
         action=ActionReference(action_id=action_id) if action_id is not None else None,
         no_recovery_outcome=(None if action_id is not None else no_recovery_outcome),
+        alternative_actions=tuple(ActionReference(action_id=item) for item in alternative_action_ids),
     )
 
 
-_IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
-    "filed_history_requires_override",
-    "local_evidence_unreadable",
-    "local_recurrence_requires_override",
-    "no_usable_authority",
-    "stale_wallet_local_recurrence_requires_override",
-    "stale_wallet_no_local_recurrence",
-    "wallet_local_recurrence_divergence",
-)
-
-_IVA_WALLET_CALCULATE_SCENARIOS = (
-    "backend_casilla_conflict",
-    *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
-    "caller_binding_conflict",
-    "caller_casilla_conflict",
-    "first_period_zero_ungrounded",
-    "not_seeded",
-    "registry_snapshot_unavailable",
-    "selected_amount_missing",
-    "supplied_decision_mismatch",
-    "target_mismatch",
-    "taxpayer_identity_missing",
-    "taxpayer_mismatch",
-    "unsupported_decision_type",
-)
-
-_IVA_WALLET_REVISION_SCENARIOS = (
-    "amount_mismatch",
-    *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
-    "first_period_zero_ungrounded",
-    "not_seeded",
-    "registry_snapshot_unavailable",
-    "revision_amount_missing",
-    "selected_amount_missing",
-    "target_mismatch",
+# Where an earlier declaration stands names the work that moves it on.
+_SOURCE_STANDING_DOORS: tuple[tuple[str, str], ...] = (
+    ("source_absent", "operator.modelo.work.create"),
+    ("source_uncalculated", "operator.modelo.work.calculate"),
+    ("source_unverified", "operator.modelo.work.verify"),
+    ("source_unfiled", "operator.modelo.work.file"),
 )
 
 
-def _iva_wallet_profiles(
-    subject_leaf_key: str,
-    scenario_codes: tuple[str, ...],
-) -> tuple[ManifestActionProfile, ...]:
-    return tuple(
-        _profile(
-            subject_leaf_key,
-            f"{subject_leaf_key}.iva_wallet.ready",
-            f"{subject_leaf_key}.iva_wallet.{scenario_code}",
-        )
-        for scenario_code in scenario_codes
+ATTEST_PRIOR_VALUE_ACTION_ID: Final[str] = "operator.modelo.work.attest_prior_value"
+"""The catalogue action by which the filer states the figure a declaration reads from an earlier return."""
+
+ATTEST_WORK_INCOME_ACTION_ID: Final[str] = "operator.modelo.work.attest_work_income"
+"""The catalogue action by which the filer states that the work-income boxes no payer certificate fills hold nothing."""
+
+# An absent earlier return whose figure the filer may state: its own door first, then the statement.
+_ATTESTABLE_SOURCE_DOORS: tuple[tuple[str, str], ...] = (
+    ("source_absent_attestable", "operator.modelo.work.create"),
+    ("filed_evidence_missing_attestable", "operator.live.filed.pull"),
+)
+
+
+def _attest_prior_value_profile(subject_leaf_key: str) -> ManifestActionProfile:
+    """A source no return can ever prove here: the filer states the figure the declaration reads from it."""
+    return _profile(
+        subject_leaf_key,
+        f"{subject_leaf_key}.cross_period_dependency.clean",
+        f"{subject_leaf_key}.cross_period_dependency.attest_prior_value",
+        action_id=ATTEST_PRIOR_VALUE_ACTION_ID,
+    )
+
+
+def _cross_period_door_profiles(subject_leaf_key: str) -> tuple[ManifestActionProfile, ...]:
+    """An unclean source routed by its first blocker: its own work, its capture once filed, or the filer's statement.
+
+    An absent earlier return whose figure the filer may state keeps its create
+    or capture door first and offers the statement after it.
+    """
+    return (
+        *(
+            _profile(
+                subject_leaf_key,
+                f"{subject_leaf_key}.cross_period_dependency.clean",
+                f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+                action_id=action_id,
+            )
+            for scenario, action_id in (
+                *_SOURCE_STANDING_DOORS,
+                ("filed_evidence_missing", "operator.live.filed.pull"),
+            )
+        ),
+        *(
+            _profile(
+                subject_leaf_key,
+                f"{subject_leaf_key}.cross_period_dependency.clean",
+                f"{subject_leaf_key}.cross_period_dependency.{scenario}",
+                action_id=action_id,
+                alternative_action_ids=(ATTEST_PRIOR_VALUE_ACTION_ID,),
+            )
+            for scenario, action_id in _ATTESTABLE_SOURCE_DOORS
+        ),
+        _attest_prior_value_profile(subject_leaf_key),
     )
 
 
@@ -169,10 +197,98 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.readiness.export_layout.unrenderable",
         action_id="operator.modelo.describe",
     ),
+    # An account page the export needs is written from an own account the
+    # register holds; adding one is the way to give the export what it asks for.
+    *(
+        _profile(
+            "modelo.export",
+            f"modelo.export.{role}_account.registered",
+            f"modelo.export.{role}_account.missing",
+            action_id="operator.ledger.account.add",
+        )
+        for role in ("charge", "refund")
+    ),
+    # A split in two instalments the export cannot write is a choice about the
+    # export that no catalogued action states.
     _profile(
-        "modelo.work.amend_wizard",
-        "modelo.work.amend_wizard.external_evidence.present",
-        "modelo.work.amend_wizard.external_evidence.missing",
+        "modelo.export",
+        "modelo.export.instalment_election.admitted",
+        "modelo.export.instalment_election.refused",
+    ),
+    # The character sits in a name the operator recorded on a profile fact, a
+    # ledger entry or an invoice; the layout field does not say which, so no
+    # single catalogued edit action reaches it.
+    _profile(
+        "modelo.export",
+        "modelo.export.text_value.writable",
+        "modelo.export.text_value.unrepresentable_character",
+    ),
+    # The official record design and the value disagree; the fault is in the
+    # design the application carries, so no filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.field.renderable",
+        "modelo.export.field.unrenderable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    # The application's own export design or renderer contradicts itself; no
+    # filer action repairs it.
+    _profile(
+        "modelo.export",
+        "modelo.export.design.consistent",
+        "modelo.export.design.inconsistent",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    # A party-name slot the filer's declared filing names leave without content
+    # is put right by stating that party's filing name.
+    _profile(
+        "modelo.export",
+        "modelo.export.declared_party_name.stated",
+        "modelo.export.declared_party_name.unstated",
+        action_id="operator.ledger.counterparty.filing_name",
+    ),
+    # A box the filer states holds a value the design cannot place; stating
+    # that box again on the work unit puts it right.
+    _profile(
+        "modelo.export",
+        "modelo.export.casilla_value.writable",
+        "modelo.export.casilla_value.refused",
+        action_id="operator.modelo.work.set_value",
+    ),
+    *EDIT_REFUSAL_PROFILES,
+    *FILING_IMPORT_REFUSAL_PROFILES,
+    # The refusals below are real but no catalogued action repairs them: the
+    # registry has not adjudicated cells the stated boxes share, the schema
+    # refuses a field that is no box of the declaration, the return suspends or
+    # waives part of its result where no remainder is computed, and the
+    # persisted justificante of an amended filing does not back it. A result
+    # box that holds no value is put right by calculating the declaration.
+    *(
+        _profile(
+            "modelo.export", f"modelo.export.{subject}.{sound}", f"modelo.export.{subject}.{refused}", action_id=act
+        )
+        for subject, sound, refused, act in (
+            ("shared_cells", "adjudicated", "unadjudicated", None),
+            ("schema_field", "valid", "refused", None),
+            ("settlement", "stated", "unsupported", None),
+            ("settlement", "stated", "result_unknown", "operator.modelo.work.calculate"),
+            ("amended_filing_justificante", "backs_filing", "unresolved", None),
+        )
+    ),
+    _profile(
+        "modelo.export",
+        "modelo.export.period.maps_to_filing_period",
+        "modelo.export.period.unmappable",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.external_evidence.present",
+            f"{leaf}.external_evidence.missing",
+            action_id="operator.modelo.filing_record.import",
+        )
+        for leaf in ("modelo.work.amend", "modelo.work.amend_wizard", "modelo.export")
     ),
     _profile(
         "modelo.work.wizard",
@@ -197,26 +313,46 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.borrador_snapshot.active",
         "modelo.work.calculate.borrador_snapshot.inactive",
     ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.source_inputs.unowned",
-        "modelo.work.calculate.source_inputs.binding_override_rejected",
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.source_inputs.unowned",
+            f"{leaf}.source_inputs.{kind}_override_rejected",
+        )
+        for leaf in ("modelo.work.calculate", "modelo.project")
+        for kind in ("binding", "casilla")
     ),
     _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.source_inputs.unowned",
-        "modelo.work.calculate.source_inputs.casilla_override_rejected",
+        "modelo.project",
+        "modelo.project.m130_quarters.present",
+        "modelo.project.m130_quarters.no_work_units",
+        action_id="operator.modelo.work.create",
+    ),
+    _profile(
+        "modelo.project",
+        "modelo.project.m130_quarters.calculated",
+        "modelo.project.m130_quarters.no_calculation",
+        action_id="operator.modelo.work.calculate",
+    ),
+    # No action: the region is a fact of the profile's tax residence, and which
+    # one it is belongs to the filer.
+    _profile(
+        "modelo.project",
+        "modelo.project.region.stated",
+        "modelo.project.region.unstated",
+    ),
+    # No action: which revision the registry's declaration names is the registry's,
+    # and the filer cannot change it.
+    _profile(
+        "modelo.project",
+        "modelo.project.projection_mapping.names_revision",
+        "modelo.project.projection_mapping.revision_unnamed",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
     ),
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.caller_overrides.binding_declared",
         "modelo.work.calculate.caller_overrides.binding_unknown",
-        action_id="operator.modelo.bindings.list",
-    ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.caller_overrides.binding_encoding_valid",
-        "modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
         action_id="operator.modelo.bindings.list",
     ),
     _profile(
@@ -256,19 +392,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         for leaf in ("modelo.work.verify", "modelo.work.file")
     ),
     *(
-        _profile(
-            leaf,
-            f"{leaf}.work_address.resolved",
-            f"{leaf}.work_address.natural_target_absent",
-        )
-        for leaf in ("modelo.work.verify", "modelo.work.file")
-    ),
-    *(
-        _profile(
-            leaf,
-            f"{leaf}.work_address.resolved",
-            f"{leaf}.work_address.exact_work_unit_absent",
-        )
+        _profile(leaf, f"{leaf}.work_address.resolved", f"{leaf}.work_address.{scenario}")
+        for scenario in ("natural_target_absent", "exact_work_unit_absent")
         for leaf in ("modelo.work.verify", "modelo.work.file")
     ),
     _profile(
@@ -290,6 +415,101 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
     ),
+    # The prorrata register listing shows the rows the edition leaves out of the summary.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.m390_prorrata_apartado.rendered",
+            f"{leaf}.m390_prorrata_apartado.unrendered",
+            action_id="operator.ledger.prorrata.list",
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
+    # A work-income box only the filer can state, a stated disability's increase left
+    # unanswered, or an expense above its legal limit: the filer states the box, through
+    # the override of the binding it reads or else its own value. An unstated income box
+    # is first offered the single statement that the boxes no payer certificate fills hold
+    # nothing, and each box's own door stays beside it.
+    *(
+        _profile(
+            "modelo.work.verify",
+            f"modelo.work.verify.trabajo_income.{condition}",
+            f"modelo.work.verify.trabajo_income.{scenario}",
+            action_id=action_id,
+            alternative_action_ids=alternative_action_ids,
+        )
+        for condition, scenario, action_id, alternative_action_ids in (
+            (
+                "stated",
+                "unstated",
+                ATTEST_WORK_INCOME_ACTION_ID,
+                ("operator.modelo.work.set_value",),
+            ),
+            (
+                "stated",
+                "unstated_source",
+                ATTEST_WORK_INCOME_ACTION_ID,
+                ("operator.modelo.work.override",),
+            ),
+            (
+                "disability_increase_stated",
+                "disability_increase_unstated",
+                "operator.modelo.work.set_value",
+                (),
+            ),
+            ("expense_within_limit", "expense_above_limit", "operator.modelo.work.set_value", ()),
+            ("expense_within_limit", "expense_above_limit_source", "operator.modelo.work.override", ()),
+        )
+    ),
+    # An assumed value waits for the filer: stating the box again confirms it, and a box read
+    # from a source the filer may state over is confirmed by the override bound to it.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.assumed_value.confirmed",
+            f"{leaf}.assumed_value.{scenario}",
+            action_id=action_id,
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+        for scenario, action_id in (
+            ("unconfirmed", "operator.modelo.work.set_value"),
+            ("unconfirmed_source", "operator.modelo.work.override"),
+        )
+    ),
+    # The profile door that states a household row's required fact: the fact is the
+    # filer's, and the door lists the people the profile records so the missing one is added.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.household_row_facts.{member}_stated",
+            f"{leaf}.household_row_facts.{member}_unstated",
+            action_id=f"operator.profile.{member}",
+        )
+        for member in ("ascendiente", "descendiente")
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
+    # The door that states a fact the mínimo por ascendientes needs of one named ascendant:
+    # the note says which row omits it, so the edit is addressed to that row.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.household_row_facts.ascendiente_row_stated",
+            f"{leaf}.household_row_facts.ascendiente_row_unstated",
+            action_id="operator.profile.ascendiente.edit",
+        )
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
+    # The command that states which ledger entry books an inventory purchase, or that none does.
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.inventory_purchase_ledger_row.stands",
+            f"{leaf}.inventory_purchase_ledger_row.{scenario}",
+            action_id="operator.ledger.inventory.movement.claim",
+        )
+        for scenario in ("unstated", "claim_refused")
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
     # No action: a settled prior-accrual Modelo 193 row needs an official
     # source for its payment-year amounts, which only the operator can obtain.
     *(
@@ -300,10 +520,71 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         )
         for leaf in ("modelo.work.file", "modelo.export")
     ),
+    # A ledger row that holds the calculation is reclassified, the row named;
+    # an issue about the whole period is re-checked over that period.
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.ledger_preflight.ready",
         "modelo.work.calculate.ledger_preflight.blocked",
+        action_id="operator.ledger.classify.movement",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.ledger_preflight.ready",
+        "modelo.work.calculate.ledger_preflight.period_blocked",
+        action_id="operator.ledger.preflight",
+    ),
+    *PRIOR_CARRY_REFUSAL_PROFILES,
+    # A property's pending interest and repairs are stated on that property's row, which the refusal names.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.prior_carries.stated",
+        "modelo.work.calculate.prior_carries.renta_capital_inmobiliario_gastos_pendientes_unstated",
+    ),
+    # A stored revision that no longer matches its content address is replaced
+    # by calculating the work unit again from its sources.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.stored_revision.intact",
+        "modelo.work.calculate.stored_revision.drifted",
+        action_id="operator.modelo.work.calculate",
+    ),
+    # An input no source supplied is stated on the calculation itself; the
+    # binding listing names it and the work unit's form takes the value.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.input.supplied",
+        "modelo.work.calculate.input.binding_unanswered",
+        action_id="operator.modelo.bindings.list",
+    ),
+    # An input whose value the operator may state over its source is answered
+    # by that statement: the door is the override bound to the input.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.input.supplied",
+        "modelo.work.calculate.input.override_unanswered",
+        action_id="operator.modelo.work.override",
+    ),
+    # A carry whose earlier return the application does not hold is answered by
+    # the override as well, or by the filer stating the earlier return's figure.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.input.supplied",
+        "modelo.work.calculate.input.override_unanswered_attestable",
+        action_id="operator.modelo.work.override",
+        alternative_action_ids=(ATTEST_PRIOR_VALUE_ACTION_ID,),
+    ),
+    # A carry from an earlier period of the same ejercicio is read from that
+    # period's filed return; where that return stands names the work that
+    # moves it on.
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.prior_filing.sources_filed",
+            f"modelo.work.calculate.prior_filing.{scenario}",
+            action_id=action_id,
+        )
+        for scenario, action_id in _SOURCE_STANDING_DOORS
     ),
     _profile(
         "modelo.work.calculate",
@@ -315,6 +596,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
         "modelo.work.calculate.m303_filing_evidence.missing",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.joint_return_unanswered",
+        action_id="operator.modelo.work.calculate_joint_return",
     ),
     _profile(
         "modelo.work.calculate",
@@ -379,6 +666,104 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.m349.operator_rows.present",
         "modelo.work.calculate.m349.operator_rows.intracom_ledger_without_operator_rows",
     ),
+    # An input the filer supplied that contradicts the sources it sits beside.
+    # No catalogued action settles any of them: which of the two contradicting
+    # statements stands is the filer's to choose when they calculate again.
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.m210.gross_income_source.coherent",
+            f"modelo.work.calculate.m210.gross_income_source.{scenario_code}",
+        )
+        for scenario_code in (
+            "ledger_with_manual_gross_income",
+            "ledger_with_manual_agrupacion_rows",
+            "ledger_on_other_modelo",
+        )
+    ),
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.m210.tipo_renta.selected",
+            f"modelo.work.calculate.m210.tipo_renta.{scenario_code}",
+        )
+        for scenario_code in ("ledger_selection_missing", "official_code_mismatch")
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.detail_rows.unambiguous",
+        "modelo.work.calculate.detail_rows.identity_conflict",
+    ),
+    # TERMINAL: a source value routed into a calculated box, a source kind no
+    # resolver handles and a carrier that disagrees with the engine are
+    # defects of the shipped definitions and resolvers, which the filer
+    # cannot change.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.bound_inputs.not_computed",
+        "modelo.work.calculate.bound_inputs.computed_casilla_bound",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.source_bindings.routed",
+        "modelo.work.calculate.source_bindings.novel_source_kind",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.m303_annual_summary.handoff_consistent",
+            f"modelo.work.calculate.m303_annual_summary.{scenario_code}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        )
+        for scenario_code in ("handoff_required", "arrival_mismatch")
+    ),
+    # A borrador snapshot the filer selected that cannot back this calculation.
+    # The listing of snapshots is not a catalogued action, so choosing another
+    # snapshot, or none, is the filer's decision.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.borrador_snapshot.eligible_modelo",
+        "modelo.work.calculate.borrador_snapshot.modelo_unsupported",
+    ),
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.borrador_snapshot.on_axis",
+            f"modelo.work.calculate.borrador_snapshot.{scenario_code}",
+        )
+        for scenario_code in ("bucket_mismatch", "axis_mismatch")
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.borrador_snapshot.bindings_admitted",
+        "modelo.work.calculate.borrador_snapshot.bindings_forbidden",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.borrador_snapshot.values_decimal",
+        "modelo.work.calculate.borrador_snapshot.value_invalid",
+    ),
+    # TERMINAL: the definitions handed to the resolver name another modelo,
+    # year or period than the command, which no input of the filer's changes.
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.borrador_snapshot.registry_axis",
+            f"modelo.work.calculate.borrador_snapshot.{scenario_code}",
+            no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        )
+        for scenario_code in ("registry_modelo_mismatch", "registry_axis_mismatch")
+    ),
+    # A calculation revision no stored declaration holds is found again from
+    # the declarations list, which names each declaration and its revisions.
+    _profile(
+        "modelo.work.revisions",
+        "modelo.work.revisions.calculation_revision.stored",
+        "modelo.work.revisions.calculation_revision.absent",
+        action_id="operator.modelo.work.list",
+    ),
     *(
         _profile(
             leaf,
@@ -403,6 +788,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.file.cross_period_dependency.clean",
         "modelo.work.file.cross_period_dependency.unclean",
     ),
+    *_cross_period_door_profiles("modelo.work.file"),
     _profile(
         "modelo.work.file",
         "modelo.work.file.activity_start_date.present",
@@ -448,19 +834,17 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
-        "modelo.work.verify.iva_selected_scope_evidence.complete",
-        "modelo.work.verify.iva_selected_scope_evidence.unresolved",
+        "modelo.work.verify.invoice_source_document.present",
+        "modelo.work.verify.invoice_source_document.missing",
     ),
-    # TERMINAL: the deduction on an intra-EU acquisition rests on the
-    # self-assessment, which no ledger write can record, so nothing the operator
-    # does inside the product lets the same declaration pass. It is filed
-    # another way.
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.iva_selected_scope_evidence.complete",
-        "modelo.work.verify.iva_selected_scope_evidence.intra_eu_self_assessment_unrecordable",
-        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+        "modelo.work.verify.iva_selected_scope_evidence.unresolved",
     ),
+    # TERMINAL: these deductions rest on a document no ledger write can record,
+    # so nothing the operator does inside the product lets the same declaration
+    # pass. It is filed another way.
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.iva_selected_scope_evidence.complete",
@@ -481,6 +865,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.cuota_disagrees_with_rate",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.iva_compensation_annual_source_evidence.complete",
         "modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
     ),
@@ -493,6 +882,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.oss_source.routed",
         "modelo.work.verify.oss_source.unrouted",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.scheme_period.matches",
+        "modelo.work.verify.scheme_period.contradicted",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.oss_no_activity.consistent",
+        "modelo.work.verify.oss_no_activity.contradicted",
     ),
     _profile(
         "modelo.work.verify",
@@ -514,6 +913,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.withholding_detail.proven",
         "modelo.work.verify.withholding_detail.contradicted",
     ),
+    # A periodic box counting more persons than the annual summary names at all.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.withholding_count.reconciled",
+        "modelo.work.verify.withholding_count.exceeded",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.ledger_snapshot.current",
@@ -523,6 +928,85 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.ledger_snapshot.current",
         "modelo.work.verify.ledger_snapshot.membership_unavailable",
+    ),
+    # A let property's records moved since the calculation: calculating again
+    # reads them afresh. An unreadable store has no door, as for the ledger.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.renta_inmueble_rows.current",
+        "modelo.work.verify.renta_inmueble_rows.drift_detected",
+        action_id="operator.modelo.work.calculate",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.renta_inmueble_rows.current",
+        "modelo.work.verify.renta_inmueble_rows.unavailable",
+    ),
+    # A profile fact the draft's calculation read was edited: calculate again.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.profile_reads.current",
+        "modelo.work.verify.profile_reads.drift_detected",
+        action_id="operator.modelo.work.calculate",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.drift_detected",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.catalogue_unavailable",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.scope_narrower",
+    ),
+    # The register's seed states the provisional prorrata from the prior definitive
+    # (LIVA art. 105.Uno); a missing, unseeded or contradicted figure is settled there.
+    *(
+        _profile(
+            "modelo.work.verify",
+            "modelo.work.verify.prorrata_seed.current",
+            f"modelo.work.verify.prorrata_seed.{scenario}",
+            action_id="operator.ledger.prorrata.seed",
+        )
+        for scenario in ("unsourced", "unseeded", "contradicted")
+    ),
+    # A draft calculated under another provisional prorrata is calculated again.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.prorrata_seed.current",
+        "modelo.work.verify.prorrata_seed.changed",
+    ),
+    # A filed return that deducted under a superseded provisional prorrata is corrected by amendment.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.prorrata_seed.current",
+        "modelo.work.verify.prorrata_seed.superseded",
+        action_id="operator.modelo.work.amend_wizard",
+    ),
+    # The year's last return settles the register as its filing will leave it (LIVA art. 105.Cuatro); a
+    # register that stays uncovered, or would continue an especial regime nobody declared again, is declared first.
+    *(
+        _profile(
+            "modelo.work.verify",
+            "modelo.work.verify.prorrata_settlement.covered",
+            f"modelo.work.verify.prorrata_settlement.{scenario}",
+        )
+        for scenario in ("especial_continuation", "sector_entries")
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.shared_casilla_cells.adjudicated",
+        "modelo.work.verify.shared_casilla_cells.unadjudicated",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.xml_return_content.accepted",
+        "modelo.work.verify.xml_return_content.refused",
     ),
     _profile(
         "modelo.work.verify",
@@ -534,25 +1018,109 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.m210.rate.resolved",
         "modelo.work.verify.m210.rate.unresolved",
     ),
+    # A box the registry leaves open names the box the filer states in its place.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.operator_box.stated",
+        "modelo.work.verify.operator_box.unstated",
+        action_id="operator.modelo.work.set_value",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.m202.modality.complete",
         "modelo.work.verify.m202.modality.incomplete",
+    ),
+    # The held preceding Modelo 200 and the stated twelve-month turnover of a
+    # twelve-month preceding período must agree; neither is taken over the other.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.m200.incn_periodo_anterior.agrees",
+        "modelo.work.verify.m200.incn_periodo_anterior.disagrees",
     ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.cross_period_dependency.clean",
         "modelo.work.verify.cross_period_dependency.unclean",
     ),
+    *_cross_period_door_profiles("modelo.work.verify"),
+    _profile(
+        "modelo.export",
+        "modelo.export.cross_period_dependency.clean",
+        "modelo.export.cross_period_dependency.unclean",
+    ),
+    *_cross_period_door_profiles("modelo.export"),
+    _profile(
+        "modelo.export",
+        "modelo.export.activity_start_date.present",
+        "modelo.export.activity_start_date.missing_for_first_filer_adjudication",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.activity_start_date.present",
         "modelo.work.verify.activity_start_date.missing_for_first_filer_adjudication",
     ),
-    *_iva_wallet_profiles("modelo.work.calculate", _IVA_WALLET_CALCULATE_SCENARIOS),
-    *_iva_wallet_profiles("modelo.work.verify", _IVA_WALLET_REVISION_SCENARIOS),
-    *_iva_wallet_profiles("modelo.work.file", _IVA_WALLET_REVISION_SCENARIOS),
-    *_iva_wallet_profiles("modelo.export", _IVA_WALLET_REVISION_SCENARIOS),
+    *IVA_WALLET_REFUSAL_PROFILES,
+    # A calculation the note gate withholds an action from. A stale screen is
+    # put right by calculating again; a blocking note is read on the
+    # declaration's status; a filing recorded before screens existed has no
+    # action that clears it, so it is the operator's decision.
+    *(
+        profile
+        for leaf in ("modelo.work.verify", "modelo.work.file", "modelo.export", "modelo.work.report")
+        for profile in (
+            _profile(
+                leaf,
+                f"{leaf}.calculation_notes.clear",
+                f"{leaf}.calculation_notes.screen_outdated",
+                action_id="operator.modelo.work.calculate",
+            ),
+            _profile(
+                leaf,
+                f"{leaf}.calculation_notes.clear",
+                f"{leaf}.calculation_notes.blocking_note",
+                action_id="operator.modelo.work.status",
+            ),
+            _profile(
+                leaf,
+                f"{leaf}.calculation_notes.clear",
+                f"{leaf}.calculation_notes.filed_before_grade_cap",
+            ),
+        )
+    ),
+    # An operator's Modelo 390 applicability attestation the application refuses
+    # to record or to rely on. Evidence that is unusable or observed at a time
+    # its period does not allow is replaced by recording a new attestation; the
+    # other causes lie in what the request names, which the operator decides,
+    # or in what this path cannot record at all.
+    *(
+        _profile(
+            "modelo.work.attest_m303_exonerado_390",
+            "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+            f"modelo.work.attest_m303_exonerado_390.evidence.{scenario_code}",
+            action_id="operator.modelo.work.attest_m303_exonerado_390",
+        )
+        for scenario_code in ("observation_timing", "evidence_unusable")
+    ),
+    _profile(
+        "modelo.work.attest_m303_exonerado_390",
+        "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+        "modelo.work.attest_m303_exonerado_390.evidence.profile_not_current",
+        action_id="operator.profile.status",
+    ),
+    *(
+        _profile(
+            "modelo.work.attest_m303_exonerado_390",
+            "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+            f"modelo.work.attest_m303_exonerado_390.evidence.{scenario_code}",
+        )
+        for scenario_code in ("identity_unusable", "target_wrong", "conflicting_assertions")
+    ),
+    _profile(
+        "modelo.work.attest_m303_exonerado_390",
+        "modelo.work.attest_m303_exonerado_390.evidence.admissible",
+        "modelo.work.attest_m303_exonerado_390.evidence.request_unsupported",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
 )
 
 MODELO_PRECONDITION_PROFILE_REGISTRY: Mapping[tuple[str, str, str], ManifestActionProfile] = MappingProxyType(
@@ -572,8 +1140,18 @@ def build_modelo_precondition_failure(
     provenance: ActionEvidenceProvenance,
     action_id: str | None = None,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
+    missing_action_arguments: tuple[str, ...] = (),
+    alternative_actions: tuple[AlternativeActionArguments, ...] = (),
 ) -> ModeloPreconditionFailure:
-    """Build one declared verdict and fail closed on catalogue disagreement."""
+    """Build one declared verdict and fail closed on catalogue disagreement.
+
+    ``missing_action_arguments`` names the declared arguments only the operator
+    can supply, such as an answer the refused request did not carry; together
+    with the resolved ``action_argument_values`` they must cover the catalogue
+    declaration exactly. ``alternative_actions`` supplies the same for each
+    alternative the scenario declares, in its declared order; an undeclared,
+    missing or reordered alternative is refused.
+    """
     identity = (subject_leaf_key, condition_id, scenario_id)
     profile = MODELO_PRECONDITION_PROFILE_REGISTRY.get(identity)
     if profile is None:
@@ -587,32 +1165,16 @@ def build_modelo_precondition_failure(
         provenance=provenance,
         values=evidence_values,
     )
-    bindings: tuple[ActionArgumentBinding, ...] = ()
-    if declared_action_id is not None:
-        declaration = lookup_action(declared_action_id)
-        values = action_argument_values or {}
-        declared_names = {item.argument_name for item in declaration.argument_specifications}
-        if set(values) != declared_names:
-            raise ValueError("modelo action argument values must exactly match the catalogue declaration")
-        bindings = tuple(
-            ActionArgumentBinding(
-                argument_name=name,
-                status=ActionArgumentStatus.RESOLVED,
-                value=value,
-                source=ActionArgumentSource.VERDICT_CONTEXT,
-                source_key=name,
-            )
-            for name, value in values.items()
-        )
+    bindings = action_argument_bindings(declared_action_id, action_argument_values, missing_action_arguments)
     verdict = PreconditionVerdict(
         failed_condition_id=condition_id,
         evidence=(evidence,),
         action=profile.action,
         argument_bindings=bindings,
-        conditionality=(
-            ActionConditionality.IMMEDIATE if declared_action_id is not None else ActionConditionality.NOT_APPLICABLE
-        ),
+        missing_argument_names=missing_action_arguments,
+        conditionality=recovery_conditionality(declared_action_id, missing_action_arguments),
         no_recovery_outcome=profile.no_recovery_outcome,
+        alternative_actions=alternative_recovery_actions(profile, alternative_actions),
     )
     return ModeloPreconditionFailure(
         subject_leaf_key=subject_leaf_key,
@@ -629,6 +1191,8 @@ def build_modelo_precondition_failure_for_scenario(
     evidence_values: Mapping[str, str | int | bool | Decimal],
     provenance: ActionEvidenceProvenance,
     action_argument_values: Mapping[str, str | int | bool | Decimal] | None = None,
+    missing_action_arguments: tuple[str, ...] = (),
+    alternative_actions: tuple[AlternativeActionArguments, ...] = (),
 ) -> ModeloPreconditionFailure:
     """Build a failure from its declared leaf/scenario profile without re-declaring its condition."""
     profiles = tuple(
@@ -648,6 +1212,29 @@ def build_modelo_precondition_failure_for_scenario(
         provenance=provenance,
         action_id=None if profile.action is None else profile.action.action_id,
         action_argument_values=action_argument_values,
+        missing_action_arguments=missing_action_arguments,
+        alternative_actions=alternative_actions,
+    )
+
+
+def build_modelo_calculate_refusal_failure(
+    *,
+    scenario: str,
+    evidence_values: Mapping[str, str | int | bool | Decimal],
+) -> ModeloPreconditionFailure:
+    """Build the declared verdict for one refusal of ``modelo.work.calculate`` that names no action.
+
+    ``scenario`` is the tail of the declared scenario identity under the
+    calculation leaf. The evidence is the application's own observation of the
+    contradiction, never the filer's private values.
+    """
+    scenario_id = f"modelo.work.calculate.{scenario}"
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.work.calculate",
+        scenario_id=scenario_id,
+        evidence_id=f"{scenario_id}.observation",
+        evidence_values=evidence_values,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
     )
 
 
@@ -682,9 +1269,12 @@ def build_modelo_work_file_unverified_revision_failure(
 
 
 __all__ = [
+    "ATTEST_PRIOR_VALUE_ACTION_ID",
+    "ATTEST_WORK_INCOME_ACTION_ID",
     "MODELO_PRECONDITION_PROFILES",
     "MODELO_PRECONDITION_PROFILE_REGISTRY",
     "ModeloPreconditionFailure",
+    "build_modelo_calculate_refusal_failure",
     "build_modelo_precondition_failure",
     "build_modelo_precondition_failure_for_scenario",
     "build_modelo_work_file_unverified_revision_failure",

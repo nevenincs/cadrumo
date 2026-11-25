@@ -17,11 +17,13 @@ from pydantic import ValidationError
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
+from .classification_effects import fields_cleared_by_classification
 from .classification_origin import ClassificationOrigin, with_classification_origin
 from .enums import BusinessClassification
 from .errors import TransactionCatalogueError, TransactionNotFoundError
 from .lineage_models import ClassificationHistoryEntry
+from .model_validation import validate_figures_without_business
 from .models import Transaction, TransactionCatalogue
 
 _LOGGER = get_logger(__name__)
@@ -49,6 +51,27 @@ def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_i
             "invoice_id": invoice_id,
         },
         context=f"invalid invoice link for transaction: {transaction_id}",
+    )
+    return _replace_transaction(catalogue, updated_transaction)
+
+
+def unlink_invoice(catalogue: TransactionCatalogue, transaction_id: str) -> TransactionCatalogue:
+    """Return a new catalogue with one transaction's invoice reference cleared.
+
+    Args:
+        catalogue: Source catalogue.
+        transaction_id: Stable transaction identifier to update.
+
+    Returns:
+        A fresh immutable :class:`TransactionCatalogue` whose transaction names no
+        invoice. A transaction that names none is returned value-equal.
+    """
+    transaction = _require_transaction(catalogue, transaction_id)
+    if transaction.invoice_id is None:
+        return catalogue
+    updated_transaction = _validate_transaction_update(
+        {**transaction.model_dump(mode="python"), "invoice_id": None},
+        context=f"invalid invoice unlink for transaction: {transaction_id}",
     )
     return _replace_transaction(catalogue, updated_transaction)
 
@@ -101,7 +124,11 @@ def set_classification(
 
     """
     transaction = _require_transaction(catalogue, transaction_id)
-    now = _utc_now()
+    # A category named for a classification that refuses one is refused, never dropped.
+    validate_figures_without_business(classification, {"category_id": category_id})
+    cleared = fields_cleared_by_classification(classification)
+    kept_category = None if "category_id" in cleared else transaction.category_id
+    now = clock_utc_now()
     normalised_reason = reason.strip()
     # Strip classified_by here so the idempotence signature below matches the
     # value the model will store (the field validator also strips, so a raw
@@ -116,7 +143,7 @@ def set_classification(
         business_pct,
         normalised_classified_by,
         normalised_reason,
-        category_id if category_id is not None else transaction.category_id,
+        category_id if category_id is not None else kept_category,
         notes if notes is not None else transaction.notes,
         resolved_confidence,
     )
@@ -148,6 +175,8 @@ def set_classification(
 
     payload = {
         **transaction.model_dump(mode="python"),
+        # A classification write drops what the classification does not keep.
+        **dict.fromkeys(cleared),
         "business_classification": classification,
         "business_pct": business_pct,
         "classified_at": now,

@@ -49,20 +49,27 @@ def keystore_path(root: Path, bucket_id: str) -> Path:
     return keystore_root(root) / bucket_id
 
 
-def _is_under(child: Path, parent: Path) -> bool:
+def _resolved(path: Path) -> Path | None:
+    """Return ``path`` resolved, or ``None`` when resolving it fails."""
+    try:
+        return path.resolve(strict=False)
+    except OSError:
+        return None
+
+
+def _is_under(child: Path, parent: Path, *, resolved_child: Path | None) -> bool:
     """True if ``child`` resolves to a path beneath ``parent``.
 
     Uses ``Path.relative_to`` semantics on the lexically-resolved forms so
     the check is OS-portable; symlink traversal is intentionally not
     followed because the call site validates configuration before any
-    filesystem state exists.
+    filesystem state exists. ``resolved_child`` is ``child`` as the caller
+    resolved it once for every parent it compares, or ``None`` when that
+    failed; when either side cannot be resolved both are compared as given.
     """
-    try:
-        resolved_child = child.resolve(strict=False)
-        resolved_parent = parent.resolve(strict=False)
-    except OSError:
-        resolved_child = child
-        resolved_parent = parent
+    resolved_parent = _resolved(parent)
+    if resolved_child is None or resolved_parent is None:
+        resolved_child, resolved_parent = child, parent
     try:
         resolved_child.relative_to(resolved_parent)
     except ValueError:
@@ -95,7 +102,9 @@ def validate_keystore_separation(
     # The already-resolved bucket dir's parent IS the buckets container -- no
     # second read of the governed name is needed.
     buckets_parent = paths.bucket_dir.parent
-    if _is_under(target, paths.db_dir):
+    # One target, two parents: the target is resolved once for both comparisons.
+    resolved_target = _resolved(target)
+    if _is_under(target, paths.db_dir, resolved_child=resolved_target):
         raise BucketValidationError(
             "keystore path resolves under bucket db dir",
             context={
@@ -103,7 +112,7 @@ def validate_keystore_separation(
                 "surface": _KEYSTORE_VALIDATION_SURFACE,
             },
         )
-    if _is_under(target, buckets_parent):
+    if _is_under(target, buckets_parent, resolved_child=resolved_target):
         raise BucketValidationError(
             "keystore path resolves under buckets parent",
             context={

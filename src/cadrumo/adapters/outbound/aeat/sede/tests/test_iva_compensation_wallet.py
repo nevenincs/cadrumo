@@ -19,6 +19,7 @@ from ......core.external_constants import UTF_8_ENCODING
 from ......core.period import Period
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import (
     AEAT_NON_HOST_AUTHORITY_CANARIES,
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
@@ -29,36 +30,37 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from ...browser.profile import Profile
-from .._adapter_utils import is_aeat_auth_gate_redirect
+from ..adapter_utils import is_aeat_auth_gate_redirect
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
-    _assert_read_browser_action,
-    _assert_read_http,
-    _dump_wallet_diagnostic,
-    _raise_if_wallet_auth_gate,
-    _wait_for_wallet_execute_initial_shape,
+    assert_read_browser_action,
+    assert_read_http,
     assert_wallet_read_landing,
+    dump_wallet_diagnostic,
+    raise_if_wallet_auth_gate,
+    wait_for_wallet_execute_initial_shape,
 )
 from ..iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,
     WALLET_URL,
-    _parse_spanish_decimal,
-    _wallet_row_from_cells,
     assert_own_name_representation_form_html,
     discover_iva_compensation_wallet_entrypoint,
     is_aeat_wallet_read_url,
     parse_iva_compensation_wallet_html,
+    parse_spanish_decimal,
     wallet_execute_gate_status,
     wallet_page_shape_context,
+    wallet_row_from_cells,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_URL = f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.auth_gate_4033}"
 _SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
-_TARGET_PERIOD = Period.from_year_and_code(2026, "2T")
+_YEAR = filing_year_envelope().horizon
+_TARGET_PERIOD = Period.from_year_and_code(_YEAR, "2T")
 
 _SEPARATOR_NAMES = {
     ".": "full-stop",
@@ -91,7 +93,7 @@ def _cartera_results_html(*, total: str, rows: str) -> str:
     <html><head><title>Cartera de cuotas de IVA a compensar</title></head><body>
       <h1>Cartera de cuotas de IVA a compensar</h1>
       <ul>
-        <li class="sei_cols"><strong class="azul">Ejercicio:</strong>&nbsp;<span class="notraducir">2026</span></li>
+        <li class="sei_cols"><strong class="azul">Ejercicio:</strong>&nbsp;<span class="notraducir">{_YEAR}</span></li>
         <li class="sei_cols"><strong class="azul">Período:</strong>&nbsp;<span class="notraducir">2T</span></li>
       </ul>
       <ul>
@@ -119,9 +121,9 @@ def test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total()
     html = _cartera_results_html(
         total="1.900,50",
         rows=(
-            '<tr><td class="texto_cen">2024</td><td class="texto_cen">4T</td>'
+            f'<tr><td class="texto_cen">{_YEAR - 2}</td><td class="texto_cen">4T</td>'
             '<td class="texto_der">                 1.500,00</td></tr>'
-            '<tr><td class="texto_cen">2025</td><td class="texto_cen">1T</td>'
+            f'<tr><td class="texto_cen">{_YEAR - 1}</td><td class="texto_cen">1T</td>'
             '<td class="texto_der">                 400,50</td></tr>'
         ),
     )
@@ -130,23 +132,23 @@ def test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total()
         html,
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-        target_year=2026,
+        target_year=_YEAR,
         target_period=_TARGET_PERIOD,
         source_url=WALLET_URL,
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
     # The aggregate "pendientes de períodos anteriores" line is the contract total.
     assert observation.total_pending == Decimal("1900.50")
     assert len(observation.rows) == 2
-    assert observation.rows[0].generation_year == 2024
-    assert observation.rows[0].generation_period == Period.from_year_and_code(2024, "4T")
+    assert observation.rows[0].generation_year == _YEAR - 2
+    assert observation.rows[0].generation_period == Period.from_year_and_code(_YEAR - 2, "4T")
     assert observation.rows[0].pending_amount == Decimal("1500.00")
     # AEAT's cartera consultation surface does not break out generated/applied.
     assert observation.rows[0].generated_amount is None
     assert observation.rows[0].applied_amount is None
-    assert observation.rows[1].generation_year == 2025
-    assert observation.rows[1].generation_period == Period.from_year_and_code(2025, "1T")
+    assert observation.rows[1].generation_year == _YEAR - 1
+    assert observation.rows[1].generation_period == Period.from_year_and_code(_YEAR - 1, "1T")
     assert observation.rows[1].pending_amount == Decimal("400.50")
     assert observation.raw_sha256 is not None
 
@@ -159,17 +161,17 @@ def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_c
     """
     html = _cartera_results_html(
         total="123,45",
-        rows="<tr><td>2024</td><td>4T</td><td>123,45</td></tr>",
+        rows=f"<tr><td>{_YEAR - 2}</td><td>4T</td><td>123,45</td></tr>",
     )
 
     observation = parse_iva_compensation_wallet_html(
         html,
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-        target_year=2026,
+        target_year=_YEAR,
         target_period=_TARGET_PERIOD,
         source_url=WALLET_URL,
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         allow_empty_wallet_shell=True,
     )
 
@@ -191,10 +193,10 @@ def test_parse_iva_compensation_wallet_html_accepts_zero_aggregate_empty_cartera
         html,
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-        target_year=2026,
+        target_year=_YEAR,
         target_period=_TARGET_PERIOD,
         source_url=WALLET_URL,
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
     assert observation.total_pending == Decimal("0")
@@ -241,10 +243,10 @@ def test_an_aggregate_grouped_with_any_printed_separator_reads_the_whole_figure(
         html,
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-        target_year=2026,
+        target_year=_YEAR,
         target_period=_TARGET_PERIOD,
         source_url=WALLET_URL,
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
     assert observation.total_pending == Decimal("1900.50"), f"{name}-grouped aggregate lost its leading group"
@@ -272,9 +274,9 @@ def test_a_cuota_disponible_cell_grouped_with_any_printed_separator_is_read_not_
     html = _cartera_results_html(
         total=f"1{separator}900,50",
         rows=(
-            f'<tr><td class="texto_cen">2024</td><td class="texto_cen">4T</td>'
+            f'<tr><td class="texto_cen">{_YEAR - 2}</td><td class="texto_cen">4T</td>'
             f'<td class="texto_der">                 1{separator}500,00</td></tr>'
-            '<tr><td class="texto_cen">2025</td><td class="texto_cen">1T</td>'
+            f'<tr><td class="texto_cen">{_YEAR - 1}</td><td class="texto_cen">1T</td>'
             '<td class="texto_der">                 400,50</td></tr>'
         ),
     )
@@ -283,10 +285,10 @@ def test_a_cuota_disponible_cell_grouped_with_any_printed_separator_is_read_not_
         html,
         taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-        target_year=2026,
+        target_year=_YEAR,
         target_period=_TARGET_PERIOD,
         source_url=WALLET_URL,
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
     assert observation.rows[0].pending_amount == Decimal("1500.00"), f"{name}-grouped cell was not read as printed"
@@ -306,7 +308,7 @@ def test_a_cuota_disponible_cell_grouped_with_an_ascii_space_is_still_refused() 
     """
     html = _cartera_results_html(
         total="1.900,50",
-        rows="<tr><td>2024</td><td>4T</td><td>1 500,00</td></tr>",
+        rows=f"<tr><td>{_YEAR - 2}</td><td>4T</td><td>1 500,00</td></tr>",
     )
 
     with pytest.raises(SedeParseError) as exc_info:
@@ -314,10 +316,10 @@ def test_a_cuota_disponible_cell_grouped_with_an_ascii_space_is_still_refused() 
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
     assert exc_info.value.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED
@@ -327,7 +329,7 @@ def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> No
     """The aggregate total must reconcile with the sum of detail rows."""
     html = _cartera_results_html(
         total="999,99",
-        rows="<tr><td>2024</td><td>4T</td><td>123,45</td></tr>",
+        rows=f"<tr><td>{_YEAR - 2}</td><td>4T</td><td>123,45</td></tr>",
     )
 
     with pytest.raises(SedeParseError, match="does not equal the sum"):
@@ -335,10 +337,10 @@ def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> No
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
 
@@ -357,10 +359,10 @@ def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
 
@@ -382,10 +384,10 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
 
@@ -406,10 +408,10 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
 
@@ -420,7 +422,7 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
       <body>
         <h1>Cartera de cuotas de IVA a compensar</h1>
         <form id="Form" method="post" action="{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
-          <input type="hidden" name="ejercicio" value="2026" />
+          <input type="hidden" name="ejercicio" value="{_YEAR}" />
         </form>
       </body>
     </html>
@@ -431,10 +433,10 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,
         )
 
@@ -442,7 +444,7 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
 def test_parse_iva_compensation_wallet_html_refuses_wrong_rendered_target_period() -> None:
     html = _cartera_results_html(
         total="123,45",
-        rows="<tr><td>2024</td><td>4T</td><td>123,45</td></tr>",
+        rows=f"<tr><td>{_YEAR - 2}</td><td>4T</td><td>123,45</td></tr>",
     )
 
     with pytest.raises(SedeParseError, match="does not match requested period"):
@@ -450,10 +452,10 @@ def test_parse_iva_compensation_wallet_html_refuses_wrong_rendered_target_period
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "1T"),
+            target_year=_YEAR,
+            target_period=Period.from_year_and_code(_YEAR, "1T"),
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
 
@@ -475,10 +477,10 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
             html,
             taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
-            target_year=2026,
+            target_year=_YEAR,
             target_period=_TARGET_PERIOD,
             source_url=WALLET_URL,
-            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+            captured_at=datetime(_YEAR, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,
         )
 
@@ -514,7 +516,7 @@ def test_wallet_execute_initial_shape_waits_for_delayed_submit() -> None:
         return pages.pop(0)
 
     async def run() -> tuple[str, str]:
-        return await _wait_for_wallet_execute_initial_shape(
+        return await wait_for_wallet_execute_initial_shape(
             content=content,
             expected_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
             timeout_ms=2_000,
@@ -527,12 +529,12 @@ def test_wallet_execute_initial_shape_waits_for_delayed_submit() -> None:
 
 
 def test_iva_wallet_read_guard_allows_declared_wallet_read_post_surface() -> None:
-    _assert_read_http("POST", WALLET_URL)
+    assert_read_http("POST", WALLET_URL)
 
 
 def test_iva_wallet_read_guard_rejects_unclassified_browser_action() -> None:
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
-        _assert_read_browser_action("wallet-unreviewed-click")
+        assert_read_browser_action("wallet-unreviewed-click")
 
 
 def test_iva_wallet_read_guard_allows_reviewed_browser_read_actions() -> None:
@@ -541,7 +543,7 @@ def test_iva_wallet_read_guard_allows_reviewed_browser_read_actions() -> None:
         EXTERNAL.aeat.pre303.wallet_execute_read_action_label,
         EXTERNAL.aeat.pre303.wallet_discovered_entrypoint_action_label,
     ):
-        _assert_read_browser_action(action_label)
+        assert_read_browser_action(action_label)
 
 
 def test_own_name_representation_guard_accepts_dialogo_dispatcher_shape() -> None:
@@ -693,7 +695,7 @@ def test_wallet_auth_gate_caller_uses_the_configured_redirect_contract(
 
     if is_auth_gate:
         with pytest.raises(SedeNavigationError) as raised:
-            _raise_if_wallet_auth_gate(
+            raise_if_wallet_auth_gate(
                 cast(Page, _Page()),
                 message="wallet auth gate",
                 expected_url=WALLET_URL,
@@ -701,7 +703,7 @@ def test_wallet_auth_gate_caller_uses_the_configured_redirect_contract(
             )
         assert raised.value.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED
     else:
-        _raise_if_wallet_auth_gate(
+        raise_if_wallet_auth_gate(
             cast(Page, _Page()),
             message="wallet auth gate",
             expected_url=WALLET_URL,
@@ -797,11 +799,11 @@ async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tm
       </form>
       <table>
         <tr><th>Ejercicio</th><th>Período</th><th>Cuota Disponible</th></tr>
-        <tr><td>2026</td><td>2T</td><td>123,45</td></tr>
+        <tr><td>{_YEAR}</td><td>2T</td><td>123,45</td></tr>
       </table>
     </body></html>
     """
-    settings = Settings(cadrumo_token_dir=tmp_path)
+    settings = Settings(cadrumo_storage_root=tmp_path)
     profile = Profile(name="wallet-diagnostic")
 
     async with (
@@ -809,7 +811,7 @@ async def test_wallet_diagnostic_dump_writes_only_redacted_structural_summary(tm
         opened_browser_page(playwright, settings, profile) as (page, _context),
     ):
         await page.set_content(html)
-        await _dump_wallet_diagnostic(page, label="unit", dump_dir=tmp_path / "diagnostics")
+        await dump_wallet_diagnostic(page, label="unit", dump_dir=tmp_path / "diagnostics")
 
     summary = (tmp_path / "diagnostics" / "unit-summary.txt").read_text(encoding=UTF_8_ENCODING)
     assert "raw_sha256=" in summary
@@ -841,14 +843,14 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
 
 
 def test_parse_spanish_decimal_empty_cell_raises_with_translated_message() -> None:
-    """_parse_spanish_decimal raises SedeParseError with a rendered translated_message.
+    """parse_spanish_decimal raises SedeParseError with a rendered translated_message.
 
     The translated_message must be set (not None) and must be a rendered locale
     string (not the raw key) so the CLI error boundary can surface a localised
     operator message for the empty-amount-cell condition.
     """
     with pytest.raises(SedeParseError) as exc_info:
-        _parse_spanish_decimal("")
+        parse_spanish_decimal("")
 
     exc = exc_info.value
     assert exc.translated_message is not None
@@ -859,16 +861,16 @@ def test_parse_spanish_decimal_empty_cell_raises_with_translated_message() -> No
 
 
 def test_wallet_row_from_cells_empty_period_raises_with_translated_message() -> None:
-    """_wallet_row_from_cells raises SedeParseError with a rendered translated_message.
+    """wallet_row_from_cells raises SedeParseError with a rendered translated_message.
 
     A row where cells[1] (the period) is blank must carry a non-None
     translated_message that is a rendered locale string (not the raw key)
     so CLI error rendering can localise the operator message.
     """
-    cells = ["2026", "", "1.500,00", "300,00", "1.200,00"]
+    cells = [str(_YEAR), "", "1.500,00", "300,00", "1.200,00"]
 
     with pytest.raises(SedeParseError) as exc_info:
-        _wallet_row_from_cells(cells)
+        wallet_row_from_cells(cells)
 
     exc = exc_info.value
     assert exc.translated_message is not None
@@ -880,7 +882,7 @@ def test_wallet_row_from_cells_empty_period_raises_with_translated_message() -> 
 def test_parse_spanish_decimal_whitespace_only_cell_raises_with_translated_message() -> None:
     """A whitespace-only amount cell normalises to empty and raises SedeParseError."""
     with pytest.raises(SedeParseError) as exc_info:
-        _parse_spanish_decimal("   \xa0  ")
+        parse_spanish_decimal("   \xa0  ")
 
     exc = exc_info.value
     assert exc.translated_message is not None
@@ -897,11 +899,11 @@ def test_parse_spanish_decimal_whitespace_only_cell_raises_with_translated_messa
 
 def test_parse_spanish_decimal_accepts_the_shapes_the_live_wallet_actually_prints() -> None:
     """Every shape observed in the committed cartera fixtures still parses."""
-    assert _parse_spanish_decimal("1.500,00") == Decimal("1500.00")
-    assert _parse_spanish_decimal("400,50") == Decimal("400.50")
-    assert _parse_spanish_decimal("123,45") == Decimal("123.45")
-    assert _parse_spanish_decimal("0,00") == Decimal("0.00")
-    assert _parse_spanish_decimal("1.000.000,00") == Decimal("1000000.00")
+    assert parse_spanish_decimal("1.500,00") == Decimal("1500.00")
+    assert parse_spanish_decimal("400,50") == Decimal("400.50")
+    assert parse_spanish_decimal("123,45") == Decimal("123.45")
+    assert parse_spanish_decimal("0,00") == Decimal("0.00")
+    assert parse_spanish_decimal("1.000.000,00") == Decimal("1000000.00")
 
 
 def test_parse_spanish_decimal_rejects_a_dot_grouped_amount_missing_its_decimal_tail() -> None:
@@ -914,7 +916,7 @@ def test_parse_spanish_decimal_rejects_a_dot_grouped_amount_missing_its_decimal_
     fixture shows AEAT actually prints. It must now raise instead.
     """
     with pytest.raises(SedeParseError) as exc_info:
-        _parse_spanish_decimal("1.500")
+        parse_spanish_decimal("1.500")
 
     assert exc_info.value.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED
 
@@ -922,7 +924,7 @@ def test_parse_spanish_decimal_rejects_a_dot_grouped_amount_missing_its_decimal_
 def test_parse_spanish_decimal_rejects_a_bare_integer_amount_cell() -> None:
     """A bare integer with no separator at all is also refused, not silently accepted."""
     with pytest.raises(SedeParseError) as exc_info:
-        _parse_spanish_decimal("500")
+        parse_spanish_decimal("500")
 
     assert exc_info.value.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED
 
@@ -930,7 +932,7 @@ def test_parse_spanish_decimal_rejects_a_bare_integer_amount_cell() -> None:
 def test_parse_spanish_decimal_negative_amount_reaches_its_own_refusal_message() -> None:
     """A correctly-shaped negative amount is refused for being negative, not for its shape."""
     with pytest.raises(SedeParseError, match="must be non-negative"):
-        _parse_spanish_decimal("-1,00")
+        parse_spanish_decimal("-1,00")
 
 
 def test_wallet_read_guard_admits_sibling_load_balancer_host() -> None:
@@ -965,19 +967,19 @@ class TestLiveSourceUrlAssertion:
     @pytest.mark.parametrize("origin_name", ["www1", "www2", "www6", "www12", "sede"])
     def test_a_wallet_read_on_any_dispatch_host_is_accepted(self, origin_name: str) -> None:
         """A successful read is accepted whichever sede host answered."""
-        from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
+        from .test_iva_compensation_wallet_live import assert_source_url_is_a_wallet_read
 
         external = Settings.external_constants()
         origin = getattr(external.aeat.domains, origin_name)
-        _assert_source_url_is_a_wallet_read(f"{origin}{external.aeat.sede_paths.iva_compensation_wallet}")
+        assert_source_url_is_a_wallet_read(f"{origin}{external.aeat.sede_paths.iva_compensation_wallet}")
 
     def test_a_non_aeat_host_is_refused(self) -> None:
         """A URL off the AEAT apex is not a wallet read, whatever its path."""
-        from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
+        from .test_iva_compensation_wallet_live import assert_source_url_is_a_wallet_read
 
         external = Settings.external_constants()
         with pytest.raises(pytest.fail.Exception, match="not under the AEAT apex"):
-            _assert_source_url_is_a_wallet_read(
+            assert_source_url_is_a_wallet_read(
                 f"https://example.invalid{external.aeat.sede_paths.iva_compensation_wallet}",
             )
 
@@ -987,11 +989,11 @@ class TestLiveSourceUrlAssertion:
         Without this the check would accept any AEAT URL at all, which is
         weaker than the invariant rather than equal to it.
         """
-        from .test_iva_compensation_wallet_live import _assert_source_url_is_a_wallet_read
+        from .test_iva_compensation_wallet_live import assert_source_url_is_a_wallet_read
 
         external = Settings.external_constants()
         with pytest.raises(pytest.fail.Exception, match="not the wallet route"):
-            _assert_source_url_is_a_wallet_read(
+            assert_source_url_is_a_wallet_read(
                 f"{external.aeat.domains.www6}{external.aeat.sede_paths.declarations_listing}",
             )
 

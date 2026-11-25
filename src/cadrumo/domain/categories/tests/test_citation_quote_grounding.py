@@ -32,8 +32,9 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.tests.published_authority import (
     published_legal_quotation_is_grounded,
     published_legal_reference,
+    published_source_reference,
 )
-from ..proportionality import CategoryCitation
+from ..proportionality import ANNUAL_EDITION_CITATION_SOURCES, CategoryCitation
 from ..registry import load_category_profiles
 from ..spending_category_catalogue import require_spending_category
 
@@ -45,6 +46,8 @@ def _shipped_citations(operation: PinnedAuthorityOperation) -> list[CategoryCita
     found: list[CategoryCitation] = []
     for profile in load_category_profiles(operation=operation).values():
         found.extend(profile.proportionality.citations)
+        if profile.proportionality.iva_mixed_use is not None:
+            found.extend(profile.proportionality.iva_mixed_use.citations)
     return found
 
 
@@ -72,6 +75,14 @@ def test_every_verified_quotation_is_contained_in_its_own_provision(operation: P
     uncontained: list[tuple[str, str]] = []
     for citation in _shipped_citations(operation):
         if citation.grounding is not CitationGrounding.VERIFIED:
+            continue
+        if citation.source in ANNUAL_EDITION_CITATION_SOURCES:
+            # An edition has no provision id. Its quotation is checked by the
+            # registry build against the bundled edition named here, and the
+            # loader refuses one the build did not check; what this test can
+            # still prove is that the named edition is published.
+            assert citation.source_ref is not None
+            published_source_reference(citation.source_ref)
             continue
         assert citation.legal_ref is not None, (
             f"verified citation {citation.locator!r} carries no legal_ref to be checked against"

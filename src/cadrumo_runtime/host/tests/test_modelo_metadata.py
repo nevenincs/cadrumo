@@ -5,11 +5,8 @@ from __future__ import annotations
 import json
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
-from threading import Event
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,7 +21,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipient import NativeEnrollmentRecipient
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
 )
@@ -36,35 +33,27 @@ from cadrumo.application.modelo.work_change_contracts import (
 )
 from cadrumo.application.operations.frontend_requests import (
     OPERATION_OBSERVATION_PROJECTION_ID,
-    OperationObservationRequestV1,
-    OperationObservationSuccessV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.entrypoints.tests.production_operation_registry import production_operation_registry
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
 )
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import (
-    OperationAcknowledged,
     OperationContract,
     OperationContractReply,
-    OperationControl,
-    OperationObserve,
-    OperationObserved,
     OperationProjected,
     OperationReply,
     OperationResult,
@@ -73,8 +62,6 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
-    ProfileLogin,
-    ProfileStatus,
     SessionRequest,
     SessionsLocked,
 )
@@ -83,8 +70,7 @@ from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
-from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
-from ..profile_connections import RuntimeProfileConnections
+from .served_runtime import SyntheticLogin, admit_session, serving_runtime, start_and_settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -99,20 +85,6 @@ _SECOND = Period.from_year_and_code(2026, "2T")
 _CREATED = datetime(2020, 1, 1, tzinfo=UTC)
 _RENAME = MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 _DISCARD = MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID
-
-
-class _LoginObservation:
-    login_id = "native-modelo-metadata-test-login"
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        return OsLoginContext(
-            login_id=self.login_id,
-            os_owner_id=owner_id(),
-            active=True,
-            lock_state=OsLockState.UNLOCKED,
-            unattended=LoginEligibility.ELIGIBLE,
-            credential_facilities=credential_facilities,
-        )
 
 
 def _unit(profile_id: UUID, period: Period) -> WorkUnit:
@@ -135,7 +107,7 @@ def _unit(profile_id: UUID, period: Period) -> WorkUnit:
     )
 
 
-def _seed_periods(profile_id: UUID) -> tuple[WorkUnit, WorkUnit]:
+def seed_periods(profile_id: UUID) -> tuple[WorkUnit, WorkUnit]:
     """Persist two canonical units into the actual encrypted catalogue."""
     units = (_unit(profile_id, _FIRST), _unit(profile_id, _SECOND))
     repository = WorkUnitCatalogueRepository(
@@ -150,7 +122,7 @@ def _seed_periods(profile_id: UUID) -> tuple[WorkUnit, WorkUnit]:
 
 
 def _scope(destination_id: UUID) -> AccessScope:
-    registry = build_production_operation_registry()
+    registry = production_operation_registry()
     disclosures = {
         DisclosurePermission(
             destination_id=destination_id,
@@ -189,7 +161,7 @@ def _scope(destination_id: UUID) -> AccessScope:
     )
 
 
-def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | None = None) -> bytes:
+def issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | None = None) -> bytes:
     requester = changed(subject.owner.requesting, destination_id=subject.owner.requesting.client_id)
     subject.owner.requesting = requester
     subject.owner.delivery.endpoint = NativeEnrollmentRecipient(
@@ -212,39 +184,15 @@ def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | No
     return credential.get_secret_value()
 
 
-def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
+def connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
     return VerifiedConnection(
-        endpoint.connect(timeout=3),
+        endpoint.connect(timeout=HANG_GUARD_SECONDS),
         expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
+        deadline=time.monotonic() + HANG_GUARD_SECONDS,
     )
 
 
-def _admit(
-    connection: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    method: Literal["password", "api_key"],
-    proof: bytes,
-) -> UUID:
-    secret = bytearray(proof)
-    reply = connection.login(
-        ProfileLogin(
-            request_id=uuid4(),
-            profile_id=profile_id,
-            frontend=OperationFrontendProjection.CLI,
-            method=method,
-        ),
-        secret,
-        deadline=exchange_deadline(),
-    )
-    assert secret == bytes(len(proof))
-    assert isinstance(reply, ProfileStatus), reply
-    assert reply.status.session_id is not None
-    return reply.status.session_id
-
-
-def _submit(
+def submit(
     connection: VerifiedConnection,
     profile_id: UUID,
     session_id: UUID,
@@ -277,198 +225,147 @@ def test_native_modelo_metadata_scope_uses_persisted_period_and_fences_result(tm
         tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
     ) as subject:
         profile_id = subject.store.binding.profile_id
-        allowed_unit, forbidden_unit = _seed_periods(profile_id)
-        api_key = _issue_scoped_key(subject)
+        allowed_unit, forbidden_unit = seed_periods(profile_id)
+        api_key = issue_scoped_key(subject)
         close_active_bucket_session()
 
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: _LoginObservation(),
+        with serving_runtime(
+            endpoint,
+            root,
+            capture_login=lambda _channel: SyntheticLogin("native-modelo-metadata-test-login"),
             secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
+        ):
+            api, human = connect(endpoint), connect(endpoint)
             try:
-                assert server.ready.wait(3)
-                api, human = _connect(endpoint), _connect(endpoint)
-                try:
-                    # The person signs in first; the key admits only while they are signed in.
-                    human_session = _admit(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-                    api_session = _admit(api, profile_id, method="api_key", proof=api_key)
-                    contract = api.operation(
-                        OperationContract(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=api_session,
-                            definition_id=_RENAME,
-                        ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(contract, OperationContractReply), contract
-                    payload = ModeloWorkRenameRequest(
-                        work_unit_id=allowed_unit.work_unit_id,
-                        new_name="Scoped native rename",
-                        observed_name=allowed_unit.name,
-                        observed_updated_at=allowed_unit.updated_at,
-                        actor="native-test-operator",
-                    )
-                    submitted = _submit(
-                        api,
-                        profile_id,
-                        api_session,
-                        definition_id=_RENAME,
-                        subject_ref=allowed_unit.work_unit_id,
-                        payload_json=payload.model_dump_json(),
-                    )
-                    assert isinstance(submitted, OperationSubmitted), submitted
-                    operation_id = submitted.receipt.operation_id
-                    started = api.operation(
-                        OperationControl(
-                            action="operation_start",
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=api_session,
-                            operation_id=operation_id,
-                        ),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert isinstance(started, OperationAcknowledged), started
-                    deadline = time.monotonic() + 10
-                    while True:
-                        observed = api.operation(
-                            OperationObserve(
-                                request_id=uuid4(),
-                                profile_id=profile_id,
-                                session_id=api_session,
-                                observation=OperationObservationRequestV1(
-                                    operation_id=operation_id, after_cursor=0, page_limit=32
-                                ),
-                            ),
-                            deadline=deadline,
-                        )
-                        assert isinstance(observed, OperationObserved), observed
-                        assert isinstance(observed.observation, OperationObservationSuccessV1)
-                        projection = observed.observation.projection
-                        if projection.terminal_condition is not None:
-                            break
-                        assert time.monotonic() < deadline
-                        time.sleep(0.02)
-                    assert projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert projection.effect is OperationEffect.UPDATED
-                    result_schema = contract.contract.result_schema
-                    assert result_schema is not None
-                    result_request = OperationResult(
+                # The person signs in first; the key admits only while they are signed in.
+                human_session = admit_session(human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+                api_session = admit_session(api, profile_id, method="api_key", proof=api_key)
+                contract = api.operation(
+                    OperationContract(
                         request_id=uuid4(),
                         profile_id=profile_id,
                         session_id=api_session,
-                        result=OperationResultProjectionRequestV1(
-                            operation_id=operation_id,
-                            terminal_revision=projection.revision,
-                            definition_contract_digest=contract.contract.definition_contract_digest,
-                            result_schema=result_schema,
-                        ),
-                    )
-                    result = api.operation(result_request, deadline=time.monotonic() + 5)
-                    assert isinstance(result, OperationProjected), result
-                    typed = OperationResultProjectionSuccessV1[ModeloWorkRenamePublicResultV2].model_validate_json(
-                        json.dumps(result.document)
-                    )
-                    assert typed.projection.work_unit_id == allowed_unit.work_unit_id
-                    assert typed.projection.name == "Scoped native rename"
-                    assert typed.projection.bucket_id == str(profile_id)
-
-                    denied_period = _submit(
-                        api,
-                        profile_id,
-                        api_session,
                         definition_id=_RENAME,
-                        subject_ref=forbidden_unit.work_unit_id,
-                        payload_json=ModeloWorkRenameRequest(
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(contract, OperationContractReply), contract
+                payload = ModeloWorkRenameRequest(
+                    work_unit_id=allowed_unit.work_unit_id,
+                    new_name="Scoped native rename",
+                    observed_name=allowed_unit.name,
+                    observed_updated_at=allowed_unit.updated_at,
+                    actor="native-test-operator",
+                )
+                submitted = submit(
+                    api,
+                    profile_id,
+                    api_session,
+                    definition_id=_RENAME,
+                    subject_ref=allowed_unit.work_unit_id,
+                    payload_json=payload.model_dump_json(),
+                )
+                assert isinstance(submitted, OperationSubmitted), submitted
+                operation_id = submitted.receipt.operation_id
+                projection = start_and_settle(api, profile_id, api_session, operation_id, settle_seconds=10)
+                assert projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+                assert projection.effect is OperationEffect.UPDATED
+                result_schema = contract.contract.result_schema
+                assert result_schema is not None
+                result_request = OperationResult(
+                    request_id=uuid4(),
+                    profile_id=profile_id,
+                    session_id=api_session,
+                    result=OperationResultProjectionRequestV1(
+                        operation_id=operation_id,
+                        terminal_revision=projection.revision,
+                        definition_contract_digest=contract.contract.definition_contract_digest,
+                        result_schema=result_schema,
+                    ),
+                )
+                result = api.operation(result_request, deadline=time.monotonic() + 5)
+                assert isinstance(result, OperationProjected), result
+                typed = OperationResultProjectionSuccessV1[ModeloWorkRenamePublicResultV2].model_validate_json(
+                    json.dumps(result.document)
+                )
+                assert typed.projection.work_unit_id == allowed_unit.work_unit_id
+                assert typed.projection.name == "Scoped native rename"
+                assert typed.projection.bucket_id == str(profile_id)
+
+                denied_period = submit(
+                    api,
+                    profile_id,
+                    api_session,
+                    definition_id=_RENAME,
+                    subject_ref=forbidden_unit.work_unit_id,
+                    payload_json=ModeloWorkRenameRequest(
+                        work_unit_id=forbidden_unit.work_unit_id,
+                        new_name="Forbidden period",
+                        observed_name=forbidden_unit.name,
+                        observed_updated_at=forbidden_unit.updated_at,
+                        actor="native-test-operator",
+                    ).model_dump_json(),
+                )
+                assert isinstance(denied_period, AccessRefusal), denied_period
+                assert denied_period.code is AccessDenialCode.PERIOD_DENIED
+                denied_discard = submit(
+                    api,
+                    profile_id,
+                    api_session,
+                    definition_id=_DISCARD,
+                    subject_ref=forbidden_unit.work_unit_id,
+                    payload_json=ModeloWorkDiscardRequest(
+                        baseline=ModeloWorkDiscardBaseline(
                             work_unit_id=forbidden_unit.work_unit_id,
-                            new_name="Forbidden period",
-                            observed_name=forbidden_unit.name,
+                            name=forbidden_unit.name,
                             observed_updated_at=forbidden_unit.updated_at,
-                            actor="native-test-operator",
-                        ).model_dump_json(),
-                    )
-                    assert isinstance(denied_period, AccessRefusal), denied_period
-                    assert denied_period.code is AccessDenialCode.PERIOD_DENIED
-                    denied_discard = _submit(
-                        api,
-                        profile_id,
-                        api_session,
-                        definition_id=_DISCARD,
-                        subject_ref=forbidden_unit.work_unit_id,
-                        payload_json=ModeloWorkDiscardRequest(
-                            baseline=ModeloWorkDiscardBaseline(
-                                work_unit_id=forbidden_unit.work_unit_id,
-                                name=forbidden_unit.name,
-                                observed_updated_at=forbidden_unit.updated_at,
-                            ),
-                            reason="not in granted period",
-                            actor="native-test-operator",
-                        ).model_dump_json(),
-                    )
-                    assert isinstance(denied_discard, AccessRefusal), denied_discard
-                    assert denied_discard.code is AccessDenialCode.PERIOD_DENIED
-                    mismatched_subject = _submit(
-                        api,
-                        profile_id,
-                        api_session,
-                        definition_id=_RENAME,
-                        subject_ref=forbidden_unit.work_unit_id,
-                        payload_json=payload.model_dump_json(),
-                    )
-                    assert isinstance(mismatched_subject, AccessRefusal), mismatched_subject
-                    assert mismatched_subject.code is AccessDenialCode.OPERATION_DENIED
-                    mismatched_profile = _submit(
-                        api,
-                        uuid4(),
-                        api_session,
-                        definition_id=_RENAME,
-                        subject_ref=allowed_unit.work_unit_id,
-                        payload_json=payload.model_dump_json(),
-                    )
-                    assert isinstance(mismatched_profile, AccessRefusal), mismatched_profile
-                    assert mismatched_profile.code is AccessDenialCode.PROFILE_MISMATCH
-
-                    locked = human.session(
-                        SessionRequest(
-                            action="session_lock",
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=human_session,
-                            target_session_id=api_session,
                         ),
-                        deadline=time.monotonic() + 5,
-                    )
-                    assert isinstance(locked, SessionsLocked) and api_session in locked.session_ids
-                    after_lock = api.operation(
-                        result_request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 5
-                    )
-                    assert isinstance(after_lock, AccessRefusal), after_lock
-                    assert after_lock.code in {
-                        AccessDenialCode.SESSION_INACTIVE,
-                        AccessDenialCode.AUTHENTICATION_REQUIRED,
-                    }
-                finally:
-                    api.close()
-                    human.close()
+                        reason="not in granted period",
+                        actor="native-test-operator",
+                    ).model_dump_json(),
+                )
+                assert isinstance(denied_discard, AccessRefusal), denied_discard
+                assert denied_discard.code is AccessDenialCode.PERIOD_DENIED
+                mismatched_subject = submit(
+                    api,
+                    profile_id,
+                    api_session,
+                    definition_id=_RENAME,
+                    subject_ref=forbidden_unit.work_unit_id,
+                    payload_json=payload.model_dump_json(),
+                )
+                assert isinstance(mismatched_subject, AccessRefusal), mismatched_subject
+                assert mismatched_subject.code is AccessDenialCode.OPERATION_DENIED
+                mismatched_profile = submit(
+                    api,
+                    uuid4(),
+                    api_session,
+                    definition_id=_RENAME,
+                    subject_ref=allowed_unit.work_unit_id,
+                    payload_json=payload.model_dump_json(),
+                )
+                assert isinstance(mismatched_profile, AccessRefusal), mismatched_profile
+                assert mismatched_profile.code is AccessDenialCode.PROFILE_MISMATCH
+
+                locked = human.session(
+                    SessionRequest(
+                        action="session_lock",
+                        request_id=uuid4(),
+                        profile_id=profile_id,
+                        session_id=human_session,
+                        target_session_id=api_session,
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(locked, SessionsLocked) and api_session in locked.session_ids
+                after_lock = api.operation(
+                    result_request.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 5
+                )
+                assert isinstance(after_lock, AccessRefusal), after_lock
+                assert after_lock.code in {
+                    AccessDenialCode.SESSION_INACTIVE,
+                    AccessDenialCode.AUTHENTICATION_REQUIRED,
+                }
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    running.result(timeout=20)
-                except Exception:
-                    if primary is None:
-                        raise
-                finally:
-                    endpoint.close()
+                api.close()
+                human.close()

@@ -7,9 +7,9 @@ retained profile worker, and emits typed envelopes through sibling renderers.
 See Also:
     :mod:`~cadrumo.entrypoints.cli.operation_modelo_m145_communication`
         Authenticated registered-operation bridge for all five commands.
-    :mod:`~entrypoints.cli._modelo_m145_parsing`
+    :mod:`~entrypoints.cli.modelo_m145_parsing`
         CLI-only parsing helpers for casilla assignments and actor labels.
-    :mod:`~entrypoints.cli._modelo_m145_rendering`
+    :mod:`~entrypoints.cli.modelo_m145_rendering`
         Text/JSON envelope emitters for the graph-declared commands.
     :mod:`~entrypoints.cli.modelo_results_m145`
         Typed JSON payload schemas declared for Modelo 145 CLI operations.
@@ -20,7 +20,7 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.m145_communication_period import M145CommunicationPeriod
-from ._modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
+from .modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
 from .operation_modelo_m145_communication import (
     create_m145_record,
     export_m145_record,

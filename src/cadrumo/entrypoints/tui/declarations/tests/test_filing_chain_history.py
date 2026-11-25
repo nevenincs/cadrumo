@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
@@ -22,7 +21,8 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.i18n.render import tr
 from .....core.period import Period
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -46,6 +46,7 @@ from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...components.host import ScreenHostApp
 from ...navigation import TuiScreenContextV1
 from ...tests.frame import geometry_band
+from ...tests.settling import settle
 from ..controller import DeclarationsWorkspaceController
 from ..filing_history import DeclarationsFilingHistoryScreen
 from ..models import DeclarationsWorkspaceWiringV1
@@ -53,19 +54,13 @@ from ..models import DeclarationsWorkspaceWiringV1
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET = "22222222-2222-4222-8222-222222222222"
-_ORIGINAL_AT = datetime(2026, 4, 20, 9, tzinfo=UTC)
-_AMENDED_AT = datetime(2026, 5, 4, 9, tzinfo=UTC)
-_RECONCILED_AT = datetime(2026, 5, 5, 9, tzinfo=UTC)
-_OVERRIDDEN_AT = datetime(2026, 5, 6, 9, tzinfo=UTC)
-_CLEARED_AT = datetime(2026, 5, 7, 9, tzinfo=UTC)
-_PERIOD = Period.from_year_and_code(2026, "1T")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    """Keep one indexed authority generation live for the projection."""
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
+_YEAR = filing_year_envelope().horizon
+_ORIGINAL_AT = datetime(_YEAR, 4, 20, 9, tzinfo=UTC)
+_AMENDED_AT = datetime(_YEAR, 5, 4, 9, tzinfo=UTC)
+_RECONCILED_AT = datetime(_YEAR, 5, 5, 9, tzinfo=UTC)
+_OVERRIDDEN_AT = datetime(_YEAR, 5, 6, 9, tzinfo=UTC)
+_CLEARED_AT = datetime(_YEAR, 5, 7, 9, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 
 
 def _revision(
@@ -107,11 +102,11 @@ def _revision(
 
 def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorkspaceProjectionV1:
     """A confirmed AEAT original amended by a pending local complementaria."""
-    snapshot_ref = operation.snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    snapshot_ref = operation.snapshot("130", filing_year=_YEAR, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=snapshot_ref.revision_id,
     )
@@ -140,7 +135,7 @@ def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorksp
         calculation_revision_id=original_revision.calculation_revision_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         filed_at=_ORIGINAL_AT,
         filed_by="aeat-import",
@@ -163,7 +158,7 @@ def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorksp
         calculation_revision_id=amended_revision.calculation_revision_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         filed_at=_AMENDED_AT,
         filed_by="operator",
@@ -176,7 +171,7 @@ def _chain_projection(operation: PinnedAuthorityOperation) -> DeclarationsWorksp
         work_unit_id=work_unit_id,
         bucket_id=_BUCKET,
         modelo="130",
-        filing_year=2026,
+        filing_year=_YEAR,
         period=_PERIOD,
         revision_id=snapshot_ref.revision_id,
         name="synthetic chain",
@@ -239,7 +234,7 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
     amendment = by_kind[FilingDeclarationKind.COMPLEMENTARIA]
     screen = DeclarationsFilingHistoryScreen(_controller(projection))
     async with ScreenHostApp[None](screen).run_test(size=(80, 30)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-filings", DataTable)
 
         detail = screen.query_one("#declarations-filing-chain", Static)
@@ -250,18 +245,18 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
             row_key = f"filing:{entry.filing_record_id}"
             cells = tuple(str(cell) for cell in table.get_row(row_key))
             assert cells[2:] == (
-                tr(f"tui.declarations.filing_state.{local_state}"),
-                tr(f"tui.declarations.confirmation.{confirmation}"),
-                tr(f"tui.declarations.{evidence}"),
+                tr(f"workspace.declarations.filing_state.{local_state}"),
+                tr(f"workspace.declarations.confirmation.{confirmation}"),
+                tr(f"workspace.declarations.{evidence}"),
             )
             table.move_cursor(row=table.get_row_index(row_key))
-            await pilot.pause()
+            await settle(pilot)
             assert str(detail.render()) == tr(
-                "tui.declarations.filing_history.chain_detail",
-                origin=tr(f"tui.declarations.origin.{origin}"),
-                kind=tr(f"tui.declarations.declaration_kind.{kind}"),
-                confirmation=tr(f"tui.declarations.confirmation.{confirmation}"),
-                amends=tr(f"tui.declarations.value.{amends}"),
+                "workspace.declarations.filing_history.chain_detail",
+                origin=tr(f"workspace.declarations.origin.{origin}"),
+                kind=tr(f"workspace.declarations.declaration_kind.{kind}"),
+                confirmation=tr(f"workspace.declarations.confirmation.{confirmation}"),
+                amends=tr(f"workspace.declarations.value.{amends}"),
             )
 
         keys = tuple(str(row.key.value) for row in table.ordered_rows)
@@ -274,13 +269,13 @@ async def test_history_shows_chain_columns_and_reconciliation_and_override_event
         )
         event_labels = [str(table.get_row(key)[2]) for key in keys[:3]]
         assert event_labels == [
-            tr("tui.declarations.lifecycle.observation_override_cleared"),
-            tr("tui.declarations.lifecycle.observation_overridden"),
-            tr("tui.declarations.lifecycle.reconciled"),
+            tr("workspace.declarations.lifecycle.observation_override_cleared"),
+            tr("workspace.declarations.lifecycle.observation_overridden"),
+            tr("workspace.declarations.lifecycle.reconciled"),
         ]
-        assert all("tui.declarations." not in label for label in event_labels)
+        assert all("workspace.declarations." not in label for label in event_labels)
         table.move_cursor(row=table.get_row_index("lifecycle:event-reconciled"))
-        await pilot.pause()
+        await settle(pilot)
         assert str(detail.render()) == ""
         assert geometry_band(screen.app, 80) == []
 
@@ -305,15 +300,15 @@ async def test_history_export_buttons_dispatch_the_exact_selected_filing(
     controller.reconciliation_export_factory = factory
     screen = DeclarationsFilingHistoryScreen(controller)
     async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         table = screen.query_one("#declarations-filings", DataTable)
         button = screen.query_one(f"#{button_id}", Button)
         assert button.disabled
         historical = next(row for row in projection.filings if row.declaration_kind is FilingDeclarationKind.ORIGINAL)
         table.move_cursor(row=table.get_row_index(f"filing:{historical.filing_record_id}"))
-        await pilot.pause()
+        await settle(pilot)
         assert not button.disabled
         button.press()
-        await pilot.pause()
+        await settle(pilot)
         assert selected == [historical]
         assert selected[0].calculation_revision_id == historical.calculation_revision_id

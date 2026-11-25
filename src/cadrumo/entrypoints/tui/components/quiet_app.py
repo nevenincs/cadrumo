@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import TYPE_CHECKING, ClassVar, Literal, override
+from typing import TYPE_CHECKING, override
 
-from textual import events, on
 from textual.app import App, AutopilotCallbackType
 from textual.driver import Driver
 from textual.events import DescendantFocus
@@ -16,9 +15,12 @@ from ....core.config import Settings
 from ....core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
+from .terminal_controls import TerminalControlFilter
 
 if TYPE_CHECKING:
-    from rich.console import RenderableType
+    from collections.abc import Sequence
+
+    from textual.filter import LineFilter
 
 
 class TuiRunFailedError(CadrumoError):
@@ -37,53 +39,22 @@ class QuietApp[ReturnType](App[ReturnType]):
     the screen on each blink, with no app-wide switch for that, so a text
     widget's cursor is held steady as the widget takes focus. On Windows the
     console input loop waits for input instead of waking every 100 ms.
+
+    Every rendered line also passes :class:`TerminalControlFilter`, so text an
+    operator imported cannot carry live terminal controls into the frame.
     """
 
-    DEFER_TERMINAL_READY: ClassVar[bool] = False
-    """Roots that load asynchronously announce their first actionable screen themselves."""
-
     def __init__(self) -> None:
-        """Choose native ANSI handling before Textual installs its color filters."""
-        # Textual chooses the NO_COLOR filter during construction. Its RGB
-        # monochrome filter would turn the desktop theme's ANSI roles black.
-        # It also reads a mere presence of NO_COLOR as monochrome, while
-        # Cadrumo declares the variable a boolean: NO_COLOR=false keeps colour
-        # in the CLI, so it keeps colour here.
+        """Settle the NO_COLOR choice before Textual installs its color filters."""
+        # Textual chooses the NO_COLOR filter during construction and reads a
+        # mere presence of NO_COLOR as monochrome, while Cadrumo declares the
+        # variable a boolean: NO_COLOR=false keeps colour in the CLI, so it
+        # keeps colour here.
         if "NO_COLOR" in os.environ and not Settings().no_color:
             del os.environ["NO_COLOR"]
-        super().__init__(ansi_color=True if os.environ.get("TERM_PROGRAM") == "cadrumo" else None)
-        self._terminal_presented = False
-
-    @on(events.Mount)
-    def _present_mounted_terminal(self) -> None:
-        """Reveal ordinary screens only after their first refresh."""
-        if not self.DEFER_TERMINAL_READY:
-            self.call_after_refresh(self.present_terminal)
-
-    def _terminal_presentation(self, phase: Literal["loading", "ready"]) -> None:
-        # Use the driver's ordered output queue, after the screen's VT frame.
-        # This is presentation only; it carries no sign-in or profile state.
-        if os.environ.get("TERM_PROGRAM") == "cadrumo" and not self.is_headless and self._driver is not None:
-            self._driver.write(f"\x1b]777;cadrumo;presentation;{phase}\x1b\\")
-
-    def present_terminal(self) -> None:
-        """Announce a rendered screen, including an actionable refusal."""
-        if self.is_running and not self._exit and not self._terminal_presented:
-            self._terminal_presented = True
-            self._terminal_presentation("ready")
-
-    @override
-    def exit(
-        self,
-        result: ReturnType | None = None,
-        return_code: int = 0,
-        message: RenderableType | None = None,
-    ) -> None:
-        """Cover terminal teardown and the handoff to the next Textual app."""
-        if self._terminal_presented:
-            self._terminal_presented = False
-            self._terminal_presentation("loading")
-        super().exit(result, return_code, message)
+        # One instance for the app's lifetime: Textual caches filtered strips per filter object.
+        self._terminal_control_filter = TerminalControlFilter()
+        super().__init__()
 
     @override
     async def run_async(
@@ -142,6 +113,11 @@ class QuietApp[ReturnType](App[ReturnType]):
 
                 return QuietWindowsDriver
         return driver
+
+    @override
+    def get_line_filters(self) -> Sequence[LineFilter]:
+        """Apply Textual's filters, then remove terminal controls carried by displayed text."""
+        return [*super().get_line_filters(), self._terminal_control_filter]
 
     def on_descendant_focus(self, event: DescendantFocus) -> None:
         """Hold the cursor of the text widget taking focus steady."""

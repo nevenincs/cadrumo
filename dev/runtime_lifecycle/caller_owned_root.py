@@ -2,7 +2,7 @@
 
 This drives the package the way an external consumer does: only its programs
 (``bin/aeat``, ``bin/cadrumo-runtime``, ``bin/cadrumo-mcp``) and its documented
-environment, ``CADRUMO_LOCAL_STORAGE_ROOT`` and ``CADRUMO_SECRET_STORE_DIR``.
+environment, ``CADRUMO_STORAGE_ROOT``.
 Nothing here imports the product to reach the runtime. The run:
 
 1. creates a synthetic profile on a fresh root and shows that sign-in is
@@ -49,11 +49,12 @@ from typing import Any
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from cadrumo.core.storage_environment import host_installed_default_root, prepare_temporary_directory
+from cadrumo.core.storage_environment import host_installed_default_root
+from dev.temporary_output import prepare_temp_root
 
 _PROFILE_NAME = "caller-owned-acceptance"
 _READY_SECONDS = 180
-_COMMAND_SECONDS = 180
+COMMAND_SECONDS = 180
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
 """Every packaged program runs without a console window of its own: none appears on the person's screen."""
 _STOP_SECONDS = 120
@@ -104,32 +105,40 @@ def require(condition: bool, message: str) -> None:
         raise AcceptanceError(message)
 
 
-def consumer_environment(root: Path, secret_store: Path) -> dict[str, str]:
-    """Return the ambient environment without product or interpreter settings, plus the two pins."""
+def consumer_environment(root: Path) -> dict[str, str]:
+    """Return the ambient environment without product or interpreter settings, plus the storage root."""
     environment = {
         name: value
         for name, value in os.environ.items()
         if not name.upper().startswith(("CADRUMO_", "PYTHON", "VIRTUAL_ENV", "UV_"))
     }
-    environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
-    environment["CADRUMO_SECRET_STORE_DIR"] = str(secret_store)
+    environment["CADRUMO_STORAGE_ROOT"] = str(root)
     return environment
 
 
 def run_cli(
-    programs: Programs, environment: Mapping[str, str], *arguments: str, secret: Mapping[str, str] | None = None
+    programs: Programs,
+    environment: Mapping[str, str],
+    *arguments: str,
+    secret: Mapping[str, str] | None = None,
+    timeout: float = COMMAND_SECONDS,
 ) -> tuple[int, dict[str, Any]]:
-    """Run one JSON ``aeat`` command; a secret travels only on standard input."""
-    return _run_json(programs.aeat, environment, arguments, secret)
+    """Run one JSON ``aeat`` command, ended after ``timeout`` seconds; a secret travels only on standard input."""
+    return _run_json(programs.aeat, environment, arguments, secret, timeout=timeout)
 
 
 def run_runtime_cli(programs: Programs, environment: Mapping[str, str], *arguments: str) -> tuple[int, dict[str, Any]]:
     """Run one JSON ``cadrumo-runtime`` command, such as ``config sign-in-status``, which ``aeat`` does not own."""
-    return _run_json(programs.runtime, environment, arguments, None)
+    return _run_json(programs.runtime, environment, arguments, None, timeout=COMMAND_SECONDS)
 
 
 def _run_json(
-    program: Path, environment: Mapping[str, str], arguments: tuple[str, ...], secret: Mapping[str, str] | None
+    program: Path,
+    environment: Mapping[str, str],
+    arguments: tuple[str, ...],
+    secret: Mapping[str, str] | None,
+    *,
+    timeout: float,
 ) -> tuple[int, dict[str, Any]]:
     result = subprocess.run(  # noqa: S603 -- exact packaged executable; no shell; secrets only on stdin.
         [str(program), "--format", "json", *arguments],
@@ -138,7 +147,7 @@ def _run_json(
         capture_output=True,
         encoding="utf-8",
         errors="replace",
-        timeout=_COMMAND_SECONDS,
+        timeout=timeout,
         check=False,
         creationflags=_NO_WINDOW,
     )
@@ -236,7 +245,7 @@ async def _mcp_status(programs: Programs, environment: Mapping[str, str], direct
     with open(os.devnull, "w", encoding="utf-8") as errors:
         async with (
             stdio_client(server, errlog=errors) as (read_stream, write_stream),
-            ClientSession(read_stream, write_stream, read_timeout_seconds=_COMMAND_SECONDS) as client,
+            ClientSession(read_stream, write_stream, read_timeout_seconds=COMMAND_SECONDS) as client,
         ):
             await client.initialize()
             status = await client.call_tool("status", {})
@@ -275,7 +284,12 @@ async def _private_read(client: ClientSession, profile_id: str | None) -> dict[s
     receipt = submitted.get("receipt")
     if executed.is_error or submitted.get("outcome") != "submitted" or not isinstance(receipt, dict):
         return facts
-    deadline = asyncio.get_running_loop().time() + _COMMAND_SECONDS
+    return await _wait_private_read(client, receipt, facts)
+
+
+async def _wait_private_read(client: ClientSession, receipt: dict[str, Any], facts: dict[str, Any]) -> dict[str, Any]:
+    """Poll the submitted operation within its original command budget."""
+    deadline = asyncio.get_running_loop().time() + COMMAND_SECONDS
     while True:
         answer = await client.call_tool("result", {"result": {"operation_id": receipt.get("operation_id")}})
         document = answer.structured_content or {}
@@ -329,9 +343,8 @@ def run(package: Path, scratch: Path) -> Receipt:
         build_number=build.get("build_number"),
         manifest_sha256=hashlib.sha256(manifest).hexdigest(),
     )
-    root, secret_store = scratch / "storage", scratch / "secrets"
-    secret_store.mkdir(parents=True)
-    environment = consumer_environment(root, secret_store)
+    root = scratch / "storage"
+    environment = consumer_environment(root)
     default_root = host_installed_default_root(os.environ)
     before = file_facts(default_root)
     receipt.record("default_root_observed", exists=default_root.exists(), entries=len(before))
@@ -385,60 +398,9 @@ def run(package: Path, scratch: Path) -> Receipt:
             # CLI and MCP follow only a stored sign-in, and logout checks it; this logon's credential store refused it.
             receipt.unproven.append("stored sign-in: CLI and MCP resume and logout need a native credential store")
 
-        # A new piped CLI process with no secret reads the profile exactly when a stored sign-in exists to resume.
-        code, envelope = run_cli(programs, environment, "config", "profile", "status")
-        resumed = code == 0 and envelope.get("status") in {"success", "warning"}
-        receipt.record("cli_resumed", exit_code=code, status=envelope.get("status"), code=error_code(envelope))
-        require(resumed is persisted, f"CLI resume disagrees with the stored sign-in: {code} {envelope}")
-        if not persisted:
-            code, envelope = run_cli(
-                programs,
-                environment,
-                "--profile-secrets-stdin",
-                "config",
-                "profile",
-                "status",
-                secret={"profile_passphrase": password},
-            )
-            read = code == 0 and envelope.get("status") in {"success", "warning"}
-            require(read, f"profile status: {code} {envelope}")
-            receipt.record("profile_read", status=envelope.get("status"))
+        _check_cli_resume(programs, environment, password, persisted, receipt)
 
-        mcp = asyncio.run(_mcp_status(programs, environment, scratch))
-        connected = _mcp_facts(mcp)
-        require(connected["profile_id"] is not None, f"MCP did not reach the served root: {connected}")
-        receipt.record("mcp_connected", **connected)
-
-        if persisted:
-            # Discovery alone proves nothing: a registered read of the profile must be answered.
-            require(
-                connected["authenticated"] is True and connected["answered"],
-                f"MCP did not follow the stored sign-in: {connected}",
-            )
-        else:
-            require(connected["denial"] == "authentication_required", f"MCP without a stored sign-in: {connected}")
-        code, envelope = run_cli(programs, environment, "config", "logout")
-        error = envelope.get("error")
-        receipt.record(
-            "logout",
-            exit_code=code,
-            status=envelope.get("status"),
-            code=error_code(envelope),
-            message=error.get("message") if isinstance(error, dict) else None,
-        )
-        require(code == 0 or not persisted, f"logout: {code} {envelope}")
-        if persisted:
-            # A new MCP process after sign-out must find nothing to follow.
-            after_logout = asyncio.run(_mcp_status(programs, environment, scratch))
-            refused = _mcp_facts(after_logout)
-            receipt.record("mcp_after_logout", **refused)
-            require(
-                refused["authenticated"] is not True and not refused["answered"],
-                f"MCP still read the profile after sign-out: {refused}",
-            )
-            code, envelope = run_cli(programs, environment, "config", "profile", "status")
-            receipt.record("cli_after_logout", exit_code=code, code=error_code(envelope))
-            require(code != 0, f"CLI still read the profile after sign-out: {envelope}")
+        _check_mcp_and_logout(programs, environment, scratch, persisted, receipt)
         exit_code = runtime.stop()
     require(exit_code == _SUPERVISOR_STOP, f"runtime exit after input closed: {exit_code}")
     receipt.record("runtime_stopped", exit_code=exit_code)
@@ -447,6 +409,12 @@ def run(package: Path, scratch: Path) -> Receipt:
     require(error_code(envelope) == "REFUSED_LOCAL_RUNTIME", f"after stop: {code} {envelope}")
     receipt.record("runtime_gone", code=error_code(envelope))
 
+    _check_default_root(default_root, root, before, receipt)
+    return receipt
+
+
+def _check_default_root(default_root: Path, root: Path, before: dict[str, tuple[int, int]], receipt: Receipt) -> None:
+    """Check the installed root for changes attributable to this run."""
     after = file_facts(default_root)
     changed = sorted(name for name in before.keys() | after.keys() if before.get(name) != after.get(name))
     # Checkouts' own development roots live below the default root, and other builds and test runs on this
@@ -456,7 +424,71 @@ def run(package: Path, scratch: Path) -> Receipt:
     leaked = [name for name in changed if name not in development or ours.intersection(Path(name).parts)]
     require(not leaked, f"the installed default root changed: {leaked[:20]}")
     receipt.record("default_root_unchanged", entries=len(after), development_roots_changed=len(development))
-    return receipt
+
+
+def _check_cli_resume(
+    programs: Programs, environment: Mapping[str, str], password: str, persisted: bool, receipt: Receipt
+) -> None:
+    """Prove resumed or explicit-secret CLI access against the held profile."""
+    # A new piped CLI process with no secret reads the profile exactly when a stored sign-in exists to resume.
+    code, envelope = run_cli(programs, environment, "config", "profile", "status")
+    resumed = code == 0 and envelope.get("status") in {"success", "warning"}
+    receipt.record("cli_resumed", exit_code=code, status=envelope.get("status"), code=error_code(envelope))
+    require(resumed is persisted, f"CLI resume disagrees with the stored sign-in: {code} {envelope}")
+    if not persisted:
+        code, envelope = run_cli(
+            programs,
+            environment,
+            "--profile-secrets-stdin",
+            "config",
+            "profile",
+            "status",
+            secret={"profile_passphrase": password},
+        )
+        read = code == 0 and envelope.get("status") in {"success", "warning"}
+        require(read, f"profile status: {code} {envelope}")
+        receipt.record("profile_read", status=envelope.get("status"))
+
+
+def _check_mcp_and_logout(
+    programs: Programs, environment: Mapping[str, str], scratch: Path, persisted: bool, receipt: Receipt
+) -> None:
+    """Prove MCP access and post-sign-out refusal in the same runtime."""
+    mcp = asyncio.run(_mcp_status(programs, environment, scratch))
+    connected = _mcp_facts(mcp)
+    require(connected["profile_id"] is not None, f"MCP did not reach the served root: {connected}")
+    receipt.record("mcp_connected", **connected)
+
+    if persisted:
+        # Discovery alone proves nothing: a registered read of the profile must be answered.
+        require(
+            connected["authenticated"] is True and connected["answered"],
+            f"MCP did not follow the stored sign-in: {connected}",
+        )
+    else:
+        require(connected["denial"] == "authentication_required", f"MCP without a stored sign-in: {connected}")
+    code, envelope = run_cli(programs, environment, "config", "logout")
+    error = envelope.get("error")
+    receipt.record(
+        "logout",
+        exit_code=code,
+        status=envelope.get("status"),
+        code=error_code(envelope),
+        message=error.get("message") if isinstance(error, dict) else None,
+    )
+    require(code == 0 or not persisted, f"logout: {code} {envelope}")
+    if persisted:
+        # A new MCP process after sign-out must find nothing to follow.
+        after_logout = asyncio.run(_mcp_status(programs, environment, scratch))
+        refused = _mcp_facts(after_logout)
+        receipt.record("mcp_after_logout", **refused)
+        require(
+            refused["authenticated"] is not True and not refused["answered"],
+            f"MCP still read the profile after sign-out: {refused}",
+        )
+        code, envelope = run_cli(programs, environment, "config", "profile", "status")
+        receipt.record("cli_after_logout", exit_code=code, code=error_code(envelope))
+        require(code != 0, f"CLI still read the profile after sign-out: {envelope}")
 
 
 def main(arguments: list[str] | None = None) -> int:
@@ -469,7 +501,7 @@ def main(arguments: list[str] | None = None) -> int:
     options = parser.parse_args(arguments)
     # The disposable root sits outside the installed default root whose
     # changes this proof attributes to the run.
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-", dir=prepare_temporary_directory()))
+    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-", dir=prepare_temp_root()))
     try:
         receipt = run(options.package.resolve(strict=True), scratch)
     except AcceptanceError as failure:

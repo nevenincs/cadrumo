@@ -50,18 +50,20 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    CalculationSourceRef,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from .....domain.modelos.calculation_revision_sources import CalculationSourceRef
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .calculation_catalogue_tamper_support import rewrite_stored_revision_catalogue
 from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -301,7 +303,7 @@ def test_changed_closed_rows_are_refused_at_encrypted_load(
     with pytest.raises(CalculationRevisionPersistenceError) as failure:
         repository.load()
     assert "opaque-closed-collection-canary" not in str(failure.value)
-    assert "opaque-closed-collection-canary" not in caplog.text
+    assert "opaque-closed-collection-canary" not in delivered_text(caplog)
 
 
 def test_row_casilla_target_row_must_equal_direct_source_row() -> None:
@@ -359,9 +361,10 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
 
 
 def _calculation_row_statement():
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        SecureObjectRow.object_key == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        secure_objects_table.c.object_key
+        == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
     )
 
 
@@ -452,7 +455,7 @@ def test_row_source_identity_corruption_is_value_free(
     assert exc.__cause__ is None
     assert exc.__context__ is None
     rendered = "".join(traceback.format_exception(exc))
-    exposed = f"{exc!r} {exc} {getattr(exc, 'context', None)!r} {rendered} {caplog.text}"
+    exposed = f"{exc!r} {exc} {getattr(exc, 'context', None)!r} {rendered} {delivered_text(caplog)}"
     for plaintext in (canary, "3" * 64, "120.00", "collectible_invoice:inv-0001"):
         assert plaintext not in exposed
 
@@ -524,31 +527,16 @@ def test_legacy_source_provenance_without_required_identity_is_rejected_at_encry
     missing_field: str,
     expected_value: object,
 ) -> None:
-    import json as _json
-
-    from .....core.classification.policies import SensitivityClass
 
     original = _revision(_source_provenance())
     repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
-    record = secure_objects.load(
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
-    )
-    assert record is not None
-    envelope = _json.loads(record.payload.decode("utf-8"))
-    row = envelope["payload"]["revisions"][original.calculation_revision_id]["source_provenance"][0]
-    assert row.pop(missing_field) == expected_value
-    secure_objects.save(
-        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        classification=record.classification,
-        schema_version=record.schema_version,
-        written_at=record.written_at,
-        payload=_json.dumps(envelope).encode("utf-8"),
-    )
+
+    def tamper(envelope: dict[str, Any]) -> None:
+        row = envelope["payload"]["revisions"][original.calculation_revision_id]["source_provenance"][0]
+        assert row.pop(missing_field) == expected_value
+
+    rewrite_stored_revision_catalogue(secure_objects, tamper)
 
     with pytest.raises(CalculationRevisionPersistenceError):
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
@@ -565,36 +553,19 @@ def test_source_provenance_blank_source_ref_payload_rejected_at_load(secure_obje
     roundtrip in the suite would be suspect.
     """
 
-    import json as _json
-
-    from .....core.classification.policies import SensitivityClass
-
     original = _revision(_source_provenance())
     repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    record = secure_objects.load(
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
-    )
-    assert record is not None
-    envelope = _json.loads(record.payload.decode("utf-8"))
-    revision_dict = envelope["payload"]["revisions"][original.calculation_revision_id]
-    row = revision_dict["source_provenance"][0]
-    assert row["source_ref"] == "collectible_invoice:inv-0001", (
-        "fixture must serialise the source_ref for this proof to be meaningful"
-    )
-    row["source_ref"] = ""
-    secure_objects.save(
-        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        classification=record.classification,
-        schema_version=record.schema_version,
-        written_at=record.written_at,
-        payload=_json.dumps(envelope).encode("utf-8"),
-    )
+    def tamper(envelope: dict[str, Any]) -> None:
+        revision_dict = envelope["payload"]["revisions"][original.calculation_revision_id]
+        row = revision_dict["source_provenance"][0]
+        assert row["source_ref"] == "collectible_invoice:inv-0001", (
+            "fixture must serialise the source_ref for this proof to be meaningful"
+        )
+        row["source_ref"] = ""
+
+    rewrite_stored_revision_catalogue(secure_objects, tamper)
 
     with pytest.raises(CalculationRevisionPersistenceError):
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
@@ -611,36 +582,19 @@ def test_source_provenance_dropped_dependency_treatment_breaks_content_identity(
     entirely and prove the persisted content-address check rejects the row.
     """
 
-    import json as _json
-
-    from .....core.classification.policies import SensitivityClass
-
     original = _revision(_source_provenance())
     repository = _repository_with_parent_work_unit(secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    record = secure_objects.load(
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
-    )
-    assert record is not None
-    envelope = _json.loads(record.payload.decode("utf-8"))
-    revision_dict = envelope["payload"]["revisions"][original.calculation_revision_id]
-    row = revision_dict["source_provenance"][0]
-    assert row["dependency_treatment"] == "direct_annual_settlement", (
-        "fixture must serialise a non-default dependency_treatment for this proof to be meaningful"
-    )
-    del row["dependency_treatment"]
-    secure_objects.save(
-        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        classification=record.classification,
-        schema_version=record.schema_version,
-        written_at=record.written_at,
-        payload=_json.dumps(envelope).encode("utf-8"),
-    )
+    def tamper(envelope: dict[str, Any]) -> None:
+        revision_dict = envelope["payload"]["revisions"][original.calculation_revision_id]
+        row = revision_dict["source_provenance"][0]
+        assert row["dependency_treatment"] == "direct_annual_settlement", (
+            "fixture must serialise a non-default dependency_treatment for this proof to be meaningful"
+        )
+        del row["dependency_treatment"]
+
+    rewrite_stored_revision_catalogue(secure_objects, tamper)
 
     with pytest.raises(CalculationRevisionPersistenceError):
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()

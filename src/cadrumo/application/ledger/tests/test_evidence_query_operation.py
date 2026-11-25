@@ -15,13 +15,19 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
+from ...tests.access_authority_support import assert_admitted_alike_without_commit_door
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import evidence_read_operation as worker
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
@@ -39,6 +45,7 @@ from ..evidence_read_operation import (
     build_ledger_evidence_query_definition,
     build_ledger_evidence_query_registration,
 )
+from .unused_repository_ports import unused_evidence_document_shape_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -95,6 +102,7 @@ def _ports_factory(*, bucket_id: str) -> LedgerEvidencePorts:
         evidence_repository=_StoredEvidence(),
         attachment_ingestor=cast(EvidenceAttachmentIngestorProtocol, object()),
         bucket_event_repository=cast(BucketEventHistoryRepositoryProtocol, object()),
+        document_shape_probe=unused_evidence_document_shape_probe,
     )
 
 
@@ -222,15 +230,7 @@ def test_the_query_is_admitted_alike_on_every_frontend_for_either_kind_of_sessio
         for frontend in OperationFrontendProjection
     }
 
-    assert len({answer.policy for answer in resolved.values()}) == 1
-    for frontend, answer in resolved.items():
-        assert answer.request.frontend is frontend
-        assert answer.request.profile_id == _PROFILE
-        assert answer.request.period_independent is True
-        # A session under the person's sign-in and one under an enrolled key differ
-        # in kind alone, and only a human-only policy tells the two apart.
-        assert answer.policy.requires_human is False
-        assert AccessAction.COMMIT not in answer.policy.actions
+    assert_admitted_alike_without_commit_door(resolved, _PROFILE)
 
 
 def test_the_query_refuses_a_request_addressed_to_another_profile() -> None:
@@ -328,6 +328,10 @@ def test_the_query_result_declares_a_file_name_and_no_path_field() -> None:
         "notes",
         "created_at",
         "updated_at",
+        "readability",
+        "document_shape",
+        "unreadable_cause",
+        "readability_checked_at",
     }
 
 

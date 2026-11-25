@@ -13,8 +13,12 @@ import shutil
 import sys
 import threading
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
+
+if TYPE_CHECKING:
+    from .python_cohort import PythonCohort
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
@@ -22,10 +26,10 @@ if str(_REPO_ROOT) not in sys.path:
 if not (__package__ is not None and __package__):
     __package__ = "dev.packaging"
 
-REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
+REPO_ROOT = importlib.import_module("dev.paths").REPO_ROOT
 _STORAGE_ENVIRONMENT = importlib.import_module("cadrumo.core.storage_environment")
 resolve_storage_path = _STORAGE_ENVIRONMENT.resolve_storage_path
-tool_storage_environment = _STORAGE_ENVIRONMENT.tool_storage_environment
+tool_storage_environment = importlib.import_module("dev.tool_storage").tool_storage_environment
 require_homebrew_installation_prefix = importlib.import_module(
     "dev.packaging.homebrew_storage",
 ).require_homebrew_installation_prefix
@@ -50,7 +54,7 @@ _RELEASE_ARTIFACT = re.compile(
 _TAP_NAME = re.compile(r"[a-z0-9][a-z0-9_-]*/[a-z0-9][a-z0-9_-]*")
 
 
-def _require_valid_tap_name(tap_name: str) -> None:
+def require_valid_tap_name(tap_name: str) -> None:
     """Accept one lowercase ``user/repository`` tap pair as Homebrew itself does.
 
     A Homebrew tap name maps to a ``homebrew-<repository>`` GitHub repository, so
@@ -172,7 +176,8 @@ def localize_formula(
     return localized, dict(sorted(replacements.items()))
 
 
-def _new_run_root(evidence_dir: Path) -> Path:
+def new_run_root(evidence_dir: Path) -> Path:
+    """Create a timestamped run directory under the evidence directory."""
     evidence = resolve_storage_path(evidence_dir)
     evidence.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
@@ -181,7 +186,7 @@ def _new_run_root(evidence_dir: Path) -> Path:
     return run_root
 
 
-def _homebrew_storage_environment() -> dict[str, str]:
+def homebrew_storage_environment() -> dict[str, str]:
     """Bind Homebrew caches, logs and build scratch beneath Cadrumo storage."""
     locations = {
         name: Path(value)
@@ -193,7 +198,7 @@ def _homebrew_storage_environment() -> dict[str, str]:
     return {name: str(path) for name, path in locations.items()}
 
 
-def _require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
+def require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
     """Refuse a Homebrew temp path on a different filesystem from its prefix.
 
     Homebrew requires its build temporary directory to share a filesystem with
@@ -231,7 +236,7 @@ def _write_json(path: Path, document: object) -> None:
     )
 
 
-def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
+def assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
     """Refuse a Homebrew keg whose installed CLI does not reproduce the oracle.
 
     The formula installs the ``cadrumo`` distribution, which declares both the
@@ -281,6 +286,247 @@ def _require_homebrew_platform() -> None:
         raise SystemExit(f"unsupported Homebrew smoke architecture: {platform.machine()}")
 
 
+def _brew_preflight(brew: Path, run_root: Path, logs: Path, tap_name: str) -> tuple[set[str], set[str]]:
+    preexisting_formulae = set(
+        _brew_lines(brew, ["list", "--formula"], cwd=run_root, log_dir=logs, label="brew-list-before"),
+    )
+    preexisting_taps = set(
+        _brew_lines(brew, ["tap"], cwd=run_root, log_dir=logs, label="brew-taps-before"),
+    )
+    if _FORMULA_NAME in preexisting_formulae:
+        raise SystemExit("refusing to replace pre-existing Homebrew formula cadrumo")
+    if tap_name in preexisting_taps:
+        raise SystemExit(f"refusing to replace pre-existing Homebrew tap {tap_name}")
+    return preexisting_formulae, preexisting_taps
+
+
+def _run_homebrew_oracles(
+    brew: Path,
+    qualified: str,
+    installed_prefix: Path,
+    aeat: Path,
+    run_root: Path,
+    logs: Path,
+    repo: Path,
+    python_cohort: PythonCohort,
+) -> tuple[str, Path, str, str]:
+    _run(
+        [str(brew), "test", qualified],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-test",
+    )
+    version = _run(
+        [str(aeat), "--version"],
+        cwd=run_root,
+        log_dir=logs,
+        label="aeat-version",
+    ).stdout.strip()
+
+    installed_python = _installed_python(installed_prefix)
+    oracle_env = os.environ.copy()
+    oracle_env["PYTHONPATH"] = str(repo)
+    tax_evidence = run_root / "tax-evidence.json"
+    _run(
+        [
+            str(installed_python),
+            "-m",
+            "dev.packaging.installed_tax_oracle",
+            "--cli",
+            str(aeat),
+            "--storage-root",
+            str(run_root / "tax-state"),
+            "--work-dir",
+            str(run_root / "tax-work"),
+            "--cohort-source-digest",
+            python_cohort.source_digest,
+            "--cohort-manifest-sha256",
+            sha256_path(python_cohort.manifest),
+            "--cohort-root-wheel-sha256",
+            python_cohort.sha256["cadrumo"],
+            "--output",
+            str(tax_evidence),
+        ],
+        cwd=repo,
+        log_dir=logs,
+        label="installed-tax-oracle",
+        env=oracle_env,
+    )
+    tax_document = json.loads(tax_evidence.read_text(encoding=_UTF_8))
+    aeat_sha256 = sha256_path(aeat)
+    aeat_path_sha256 = sha256_text(str(aeat))
+    assert_oracle_evidence(tax_document=tax_document)
+    return version, tax_evidence, aeat_sha256, aeat_path_sha256
+
+
+def _finish_smoke_cleanup(
+    retain_install: bool,
+    run_root: Path,
+    brew: Path,
+    tap_name: str,
+    tap_registered: bool,
+    installed_prefix: Path | None,
+    preexisting_formulae: set[str],
+    preexisting_taps: set[str],
+    logs: Path,
+    cleanup_errors: list[str],
+    evidence: dict[str, object],
+    started_at: datetime,
+) -> None:
+    cleanup: dict[str, object]
+    if retain_install:
+        # The workflow's later emit step hashes the INSTALLED executables
+        # (the mint-time isolation proof), so the keg must survive this
+        # process. Record everything the deferred cleanup needs; the
+        # workflow runs `--cleanup-state` after the row is minted.
+        state_path = run_root / CLEANUP_STATE_NAME
+        _write_json(
+            state_path,
+            cleanup_state_document(
+                brew=brew,
+                tap_name=tap_name,
+                tap_registered=tap_registered,
+                installed_prefix=installed_prefix,
+                preexisting_formulae=preexisting_formulae,
+                preexisting_taps=preexisting_taps,
+            ),
+        )
+        cleanup = {
+            "deferred_for_emit": True,
+            "cleanup_state": str(state_path),
+            "errors": cleanup_errors,
+        }
+    else:
+        deferred_errors, cleanup = _run_brew_cleanup(
+            brew=brew,
+            run_root=run_root,
+            logs=logs,
+            tap_name=tap_name,
+            preexisting_formulae=preexisting_formulae,
+            preexisting_taps=preexisting_taps,
+            tap_registered=tap_registered,
+            installed_prefix=installed_prefix,
+        )
+        cleanup_errors.extend(deferred_errors)
+        cleanup["errors"] = cleanup_errors
+    _finish_homebrew_evidence(run_root, evidence, cleanup_errors, cleanup, started_at)
+
+
+def _smoke_evidence(
+    started_at: datetime,
+    brew: Path,
+    run_root: Path,
+    logs: Path,
+    tap_name: str,
+    qualified: str,
+    formula_source: Path,
+    staged_formula: Path,
+    replacements: dict[str, str],
+    cohort_artifacts: list[dict[str, object]],
+    installed_prefix: Path,
+    installed_formulae: tuple[str, ...],
+    aeat: Path,
+    aeat_sha256: str,
+    aeat_path_sha256: str,
+    version: str,
+    tax_evidence: Path,
+    preexisting_formulae: set[str],
+    preexisting_taps: set[str],
+) -> dict[str, object]:
+    evidence: dict[str, object] = {
+        "schema": "cadrumo.packaging.homebrew-smoke.v1",
+        "started_at": started_at.isoformat(),
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "brew": str(brew),
+        "brew_version": _run(
+            [str(brew), "--version"],
+            cwd=run_root,
+            log_dir=logs,
+            label="brew-version",
+        ).stdout.strip(),
+        "tap_name": tap_name,
+        "formula_name": qualified,
+        "source_formula": str(formula_source),
+        "source_formula_sha256": sha256_path(formula_source),
+        "localized_formula": str(staged_formula),
+        "localized_formula_sha256": sha256_path(staged_formula),
+        "cohort_url_replacements": replacements,
+        "cohort_artifacts": cohort_artifacts,
+        "installed_prefix": str(installed_prefix),
+        "installed_formulae": list(installed_formulae),
+        "aeat_command": str(aeat),
+        "aeat_sha256": aeat_sha256,
+        "aeat_path_sha256": aeat_path_sha256,
+        "version_output": version,
+        "tax_evidence": str(tax_evidence),
+        "preexisting_formulae": sorted(preexisting_formulae),
+        "preexisting_taps": sorted(preexisting_taps),
+    }
+    return evidence
+
+
+def _prepare_smoke_prefix(brew: Path, run_root: Path, logs: Path) -> None:
+    homebrew_environment = homebrew_storage_environment()
+    os.environ.update(homebrew_environment)
+    prefix_text = _run(
+        [str(brew), "--prefix"],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-prefix-root",
+    ).stdout.strip()
+    brew_prefix = require_homebrew_installation_prefix(prefix_text)
+    require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
+
+
+def _install_smoke_formula(
+    brew: Path,
+    run_root: Path,
+    logs: Path,
+    tap_name: str,
+    qualified: str,
+    original_formula: str,
+    localized_formula: str,
+    staged_formula: Path,
+) -> tuple[tuple[str, ...], Path]:
+    tapped_repo = Path(
+        _run([str(brew), "--repo", tap_name], cwd=run_root, log_dir=logs, label="brew-tap-repo").stdout.strip(),
+    ).resolve(strict=True)
+    tapped_formula = tapped_repo / "Formula" / "cadrumo.rb"
+    tapped_formula.parent.mkdir(parents=True, exist_ok=True)
+    tapped_formula.write_text(original_formula, encoding=_UTF_8, newline="\n")
+    _run(
+        [str(brew), "audit", "--strict", "--formula", qualified],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-audit",
+    )
+
+    staged_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
+    tapped_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
+    _run(
+        [str(brew), "install", "--build-from-source", qualified],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-install",
+    )
+    installed_formulae = _brew_lines(
+        brew,
+        ["list", "--formula"],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-list-installed",
+    )
+    prefix_text = _run(
+        [str(brew), "--prefix", qualified],
+        cwd=run_root,
+        log_dir=logs,
+        label="brew-prefix",
+    ).stdout.strip()
+    installed_prefix = Path(prefix_text).resolve(strict=True)
+    return installed_formulae, installed_prefix
+
+
 def run_homebrew_smoke(
     *,
     formula_path: Path,
@@ -306,7 +552,7 @@ def run_homebrew_smoke(
     if not brew.is_file():
         raise SystemExit(f"Homebrew executable is not a file: {brew}")
     repo = repo_root.resolve(strict=True)
-    _require_valid_tap_name(tap_name)
+    require_valid_tap_name(tap_name)
     _require_homebrew_platform()
     os.environ["HOMEBREW_NO_AUTO_UPDATE"] = "1"
     brew_prefix = brew.parent.parent
@@ -314,19 +560,10 @@ def run_homebrew_smoke(
         (str(brew_prefix / "bin"), str(brew_prefix / "sbin"), os.environ["PATH"]),
     )
 
-    run_root = _new_run_root(evidence_dir)
+    run_root = new_run_root(evidence_dir)
     logs = run_root / "logs"
     logs.mkdir()
-    homebrew_environment = _homebrew_storage_environment()
-    os.environ.update(homebrew_environment)
-    prefix_text = _run(
-        [str(brew), "--prefix"],
-        cwd=run_root,
-        log_dir=logs,
-        label="brew-prefix-root",
-    ).stdout.strip()
-    brew_prefix = require_homebrew_installation_prefix(prefix_text)
-    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
+    _prepare_smoke_prefix(brew, run_root, logs)
     tap_repo = run_root / "tap"
     formula_dir = tap_repo / "Formula"
     formula_dir.mkdir(parents=True)
@@ -334,20 +571,11 @@ def run_homebrew_smoke(
     original_formula = formula_source.read_text(encoding=_UTF_8)
     staged_formula.write_text(original_formula, encoding=_UTF_8, newline="\n")
 
-    preexisting_formulae = set(
-        _brew_lines(brew, ["list", "--formula"], cwd=run_root, log_dir=logs, label="brew-list-before"),
-    )
-    preexisting_taps = set(
-        _brew_lines(brew, ["tap"], cwd=run_root, log_dir=logs, label="brew-taps-before"),
-    )
-    if _FORMULA_NAME in preexisting_formulae:
-        raise SystemExit("refusing to replace pre-existing Homebrew formula cadrumo")
-    if tap_name in preexisting_taps:
-        raise SystemExit(f"refusing to replace pre-existing Homebrew tap {tap_name}")
+    preexisting_formulae, preexisting_taps = _brew_preflight(brew, run_root, logs, tap_name)
 
     server = _QuietServer(
         ("127.0.0.1", 0),
-        lambda *args, **kwargs: _QuietHandler(*args, directory=str(cohort), **kwargs),
+        partial(_QuietHandler, directory=str(cohort)),
     )
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
@@ -357,7 +585,7 @@ def run_homebrew_smoke(
         cohort_dir=cohort,
         server_base_url=server_base,
     )
-    cohort_artifacts = [
+    cohort_artifacts: list[dict[str, object]] = [
         {
             "filename": Path(original).name,
             "sha256": sha256_path(cohort / Path(original).name),
@@ -381,124 +609,40 @@ def run_homebrew_smoke(
             label="brew-tap-new",
         )
         tap_registered = True
-        tapped_repo = Path(
-            _run([str(brew), "--repo", tap_name], cwd=run_root, log_dir=logs, label="brew-tap-repo").stdout.strip(),
-        ).resolve(strict=True)
-        tapped_formula = tapped_repo / "Formula" / "cadrumo.rb"
-        tapped_formula.parent.mkdir(parents=True, exist_ok=True)
-        tapped_formula.write_text(original_formula, encoding=_UTF_8, newline="\n")
-        _run(
-            [str(brew), "audit", "--strict", "--formula", qualified],
-            cwd=run_root,
-            log_dir=logs,
-            label="brew-audit",
+        installed_formulae, installed_prefix = _install_smoke_formula(
+            brew, run_root, logs, tap_name, qualified, original_formula, localized_formula, staged_formula
         )
-
-        staged_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
-        tapped_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
-        _run(
-            [str(brew), "install", "--build-from-source", qualified],
-            cwd=run_root,
-            log_dir=logs,
-            label="brew-install",
-        )
-        installed_formulae = _brew_lines(
-            brew,
-            ["list", "--formula"],
-            cwd=run_root,
-            log_dir=logs,
-            label="brew-list-installed",
-        )
-        prefix_text = _run(
-            [str(brew), "--prefix", qualified],
-            cwd=run_root,
-            log_dir=logs,
-            label="brew-prefix",
-        ).stdout.strip()
-        installed_prefix = Path(prefix_text).resolve(strict=True)
         # The formula installs the `cadrumo` distribution, whose console scripts
         # are `aeat` and `cadrumo-mcp`; this lane resolves the CLI leg only.
         aeat = (installed_prefix / "bin" / "aeat").resolve(strict=True)
         if not aeat.is_file() or not os.access(aeat, os.X_OK):
             raise SystemExit(f"installed Homebrew command is not executable: {aeat}")
 
-        _run(
-            [str(brew), "test", qualified],
-            cwd=run_root,
-            log_dir=logs,
-            label="brew-test",
+        version, tax_evidence, aeat_sha256, aeat_path_sha256 = _run_homebrew_oracles(
+            brew, qualified, installed_prefix, aeat, run_root, logs, repo, python_cohort
         )
-        version = _run(
-            [str(aeat), "--version"],
-            cwd=run_root,
-            log_dir=logs,
-            label="aeat-version",
-        ).stdout.strip()
 
-        installed_python = _installed_python(installed_prefix)
-        oracle_env = os.environ.copy()
-        oracle_env["PYTHONPATH"] = str(repo)
-        tax_evidence = run_root / "tax-evidence.json"
-        _run(
-            [
-                str(installed_python),
-                "-m",
-                "dev.packaging.installed_tax_oracle",
-                "--cli",
-                str(aeat),
-                "--storage-root",
-                str(run_root / "tax-state"),
-                "--work-dir",
-                str(run_root / "tax-work"),
-                "--cohort-source-digest",
-                python_cohort.source_digest,
-                "--cohort-manifest-sha256",
-                sha256_path(python_cohort.manifest),
-                "--cohort-root-wheel-sha256",
-                python_cohort.sha256["cadrumo"],
-                "--output",
-                str(tax_evidence),
-            ],
-            cwd=repo,
-            log_dir=logs,
-            label="installed-tax-oracle",
-            env=oracle_env,
+        evidence = _smoke_evidence(
+            started_at,
+            brew,
+            run_root,
+            logs,
+            tap_name,
+            qualified,
+            formula_source,
+            staged_formula,
+            replacements,
+            cohort_artifacts,
+            installed_prefix,
+            installed_formulae,
+            aeat,
+            aeat_sha256,
+            aeat_path_sha256,
+            version,
+            tax_evidence,
+            preexisting_formulae,
+            preexisting_taps,
         )
-        tax_document = json.loads(tax_evidence.read_text(encoding=_UTF_8))
-        aeat_sha256 = sha256_path(aeat)
-        aeat_path_sha256 = sha256_text(str(aeat))
-        _assert_oracle_evidence(tax_document=tax_document)
-
-        evidence = {
-            "schema": "cadrumo.packaging.homebrew-smoke.v1",
-            "started_at": started_at.isoformat(),
-            "platform": platform.platform(),
-            "machine": platform.machine(),
-            "brew": str(brew),
-            "brew_version": _run(
-                [str(brew), "--version"],
-                cwd=run_root,
-                log_dir=logs,
-                label="brew-version",
-            ).stdout.strip(),
-            "tap_name": tap_name,
-            "formula_name": qualified,
-            "source_formula": str(formula_source),
-            "source_formula_sha256": sha256_path(formula_source),
-            "localized_formula": str(staged_formula),
-            "localized_formula_sha256": sha256_path(staged_formula),
-            "cohort_url_replacements": replacements,
-            "cohort_artifacts": cohort_artifacts,
-            "installed_prefix": str(installed_prefix),
-            "installed_formulae": list(installed_formulae),
-            "aeat_command": str(aeat),
-            "aeat_sha256": aeat_sha256,
-            "aeat_path_sha256": aeat_path_sha256,
-            "version_output": version,
-            "tax_evidence": str(tax_evidence),
-            "preexisting_formulae": sorted(preexisting_formulae),
-            "preexisting_taps": sorted(preexisting_taps),
-        }
     except BaseException as exc:
         _write_json(
             run_root / "homebrew-failure.json",
@@ -516,43 +660,20 @@ def run_homebrew_smoke(
         server.server_close()
         server_thread.join(timeout=5)
 
-        cleanup: dict[str, object]
-        if retain_install:
-            # The workflow's later emit step hashes the INSTALLED executables
-            # (the mint-time isolation proof), so the keg must survive this
-            # process. Record everything the deferred cleanup needs; the
-            # workflow runs `--cleanup-state` after the row is minted.
-            state_path = run_root / CLEANUP_STATE_NAME
-            _write_json(
-                state_path,
-                cleanup_state_document(
-                    brew=brew,
-                    tap_name=tap_name,
-                    tap_registered=tap_registered,
-                    installed_prefix=installed_prefix,
-                    preexisting_formulae=preexisting_formulae,
-                    preexisting_taps=preexisting_taps,
-                ),
-            )
-            cleanup = {
-                "deferred_for_emit": True,
-                "cleanup_state": str(state_path),
-                "errors": cleanup_errors,
-            }
-        else:
-            deferred_errors, cleanup = _run_brew_cleanup(
-                brew=brew,
-                run_root=run_root,
-                logs=logs,
-                tap_name=tap_name,
-                preexisting_formulae=preexisting_formulae,
-                preexisting_taps=preexisting_taps,
-                tap_registered=tap_registered,
-                installed_prefix=installed_prefix,
-            )
-            cleanup_errors.extend(deferred_errors)
-            cleanup["errors"] = cleanup_errors
-        _finish_homebrew_evidence(run_root, evidence, cleanup_errors, cleanup, started_at)
+        _finish_smoke_cleanup(
+            retain_install,
+            run_root,
+            brew,
+            tap_name,
+            tap_registered,
+            installed_prefix,
+            preexisting_formulae,
+            preexisting_taps,
+            logs,
+            cleanup_errors,
+            evidence,
+            started_at,
+        )
 
     return run_root / "homebrew-evidence.json"
 
@@ -724,7 +845,7 @@ def run_deferred_cleanup(state_path: Path) -> int:
     run_root = resolved_state.parent
     logs = run_root / "logs"
     logs.mkdir(exist_ok=True)
-    os.environ.update(_homebrew_storage_environment())
+    os.environ.update(homebrew_storage_environment())
     prefix_text = _run(
         [str(state["brew"]), "--prefix"],
         cwd=run_root,
@@ -750,7 +871,8 @@ def run_deferred_cleanup(state_path: Path) -> int:
     return 1 if cleanup_errors else 0
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the Homebrew smoke run."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formula", required=True, type=Path)
     parser.add_argument("--cohort-dir", required=True, type=Path)
@@ -791,7 +913,7 @@ def main(argv: list[str] | None = None) -> int:
     if "--cleanup-state" in arguments:
         cleanup_args = _cleanup_parser().parse_args(arguments)
         return run_deferred_cleanup(cleanup_args.cleanup_state)
-    args = _parser().parse_args(arguments)
+    args = parser().parse_args(arguments)
     evidence = run_homebrew_smoke(
         formula_path=args.formula,
         cohort_dir=args.cohort_dir,

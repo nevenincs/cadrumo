@@ -6,24 +6,24 @@ from datetime import date, datetime
 from uuid import uuid4
 
 from ....core.hashing import canonical_json_bytes
-from ....core.time.clock import now as _utc_now
+from ....core.time.clock import now
 from ...calculations.registry.authority_artifact import ProfileCreateContext
 from ..errors import UserProfileValidationError
 from ..values import (
     ProfileSetupState,
     UserProfileRecord,
     UserProfileSnapshot,
-    _authority_context_types,
-    _context_for_schema,
-    _derive_canonical_hash,
-    _typed_profile_facts,
+    authority_context_types,
+    context_for_schema,
+    derive_canonical_hash,
+    typed_profile_facts,
     validate_profile_schema_identity,
 )
 
 
 def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
     """Create a deterministic-shape but unique snapshot id."""
-    instant = created_at or _utc_now()
+    instant = created_at or now()
     return f"{profile_id}:{instant.strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}"
 
 
@@ -39,8 +39,8 @@ def create_user_profile_snapshot(
     Core types:
     :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
-    checked = _context_for_schema(context)
-    create_context_type, _ = _authority_context_types()
+    checked = context_for_schema(context)
+    create_context_type, _ = authority_context_types()
     if not isinstance(checked, create_context_type):
         raise TypeError("creating a profile snapshot requires ProfileCreateContext")
     if profile.setup_state is not ProfileSetupState.COMPLETE:
@@ -51,8 +51,8 @@ def create_user_profile_snapshot(
         schema=checked.schema,
         surface="user profile record",
     )
-    typed_facts = _typed_profile_facts(tuple(profile.facts), schema=checked.schema)
-    instant = created_at or _utc_now()
+    typed_facts = typed_profile_facts(tuple(profile.facts), schema=checked.schema)
+    instant = created_at or now()
     facts = tuple(
         sorted(
             typed_facts,
@@ -64,7 +64,7 @@ def create_user_profile_snapshot(
             ),
         ),
     )
-    digest = _derive_canonical_hash(
+    digest = derive_canonical_hash(
         schema_id=checked.schema.id,
         schema_version=checked.schema.version,
         profile_id=profile.profile_id,

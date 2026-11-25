@@ -13,13 +13,13 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.config import override_settings
 from ....core.modelo import Modelo
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..obligation_snapshot import WorkflowObligationSnapshot
 from ..run_models import (
@@ -37,11 +37,11 @@ from ..run_read_operation import (
     WorkflowRunListRequest,
     WorkflowRunReadProjection,
     WorkflowRunReadRequest,
-    _read_exact_run,
     build_workflow_run_list_definition,
     build_workflow_run_list_registration,
     build_workflow_run_read_definition,
     build_workflow_run_read_registration,
+    read_exact_run,
 )
 from ..run_read_ports import WorkflowRunReadPorts
 
@@ -180,7 +180,7 @@ def test_explicit_period_requires_trustworthy_matching_captured_record(run: Work
         profile_id=_PROFILE, run_id="a" * 16, expected_period=PublicPeriod.from_period(_PERIOD)
     )
     with pytest.raises((ProfileAccessRefusedError, ValueError)):
-        _read_exact_run(payload, WorkflowRunReadPorts(bucket_id=str(_PROFILE), runs=reader))
+        read_exact_run(payload, WorkflowRunReadPorts(bucket_id=str(_PROFILE), runs=reader))
     assert reader.loads == 1
 
 

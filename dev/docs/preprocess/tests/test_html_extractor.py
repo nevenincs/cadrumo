@@ -22,24 +22,28 @@ Exercises real corpus HTML through the production extractor (no mocks):
 
 from __future__ import annotations
 
+import hashlib
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
 
-from dev._paths import REPO_ROOT
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.docs.preprocess.orden_anual_sections import extract_lorca_reduction
+from dev.paths import REPO_ROOT
 
 from ..normatives_html import (
     HTML_EXTRACTOR_ID,
-    _anchor_from_heading,
+    anchor_from_heading,
     build_outputs,
     extract_html,
 )
 from ..schema import (
     ExtractionStatus,
     PreprocessOutput,
+    PreprocessUnit,
     SourceDocumentKind,
 )
 from ..sidecar import (
@@ -72,6 +76,42 @@ _ORDINAL_PARAGRAPH_HTML = _NORMATIVES / "html" / "boe-a-2011-208-modelo-145.html
 # A real single-article slice whose heading names an ordinal beyond the
 # derivation's recognised set, and which carries no bloque marker of its own.
 _UNMARKED_ORDINAL_SLICE_HTML = _NORMATIVES / "html" / "ley-37-1992-art-163-vicies.html"
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    ('<meta charset="ISO-8859-15">', '<meta http-equiv="content-type" content="text/html; charset=ISO-8859-15">'),
+)
+def test_declared_latin9_preserves_accents_euro_and_source_bytes(tmp_path: Path, declaration: str) -> None:
+    source = tmp_path / "ine-codigos-comunidades-autonomas.html"
+    markup = f'{declaration}<h5 class="articulo">Artículo 1.</h5><p>Relación de códigos: 1 €.</p>'
+    original = markup.encode("iso8859-15")
+    source.write_bytes(original)
+
+    records = build_outputs(source, repo_root=tmp_path)
+
+    assert len(records) == 1
+    assert "Relación de códigos: 1 €." in records[0].units[0].text
+    assert records[0].source_sha256 == hashlib.sha256(original).hexdigest()
+    assert "Instituto Nacional de Estadística" in records[0].attribution
+    assert "Boletin Oficial" not in records[0].attribution
+    assert source.read_bytes() == original
+
+
+def test_declared_utf8_does_not_silently_repair_invalid_bytes(tmp_path: Path) -> None:
+    source = tmp_path / "invalid.html"
+    source.write_bytes(b'<meta charset="utf-8"><p>Relaci\xf3n</p>')
+
+    with pytest.raises(UnicodeDecodeError):
+        build_outputs(source, repo_root=tmp_path)
+
+
+def test_unsupported_declared_html_encoding_is_refused(tmp_path: Path) -> None:
+    source = tmp_path / "unsupported.html"
+    source.write_bytes(b'<meta charset="unicode_escape"><p>Text</p>')
+
+    with pytest.raises(ValueError, match="Unsupported declared HTML charset"):
+        build_outputs(source, repo_root=tmp_path)
 
 
 def test_worked_example_files_exist() -> None:
@@ -218,6 +258,31 @@ def test_annex_instructions_become_atomic_citation_units() -> None:
     assert "A efectos del pago fraccionado" not in annex_one_point_three.text
 
 
+def _anchors_with_prefix(output: PreprocessOutput, prefix: str, excluded: str) -> tuple[str, ...]:
+    return tuple(
+        unit.anchor
+        for unit in output.units
+        if (unit.anchor is not None and unit.anchor) and unit.anchor.startswith(prefix) and unit.anchor != excluded
+    )
+
+
+def _assert_activity_unit(
+    fragments: Mapping[str, PreprocessUnit],
+    anchor: str,
+    *,
+    number: str,
+    quota: str,
+    other_activity: str,
+    title: str | None = None,
+) -> None:
+    unit = fragments[anchor]
+    if title is not None:
+        assert unit.title == title
+    assert f"\n{number}\n" in unit.text
+    assert quota in unit.text
+    assert other_activity not in unit.text
+
+
 def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> None:
     """Real 2025 IVA source boundaries exclude adjacent instruction and activity units."""
     output = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
@@ -230,43 +295,38 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "Cuotas trimestrales" not in instructions.text
     assert not any(unit.anchor and unit.anchor.startswith("#m303-da-4-") for unit in output.units)
 
-    iva_table_anchors = tuple(
-        unit.anchor
-        for unit in output.units
-        if (unit.anchor is not None and unit.anchor)
-        and unit.anchor.startswith("#m303-anexo-ii-iva-")
-        and unit.anchor != "#m303-anexo-ii-iva-ingreso-a-cuenta"
-    )
+    iva_table_anchors = _anchors_with_prefix(output, "#m303-anexo-ii-iva-", "#m303-anexo-ii-iva-ingreso-a-cuenta")
     assert len(iva_table_anchors) == 49
     assert len(set(iva_table_anchors)) == len(iva_table_anchors)
-    agricultural_anchors = tuple(
-        unit.anchor
-        for unit in output.units
-        if (unit.anchor is not None and unit.anchor)
-        and unit.anchor.startswith("#m303-anexo-i-iva-")
-        and unit.anchor != "#m303-anexo-i-iva-ingreso-a-cuenta"
-    )
+    agricultural_anchors = _anchors_with_prefix(output, "#m303-anexo-i-iva-", "#m303-anexo-i-iva-ingreso-a-cuenta")
     assert len(agricultural_anchors) == 17
     assert len(set(agricultural_anchors)) == len(agricultural_anchors)
     assert "#m303-anexo-i-iva-ingreso-a-cuenta" in fragments
     assert "#m303-iva-indices-correctores-temporada" in fragments
     assert "#m303-iva-cuotas-soportadas-dificil-justificacion" in fragments
 
-    autotaxis = fragments["#m303-anexo-ii-iva-721-2-transporte-por-autotaxis"]
-    assert autotaxis.title == "Transporte por autotaxis"
-    assert "\n721.2\n" in autotaxis.text
-    assert "Cuota mínima por operaciones corrientes: 10 %" in autotaxis.text
-    assert "Transporte de mercancías por carretera" not in autotaxis.text
-
-    freight = fragments["#m303-anexo-ii-iva-722-transporte-de-mercancias-por-carretera-excepto-residuos"]
-    assert "\n722\n" in freight.text
-    assert "Cuota mínima por operaciones corrientes: 10 %" in freight.text
-    assert "Transporte de residuos por carretera" not in freight.text
-
-    hairdressing = fragments["#m303-anexo-ii-iva-972-1-servicios-de-peluqueria-de-senora-y-caballero"]
-    assert "\n972.1\n" in hairdressing.text
-    assert "Cuota mínima por operaciones corrientes: 13 %" in hairdressing.text
-    assert "Salones e institutos de belleza" not in hairdressing.text
+    _assert_activity_unit(
+        fragments,
+        "#m303-anexo-ii-iva-721-2-transporte-por-autotaxis",
+        number="721.2",
+        quota="Cuota mínima por operaciones corrientes: 10 %",
+        other_activity="Transporte de mercancías por carretera",
+        title="Transporte por autotaxis",
+    )
+    _assert_activity_unit(
+        fragments,
+        "#m303-anexo-ii-iva-722-transporte-de-mercancias-por-carretera-excepto-residuos",
+        number="722",
+        quota="Cuota mínima por operaciones corrientes: 10 %",
+        other_activity="Transporte de residuos por carretera",
+    )
+    _assert_activity_unit(
+        fragments,
+        "#m303-anexo-ii-iva-972-1-servicios-de-peluqueria-de-senora-y-caballero",
+        number="972.1",
+        quota="Cuota mínima por operaciones corrientes: 13 %",
+        other_activity="Salones e institutos de belleza",
+    )
 
 
 def test_lorca_reduction_modulos_orden_iva_units_preserve_the_legacy_table_shape() -> None:
@@ -295,12 +355,13 @@ def test_lorca_reduction_modulos_orden_iva_units_preserve_the_legacy_table_shape
 
 def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
     """The singular extractor accepts Lorca 2022 but does not reinterpret DANA."""
+    exercise = filing_year_envelope().horizon
     lorca = BeautifulSoup(
-        """
-        <h5>Disposición adicional cuarta. Reducción en 2022 para actividades en Lorca.</h5>
+        f"""
+        <h5>Disposición adicional cuarta. Reducción en {exercise} para actividades en Lorca.</h5>
         <p>Los sujetos pasivos con actividades incluidas en el anexo II de esta Orden en el
         término municipal de Lorca podrán reducir en un 20 por ciento las cuotas devengadas
-        por operaciones corrientes correspondientes al año 2022.</p>
+        por operaciones corrientes correspondientes al año {exercise}.</p>
         <p>Esta reducción se tendrá en cuenta para el cálculo de la cuota trimestral y la cuota anual.</p>
         """,
         "lxml",
@@ -315,10 +376,10 @@ def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
         "lxml",
     )
 
-    reduction = extract_lorca_reduction(lorca, source_label="synthetic-lorca-2022.html")
+    reduction = extract_lorca_reduction(lorca, source_label=f"synthetic-lorca-{exercise}.html")
 
     assert reduction is not None
-    assert reduction.ejercicio == 2022
+    assert reduction.ejercicio == exercise
     assert reduction.municipality == "Lorca"
     assert reduction.annex_scope == "ANEXO II"
     assert reduction.percentage == Decimal("20")
@@ -329,8 +390,7 @@ def test_lorca_reduction_is_scoped_to_its_observed_heading() -> None:
 def test_toc_and_form_boilerplate_is_stripped() -> None:
     """Known TOC/markup boilerplate is ABSENT; known article prose is PRESENT.
 
-    The F4 audit flagged TOC link farms polluting the index; this is the
-    proof they no longer ship. Asserts across every unit's text.
+    Asserts across every unit's text.
     """
     output = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
     body = "\n".join(u.text for u in output.units)
@@ -438,15 +498,15 @@ def test_heading_derived_anchor_is_lossy_and_collides_across_articles() -> None:
     articles must not be representable by one anchor, and the fact that they
     are is the defect this test makes visible rather than endorses.
     """
-    assert _anchor_from_heading("Artículo 5. Concepto de empresario.") == "#a5"
-    assert _anchor_from_heading("Artículo 163 quinquies. Opciones.") == "#a163quinquies"
+    assert anchor_from_heading("Artículo 5. Concepto de empresario.") == "#a5"
+    assert anchor_from_heading("Artículo 163 quinquies. Opciones.") == "#a163quinquies"
     # A heading that names no article yields nothing: the fallback does have a
     # refusal path, so the collision below is a gap in coverage, not absence.
-    assert _anchor_from_heading("Disposición adicional primera.") == ""
+    assert anchor_from_heading("Disposición adicional primera.") == ""
 
-    base = _anchor_from_heading("Artículo 163. Régimen especial.")
+    base = anchor_from_heading("Artículo 163. Régimen especial.")
     later_ordinals = {
-        heading: _anchor_from_heading(heading)
+        heading: anchor_from_heading(heading)
         for heading in (
             "Artículo 163 sexies. Condiciones para la aplicación.",
             "Artículo 163 vicies. Derecho a la deducción.",
@@ -539,9 +599,9 @@ _WRAPPED_ARTICLE_EXCERPT = (
 def test_plain_heading_excerpt_splits_on_its_declared_article_fragments(tmp_path: Path) -> None:
     """Each ``<div id="aN"><h2>Articulo N.`` becomes its own titled unit at ``#aN``.
 
-    Unsplit, the excerpt was one anonymous unit, so a citation of article 1
-    verified against article 6's text too. The capture note after the last
-    wrapper is not article text and stays out of every unit.
+    One anonymous unit would let a citation of article 1 verify against article
+    6's text too. The capture note after the last wrapper is not article text
+    and stays out of every unit.
     """
     source = tmp_path / "orden-probe.html"
     source.write_text(_WRAPPED_ARTICLE_EXCERPT, encoding="utf-8")

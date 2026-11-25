@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from contextvars import ContextVar, copy_context
 from datetime import UTC, datetime
+from functools import cache
 from importlib.metadata import version
 from pathlib import Path
 from threading import Event
@@ -34,7 +35,9 @@ from cadrumo.application.user_profile.automation_custody_port import NativeSecre
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import frozen_clock
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.filing import software_identity
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
@@ -57,10 +60,32 @@ from cadrumo_runtime.host.worker import run
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+from dev.dependency_observation.observation import active_observation
+from dev.docs.sequences.observed_journals import WORKER_SCRIPT_NAME, prepare_worker_journals
 from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
-SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
-"""The canonical frozen instant for docs sequences and their profile workers."""
+
+@cache
+def sandbox_instant() -> datetime:
+    """The frozen instant: 1 April, 09:00 UTC, of the newest filing year the pinned authority supports.
+
+    The isolated worker child carries no authority setting, so it reads the
+    generation the sandbox published beside its storage; every other caller
+    reads the authority the parent process selected. It is read on first use,
+    not at import, so the child's argument parser answers before that
+    generation exists.
+    """
+    if __name__ != "__main__":
+        with bundled_indexed_authority().operation() as operation:
+            return datetime(operation.supported_filing_years().horizon, 4, 1, 9, 0, 0, tzinfo=UTC)
+    published = IndexedRegistryAuthority(
+        Path(load_settings().cadrumo_storage_root).parent / "docs-authority" / AUTHORITY_DESCRIPTOR_FILENAME
+    )
+    try:
+        with published.operation() as operation:
+            return datetime(operation.supported_filing_years().horizon, 4, 1, 9, 0, 0, tzinfo=UTC)
+    finally:
+        published.close()
 
 
 class _SequenceRuntimeTransportServer(RetainedRuntimeTransportServer):
@@ -68,23 +93,23 @@ class _SequenceRuntimeTransportServer(RetainedRuntimeTransportServer):
 
     @override
     def _connection(self, channel: ByteChannel) -> None:
-        with frozen_clock(SANDBOX_INSTANT):
+        with frozen_clock(sandbox_instant()):
             super()._connection(channel)
 
 
-_EXPORT_VERSION_FILE = "docs-export-version.json"
+EXPORT_VERSION_FILE = "docs-export-version.json"
 _EXPORT_VERSION_BYTES = 256
-_WORKER_SCRIPT: ContextVar[Path | None] = ContextVar("sequence_worker_script", default=None)
+WORKER_SCRIPT: ContextVar[Path | None] = ContextVar("sequence_worker_script", default=None)
 
 
 @contextmanager
 def sequence_worker_script(script: Path) -> Generator[None]:
     """Select a trusted instrumented copy for this developer sequence scope."""
-    token = _WORKER_SCRIPT.set(script.resolve(strict=True))
+    token = WORKER_SCRIPT.set(script.resolve(strict=True))
     try:
         yield
     finally:
-        _WORKER_SCRIPT.reset(token)
+        WORKER_SCRIPT.reset(token)
 
 
 class _RecordedExportVersion(BaseModel):
@@ -102,19 +127,32 @@ class _RecordedExportVersion(BaseModel):
         return value
 
 
-def _publish_export_version(sandbox_root: Path) -> None:
-    recorded = _RecordedExportVersion(package_version=software_identity.PACKAGE_VERSION)
-    with (sandbox_root / _EXPORT_VERSION_FILE).open("x", encoding="utf-8") as destination:
+@contextmanager
+def export_version_authority(sandbox_root: Path) -> Generator[None]:
+    """Validate against the exact public generation copied for this sandbox."""
+    authority = IndexedRegistryAuthority(sandbox_root / "docs-authority" / AUTHORITY_DESCRIPTOR_FILENAME)
+    try:
+        with authority.operation():
+            yield
+    finally:
+        authority.close()
+
+
+def publish_export_version(sandbox_root: Path) -> None:
+    with export_version_authority(sandbox_root):
+        recorded = _RecordedExportVersion(package_version=software_identity.PACKAGE_VERSION)
+    with (sandbox_root / EXPORT_VERSION_FILE).open("x", encoding="utf-8") as destination:
         destination.write(recorded.model_dump_json())
 
 
 @contextmanager
-def _recorded_export_version(sandbox_root: Path) -> Generator[None]:
-    with (sandbox_root / _EXPORT_VERSION_FILE).open("rb") as source:
+def recorded_export_version(sandbox_root: Path) -> Generator[None]:
+    with (sandbox_root / EXPORT_VERSION_FILE).open("rb") as source:
         raw = source.read(_EXPORT_VERSION_BYTES + 1)
     if len(raw) > _EXPORT_VERSION_BYTES:
         raise ValueError("recorded documentation export version exceeds its finite limit")
-    recorded = _RecordedExportVersion.model_validate_json(raw)
+    with export_version_authority(sandbox_root):
+        recorded = _RecordedExportVersion.model_validate_json(raw)
     with pytest.MonkeyPatch.context() as selected:
         selected.setattr(software_identity, "PACKAGE_VERSION", recorded.package_version)
         yield
@@ -137,7 +175,7 @@ class _UnavailableSecretStore:
         raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
 
 
-class _SequenceLoginObservation:
+class SequenceLoginObservation:
     """Explicit fixture login facts; native transport still verifies the peer."""
 
     def __init__(self, owner: str, login_id: str) -> None:
@@ -157,7 +195,7 @@ class _SequenceLoginObservation:
 @contextmanager
 def _worker_composition() -> Generator[None]:
     """Compose recorded dependencies after the canonical worker verifies its parent."""
-    root = Path(load_settings().cadrumo_local_storage_root)
+    root = Path(load_settings().cadrumo_storage_root)
     previous_backend = keyring.core._keyring_backend
     receipt_root = root / RECEIPT_FIXTURE_DIRECTORY
     keyring.set_keyring(
@@ -165,16 +203,14 @@ def _worker_composition() -> Generator[None]:
     )
     try:
         with (
-            _recorded_export_version(root.parent),
             override_settings(
                 cadrumo_authority_root=root.parent / "docs-authority",
                 cadrumo_output_language="en",
                 cadrumo_live_tests_enabled="",
                 cadrumo_live_tests_google="",
-                cadrumo_log_dir=root / "logs" / "worker",
-                cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat",
             ),
-            frozen_clock(SANDBOX_INSTANT),
+            recorded_export_version(root.parent),
+            frozen_clock(sandbox_instant()),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
             profile_adapter_composition(automation_secrets_store=_UnavailableSecretStore()),
         ):
@@ -205,23 +241,23 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
     ):
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
     staged.rename(authority_root)
-    _publish_export_version(sandbox_root)
+    publish_export_version(sandbox_root)
     endpoint = WindowsEndpoint(storage_root=root) if sys.platform == "win32" else PosixEndpoint(storage_root=root)
     stop, boot = Event(), uuid4()
     owner = NativeRuntimeFixtureOwner(endpoint, stop, timeout=25)
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="docs-runtime")
     owner.executor = pool
     primary: BaseException | None = None
+    journals = prepare_worker_journals(root)
     try:
         profiles = RuntimeProfileConnections(
             storage_root=root,
             storage_identity=endpoint.storage_identity,
             runtime_boot_id=boot,
             stop=stop,
-            capture_login=lambda channel: _SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
+            capture_login=lambda channel: SequenceLoginObservation(channel.peer.os_owner_id, str(boot)),
             secret_store=_UnavailableSecretStore,
-            worker_script=_WORKER_SCRIPT.get() or Path(__file__).resolve(),
-            wall_clock=lambda: SANDBOX_INSTANT,
+            worker_script=_worker_script(journals),
         )
         profiles.prepare_registry()
         server = _SequenceRuntimeTransportServer(
@@ -254,11 +290,31 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
         raise
     finally:
         owner.close_from_sync(task_name="docs-runtime-close", primary_error=primary)
+        observation = active_observation()
+        if observation is not None and journals is not None:
+            observation.harvest(journals)
+
+
+def _worker_script(journals: Path | None) -> Path:
+    """Select the worker script: a scoped override, else this fixture, observed when the check is.
+
+    An override is an instrumented copy that installs no observer, so its
+    workers' reads are unknown and the check's observation is incomplete.
+    """
+    selected = WORKER_SCRIPT.get()
+    if selected is not None:
+        observation = active_observation()
+        if observation is not None:
+            observation.note_incomplete(f"unobserved worker script {selected.name}")
+        return selected
+    if journals is not None:
+        return (journals / WORKER_SCRIPT_NAME).resolve()
+    return Path(__file__).resolve()
 
 
 def _establish_synthetic_sign_in(profile_id: UUID) -> None:
     """Mint real runtime-owned proof for the fixture's explicit sign-out scenario."""
-    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo_client.transport.installed_client import open_installed_client
 
     client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))

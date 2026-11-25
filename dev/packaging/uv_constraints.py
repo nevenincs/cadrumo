@@ -25,8 +25,8 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import UTF_8
 
 _UTF_8 = UTF_8
 #: The distribution whose resolution is exported.

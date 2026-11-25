@@ -10,7 +10,6 @@ released result carries the reference exactly as the stored record keeps it.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -35,13 +34,15 @@ from ...application.modelo.reconciliation_pull_operation import (
 )
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
 from ...core.config import override_settings
-from ...core.hashing import sha256_hex
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
 
@@ -53,7 +54,7 @@ _JUSTIFICANTE_FIXTURE = (
 )
 
 
-def _session_host(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
+def session_host(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
     def read(identity: OperationIdentity) -> OperationExecutionCaller:
         del identity
         return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
@@ -72,23 +73,13 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
     with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
         cleanup=conformance.OperationRuntimeCloseWitness(),
-        execution_caller_reader=_session_host(frontend),
+        execution_caller_reader=session_host(frontend),
     ) as (driver, registry, profile_id):
         subject_ref = profile_operation_subject(str(profile_id))
         released: dict[str, ModeloReconciliationImportProjection] = {}
         with override_settings(cadrumo_active_profile=str(profile_id)):
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
-            pdf = _JUSTIFICANTE_FIXTURE.read_bytes()
-            snapshot = build_justificante_capture_service(str(profile_id)).capture(
-                modelo=str(unit.modelo),
-                filing_year=unit.filing_year,
-                period=unit.period,
-                expediente_id="202413000000001Z",
-                csv="ABCD1234EFGH",
-                pdf_bytes=pdf,
-                pdf_sha256=sha256_hex(pdf),
-                captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-            )
+            snapshot = modelo_operation_test_support.captured_justificante_snapshot(profile_id, unit)
             for definition_id, payload in (
                 (
                     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
@@ -111,7 +102,7 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
                 )
                 assert recorded_observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
                 assert recorded_observation.projection.effect is OperationEffect.UPDATED
-                released[definition_id] = conformance._resolve_result_projection(
+                released[definition_id] = conformance.resolve_result_projection(
                     driver,
                     registry,
                     definition_id=definition_id,
@@ -130,7 +121,7 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
             stored = {record.source_ref for record in ModeloReconciliationPersistence().iter_records()}
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        listing = conformance._resolve_result_projection(
+        listing = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,

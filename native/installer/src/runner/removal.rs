@@ -249,10 +249,7 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
             .file
             .take(16 * 1024 * 1024 + 1)
             .read_to_end(&mut bytes)?;
-        if bytes.len() > 16 * 1024 * 1024
-            || Sha256Digest::new(format!("{:x}", Sha256::digest(&bytes)))?
-                != product.manifest_sha256
-        {
+        if bytes.len() > 16 * 1024 * 1024 || Sha256Digest::of(&bytes) != product.manifest_sha256 {
             return Err(Error::Integrity("removal package bytes differ".into()));
         }
         let manifest: cadrumo_application::package::PackageManifest =
@@ -278,7 +275,10 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
             vec![plan.contract.manager_member()?.under(&plan.prefix)]
         };
         for batch in files.chunks(256) {
-            if !windows::file_users(batch).map_err(native_error)?.is_empty() {
+            if !windows::restart_manager::file_users(batch)
+                .map_err(native_error)?
+                .is_empty()
+            {
                 return Err(Error::Busy);
             }
         }

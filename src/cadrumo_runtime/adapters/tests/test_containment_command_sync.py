@@ -49,9 +49,9 @@ class _Process:
         (b"public manager state", False, False, False, None, False),
         (b"\xff", False, False, False, RefusalCode.INVALID_FRAME, False),
         (b"x" * (64 * 1024 + 1), False, False, False, RefusalCode.INVALID_FRAME, True),
-        (b"", True, False, False, RefusalCode.DEADLINE_EXCEEDED, True),
+        (b"", True, False, False, RefusalCode.TIMEOUT, True),
         (b"", False, True, False, RefusalCode.UNAVAILABLE, True),
-        (b"", False, False, True, RefusalCode.DEADLINE_EXCEEDED, True),
+        (b"", False, False, True, RefusalCode.TIMEOUT, True),
     ],
     ids=["complete", "invalid-utf8", "oversize", "read-timeout", "no-stdout", "wait-timeout"],
 )

@@ -64,7 +64,7 @@ class ProfileSourceResolver:
         """
         snapshot = self._registry_snapshot
         if snapshot is None:
-            snapshot = self._operation.snapshot(
+            snapshot = self._operation.reading_snapshot(
                 context.modelo,
                 filing_year=context.filing_year,
                 period=context.period.registry_token,

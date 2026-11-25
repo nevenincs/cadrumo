@@ -284,7 +284,7 @@ class AttachmentStore(BaseModel):
         digest = sha256_hex(data)
         objects = self._objects_repo()
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
-            _LOGGER.debug("reusing existing attachment object for %s", digest)
+            _LOGGER.debug("reusing existing attachment object")
             return digest
         written_at = now()
         payload = _wrap_blob_payload(data)
@@ -299,7 +299,7 @@ class AttachmentStore(BaseModel):
                 payload=payload,
             )
         )
-        _LOGGER.debug("stored attachment object %s (%d bytes)", digest, len(data))
+        _LOGGER.debug("stored attachment object bytes=%d", len(data))
         return digest
 
     def put_file(self, source: Path) -> tuple[str, int]:
@@ -448,7 +448,7 @@ class AttachmentStore(BaseModel):
                 payload=payload,
             )
         )
-        _LOGGER.debug("wrote attachment manifest %s", attachment.attachment_id)
+        _LOGGER.debug("wrote attachment manifest")
 
     def load_manifest(self, attachment_id: str) -> Attachment:
         """Load and validate the :class:`Attachment` manifest envelope."""

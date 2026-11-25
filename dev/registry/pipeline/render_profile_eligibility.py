@@ -317,7 +317,7 @@ def _reviewed_source_text_field_matches(
     material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
     if sha256(material.encode()).hexdigest() != digest:
         raise RegistryValidationError(error_message)
-    if not _has_absent_naturaleza(field):
+    if not has_absent_naturaleza(field):
         raise RegistryValidationError(error_message)
     return True
 
@@ -338,7 +338,7 @@ class RenderProfileEligibility(_StrictModel):
     fixed_fields: tuple[RecordDesignIntermediateField, ...] = ()
 
 
-def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
+def is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
     """Report whether the official description marks this slot reserved.
 
     Reservation is read from the DESCRIPTION and never from the type column,
@@ -358,7 +358,7 @@ def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
     return _RESERVED_DESCRIPTION_MARKER in field.normalized_description.casefold()
 
 
-def _has_absent_naturaleza(field: RecordDesignIntermediateField) -> bool:
+def has_absent_naturaleza(field: RecordDesignIntermediateField) -> bool:
     """Whether AEAT printed this row's naturaleza cell EMPTY.
 
     The strongest case for a reviewed rule there is, and it was excluded. A
@@ -384,7 +384,7 @@ def normalise_aeat_type(aeat_type: str) -> str:
     return unicodedata.normalize("NFKD", aeat_type.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
 
 
-def _is_numeric_aeat_type(aeat_type: str) -> bool:
+def is_numeric_aeat_type(aeat_type: str) -> bool:
     """Whether ``aeat_type`` names a numeric naturaleza, however AEAT spelled it.
 
     A workbook prints the abbreviation (``Num``, and ``N`` for the signed form);
@@ -424,7 +424,7 @@ def _is_filing_instruction_only(content: str) -> bool:
     return content.strip().rstrip(".").casefold() in _FILING_INSTRUCTION_ONLY_CONTENTS
 
 
-def _states_no_wire_fact(
+def states_no_wire_fact(
     field: RecordDesignIntermediateField,
     *,
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
@@ -497,9 +497,9 @@ def _numeric_field_is_render_profile_eligible(
     excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]],
 ) -> bool:
     return (
-        (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
-        and _states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
-        and not _is_source_reserved_field(field)
+        (is_numeric_aeat_type(field.aeat_type) or has_absent_naturaleza(field))
+        and states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
+        and not is_source_reserved_field(field)
         and (field.sheet, field.source_row, field.offset) not in excluded_absent_naturaleza_rows
     )
 

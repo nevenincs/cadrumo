@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import ast
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 
 from ....core.directory_scan import scan_directory
+from ....tests.inventory import parse_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -100,6 +101,26 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
     ),
     _ProfileShapeExclusion(
         "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
+        "test_the_general_regime_settles_the_composition_but_not_the_rest_of_the_block",
+        "deliberately incomplete general-regime profile proves only the composition is settled",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/domain/deadlines/profiles.py",
+        "iva_regime_owes_m303_regime_composition",
+        "a single-axis probe asks the resolver what one regime settles; it is not a profile",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/wizard/tests/test_iva_block_questions_share_one_claim_gate.py",
+        "test_the_composition_is_asked_under_exactly_the_regimes_whose_completeness_owes_it",
+        "a single-axis probe compares the wizard gate with completeness per regime; it is not a profile",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/domain/deadlines/tests/test_general_regime_m303_composition.py",
+        "_facts",
+        "the composition is deliberately left unstated to prove the general regime settles it",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_iva_block_profile_completeness.py",
         "test_completeness_demands_exactly_what_the_resolver_refuses_without",
         "incremental incomplete maps compare completeness demands with resolver refusals",
         expected_count=2,
@@ -114,16 +135,16 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
         "test_calendar_warnings_include_registry_deadline_window_predicates",
         "raw calendar warning diagnostics",
     ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/overview/tests/test_calendar_profile_context.py",
+        "test_calendar_warnings_carry_their_sentence_in_the_read_language",
+        "raw calendar values that provoke the warnings whose read-language sentence is checked",
+    ),
 )
 
 _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
     _ProfileShapeExclusion(
-        "src/cadrumo/adapters/persistence/profile/tests/test_m303_regimen_simplificado_scope_persistence.py",
-        None,
-        "schema-minimum fragment composed with the IVA block by each complete-profile fixture",
-    ),
-    _ProfileShapeExclusion(
-        "src/cadrumo/application/tests/test_workbench_generation.py",
+        "src/cadrumo/application/tests/test_workbench_generation_home.py",
         "test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing",
         "deliberately incomplete profile proves the workbench reasons about the gap instead of failing",
     ),
@@ -131,6 +152,16 @@ _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
         "src/cadrumo/application/user_profile/tests/test_overview_lists_conditional_requirements.py",
         "test_a_claimed_iva_block_lists_every_path_it_owes",
         "deliberately incomplete IVA claim proves the overview lists every path the block owes",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/user_profile/tests/test_overview_lists_conditional_requirements.py",
+        "test_the_general_regime_does_not_ask_for_the_modelo_303_composition",
+        "deliberately incomplete general-regime claim proves the overview owes no composition",
+    ),
+    _ProfileShapeExclusion(
+        "src/cadrumo/application/tests/test_workbench_generation_undeclared_works.py",
+        "test_a_refused_taxpayer_projection_still_dates_each_local_declaration",
+        "deliberately incomplete IVA claim proves a refused projection still dates each local declaration",
     ),
 )
 
@@ -154,13 +185,109 @@ def _fact_path(call: ast.Call) -> str | None:
     return value.value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
 
 
-def _profile_fact_paths(container: ast.Tuple | ast.List) -> frozenset[str]:
-    return frozenset(
+def _profile_fact_paths(
+    container: ast.Tuple | ast.List, shared: Mapping[str, frozenset[str]] | None = None
+) -> frozenset[str]:
+    """Return the fact paths a container names, including those of a module-level fact tuple it unpacks."""
+    paths = {
         path
         for element in container.elts
         if isinstance(element, ast.Call)
         if ((path := _fact_path(element)) is not None and path)
+    }
+    for element in container.elts:
+        if isinstance(element, ast.Starred) and isinstance(element.value, ast.Name):
+            paths |= shared.get(element.value.id, frozenset()) if shared is not None else frozenset()
+    return frozenset(paths)
+
+
+def _shared_fact_tuples(module: ast.Module) -> dict[str, frozenset[str]]:
+    """Map each module-level fact tuple or list to its paths, so a fixture can unpack it."""
+    return {
+        statement.targets[0].id: paths
+        for statement in module.body
+        if isinstance(statement, ast.Assign)
+        and len(statement.targets) == 1
+        and isinstance(statement.targets[0], ast.Name)
+        and isinstance(statement.value, ast.Tuple | ast.List)
+        if (paths := _profile_fact_paths(statement.value))
+    }
+
+
+_PERSONA_COMPOSER = "persona_facts_beneath"
+"""The fixture seam that lays stated facts over a catalogue persona's complete profile."""
+
+
+def _local_containers(scope: ast.AST) -> dict[str, list[ast.expr]]:
+    """Map each name a scope assigns to the expressions assigned to it, without entering nested scopes."""
+    assigned: dict[str, list[ast.expr]] = {}
+    pending = list(ast.iter_child_nodes(scope))
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda):
+            continue
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            assigned.setdefault(node.targets[0].id, []).append(node.value)
+        pending.extend(ast.iter_child_nodes(node))
+    return assigned
+
+
+def _resolved(expression: ast.expr, assigned: Mapping[str, list[ast.expr]]) -> list[ast.expr]:
+    if isinstance(expression, ast.Name):
+        return assigned.get(expression.id, [])
+    return [expression]
+
+
+def _omits_a_required_iva_path(call: ast.Call, assigned: Mapping[str, list[ast.expr]]) -> bool:
+    """Whether the composer's ``without`` drops a required path or a section prefix holding one."""
+    without = next((keyword.value for keyword in call.keywords if keyword.arg == "without"), None)
+    if without is None:
+        return False
+    names = {
+        node.value
+        for expression in _resolved(without, assigned)
+        for node in ast.walk(expression)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
+    return any(
+        name == path or (name.endswith(".") and path.startswith(name))
+        for name in names
+        for path in _REQUIRED_IVA_FACT_PATHS
     )
+
+
+def _persona_overlays(module: ast.Module) -> frozenset[int]:
+    """Return the identities of fact containers stated over a persona's complete profile.
+
+    A fragment handed to the persona composer replaces the persona's facts only at the paths it
+    states, so the persona's own IVA block supplies every axis the fragment leaves out. The
+    fragment is still incomplete when the composer is told to omit one of those axes.
+    """
+    overlays: set[int] = set()
+    scopes = [module, *(node for node in ast.walk(module) if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef))]
+    for scope in scopes:
+        assigned = _local_containers(scope)
+        pending = list(ast.iter_child_nodes(scope))
+        while pending:
+            node = pending.pop()
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda):
+                continue
+            pending.extend(ast.iter_child_nodes(node))
+            if not isinstance(node, ast.Call) or _called_name(node) != _PERSONA_COMPOSER:
+                continue
+            stated = (
+                node.args[0]
+                if node.args
+                else next((keyword.value for keyword in node.keywords if keyword.arg == "stated"), None)
+            )
+            if stated is None or _omits_a_required_iva_path(node, assigned):
+                continue
+            overlays.update(
+                id(expression)
+                for expression in _resolved(stated, assigned)
+                if isinstance(expression, ast.Tuple | ast.List)
+            )
+    return frozenset(overlays)
 
 
 def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
@@ -181,85 +308,108 @@ def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
         )
         raise AssertionError(message)
     for path in modules:
-        yield path, ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        yield path, parse_source(path.read_text(encoding="utf-8"), filename=str(path))
 
 
 def _relative(path: Path) -> str:
     return path.relative_to(_source_root()).as_posix()
 
 
-def _dicts_with_enclosing_function(module: ast.Module) -> Iterator[tuple[ast.Dict, str | None]]:
-    """Yield every dict literal paired with the function that encloses it."""
-    enclosing: list[str] = []
-    results: list[tuple[ast.Dict, str | None]] = []
-
-    def walk(node: ast.AST) -> None:
-        entered = isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-        if entered:
-            enclosing.append(node.name)  # type: ignore[union-attr]
-        if isinstance(node, ast.Dict):
-            results.append((node, enclosing[-1] if enclosing else None))
-        for child in ast.iter_child_nodes(node):
-            walk(child)
-        if entered:
-            enclosing.pop()
-
-    walk(module)
-    return iter(results)
+_LEAF_NODES = (ast.Name, ast.Constant, ast.expr_context, ast.operator, ast.unaryop, ast.boolop, ast.cmpop)
+"""Nodes that hold nothing this gate reads, so a walk need not enter them."""
 
 
-def _fact_containers_with_enclosing_function(
-    module: ast.Module,
-) -> Iterator[tuple[ast.Tuple | ast.List, str | None]]:
-    """Yield every fact container paired with the function that encloses it."""
-    enclosing: list[str] = []
-    results: list[tuple[ast.Tuple | ast.List, str | None]] = []
+class _ProfileShapeFindings:
+    """The three incomplete-shape tallies, accumulated over the tree."""
 
-    def walk(node: ast.AST) -> None:
-        entered = isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-        if entered:
-            enclosing.append(node.name)  # type: ignore[union-attr]
-        if isinstance(node, ast.Tuple | ast.List) and _profile_fact_paths(node):
-            results.append((node, enclosing[-1] if enclosing else None))
-        for child in ast.iter_child_nodes(node):
-            walk(child)
-        if entered:
-            enclosing.pop()
+    def __init__(self) -> None:
+        self.fact_containers: Counter[tuple[str, str | None]] = Counter()
+        self.modelo_iva_constructors: list[tuple[str, int, frozenset[str]]] = []
+        self.literal_maps: Counter[tuple[str, str | None]] = Counter()
 
-    walk(module)
-    return iter(results)
+    def scan(self, relative_path: str, module: ast.Module) -> None:
+        """Read every shape in one walk, tracking the enclosing function."""
+        shared_fact_tuples = _shared_fact_tuples(module)
+        persona_overlays = _persona_overlays(module)
+
+        def walk(node: ast.AST, enclosing: str | None) -> None:
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                enclosing = node.name
+            elif isinstance(node, ast.Call):
+                self._read_constructor(relative_path, node)
+            elif isinstance(node, ast.Tuple | ast.List):
+                fact_paths = _profile_fact_paths(node, shared_fact_tuples)
+                if (
+                    _IVA_REGIME_PATH in fact_paths
+                    and _REQUIRED_IVA_FACT_PATHS - fact_paths
+                    and id(node) not in persona_overlays
+                ):
+                    self.fact_containers[(relative_path, enclosing)] += 1
+            elif isinstance(node, ast.Dict):
+                literal_paths = frozenset(
+                    key.value for key in node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
+                )
+                if _IVA_REGIME_PATH in literal_paths and _REQUIRED_IVA_FACT_PATHS - literal_paths:
+                    self.literal_maps[(relative_path, enclosing)] += 1
+            for child in ast.iter_child_nodes(node):
+                if not isinstance(child, _LEAF_NODES):
+                    walk(child, enclosing)
+
+        walk(module, None)
+
+    def _read_constructor(self, relative_path: str, node: ast.Call) -> None:
+        if _called_name(node) != "ModeloIVAProfile":
+            return
+        provided = frozenset(keyword.arg for keyword in node.keywords if keyword.arg is not None)
+        missing = _REQUIRED_MODELO_IVA_KEYWORDS - provided
+        if missing:
+            self.modelo_iva_constructors.append((relative_path, node.lineno, missing))
 
 
 def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> None:
-    incomplete_fact_containers: Counter[tuple[str, str | None]] = Counter()
-    incomplete_modelo_iva_constructors: list[tuple[str, int, frozenset[str]]] = []
-    incomplete_literal_maps: Counter[tuple[str, str | None]] = Counter()
-
+    findings = _ProfileShapeFindings()
     for path, module in _iter_modules():
-        relative_path = _relative(path)
-        for node in ast.walk(module):
-            if isinstance(node, ast.Call) and _called_name(node) == "ModeloIVAProfile":
-                provided = frozenset(keyword.arg for keyword in node.keywords if keyword.arg is not None)
-                missing = _REQUIRED_MODELO_IVA_KEYWORDS - provided
-                if missing:
-                    incomplete_modelo_iva_constructors.append((relative_path, node.lineno, missing))
+        findings.scan(_relative(path), module)
 
-        for fact_container, enclosing_function in _fact_containers_with_enclosing_function(module):
-            fact_paths = _profile_fact_paths(fact_container)
-            if _IVA_REGIME_PATH in fact_paths and _REQUIRED_IVA_FACT_PATHS - fact_paths:
-                incomplete_fact_containers[(relative_path, enclosing_function)] += 1
-
-        for dict_node, enclosing_function in _dicts_with_enclosing_function(module):
-            literal_paths = frozenset(
-                key.value for key in dict_node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)
-            )
-            if _IVA_REGIME_PATH in literal_paths and _REQUIRED_IVA_FACT_PATHS - literal_paths:
-                incomplete_literal_maps[(relative_path, enclosing_function)] += 1
-
-    assert incomplete_fact_containers == Counter(
+    assert findings.fact_containers == Counter(
         (entry.path, entry.function) for entry in _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS
     )
-    assert incomplete_modelo_iva_constructors == []
-    assert incomplete_literal_maps == Counter(
+    assert findings.modelo_iva_constructors == []
+    assert findings.literal_maps == Counter(
         {(entry.path, entry.function): entry.expected_count for entry in _LITERAL_NON_PROFILE_EXCLUSIONS}
     )
+
+
+_BARE_FRAGMENT = "facts = (UserProfileFact(path='iva.regime', value='GENERAL'),)"
+_PERSONA_OVERLAY = "facts = persona_facts_beneath((UserProfileFact(path='iva.regime', value='GENERAL'),))"
+_OVERLAY_THROUGH_A_LOCAL = """
+def build():
+    stated = [UserProfileFact(path='iva.regime', value='GENERAL')]
+    return persona_facts_beneath(stated)
+"""
+_OVERLAY_OMITTING_THE_SECTION = (
+    "facts = persona_facts_beneath((UserProfileFact(path='iva.regime', value='GENERAL'),), without=('iva.',))"
+)
+_OVERLAY_OMITTING_AN_AXIS_THROUGH_A_LOCAL = """
+def build():
+    omitted = ('iva.voluntary_sii_enrolled',)
+    return persona_facts_beneath((UserProfileFact(path='iva.regime', value='GENERAL'),), without=omitted)
+"""
+
+
+@pytest.mark.parametrize(
+    ("source", "flagged"),
+    (
+        pytest.param(_BARE_FRAGMENT, True, id="bare-fragment"),
+        pytest.param(_PERSONA_OVERLAY, False, id="persona-overlay"),
+        pytest.param(_OVERLAY_THROUGH_A_LOCAL, False, id="persona-overlay-through-a-local"),
+        pytest.param(_OVERLAY_OMITTING_THE_SECTION, True, id="persona-overlay-omitting-the-iva-section"),
+        pytest.param(
+            _OVERLAY_OMITTING_AN_AXIS_THROUGH_A_LOCAL, True, id="persona-overlay-omitting-one-axis-through-a-local"
+        ),
+    ),
+)
+def test_a_regime_fragment_is_complete_only_over_a_persona_that_keeps_its_iva_block(source: str, flagged: bool) -> None:
+    findings = _ProfileShapeFindings()
+    findings.scan("fixture.py", ast.parse(source))
+    assert bool(findings.fact_containers) is flagged

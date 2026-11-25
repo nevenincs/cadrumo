@@ -7,8 +7,9 @@ Core types: :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevi
 from __future__ import annotations
 
 import re
-from typing import Final
+from collections.abc import Mapping
 
+from ...core.absence_attestation_family import AbsenceAttestationFamily
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...domain.calculations.registry.export_field_casilla import (
@@ -18,7 +19,15 @@ from ...domain.calculations.registry.export_field_casilla import (
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.iva.refund_eligibility import RedemeEnrolmentState
+from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
+from ...domain.modelos.calculation_revision_sources import (
+    CalculationSourceRef,
+    bound_binding_source_refs,
+    bound_input_source_refs,
+)
+from .calculation_note_gate import NO_SOURCE_DISAGREEMENT_RESOLUTIONS, SourceDisagreementResolutions
+from .calculation_required_inputs import calculation_required_inputs
 from .caller_context import caller_context_of
 from .edit_models import (
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
@@ -30,12 +39,6 @@ from .edit_models import (
 from .required_inputs import filer_required_casilla_ids
 from .work_form_localization import render_box_locator_patterns
 from .work_review import ModeloWorkReview, ModeloWorkReviewCasilla
-
-_FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
-    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
-)
-
-"""The lifecycle states of a calculation recorded as filed."""
 
 
 def _review_indexes(
@@ -130,9 +133,24 @@ class WorkFormContext:
         overridden_binding_ids: frozenset[BindingId] | None,
         language: OutputLanguage,
         unworked_casilla_ids: frozenset[str] = frozenset(),
+        element_names: Mapping[str, str] | None = None,
+        known_truths: Mapping[BindingId, bool] | None = None,
+        resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+        redeme: RedemeEnrolmentState = RedemeEnrolmentState.UNSTATED,
     ) -> None:
-        """Index one work review and its pinned revision for repeated form lookups."""
+        """Index one work review and its pinned revision for repeated form lookups.
+
+        ``resolutions`` are the source disagreements the operator accepted, which
+        the form's hold on filing lifts exactly as the gate does.
+
+        ``redeme`` is the filer's stated inscription in the Registro de
+        devolución mensual, which the settlement result needs to answer whether
+        a carried IVA credit may be elected as a refund in this period.
+        """
         self.review = review
+        self.redeme = redeme
+        self.resolutions = resolutions
+        self.element_names: Mapping[str, str] = element_names or {}
         self.unworked = unworked_casilla_ids
         self.language = language
         self.revision = revision
@@ -142,14 +160,39 @@ class WorkFormContext:
         self._export_decimals: dict[str, int] | None = None
         self._box_locators: tuple[re.Pattern[str], ...] | None = None
         self.required: frozenset[str] = filer_required_casilla_ids(snapshot.revision)
-        self.filed = review.lifecycle_state in _FILED_STATES
+        self.calculation_required = calculation_required_inputs(
+            snapshot.revision, registry_period=review.period.registry_token, known_truths=known_truths
+        )
+        self.filed = review.lifecycle_state in FILED_REVISION_STATES
         self.surface = _surface_index(permitted_surface, filed=self.filed)
         self.aeat_data_bindings = _aeat_data_binding_ids(revision)
         self.entered = entered_casilla_ids
         self.overridden = overridden_binding_ids
         self.cleared: frozenset[str] = frozenset(() if revision is None else revision.cleared_casilla_ids)
+        # The boxes a source resolver handed the calculation a value for, apart from any binding.
+        self.source_supplied: Mapping[CasillaId, CalculationSourceRef] = (
+            {} if revision is None else bound_input_source_refs(revision.source_provenance)
+        )
+        # The bindings a source resolver supplied where the registry leaves the value to the filer.
+        self.source_supplied_bindings: Mapping[BindingId, CalculationSourceRef] = (
+            {} if revision is None else bound_binding_source_refs(revision.source_provenance)
+        )
+        self.stated = _stated_absences(revision, self.bindings)
         self.placed_boxes: dict[str, str] = {}
         self.casillas_by_export_position = _export_position_index(snapshot, self.bindings)
+
+
+def _stated_absences(
+    revision: CalculationRevision | None, bindings: Mapping[str, BindingDefinition]
+) -> dict[BindingId, AbsenceAttestationFamily]:
+    """The carries the filer stated hold nothing, each with the family of the statement its binding declares."""
+    layer = None if revision is None else revision.operator_layer
+    stated: dict[BindingId, AbsenceAttestationFamily] = {}
+    for binding_id in () if layer is None else layer.attested_binding_ids:
+        binding = bindings.get(binding_id)
+        if binding is not None and binding.absence_attestation is not None:
+            stated[binding_id] = binding.absence_attestation
+    return stated
 
 
 def _surface_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:

@@ -49,6 +49,7 @@ log record here. The migration reports identifiers only.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from weakref import WeakSet
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -67,10 +68,17 @@ from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryP
 from .relation_binding_join import bundled_relation_binding_join, bundled_relation_binding_join_targets
 
 _LOGGER = get_logger(__name__)
-_MIGRATION_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
+MIGRATION_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 _WRITE_PROVENANCE_REASON = "calculation-revision:relation-override-binding-rekey"
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+#: Repositories, each composed for one operation, whose stored catalogue this
+#: operation has already brought onto binding ids. Nothing writes a retired key,
+#: so one operation has nothing to migrate twice; its later callers still read
+#: and validate the catalogue they use. This covers a catalogue holding overrides,
+#: which the repository's content-keyed proof does not.
+_SETTLED_REPOSITORIES: WeakSet[CalculationRevisionCatalogueRepositoryProtocol] = WeakSet()
 
 
 class OrphanedRelationOverrideError(CalculationRevisionPersistenceError):
@@ -193,6 +201,8 @@ def _rekeyed_overrides_for_revision(
             a binding the revision's own registry snapshot declares; or two
             retired keys fold onto one binding carrying different values.
     """
+    if not revision.relation_overrides:
+        return {}, ()
     current_binding_ids = join_targets | _declared_binding_ids(
         revision.registry_snapshot_ref,
         operation=operation,
@@ -228,7 +238,7 @@ def _rekeyed_overrides_for_revision(
     if orphans:
         raise OrphanedRelationOverrideError(
             "calculation revision carries override keys that are neither a known relation nor a known binding",
-            translated_message=_MIGRATION_MESSAGE,
+            translated_message=MIGRATION_MESSAGE,
             context={
                 "reason": "orphaned_relation_override",
                 "calculation_revision_id": revision.calculation_revision_id,
@@ -238,7 +248,7 @@ def _rekeyed_overrides_for_revision(
     if collisions:
         raise OrphanedRelationOverrideError(
             "calculation revision carries disagreeing overrides that fold onto one binding",
-            translated_message=_MIGRATION_MESSAGE,
+            translated_message=MIGRATION_MESSAGE,
             context={
                 "reason": "conflicting_relation_override_fold",
                 "calculation_revision_id": revision.calculation_revision_id,
@@ -299,7 +309,7 @@ def rekey_calculation_revision_overrides(
         if derive_calculation_revision_id_from_revision(rekeyed_revision) != recomputed:
             raise CalculationRevisionPersistenceError(
                 "rekeyed calculation revision does not reproduce its recomputed content address",
-                translated_message=_MIGRATION_MESSAGE,
+                translated_message=MIGRATION_MESSAGE,
                 context={
                     "reason": "revision_id_recomputation_unstable",
                     "calculation_revision_id": revision.calculation_revision_id,
@@ -308,7 +318,7 @@ def rekey_calculation_revision_overrides(
         if recomputed in migrated:
             raise CalculationRevisionPersistenceError(
                 "two calculation revisions collide on one content address after rekeying",
-                translated_message=_MIGRATION_MESSAGE,
+                translated_message=MIGRATION_MESSAGE,
                 context={
                     "reason": "rekeyed_revision_id_collision",
                     "calculation_revision_id": recomputed,
@@ -337,7 +347,7 @@ def migrate_stored_relation_overrides_to_binding_ids(
     repository: CalculationRevisionCatalogueRepositoryProtocol,
     *,
     operation: PinnedAuthorityOperation,
-) -> CalculationRevisionOverrideMigrationResult:
+) -> CalculationRevisionOverrideMigrationResult | None:
     """Rekey one profile's stored overrides and persist the result atomically.
 
     The read is revision-guarded and the write is the singleton's own
@@ -349,27 +359,37 @@ def migrate_stored_relation_overrides_to_binding_ids(
     idempotent in storage as well as in memory, so re-running it does not churn
     the row's revision lineage.
 
+    A catalogue with no override has nothing to rekey or refuse, so when the
+    repository already knows that of the row's exact bytes, nothing is read. The
+    caller's own guarded read still validates the catalogue before any write.
+
     Args:
         repository: The bucket-bound calculation-revision catalogue repository.
         operation: Existing generation-pinned authority operation.
 
     Returns:
         The identifier-only record of what moved, carrying the migrated
-        catalogue.
+        catalogue, or ``None`` when this repository already completed a
+        migration or the stored bytes are known to hold no override, and so
+        nothing was read. A failed run settles nothing.
 
     Raises:
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
+    if repository in _SETTLED_REPOSITORIES or repository.stored_catalogue_is_known_override_free():
+        return None
     catalogue, expected_revision_id = repository.load_revisioned(operation=operation)
     result = rekey_calculation_revision_overrides(catalogue, operation=operation)
     if not result.changed:
+        _SETTLED_REPOSITORIES.add(repository)
         return result
     repository.save_with_secure_object_writes(
         result.catalogue,
         (),
         expected_revision_id=expected_revision_id,
     )
+    _SETTLED_REPOSITORIES.add(repository)
     _LOGGER.info(
         "rekeyed persisted calculation-revision relation overrides onto binding ids",
         extra={

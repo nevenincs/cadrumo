@@ -16,17 +16,22 @@ from datetime import date
 from pathlib import Path
 from typing import Final
 
-from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import (
+    IndexedRegistryAuthority,
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
 # The DP30300 header byte ranges each official Modelo 303 record design reserves for the
-# "Versión del Programa" and "NIF del desarrollador" fields, keyed by the registry revision
-# that carries that design.  Each entry is read from the official design itself, independently
-# of the registry, so a journey only checks an export refusal against a design listed here.
+# "Versión del Programa" and "NIF del desarrollador" fields, keyed by the SHA-256 of the
+# official design document that declares that record design.  Each entry is read from the
+# official design itself, independently of the registry, so a journey only checks an export
+# refusal against a design listed here.
 _M303_DEVELOPER_HEADER_POSITIONS: Final[Mapping[str, tuple[str, str, str]]] = {
-    "2025": ("DP30300", "93-96", "101-109"),
+    "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6": ("DP30300", "93-96", "101-109"),
 }
 
 
@@ -41,6 +46,8 @@ class IvaJourneyYear:
     year: int
     revisions: tuple[tuple[str, str, str], ...]
     """``(modelo, period, revision_id)`` for each exercised coordinate, as the authority selected it."""
+    design_digests: tuple[tuple[str, str, str], ...] = ()
+    """``(modelo, period, sha256)`` of the official design document behind each coordinate's filing envelope."""
 
     def revision(self, modelo: str, period: str) -> str:
         """Return the authored revision the authority selected for one exercised coordinate."""
@@ -50,6 +57,13 @@ class IvaJourneyYear:
         raise IvaFilingYearUnsupportedError(
             f"modelo {modelo} period {period} was not admitted for filing year {self.year}"
         )
+
+    def design_digest(self, modelo: str, period: str) -> str | None:
+        """Return the official design document digest the selected revision's filing envelope cites, if any."""
+        for candidate_modelo, candidate_period, digest in self.design_digests:
+            if (candidate_modelo, candidate_period) == (modelo, period):
+                return digest
+        return None
 
     def iso_date(self, month: int, day: int) -> str:
         """Return the ISO calendar date of ``month``/``day`` inside this filing year."""
@@ -72,32 +86,87 @@ def require_journey_year(*, authority_root: Path, year: int, coordinates: Iterab
         IvaFilingYearUnsupportedError: When a coordinate does not resolve, or
             resolves only by projecting another year's authored edition.
     """
+    requested = _requested_coordinates(coordinates)
+    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME)
+    try:
+        with authority.operation() as operation:
+            return _admit_year(operation, year=year, requested=requested)
+    finally:
+        authority.close()
+
+
+def newest_journey_year(
+    *, coordinates: Iterable[tuple[str, str]], authority_root: Path | None = None
+) -> IvaJourneyYear:
+    """Admit the newest supported filing year the authority authors for every ``(modelo, period)``.
+
+    The published authority at ``authority_root`` decides, or the process's
+    bundled authority when no root is given.  Years run from the support
+    envelope's horizon downwards and the first one every coordinate resolves
+    for as an authored edition is returned.
+
+    Raises:
+        IvaFilingYearUnsupportedError: When no supported year is authored for every coordinate.
+    """
+    requested = _requested_coordinates(coordinates)
+    if authority_root is None:
+        with bundled_indexed_authority().operation() as operation:
+            return _newest_admitted_year(operation, requested)
+    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME)
+    try:
+        with authority.operation() as operation:
+            return _newest_admitted_year(operation, requested)
+    finally:
+        authority.close()
+
+
+def _requested_coordinates(coordinates: Iterable[tuple[str, str]]) -> tuple[tuple[str, str], ...]:
     requested = tuple(dict.fromkeys(coordinates))
     if not requested:
         raise IvaFilingYearUnsupportedError("a journey must name at least one modelo coordinate to admit a year")
-    authority = IndexedRegistryAuthority(authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME)
-    selected: list[tuple[str, str, str]] = []
-    try:
-        with authority.operation() as operation:
-            for modelo, period in requested:
-                try:
-                    snapshot = operation.snapshot(modelo, filing_year=year, period=period)
-                except RegistryError as exc:
-                    raise IvaFilingYearUnsupportedError(
-                        f"modelo {modelo} has no filing-grade revision for filing year {year} period {period} "
-                        f"in the published authority: {type(exc).__name__}: {exc}"
-                    ) from exc
-                direction = snapshot.revision_projection_direction
-                if direction is not TemporalProjectionDirection.AUTHORED:
-                    raise IvaFilingYearUnsupportedError(
-                        f"modelo {modelo} filing year {year} period {period} is not authored in the published "
-                        f"authority: it resolves only by {direction.value} projection of the "
-                        f"{snapshot.authored_filing_year} edition (revision {snapshot.revision.id})"
-                    )
-                selected.append((modelo, period, str(snapshot.revision.id)))
-    finally:
-        authority.close()
-    return IvaJourneyYear(year=year, revisions=tuple(selected))
+    return requested
+
+
+def _newest_admitted_year(
+    operation: PinnedAuthorityOperation, requested: tuple[tuple[str, str], ...]
+) -> IvaJourneyYear:
+    refusals: list[str] = []
+    for year in reversed(operation.supported_filing_years().years):
+        try:
+            return _admit_year(operation, year=year, requested=requested)
+        except IvaFilingYearUnsupportedError as refusal:
+            refusals.append(str(refusal))
+    raise IvaFilingYearUnsupportedError(
+        f"no supported filing year is authored for every coordinate {list(requested)}: {refusals}"
+    )
+
+
+def _admit_year(
+    operation: PinnedAuthorityOperation, *, year: int, requested: tuple[tuple[str, str], ...]
+) -> IvaJourneyYear:
+    revisions: list[tuple[str, str, str]] = []
+    digests: list[tuple[str, str, str]] = []
+    for modelo, period in requested:
+        try:
+            snapshot = operation.snapshot(modelo, filing_year=year, period=period)
+        except RegistryError as exc:
+            raise IvaFilingYearUnsupportedError(
+                f"modelo {modelo} has no filing-grade revision for filing year {year} period {period} "
+                f"in the published authority: {type(exc).__name__}: {exc}"
+            ) from exc
+        direction = snapshot.revision_projection_direction
+        if direction is not TemporalProjectionDirection.AUTHORED:
+            raise IvaFilingYearUnsupportedError(
+                f"modelo {modelo} filing year {year} period {period} is not authored in the published "
+                f"authority: it resolves only by {direction.value} projection of the "
+                f"{snapshot.authored_filing_year} edition (revision {snapshot.revision.id})"
+            )
+        revisions.append((modelo, period, str(snapshot.revision.id)))
+        for layout in snapshot.revision.export_layouts:
+            if layout.filing_envelope is not None:
+                digests.append((modelo, period, str(layout.filing_envelope.source_sha256)))
+                break
+    return IvaJourneyYear(year=year, revisions=tuple(revisions), design_digests=tuple(digests))
 
 
 def require_m303_developer_header_positions(journey_year: IvaJourneyYear, *, period: str) -> tuple[str, str, str]:
@@ -108,12 +177,13 @@ def require_m303_developer_header_positions(journey_year: IvaJourneyYear, *, per
             whose positions no official source has supplied to the journey.
     """
     revision_id = journey_year.revision("303", period)
-    positions = _M303_DEVELOPER_HEADER_POSITIONS.get(revision_id)
+    digest = journey_year.design_digest("303", period)
+    positions = _M303_DEVELOPER_HEADER_POSITIONS.get(digest) if digest is not None else None
     if positions is None:
         raise IvaFilingYearUnsupportedError(
             f"modelo 303 filing year {journey_year.year} period {period} selects record design revision "
-            f"{revision_id}; the journey holds official DP30300 developer-header positions only for revisions "
-            f"{sorted(_M303_DEVELOPER_HEADER_POSITIONS)}"
+            f"{revision_id} (official design digest {digest}); the journey holds official DP30300 "
+            f"developer-header positions only for the designs {sorted(_M303_DEVELOPER_HEADER_POSITIONS)}"
         )
     return positions
 
@@ -121,6 +191,7 @@ def require_m303_developer_header_positions(journey_year: IvaJourneyYear, *, per
 __all__ = [
     "IvaFilingYearUnsupportedError",
     "IvaJourneyYear",
+    "newest_journey_year",
     "require_journey_year",
     "require_m303_developer_header_positions",
 ]

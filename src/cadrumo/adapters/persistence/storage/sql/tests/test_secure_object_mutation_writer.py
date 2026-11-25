@@ -10,13 +10,17 @@ import pytest
 from sqlalchemy import Connection, event
 
 from ......core.classification.policies import SensitivityClass
-from ......core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ......core.errors.hierarchy import InternalInvariantError
+from ......core.secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    SecureObjectRevisionAssertion,
+    SecureObjectWrite,
+)
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
-from .. import _secure_object_writes as writes_module
-from ..secure_object_records import SecureObjectRevisionAssertion
+from .. import secure_object_writes
 from ..secure_objects import SecureObjectRepository
-from ._secure_objects_support import _repo_at
+from .secure_objects_support import repo_at
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.quickfile.writer.test"
@@ -42,7 +46,7 @@ def test_encryption_precedes_admission_and_sql_commit_finishes_inside_it(
     active = False
     commits: list[bool] = []
     encrypted: list[bytes] = []
-    original_encrypt = writes_module.encrypt_secure_object_payload
+    original_encrypt = secure_object_writes.encrypt_secure_object_payload
 
     def encrypt(payload: bytes, *, associated_data: bytes) -> bytes:
         assert not active, "encryption and AAD preparation must precede the short writer fence"
@@ -61,8 +65,8 @@ def test_encryption_precedes_admission_and_sql_commit_finishes_inside_it(
     def committed(_connection: Connection) -> None:
         commits.append(active)
 
-    monkeypatch.setattr(writes_module, "encrypt_secure_object_payload", encrypt)
-    with EphemeralBucketSession(), _repo_at(tmp_path / "prepared.db") as base:
+    monkeypatch.setattr(secure_object_writes, "encrypt_secure_object_payload", encrypt)
+    with EphemeralBucketSession(), repo_at(tmp_path / "prepared.db") as base:
         repository = SecureObjectRepository(engine=base.engine, mutation_writer=admitted)
         event.listen(base.engine, "commit", committed)
         try:
@@ -84,7 +88,7 @@ def test_assertions_and_empty_batches_never_request_mutation_admission(tmp_path:
     def forbidden(_write: Callable[[], None]) -> None:
         raise AssertionError("assertion-only or empty work cannot confirm a mutation")
 
-    with EphemeralBucketSession(), _repo_at(tmp_path / "assertions.db") as base:
+    with EphemeralBucketSession(), repo_at(tmp_path / "assertions.db") as base:
         base.save_many((_write("source"),))
         source = base.load(
             namespace=_NAMESPACE,
@@ -117,7 +121,7 @@ def test_rejected_batch_cas_rolls_back_sibling_rows_before_any_confirmation(tmp_
         write()
         confirmed += 1
 
-    with EphemeralBucketSession(), _repo_at(tmp_path / "cas.db") as base:
+    with EphemeralBucketSession(), repo_at(tmp_path / "cas.db") as base:
         base.save_many((_write("occupied"),))
         repository = SecureObjectRepository(engine=base.engine, mutation_writer=admitted)
         with pytest.raises(SecureObjectRevisionConflictError):
@@ -129,3 +133,30 @@ def test_rejected_batch_cas_rolls_back_sibling_rows_before_any_confirmation(tmp_
             )
         assert not base.exists(_NAMESPACE, "sibling") and base.exists(_NAMESPACE, "occupied")
     assert attempts == 1 and confirmed == 0
+
+
+def test_a_delete_runs_only_inside_its_admission(tmp_path: Path) -> None:
+    admitted_deletes: list[bool] = []
+
+    with EphemeralBucketSession(), repo_at(tmp_path / "delete.db") as base:
+        base.save_many((_write("removed"),))
+
+        def admitted(write: Callable[[], None]) -> None:
+            write()
+            admitted_deletes.append(not base.exists(_NAMESPACE, "removed"))
+
+        repository = base.with_mutation_writer(admitted)
+        assert repository.delete(_NAMESPACE, "removed") is True
+        assert repository.delete(_NAMESPACE, "removed") is False
+        assert not base.exists(_NAMESPACE, "removed")
+    assert admitted_deletes == [True, True]
+
+
+def test_a_fenced_repository_cannot_take_a_second_writer(tmp_path: Path) -> None:
+    def admitted(write: Callable[[], None]) -> None:
+        write()
+
+    with EphemeralBucketSession(), repo_at(tmp_path / "fenced.db") as base:
+        fenced = base.with_mutation_writer(admitted)
+        with pytest.raises(InternalInvariantError):
+            fenced.with_mutation_writer(admitted)

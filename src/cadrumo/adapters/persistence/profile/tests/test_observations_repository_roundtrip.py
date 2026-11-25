@@ -181,7 +181,7 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
     """Anti-tautology: changing the persisted text scalar changes the loaded envelope."""
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
     from cadrumo.application.calculations.observations_repository import observation_key
 
     period = Period.from_year_and_code(2025, "1T")
@@ -197,9 +197,9 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
                 source_headers=_m303_ingreso_header(),
             )
         )
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == repo.namespace,
-            SecureObjectRow.object_key == observation_key("303", period),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == repo.namespace,
+            secure_objects_table.c.object_key == observation_key("303", period),
         )
 
         def replace_text_scalar(envelope):
@@ -457,7 +457,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     persisted observation with no legal_refs would silently feed
     unsupported numbers into amendment / verification flows.
 
-    Persists a populated observation, reaches into ``SecureObjectRow``
+    Persists a populated observation, reaches into the ``secure_objects`` row
     via ``session_scope``, surgically deletes the ``legal_refs`` tuple
     from one casilla in the encrypted JSON envelope, and asserts the
     load path catches the drift (either ValidationError on the typed
@@ -467,7 +467,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
     from cadrumo.application.calculations.observations_repository import observation_key
 
     observation_namespace = CalculationObservationRepository.namespace
@@ -486,9 +486,9 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
         )
 
         object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == observation_namespace,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == observation_namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(envelope):
@@ -896,15 +896,15 @@ def _restamp_wallet_decision_row_as_v1(
     """Turn one real encrypted v2 row into a self-consistent historical v1 row."""
     import json
 
-    from sqlalchemy import select
+    from sqlalchemy import select, update
 
     from cadrumo.adapters.persistence.storage.crypto.encrypted_columns import (
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
     from cadrumo.adapters.persistence.storage.sql.secure_object_crypto import derive_revision_id
     from cadrumo.adapters.persistence.storage.sql.session import session_scope
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
     from cadrumo.core.hashing import sha256_hex
 
     current = repo.secure_object_repository.load(
@@ -924,30 +924,36 @@ def _restamp_wallet_decision_row_as_v1(
 
     with session_scope(repo.secure_object_repository.engine) as session:
         row = session.execute(
-            select(SecureObjectRow).where(
-                SecureObjectRow.namespace == namespace,
-                SecureObjectRow.object_key == object_key,
+            select(secure_objects_table).where(
+                secure_objects_table.c.namespace == namespace,
+                secure_objects_table.c.object_key == object_key,
             ),
-        ).scalar_one()
+        ).one()
         legacy_payload_wire = encrypt_secure_object_payload(
             legacy_payload,
             associated_data=secure_object_payload_aad(namespace, bytes(row.object_key), 1),
         )
         legacy_payload_hash = sha256_hex(legacy_payload)
         legacy_ciphertext_hash = sha256_hex(legacy_payload_wire)
-        row.schema_version = 1
-        row.payload = legacy_payload_wire
-        row.payload_hash = legacy_payload_hash
-        row.ciphertext_hash = legacy_ciphertext_hash
-        row.revision_id = derive_revision_id(
-            namespace=namespace,
-            object_key=bytes(row.object_key),
-            schema_version=1,
-            written_at=row.written_at,
-            payload_hash=legacy_payload_hash,
-            ciphertext_hash=legacy_ciphertext_hash,
-            previous_revision_id=row.previous_revision_id,
-            previous_payload_hash=row.previous_payload_hash,
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(
+                schema_version=1,
+                payload=legacy_payload_wire,
+                payload_hash=legacy_payload_hash,
+                ciphertext_hash=legacy_ciphertext_hash,
+                revision_id=derive_revision_id(
+                    namespace=namespace,
+                    object_key=bytes(row.object_key),
+                    schema_version=1,
+                    written_at=row.written_at,
+                    payload_hash=legacy_payload_hash,
+                    ciphertext_hash=legacy_ciphertext_hash,
+                    previous_revision_id=row.previous_revision_id,
+                    previous_payload_hash=row.previous_payload_hash,
+                ),
+            ),
         )
 
 

@@ -9,25 +9,17 @@ These helpers validate and compose paths only. They do not read, write,
 create, or secure files; persistence adapters that need registered storage
 errors own their typed containment layer.
 
-:func:`is_windows_long_path_error`, :func:`windows_long_paths_enabled`, and
-:func:`windows_storage_root_long_path_margin` are the Windows ``MAX_PATH``
-(260-character) hardening surface: classifying an ``OSError`` that legacy
-Windows raises once a resolved path exceeds the limit, reading the
-machine-wide long-path opt-in, and computing whether a candidate storage root
-leaves enough headroom for the deepest object path the caller's storage layout
-can produce. The worst-case suffix that last helper measures against is
-supplied by its caller: this module owns the arithmetic, never the on-disk
-grammar of a layer above it.
+:func:`is_windows_long_path_error` is the Windows ``MAX_PATH`` hardening
+surface: classifying an ``OSError`` that legacy Windows raises once a resolved
+path exceeds the limit.
 """
 
 from __future__ import annotations
 
-import os
 import sys
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Sequence
 from functools import lru_cache
 from pathlib import Path
-from stat import S_ISREG
 from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from .config_state_root import (
@@ -35,8 +27,6 @@ from .config_state_root import (
     live_state_root_inputs,
     platform_user_data_root,
 )
-from .directory_scan import DirectoryEntryKind, iter_directory
-from .errors.hierarchy import CoreValidationError
 
 if TYPE_CHECKING:
     from .config import Settings
@@ -49,13 +39,6 @@ def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> P
 
 
 # ── Windows MAX_PATH (260-character) hardening ────────────────────────────
-
-#: Legacy Windows ``CreateFileW`` path-length ceiling in UTF-16 code units.
-#: Windows 10 1607+ can lift this per-application via the
-#: ``LongPathsEnabled`` registry value combined with a
-#: ``longPathAware`` application manifest; a workstation that has neither
-#: still enforces this ceiling.
-WINDOWS_MAX_PATH: int = 260
 
 #: ``WinError 3`` — ``ERROR_PATH_NOT_FOUND`` ("The system cannot find the
 #: path specified."). Windows raises this — instead of a length-specific
@@ -70,14 +53,6 @@ _WIN_ERROR_FILENAME_EXCED_RANGE = 206
 
 _WINDOWS_LONG_PATH_WINERRORS = frozenset({_WIN_ERROR_PATH_NOT_FOUND, _WIN_ERROR_FILENAME_EXCED_RANGE})
 
-#: Minimum plausible object-path suffix length, used only to reject a
-#: caller that passes a nonsensical budget to
-#: :func:`windows_storage_root_long_path_margin`. The real worst-case
-#: suffix is supplied by the layer that owns the on-disk grammar (see that
-#: function's ``object_path_suffix_length`` argument); this module holds no
-#: opinion about its value.
-_MIN_OBJECT_PATH_SUFFIX_LENGTH = 1
-
 
 def is_windows_long_path_error(exc: OSError) -> bool:
     """Return whether ``exc`` is a Windows path-length-ceiling failure.
@@ -85,7 +60,7 @@ def is_windows_long_path_error(exc: OSError) -> bool:
     Classifies ``WinError 3`` (``ERROR_PATH_NOT_FOUND``) and ``WinError
     206`` (``ERROR_FILENAME_EXCED_RANGE``) — the two concrete Windows API
     error codes a legacy (non long-path-aware) workstation raises once a
-    resolved path walks past :data:`WINDOWS_MAX_PATH`. Always ``False`` on
+    resolved path walks past the legacy 260-character limit. Always ``False`` on
     non-Windows platforms and for any other ``OSError``, so callers can
     unconditionally probe every caught ``OSError`` without a platform
     guard of their own.
@@ -100,94 +75,6 @@ def is_windows_long_path_error(exc: OSError) -> bool:
     if sys.platform != "win32":
         return False
     return getattr(exc, "winerror", None) in _WINDOWS_LONG_PATH_WINERRORS
-
-
-def windows_long_paths_enabled() -> bool | None:
-    r"""Report the machine-wide Windows long-path opt-in, if determinable.
-
-    Reads ``HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem
-    \LongPathsEnabled`` — the registry value Windows 10 1607+ consults to
-    lift :data:`WINDOWS_MAX_PATH` for manifest-declared long-path-aware
-    applications (this CLI is built with a ``longPathAware`` manifest via
-    its packaging).
-
-    Returns:
-        ``True`` when the value is present and non-zero, ``False`` when
-        present and zero (or when the platform is Windows but the value is
-        absent — the pre-1607 / not-yet-opted-in default), and ``None`` on
-        a non-Windows platform where the concept does not apply, or when
-        the registry cannot be read at all (a probe is best-effort; it
-        never raises).
-    """
-    if sys.platform == "win32":
-        # The positive block, rather than an early return off Windows, is what
-        # establishes the platform for `winreg`: it is the only guard shape
-        # every checker this project runs narrows on, so the module resolves
-        # when the tree is analysed for a platform that does not ship it.
-        import winreg
-
-        try:
-            with winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE,
-                r"SYSTEM\CurrentControlSet\Control\FileSystem",
-            ) as key:
-                value, _kind = winreg.QueryValueEx(key, "LongPathsEnabled")
-        except OSError:
-            # Key or value absent, or unreadable under the current privilege
-            # level: report the conservative pre-opt-in default rather than
-            # raising out of a best-effort probe.
-            return False
-        return bool(value)
-    return None
-
-
-def windows_storage_root_long_path_margin(root: Path, *, object_path_suffix_length: int) -> int:
-    """Return the headroom, in characters, before an object write risks ``MAX_PATH``.
-
-    Computes ``WINDOWS_MAX_PATH - len(str(root.resolve())) -
-    object_path_suffix_length``. A positive result is the number of
-    characters of slack remaining; zero or negative means the deepest
-    object the caller's layout can write already meets or exceeds the
-    legacy ``MAX_PATH`` ceiling from this root. Platform-independent by
-    design: the margin is informative on every OS, but only Windows
-    without the long-path opt-in enforces the ceiling it measures against.
-
-    The worst-case suffix is a required argument rather than a constant of
-    this module. It was previously a literal here, spelling one
-    hand-picked ``<namespace>`` sample into the arithmetic because
-    ``core`` sits below the layers that own the on-disk grammar. That
-    sample was drawn from the wrong vocabulary entirely: the
-    ``<namespace>`` segment of a provider object path is a registered
-    *secure-object storage namespace*, and the literal named a bucket-event
-    object type, none of whose values is a registered namespace. The real
-    longest namespace is materially longer, so the resulting ceiling
-    understated every margin this function returned. Taking the budget from
-    the caller lets the owning layer derive it from its own registry —
-    structurally, over the whole domain — without inverting the dependency
-    graph. See
-    :func:`~adapters.outbound.storage.path_budget.windows_worst_case_object_path_suffix_length`.
-
-    Args:
-        root: The candidate storage root (``cadrumo_local_storage_root`` or
-            an outbound-storage provider root).
-        object_path_suffix_length: Length of the deepest path suffix
-            (leading separator through file extension) the caller's layout
-            can append below ``root``.
-
-    Returns:
-        The signed character margin described above.
-
-    Raises:
-        CoreValidationError: When ``object_path_suffix_length`` is not a
-            positive length, which would silently inflate the margin.
-    """
-    if object_path_suffix_length < _MIN_OBJECT_PATH_SUFFIX_LENGTH:
-        raise CoreValidationError(
-            f"object_path_suffix_length must be at least {_MIN_OBJECT_PATH_SUFFIX_LENGTH}, "
-            f"got {object_path_suffix_length}",
-        )
-    resolved_length = len(str(root.resolve()))
-    return WINDOWS_MAX_PATH - resolved_length - object_path_suffix_length
 
 
 def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInputs | None = None) -> Path:
@@ -281,7 +168,7 @@ def effective_storage_root(
     """Return the effective Cadrumo storage root: a caller override, or the settings default.
 
     The single accessor for the "an explicit root override wins, otherwise
-    fall back to ``Settings.cadrumo_local_storage_root``" fallback that six
+    fall back to ``Settings.cadrumo_storage_root``" fallback that six
     call sites across ``application/user_profile`` and
     ``application/config_reset_repository.py`` each re-implemented inline.
     Comparing the six copies surfaced real drift, not just duplication: one
@@ -303,13 +190,13 @@ def effective_storage_root(
     the platform user-data root — one level above the settings default's own
     ``storage/`` — never under the current working directory and never
     nested under an already-derived storage root. ``root is None`` falls
-    back to ``Settings.cadrumo_local_storage_root``, which the settings
+    back to ``Settings.cadrumo_storage_root``, which the settings
     field validator already normalises identically on load, so no second
     resolve is spent on the common (no-override) path.
 
     Args:
         root: Optional caller-supplied storage-root override. ``None``
-            (the default) resolves ``Settings.cadrumo_local_storage_root``.
+            (the default) resolves ``Settings.cadrumo_storage_root``.
         settings: Optional already-resolved
             :class:`~cadrumo.core.config.Settings`, read only when ``root``
             is ``None``, so a caller that already holds a ``Settings``
@@ -329,7 +216,7 @@ def effective_storage_root(
     from .config import load_settings
 
     resolved_settings = settings if settings is not None else load_settings()
-    return resolved_settings.cadrumo_local_storage_root
+    return resolved_settings.cadrumo_storage_root
 
 
 def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
@@ -380,97 +267,6 @@ def path_stat_fingerprint(path: Path) -> tuple[str, int, int]:
     """
     stat = path.stat()
     return (str(path), stat.st_size, stat.st_mtime_ns)
-
-
-def directory_byte_total(
-    directory: Path,
-    *,
-    tolerate_errors: bool = False,
-    entries: Iterable[Path] | None = None,
-) -> tuple[int, int]:
-    """Return ``(total_bytes, file_count)`` for every regular file under ``directory``.
-
-    A missing (or not-a-directory) ``directory`` reports ``(0, 0)`` rather
-    than raising, mirroring the shape every prior hand-rolled walker used.
-
-    Args:
-        directory: The directory to sum. Only used to short-circuit on
-            absence when ``entries`` is not supplied; the actual walk reads
-            ``entries`` (or a fresh recursive scan of ``directory``).
-        tolerate_errors: When ``False`` (the default), an ``OSError`` raised
-            while statting a candidate propagates, as does one raised while
-            advancing a caller-supplied ``entries`` iterator. When ``True``,
-            the failing candidate — or the rest of an interrupted walk — is
-            skipped and the total reflects only what was successfully
-            stat'd, so a blob write racing this read never crashes the
-            caller.
-
-            The flag does not reach the internal scan's own descent: an
-            unreadable subdirectory is skipped silently whatever it is set
-            to, the scan reporting what it could read rather than raising
-            from beneath the root. That predates the move off
-            ``Path.rglob``, which swallowed the same errors — so an
-            injected ``entries`` is the only walk advance this flag
-            governs.
-        entries: Pre-enumerated candidates to sum instead of a fresh
-            recursive scan of ``directory``. Injectable so a caller that already
-            holds an enumeration can reuse it, and so a test can reproduce a
-            file vanishing mid-walk deterministically (list the candidate,
-            delete it on disk, then call this function with that stale
-            reference).
-
-    Returns:
-        ``(total_bytes, file_count)`` summed over every regular file
-        encountered. Directories and other non-regular entries among the
-        candidates are silently skipped (not an error).
-    """
-    candidates = _byte_total_candidates(directory, entries)
-    total_bytes = 0
-    file_count = 0
-    while True:
-        has_candidate, candidate = _next_byte_total_candidate(candidates, tolerate_errors=tolerate_errors)
-        if not has_candidate:
-            break
-        candidate_stat = _stat_byte_total_candidate(candidate, tolerate_errors=tolerate_errors)
-        if candidate_stat is None:
-            continue
-        if S_ISREG(candidate_stat.st_mode):
-            total_bytes += candidate_stat.st_size
-            file_count += 1
-    return total_bytes, file_count
-
-
-def _byte_total_candidates(directory: Path, entries: Iterable[Path] | None) -> Iterator[Path]:
-    """Return supplied candidates or a fresh recursive file-only directory walk."""
-    if entries is not None:
-        return iter(entries)
-    if not directory.is_dir():
-        return iter(())
-    return iter_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
-
-
-def _next_byte_total_candidate(candidates: Iterator[Path], *, tolerate_errors: bool) -> tuple[bool, Path | None]:
-    """Advance a candidate iterator, stopping on its tolerated traversal error."""
-    try:
-        return True, next(candidates)
-    except StopIteration:
-        return False, None
-    except OSError:
-        if not tolerate_errors:
-            raise
-        return False, None
-
-
-def _stat_byte_total_candidate(candidate: Path | None, *, tolerate_errors: bool) -> os.stat_result | None:
-    """Stat one candidate, skipping only its tolerated stat failure."""
-    if candidate is None:
-        return None
-    try:
-        return candidate.stat()
-    except OSError:
-        if not tolerate_errors:
-            raise
-        return None
 
 
 class _RetentionTimestamp(Protocol):

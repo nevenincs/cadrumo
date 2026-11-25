@@ -14,6 +14,8 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
+from ....core.external_constants import OutputLanguage
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
@@ -22,12 +24,12 @@ from ....domain.buckets.event import (
     derive_bucket_event_id,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...bucket_event_projection import BucketEventProjection
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
-from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.models import OperationRequest
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history import WorkUnitHistory
 from ..history_operation import (
@@ -40,62 +42,30 @@ from ..history_operation import (
     build_modelo_work_history_registration,
 )
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
+from ..work_history_read import ModeloWorkHistoryEntryV1, worded_history
+from .work_operation_support import GuardPhaseReachedError, guarded_executor_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_NOW = datetime(2026, 3, 10, 12, tzinfo=UTC)
-
-
-class _GuardPhaseReachedError(Exception):
-    pass
-
-
-class _GuardEvents:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-
-    async def phase(self, phase: str) -> None:
-        self.phases.append(phase)
-        raise _GuardPhaseReachedError(phase)
-
-
-def _executor_context(
-    request: OperationRequest[ModeloWorkHistoryRequest],
-    *,
-    definition_id: str | None = None,
-    subject_ref: str | None = None,
-) -> tuple[OperationExecutorContext, _GuardEvents]:
-    events = _GuardEvents()
-    context = cast(
-        OperationExecutorContext,
-        cast(
-            object,
-            SimpleNamespace(
-                identity=OperationIdentity(
-                    operation_id="a" * 64,
-                    definition_id=definition_id if definition_id is not None else request.definition_id,
-                    subject_ref=subject_ref if subject_ref is not None else request.subject_ref,
-                ),
-                events=events,
-            ),
-        ),
-    )
-    return context, events
+_NOW = datetime(1980, 3, 10, 12, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(open_ended_revision("303").id)
+_EN = OutputLanguage.EN
 
 
 def _unit() -> WorkUnit:
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(_FILING_YEAR, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="2026-y-siguientes"
+            bucket_id=str(_PROFILE), modelo="303", filing_year=_FILING_YEAR, period=period, revision_id=_REVISION_ID
         ),
         bucket_id=str(_PROFILE),
         modelo="303",
-        filing_year=2026,
+        filing_year=_FILING_YEAR,
         period=period,
-        revision_id="2026-y-siguientes",
+        revision_id=_REVISION_ID,
         name="First quarter",
         created_at=_NOW,
         updated_at=_NOW,
@@ -152,7 +122,9 @@ def _request(
     return OperationRequest[BaseModel](
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
-        payload=ModeloWorkHistoryRequest(profile_id=profile_id, work_unit_id=unit.work_unit_id),
+        payload=ModeloWorkHistoryRequest(
+            profile_id=profile_id, work_unit_id=unit.work_unit_id, output_language=OutputLanguage.EN
+        ),
     )
 
 
@@ -162,7 +134,9 @@ def _executor_request(
     return OperationRequest[ModeloWorkHistoryRequest](
         definition_id=MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID,
         subject_ref=subject_ref or unit.work_unit_id,
-        payload=ModeloWorkHistoryRequest(profile_id=profile_id, work_unit_id=unit.work_unit_id),
+        payload=ModeloWorkHistoryRequest(
+            profile_id=profile_id, work_unit_id=unit.work_unit_id, output_language=OutputLanguage.EN
+        ),
     )
 
 
@@ -173,7 +147,7 @@ def test_history_executor_profile_guard_preserves_work_unit_subject(
     unit = _unit()
     request_subject = "another-work-unit" if failure == "wrong_unit" else unit.work_unit_id
     request = _executor_request(unit, subject_ref=request_subject)
-    context, events = _executor_context(
+    context, events = guarded_executor_context(
         request,
         definition_id="modelo.work.other" if failure == "identity_definition" else None,
         subject_ref="another-work-unit" if failure == "identity_subject" else None,
@@ -195,11 +169,11 @@ def test_history_executor_profile_guard_preserves_work_unit_subject(
 def test_history_executor_accepts_its_work_unit_subject_at_the_guard_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     unit = _unit()
     request = _executor_request(unit)
-    context, events = _executor_context(request)
+    context, events = guarded_executor_context(request)
     monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
     executor = ModeloWorkHistoryExecutor(cast(ModeloHistoryPortsFactory, cast(object, lambda **_kwargs: None)))
 
-    with pytest.raises(_GuardPhaseReachedError) as reached:
+    with pytest.raises(GuardPhaseReachedError) as reached:
         asyncio.run(executor.execute(request, context))
 
     assert str(reached.value) == MODELO_WORK_HISTORY_OPERATION_DEFINITION_ID
@@ -252,10 +226,12 @@ def _event(*, bucket_id: UUID = _PROFILE, occurred_at: datetime = _NOW, object_i
 
 def test_projection_preserves_canonical_event_and_rejects_foreign_duplicate_unordered() -> None:
     first = _event()
-    later = _event(occurred_at=datetime(2026, 3, 10, 13, tzinfo=UTC))
+    later = _event(occurred_at=datetime(1980, 3, 10, 13, tzinfo=UTC))
     history = WorkUnitHistory(bucket_id=str(_PROFILE), work_unit_id=_unit().work_unit_id, events=(first, later))
     projection = ModeloWorkHistoryProjection(
-        profile_id=_PROFILE, history=ModeloWorkHistorySnapshot.from_history(history)
+        profile_id=_PROFILE,
+        history=ModeloWorkHistorySnapshot.from_history(history),
+        entries=worded_history(history, OutputLanguage.EN),
     )
     assert ModeloWorkHistoryProjection.model_validate_json(projection.model_dump_json()) == projection
     assert projection.history.to_history() == history
@@ -269,9 +245,28 @@ def test_projection_preserves_canonical_event_and_rejects_foreign_duplicate_unor
                     work_unit_id=history.work_unit_id,
                     events=tuple(BucketEventProjection.from_event(event) for event in events),
                 ),
+                entries=_entries_for(history.work_unit_id, events),
             )
     with pytest.raises(ValidationError):
-        ModeloWorkHistoryProjection(profile_id=_OTHER, history=ModeloWorkHistorySnapshot.from_history(history))
+        ModeloWorkHistoryProjection(
+            profile_id=_OTHER,
+            history=ModeloWorkHistorySnapshot.from_history(history),
+            entries=worded_history(history, OutputLanguage.EN),
+        )
+    with pytest.raises(ValidationError, match="newest first"):
+        ModeloWorkHistoryProjection(
+            profile_id=_PROFILE,
+            history=ModeloWorkHistorySnapshot.from_history(history),
+            entries=tuple(reversed(worded_history(history, OutputLanguage.EN))),
+        )
+
+
+def _entries_for(work_unit_id: str, events: tuple[BucketEvent, ...]) -> tuple[ModeloWorkHistoryEntryV1, ...]:
+    """Each event worded on its own, newest first by the order given, so only the events' own defect refuses."""
+    return tuple(
+        worded_history(WorkUnitHistory(bucket_id=str(_PROFILE), work_unit_id=work_unit_id, events=(event,)), _EN)[0]
+        for event in reversed(events)
+    )
 
 
 def test_profile_and_subject_refused_before_repositories(

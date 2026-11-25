@@ -7,7 +7,7 @@ command line.
 
 from __future__ import annotations
 
-from ._sweep_cli import app
+from .sweep_cli import app
 
 if __name__ == "__main__":
     app()

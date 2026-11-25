@@ -5,7 +5,10 @@ import { Specimen } from "@/dev/catalogue/Frame";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { catalogChoices, offeredSelection } from "../../shell/agentCatalog";
+import { offeredSelection } from "../../shell/agentCatalog";
+import { agentOffer } from "../../shell/agentOffer";
+import { AgentOfferContext } from "../../shell/agentOfferContext";
+import type { ServedProviderCatalog } from "../../shell/agentCatalogContract";
 import { useStrings } from "../../shell/strings";
 import { AgentSettingsPopover } from "./AgentSettingsPopover";
 import { APPEARANCE_NOTE } from "./Composer.stories";
@@ -16,9 +19,34 @@ import type { AgentSelection } from "./types";
 // every model in it is made up. The story holds the selection itself so the
 // controls can be tried. Nothing reaches a provider.
 
+// A model's own sentence is served by the catalog, in the language the agent
+// was asked for.
+const DEEP: Record<string, string> = {
+  es: "Un modelo inventado que admite todos los esfuerzos hasta el máximo.",
+  ca: "Un model inventat que admet tots els esforços fins al màxim.",
+  hu: "Egy kitalált modell, amely a legnagyobb erőfeszítésig minden szintet elfogad.",
+};
+const catalogIn = (locale: string | undefined): ServedProviderCatalog => ({
+  ...FIXTURE_CATALOG,
+  providers: (FIXTURE_CATALOG.providers ?? []).map((lane) => ({
+    ...lane,
+    catalog: {
+      ...lane.catalog,
+      models: (lane.catalog.models ?? []).map((model) =>
+        model.description && locale && DEEP[locale]
+          ? { ...model, description: DEEP[locale] }
+          : model,
+      ),
+    },
+  })),
+});
+
 function Settings({ start }: { start?: Partial<AgentSelection> }) {
   const t = useStrings();
-  const choices = useMemo(() => catalogChoices(t, FIXTURE_CATALOG), [t]);
+  const choices = useMemo(
+    () => agentOffer(t, catalogIn(t.locale), null, null),
+    [t],
+  );
   const [selection, setSelection] = useState<AgentSelection>(() => ({
     ...(offeredSelection(choices, null) ?? {
       providerId: "",
@@ -40,19 +68,16 @@ function Settings({ start }: { start?: Partial<AgentSelection> }) {
     .filter(Boolean)
     .join(" · ");
   return (
-    <Specimen title="Agent settings" note={APPEARANCE_NOTE}>
+    <Specimen title={t("desktop.agent.settings")} note={APPEARANCE_NOTE}>
       <div className="flex h-dvh w-(--agent-w) items-end pb-24">
-        <AgentSettingsPopover
-          providers={choices.providers}
-          models={choices.models}
-          selection={selection}
-          onChange={setSelection}
-        >
-          <Button variant="ghost" size="xs">
-            {words}
-            <Icon name="chevronDown" size="xs" />
-          </Button>
-        </AgentSettingsPopover>
+        <AgentOfferContext.Provider value={choices}>
+          <AgentSettingsPopover selection={selection} onChange={setSelection}>
+            <Button variant="ghost" size="xs">
+              {words}
+              <Icon name="chevronDown" size="xs" />
+            </Button>
+          </AgentSettingsPopover>
+        </AgentOfferContext.Provider>
       </div>
     </Specimen>
   );
@@ -88,8 +113,8 @@ export const SecondLaneOfOneProvider: Story = {
   name: "Open, the second lane of a provider",
   args: {
     start: {
-      providerId: "beta",
-      wayId: "beta/cli",
+      providerId: "qwen",
+      wayId: "qwen/cli",
       modelId: "fixture-tiered",
       effort: "medium",
     },
@@ -101,8 +126,8 @@ export const NoEffortChosen: Story = {
   name: "Open, the provider's own effort",
   args: {
     start: {
-      providerId: "alpha",
-      wayId: "alpha/api",
+      providerId: "kimi",
+      wayId: "kimi/api",
       modelId: "fixture-deep",
       effort: undefined,
     },
@@ -114,8 +139,8 @@ export const ModelWithoutEfforts: Story = {
   name: "Open, model without efforts",
   args: {
     start: {
-      providerId: "alpha",
-      wayId: "alpha/api",
+      providerId: "kimi",
+      wayId: "kimi/api",
       modelId: "fixture-plain",
       effort: undefined,
     },
@@ -126,7 +151,7 @@ export const ModelWithoutEfforts: Story = {
 export const WrittenModel: Story = {
   name: "Open, a provider that lists no models",
   args: {
-    start: { providerId: "gateway", wayId: "gateway/cli", modelId: "" },
+    start: { providerId: "zhipu", wayId: "zhipu/cli", modelId: "" },
   },
   play: opened,
 };

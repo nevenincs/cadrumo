@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import ModeloRecord
 from ....tests.aeat_literal_fixtures import (
     CENSO_SOURCE_URL_FIXTURE,
@@ -44,6 +45,7 @@ from ...overview.evidence import (
     build_calendar_evidence_projection,
 )
 from ...overview.home import HomeAvailability, HomeZoneState
+from ...tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
@@ -69,19 +71,21 @@ from ..workspace import (
     project_aeat_sync_workspace,
 )
 from ..workspace_reader import read_local_aeat_sync_workspace_projection
-from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "00000000-0000-4000-8000-000000000001"
-_SUBJECT = "00000001R"
-_NOW = datetime(2026, 9, 4, 10, 0, tzinfo=UTC)
+_SUBJECT = "00001005Q"
+_SUBJECT_AS_TYPED = f"{_SUBJECT[:-1]}-{_SUBJECT[-1].lower()}"
+"""The subject as an operator may type it, with a separator and a lowercase letter."""
+_YEAR = filing_year_envelope().horizon
+_NOW = datetime(_YEAR, 9, 4, 10, 0, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
-def _unrelated_contracts() -> OperationPublicContractSetV1:
+def unrelated_contracts() -> OperationPublicContractSetV1:
     """A real registered operation that is NOT any AEAT pull.
 
     The contract set cannot be empty, so the absence being proven -- that no
@@ -111,7 +115,7 @@ def _contracts_with_notifications_list() -> OperationPublicContractSetV1:
 
     definition = build_notifications_list_definition(unopened_ports)
     notification_contract = build_notifications_list_registration(definition).contract
-    return OperationPublicContractSetV1.build((*_unrelated_contracts().definitions, notification_contract))
+    return OperationPublicContractSetV1.build((*unrelated_contracts().definitions, notification_contract))
 
 
 def _projection(
@@ -125,7 +129,7 @@ def _projection(
         subject_key=_SUBJECT,
         observed_at=_NOW,
         filings=(),
-        operation_contracts=contracts if contracts is not None else _unrelated_contracts(),
+        operation_contracts=contracts if contracts is not None else unrelated_contracts(),
         censo_values=censo_values,
         custody_count=custody_count,
     )
@@ -335,7 +339,7 @@ def test_a_verdict_cannot_be_published_without_the_aeat_observation() -> None:
             subject_key=_SUBJECT,
             zone_observations=_pre_pull_zone_observations(),
             action_catalogue=OPERATOR_ACTION_CATALOGUE,
-            operation_contracts=_unrelated_contracts(),
+            operation_contracts=unrelated_contracts(),
             census=(fact,),
         )
 
@@ -388,7 +392,7 @@ def test_an_uncomposed_custody_reader_leaves_notifications_unobserved() -> None:
     assert row.local_observed_at is None
 
 
-@pytest.mark.parametrize("observed_nif", (_SUBJECT, "00000001-r"))
+@pytest.mark.parametrize("observed_nif", (_SUBJECT, _SUBJECT_AS_TYPED))
 def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif: str) -> None:
     """A reopened workspace reads stored evidence without fabricating absent values."""
     from ...user_profile.censal_observation import (
@@ -429,7 +433,7 @@ def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif
         subject_key=_SUBJECT,
         observed_at=_NOW,
         filings=(),
-        operation_contracts=_unrelated_contracts(),
+        operation_contracts=unrelated_contracts(),
         censo_values={"contact.postcode": "08001"},
         census_observation=observation,
     )
@@ -446,17 +450,17 @@ def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif
     with pytest.raises(AeatSyncWorkspaceProjectionError, match="another profile or taxpayer"):
         read_local_aeat_sync_workspace_projection(
             bucket_id=_BUCKET,
-            subject_key="00000002W",
+            subject_key="00001000B",
             observed_at=_NOW,
             filings=(),
-            operation_contracts=_unrelated_contracts(),
+            operation_contracts=unrelated_contracts(),
             censo_values={},
             census_observation=observation,
         )
 
 
-_FILED_SUBJECT = "X1234567L"
-_CAPTURED_AT = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
+_FILED_SUBJECT = "X0001500M"
+_CAPTURED_AT = datetime(_YEAR, 4, 16, 8, 0, tzinfo=UTC)
 
 
 def _filed_evidence(
@@ -511,7 +515,7 @@ def _contracts_with_filed_history_pull() -> OperationPublicContractSetV1:
         browser_resources_factory=unopened,
     )
     pull_contract = build_filed_history_operation_registration(definition).contract
-    return OperationPublicContractSetV1.build((*_unrelated_contracts().definitions, pull_contract))
+    return OperationPublicContractSetV1.build((*unrelated_contracts().definitions, pull_contract))
 
 
 def _filed_projection(
@@ -525,7 +529,7 @@ def _filed_projection(
         subject_key=_FILED_SUBJECT,
         observed_at=_NOW,
         filings=filings,
-        operation_contracts=contracts if contracts is not None else _unrelated_contracts(),
+        operation_contracts=contracts if contracts is not None else unrelated_contracts(),
         filed_evidence=filed_evidence,
     )
 
@@ -551,7 +555,7 @@ def test_captured_filings_reach_filed_declarations_with_receipt_and_submission_a
     first = filed_declaration_observation(artefacts=(filed_declaration_artefact(),))
     second = replace(
         filed_declaration_observation(artefacts=(), expediente_id="22222222222222222222"),
-        _period=Period.from_year_and_code(2025, "2T"),
+        _period=Period.from_year_and_code(modelo_record().filing_year, "2T"),
     )
     projection = _filed_projection(_filed_evidence((first, second), verified=True), filings=(modelo_record(),))
 
@@ -628,7 +632,7 @@ def test_another_taxpayers_capture_is_an_observed_zero_not_a_filing() -> None:
     """Exact-subject scoping comes from the shared join, and the read still happened."""
     from ...overview.tests.calendar_test_support import filed_declaration_observation
 
-    foreign = replace(filed_declaration_observation(artefacts=()), _authenticated_identity="00000001R")
+    foreign = replace(filed_declaration_observation(artefacts=()), _authenticated_identity="00001005Q")
     projection = _filed_projection(_filed_evidence((foreign,)))
 
     assert projection.filed_declarations == ()

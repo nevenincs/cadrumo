@@ -10,13 +10,13 @@ from dev.acceptance.income_tax.installed_tui_child import (
     run_installed_tui_child_process,
 )
 
-from .installed_tui_contracts import _SCHEMA_VERSION, ChildMode, LedgerInstalledTuiError, LedgerTuiChildReceipt
+from .installed_tui_contracts import SCHEMA_VERSION, ChildMode, LedgerInstalledTuiError, LedgerTuiChildReceipt
 
 
 def _child_receipt_identity_matches(document: dict[str, Any], expected_mode: ChildMode) -> bool:
     """Require the installed public route named by the child launch."""
     return bool(
-        document.get("schema_version") == _SCHEMA_VERSION
+        document.get("schema_version") == SCHEMA_VERSION
         and document.get("status") == "proven"
         and document.get("mode") == expected_mode
         and document.get("product_origin") == "site-packages"
@@ -37,7 +37,7 @@ def _child_observations_match(observations: object) -> bool:
     )
 
 
-def _parse_child_receipt(path: Path, *, expected_mode: ChildMode) -> LedgerTuiChildReceipt:
+def parse_child_receipt(path: Path, *, expected_mode: ChildMode) -> LedgerTuiChildReceipt:
     """Read and validate the deliberately value-free child result."""
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
@@ -53,7 +53,7 @@ def _parse_child_receipt(path: Path, *, expected_mode: ChildMode) -> LedgerTuiCh
     ):
         raise LedgerInstalledTuiError("installed Ledger TUI child did not prove the expected public route")
     return LedgerTuiChildReceipt(
-        schema_version=_SCHEMA_VERSION,
+        schema_version=SCHEMA_VERSION,
         status="proven",
         mode=expected_mode,
         product_origin="site-packages",
@@ -62,7 +62,7 @@ def _parse_child_receipt(path: Path, *, expected_mode: ChildMode) -> LedgerTuiCh
     )
 
 
-def _run_child(
+def run_child(
     *,
     python_executable: Path,
     workspace_root: Path,
@@ -113,4 +113,4 @@ def _run_child(
     )
     if evidence.returncode != 0 or evidence.receipt_status != "proven":
         raise LedgerInstalledTuiError(f"installed Ledger TUI {mode} child did not exit successfully")
-    return _parse_child_receipt(receipt_path, expected_mode=mode)
+    return parse_child_receipt(receipt_path, expected_mode=mode)

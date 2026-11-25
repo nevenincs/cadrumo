@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -28,10 +27,7 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from .....domain.modelos.calculation_revision_amendment import (
-    CalculationRevisionAmendmentIdentity,
-    CalculationRevisionAmendmentKind,
-)
+from .....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentIdentity
 from .....domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -57,12 +53,6 @@ _EVIDENCE_REFERENCE = "CSV-303-2025-1T-S21"
 _DECLARATION_TYPE_LOCATOR = "modelo-303-page-01:declaration-type:13:1"
 #: A positive result: the only sign a domiciliation (or ingreso) disposition admits.
 _POSITIVE_RESULT = Decimal("100.00")
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 def _submitted_file_declaration_type(
@@ -148,7 +138,7 @@ def _work_unit(*, modelo: str = "303") -> WorkUnit:
 def _revision(
     work_unit: WorkUnit,
     *,
-    amendment_kind: CalculationRevisionAmendmentKind | None,
+    amendment_kind: FilingDeclarationKind | None,
     baseline_filing_record_id: str | None = None,
 ) -> CalculationRevision:
     # Built once and fed to BOTH the deriver and the revision: the id is content
@@ -169,7 +159,7 @@ def _revision(
     # rectificativa shape is constructed without that out-of-scope aggregate.
     build = (
         CalculationRevision.model_construct
-        if amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
+        if amendment_kind is FilingDeclarationKind.RECTIFICATIVA
         else CalculationRevision
     )
     return build(
@@ -255,11 +245,11 @@ def test_keep_is_neutral_and_needs_no_filing_evidence(
 @pytest.mark.parametrize(
     ("election", "modelo", "amendment_kind"),
     [
-        pytest.param("X", "303", CalculationRevisionAmendmentKind.RECTIFICATIVA, id="raw-marker"),
+        pytest.param("X", "303", FilingDeclarationKind.RECTIFICATIVA, id="raw-marker"),
         pytest.param(
             PriorDomiciliationElection.CANCEL_OR_MODIFY,
             "130",
-            CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            FilingDeclarationKind.RECTIFICATIVA,
             id="non-m303",
         ),
         pytest.param(PriorDomiciliationElection.CANCEL_OR_MODIFY, "303", None, id="non-rectificativa"),
@@ -269,7 +259,7 @@ def test_cancel_or_modify_refuses_raw_unsupported_and_non_rectificativa_requests
     tmp_path: Path,
     election: object,
     modelo: str,
-    amendment_kind: CalculationRevisionAmendmentKind | None,
+    amendment_kind: FilingDeclarationKind | None,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """No untyped marker or unsupported filing shape can reach evidence lookup."""
@@ -399,7 +389,7 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
         )
         revision = _revision(
             work_unit,
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             baseline_filing_record_id=baseline.filing_record_id,
         )
 
@@ -486,7 +476,7 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(
         )
         revision = _revision(
             work_unit,
-            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            amendment_kind=FilingDeclarationKind.RECTIFICATIVA,
             baseline_filing_record_id=baseline.filing_record_id,
         )
 

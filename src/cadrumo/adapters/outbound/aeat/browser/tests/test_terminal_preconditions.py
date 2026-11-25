@@ -16,6 +16,7 @@ from playwright.async_api import async_playwright
 from ......core.config import Settings
 from ......core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ......tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 from .. import evasion as evasion_module
 from .. import factory as factory_module
 from .. import session as session_module
@@ -24,7 +25,7 @@ from ..errors import (
     BrowserEvasionError,
     BrowserPreconditionCondition,
 )
-from ..evasion import _raise_playwright_stealth_unavailable
+from ..evasion import raise_playwright_stealth_unavailable
 from ..profile import Profile
 from ..session import BrowserSession
 
@@ -50,6 +51,11 @@ def _contract(
 # scope.  Fact values remain AST expressions so dynamic checks and polarities
 # cannot silently drift while retaining the same mapping keys.
 _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
+    "session:_browser_not_available:BrowserNotReadyError:Chromium browser build is not available": _contract(
+        BrowserPreconditionCondition.BROWSER_AVAILABLE,
+        (("browser_available", "False"),),
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
     "factory:_SharedPlaywrightRuntimeOwner.close:BrowserError:Playwright runtime stop failed": _contract(
         BrowserPreconditionCondition.RUNTIME_STOPPABLE,
         (("playwright_runtime_stoppable", "False"),),
@@ -75,12 +81,12 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("playwright_runtime_startable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "session:BrowserSession.create_context:BrowserError:Browser session already owns a live browser": _contract(
+    "session:BrowserSession._create_context:BrowserError:Browser session already owns a live browser": _contract(
         BrowserPreconditionCondition.SESSION_AVAILABLE,
         (("browser_session_available", "False"),),
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "session:BrowserSession.create_context:BrowserError:Browser context preparation failed": _contract(
+    "session:BrowserSession._create_context:BrowserError:Browser context preparation failed": _contract(
         BrowserPreconditionCondition.CONTEXT_CREATABLE,
         (("browser_context_creatable", "False"),),
         NoRecoveryOutcome.SAFETY,
@@ -114,35 +120,18 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("browser_closeable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "evasion:_raise_playwright_stealth_unavailable:BrowserEvasionError:Browser evasion support is unavailable": _contract(
+    "evasion:raise_playwright_stealth_unavailable:BrowserEvasionError:Browser evasion support is unavailable": _contract(
         BrowserPreconditionCondition.EVASION_SUPPORT_AVAILABLE,
         (("browser_evasion_support_available", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
 }
 
-# Carriers whose refusal is recoverable by provisioning: the verdict, with its
-# recovery action, is the provisioning probe's own rather than a browser-authored one.
-_PROVISIONING_DELEGATED_CARRIERS: frozenset[str] = frozenset(
-    {
-        "session:BrowserSession._require_bundled_browser_provisioned:BrowserError:"
-        "Chromium browser build is not provisioned",
-    }
-)
-
 _BROWSER_PRODUCER_MODULES: tuple[ModuleType, ...] = (
     factory_module,
     session_module,
     evasion_module,
 )
-
-
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
 
 
 def _message_identity(node: ast.expr) -> str:
@@ -188,8 +177,12 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                error_type = _call_name(node.func)
-                if error_type in {"BrowserError", "BrowserEvasionError"}:
+                error_type = call_name(node.func)
+                if error_type in {
+                    "BrowserError",
+                    "BrowserEvasionError",
+                    "BrowserNotReadyError",
+                }:
                     assert node.args
                     key = f"{self.module_name}:{self.owner}:{error_type}:{_message_identity(node.args[0])}"
                     assert key not in carriers, f"duplicate browser failure carrier {key}"
@@ -200,38 +193,22 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
     return carriers
 
 
-def _keyword(call: ast.Call, name: str) -> ast.expr:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == name), None)
-    assert value is not None, f"missing {name}"
-    return value
-
-
 def _precondition(call: ast.Call) -> ast.Call:
-    value = _keyword(call, "precondition_verdict")
+    value = keyword_value(call, "precondition_verdict")
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "browser_no_action_verdict"
+    assert call_name(value.func) == "browser_no_action_verdict"
     return value
 
 
 def _condition(precondition: ast.Call) -> BrowserPreconditionCondition:
-    value = _keyword(precondition, "condition")
+    value = keyword_value(precondition, "condition")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "BrowserPreconditionCondition"
     return BrowserPreconditionCondition[value.attr]
 
 
-def _fact_expressions(precondition: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(precondition, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
-
-
 def _outcome(precondition: ast.Call) -> NoRecoveryOutcome:
-    value = _keyword(precondition, "outcome")
+    value = keyword_value(precondition, "outcome")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "NoRecoveryOutcome"
     return NoRecoveryOutcome[value.attr]
@@ -264,15 +241,12 @@ def _assert_terminal_contract(
 def test_browser_failure_totality_uses_one_canonical_no_action_projection() -> None:
     observed = _browser_error_carriers()
 
-    assert set(observed) == set(_BROWSER_FAILURE_TOTALITY) | _PROVISIONING_DELEGATED_CARRIERS
+    assert set(observed) == set(_BROWSER_FAILURE_TOTALITY)
     for key, carrier in observed.items():
-        if key in _PROVISIONING_DELEGATED_CARRIERS:
-            assert ast.unparse(_keyword(carrier, "precondition_verdict")) == "status.precondition_verdict"
-            continue
         expected = _BROWSER_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition
-        assert _fact_expressions(precondition) == expected.facts
+        assert fact_expressions(precondition) == expected.facts
         assert _outcome(precondition) is expected.outcome
 
 
@@ -286,17 +260,17 @@ def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recove
         assert "str(exc)" not in source
         tree = ast.parse(inspect.getsource(module))
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module.__name__
 
     delegate_calls = [
-        (module.__name__, _call_name(node.func))
+        (module.__name__, call_name(node.func))
         for module in (*_BROWSER_PRODUCER_MODULES, errors_module)
         for node in ast.walk(ast.parse(inspect.getsource(module)))
-        if isinstance(node, ast.Call) and _call_name(node.func) == "no_action_precondition_verdict"
+        if isinstance(node, ast.Call) and call_name(node.func) == "no_action_precondition_verdict"
     ]
     assert delegate_calls == [(errors_module.__name__, "no_action_precondition_verdict")]
 
@@ -304,7 +278,7 @@ def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recove
 def test_missing_evasion_support_has_an_exact_runtime_safety_verdict() -> None:
     cause = ImportError("playwright-stealth is unavailable")
     with pytest.raises(BrowserEvasionError) as raised:
-        _raise_playwright_stealth_unavailable(cause)
+        raise_playwright_stealth_unavailable(cause)
 
     assert raised.value.__cause__ is cause
     _assert_terminal_contract(

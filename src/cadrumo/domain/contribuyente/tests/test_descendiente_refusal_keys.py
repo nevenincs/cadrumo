@@ -11,9 +11,12 @@ the operator typed, so it must not arrive as an answer-type refusal at all.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.errors.hierarchy import InternalInvariantError, ProfileAnswerTypeError
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...calculations.registry.tests.fact_scope import outside_governed_fact_validation
 from ..descendant_facts import descendant_list_from_facts, parse_descendiente_flag
 from ..guarderia_mensual import parse_guarderia_mensual
@@ -21,7 +24,9 @@ from ..meses_trabajo import parse_meses_trabajo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_BIRTH = "NACIMIENTO=2018-04-01"
+_BIRTH_DATE = date(filing_year_envelope().horizon - 6, 4, 1).isoformat()
+
+_BIRTH = f"NACIMIENTO={_BIRTH_DATE}"
 
 
 def _refusal_key(raw: str) -> object:
@@ -35,7 +40,7 @@ def _refusal_key(raw: str) -> object:
     [
         ("DISCAPACIDAD=0", "NACIMIENTO"),
         ("NACIMIENTO=", "NACIMIENTO"),
-        ("NACIMIENTO=2018-13-45", "NACIMIENTO"),
+        (f"NACIMIENTO={filing_year_envelope().horizon - 6}-13-45", "NACIMIENTO"),
         (f"{_BIRTH},DISCAPACIDAD=50", "DISCAPACIDAD"),
         (f"{_BIRTH},DISCAPACIDAD=bogus", "DISCAPACIDAD"),
         (f"{_BIRTH},RELACION=cuñado", "RELACION"),
@@ -63,11 +68,11 @@ def test_an_unknown_key_refusal_names_no_key() -> None:
     ("facts", "key"),
     [
         (
-            {"renta_family.descendiente.0.birth_date": "2018-04-01", "renta_family.descendiente.0.relacion": "cuñado"},
+            {"renta_family.descendiente.0.birth_date": _BIRTH_DATE, "renta_family.descendiente.0.relacion": "cuñado"},
             "renta_family.descendiente.0.relacion",
         ),
         (
-            {"renta_family.descendiente.0.birth_date": "2018-04-01", "renta_family.descendiente.0.rentas_anuales": "x"},
+            {"renta_family.descendiente.0.birth_date": _BIRTH_DATE, "renta_family.descendiente.0.rentas_anuales": "x"},
             "renta_family.descendiente.0.rentas_anuales",
         ),
     ],

@@ -16,6 +16,11 @@ Asturias (Ley 3/2025, in force 3 December 2025).
 The Comunitat Valenciana's amounts start on 28 October 2022, when Decreto-ley
 14/2022 added them without earlier effect, so they reach the devengo of 31
 December 2022 but no date before the decreto-ley's entry into force.
+
+The territories walked here come from the residence catalogue, so Ceuta and
+Melilla are covered as soon as the fact declares them. Neither city approves a
+mínimo of its own, so both fall to the state amounts like the comunidades absent
+from the manual's table.
 """
 
 from __future__ import annotations
@@ -27,10 +32,11 @@ import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import supported_authored_exercises
 
-from ._modelo_100_registry_support import _loaded_registry
+from .modelo_100_registry_support import authored_ccaa_choices, loaded_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,50 +46,42 @@ _BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 #: LIRPF art. 57: general amount, increment from 65, further increment from 75.
 _STATE = (Decimal("5550"), Decimal("1150"), Decimal("1400"))
-_OWN_AMOUNTS_2024 = {
+_OWN_AMOUNTS_LATER = {
     "andalucia": (Decimal("5790"), Decimal("1200"), Decimal("1460")),
     "canarias": (Decimal("5606"), Decimal("1162"), Decimal("1414")),
     "galicia": (Decimal("5789"), Decimal("1199"), Decimal("1460")),
     "madrid": (Decimal("5956.65"), Decimal("1234.26"), Decimal("1502.58")),
     "comunidad_valenciana": (Decimal("6105"), Decimal("1265"), Decimal("1540")),
 }
-_OWN_AMOUNTS_2022 = {
+_OWN_AMOUNTS_FIRST = {
     "andalucia": (Decimal("5790"), Decimal("1200"), Decimal("1460")),
     "galicia": (Decimal("5789"), Decimal("1199"), Decimal("1460")),
     "madrid": (Decimal("5777.55"), Decimal("1197.15"), Decimal("1457.40")),
     "comunidad_valenciana": (Decimal("6105"), Decimal("1265"), Decimal("1540")),
 }
-_OWN_AMOUNTS = {
-    2022: _OWN_AMOUNTS_2022,
-    2023: {**_OWN_AMOUNTS_2022, "madrid": (Decimal("5956.65"), Decimal("1234.26"), Decimal("1502.58"))},
-    2024: _OWN_AMOUNTS_2024,
-    2025: {**_OWN_AMOUNTS_2024, "asturias": (Decimal("6105"), Decimal("1265"), Decimal("1540"))},
-}
-#: Decreto-ley 14/2022 (Comunitat Valenciana) enters into force on this date, with no earlier effect.
-_VALENCIA_MINIMO_IN_FORCE = date(2022, 10, 28)
-_CCAA = (
-    "andalucia",
-    "aragon",
-    "asturias",
-    "baleares",
-    "canarias",
-    "cantabria",
-    "castilla_la_mancha",
-    "castilla_y_leon",
-    "cataluna",
-    "comunidad_valenciana",
-    "extremadura",
-    "galicia",
-    "la_rioja",
-    "madrid",
-    "murcia",
+#: The four supported editions in order: Madrid rises in the second, Canarias joins in the third and
+#: Asturias in the fourth (see the module docstring).
+_OWN_AMOUNTS = dict(
+    zip(
+        supported_authored_exercises("100"),
+        (
+            _OWN_AMOUNTS_FIRST,
+            {**_OWN_AMOUNTS_FIRST, "madrid": (Decimal("5956.65"), Decimal("1234.26"), Decimal("1502.58"))},
+            _OWN_AMOUNTS_LATER,
+            {**_OWN_AMOUNTS_LATER, "asturias": (Decimal("6105"), Decimal("1265"), Decimal("1540"))},
+        ),
+        strict=True,
+    )
 )
+#: Decreto-ley 14/2022 (Comunitat Valenciana) enters into force on this date, with no earlier effect.
+_VALENCIA_MINIMO_IN_FORCE = loaded_registry()[1].legal["valenciana-ley-13-1997:art-2-bis"].effective_from
+_CCAA = tuple(str(token) for token in authored_ccaa_choices())
 #: Ages at the end of the tax period, including both increment boundaries.
 _AGES = (40, 64, 65, 74, 75, 90)
 
 
 def _revisions() -> dict[int, ModeloRevision]:
-    return {int(revision_id): revision for revision_id, revision in _loaded_registry()[0]["100"].revisions.items()}
+    return {int(revision_id): revision for revision_id, revision in loaded_registry()[0]["100"].revisions.items()}
 
 
 def _computed_years() -> tuple[int, ...]:
@@ -134,6 +132,10 @@ def test_0512_takes_the_comunidad_amounts_and_age_increments(year: int, ccaa: st
 
 
 def test_valencia_amounts_start_when_decreto_ley_14_2022_enters_into_force() -> None:
-    assert _computed(2022, "comunidad_valenciana", 40, on=_VALENCIA_MINIMO_IN_FORCE) == Decimal("6105")
+    assert _computed(
+        _VALENCIA_MINIMO_IN_FORCE.year, "comunidad_valenciana", 40, on=_VALENCIA_MINIMO_IN_FORCE
+    ) == Decimal("6105")
     with pytest.raises(RegistryError):
-        _computed(2022, "comunidad_valenciana", 40, on=_VALENCIA_MINIMO_IN_FORCE - timedelta(days=1))
+        _computed(
+            _VALENCIA_MINIMO_IN_FORCE.year, "comunidad_valenciana", 40, on=_VALENCIA_MINIMO_IN_FORCE - timedelta(days=1)
+        )

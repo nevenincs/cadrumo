@@ -42,7 +42,7 @@ from ..core.config import (
 from ..core.config_support import StorageRouteClassification, StorageRouteKind
 from ..core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
 from ..core.i18n.render import tr
-from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operator_action_enums import (
     ActionArgumentStatus,
     ActionConditionality,
@@ -109,7 +109,7 @@ class StorageWritePolicyDecision(BaseModel):
             never carry a failed verdict.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     allowed: bool
     code: StorageWritePolicyCode
@@ -279,7 +279,7 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
     ):
         from .user_profile.profile_pointer import observe_active_profile_pointer
 
-        pointer = observe_active_profile_pointer(resolved.cadrumo_local_storage_root)
+        pointer = observe_active_profile_pointer(resolved.cadrumo_storage_root)
         if pointer.bucket_id is not None:
             return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
     return route

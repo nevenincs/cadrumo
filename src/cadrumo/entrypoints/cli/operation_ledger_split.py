@@ -21,7 +21,7 @@ from ...application.ledger.split_operation import (
     LedgerSplitRequest,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._ledger_support import ledger_validation_bad
+from .ledger_support import ledger_validation_bad
 
 
 def run_ledger_split(

@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormLayoutDefinition,
     FormRepeatingGroupBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -22,23 +23,31 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _edition(position: int) -> str:
+    """The id of the authored Modelo 303 revision at ``position`` in its oldest-first order."""
+    return str(authored_revisions("303")[position].id)
+
+
 @cache
 def _revision() -> ModeloRevision:
-    return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions["2026-y-siguientes"]
+    return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[
+        str(open_ended_revision("303").id)
+    ]
 
 
-def test_2022_form_keeps_single_record_and_historical_bank_owners() -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions["2022"]
+def test_the_oldest_form_repeats_activities_to_the_design_limit_and_keeps_historical_bank_owners() -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(0)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
     assert all(str(75943 + n) in (page.official_ref or "") for n, page in enumerate(layout.pages))
-    assert len(layout.placements) == len(revision.casillas) == 208
+    assert len(layout.placements) == len(revision.casillas)
+    assert {placement.casilla_id for placement in layout.placements} == {casilla.id for casilla in revision.casillas}
     blocks = [block for page in layout.pages for section in page.sections for block in section.blocks]
     activities = [block for block in blocks if isinstance(block, FormRepeatingGroupBlock)]
     assert len(activities) == 4
     assert sum(len(block.columns) for block in activities) == 70
-    assert all(block.max_rows == 1 for block in activities)
+    assert all(block.max_rows == 3 for block in activities)
     for page in (layout.pages[2], layout.pages[5]):
         bank_fields = [
             resolve_form_context_field(revision, block)
@@ -52,34 +61,41 @@ def test_2022_form_keeps_single_record_and_historical_bank_owners() -> None:
 
 def test_annual_volume_formula_is_inherited_only_in_grounded_editions() -> None:
     revisions = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions
+    form_sources = (
+        "boe-modelo-303-2021-form-pdf",
+        "boe-modelo-303-2023-form-pdf",
+        "boe-modelo-303-2023-form-pdf",
+        "boe-modelo-303-2024-form-pdf",
+        "boe-modelo-303-2024-form-pdf",
+        "boe-modelo-303-2024-form-pdf",
+        "boe-modelo-303-2026-form-pdf",
+    )
     expressions = []
-    for revision_id in revisions:
-        revision = revisions[revision_id]
+    for position, source in enumerate(form_sources):
+        revision = revisions[_edition(position)]
         box = next(c for c in revision.casillas if c.id == "88")
         assert box.input_kind == "computed"
         formula = next(f for f in revision.formulas if f.id == box.formula)
         expressions.append(formula.expression)
-        source = {
-            "2022": "boe-modelo-303-2021-form-pdf",
-            "2023": "boe-modelo-303-2023-form-pdf",
-            "2024-hasta-08-y-2t": "boe-modelo-303-2023-form-pdf",
-            "2024-desde-09-y-3t": "boe-modelo-303-2024-form-pdf",
-            "2025": "boe-modelo-303-2024-form-pdf",
-            "2026-hasta-01-y-1t": "boe-modelo-303-2024-form-pdf",
-            "2026-y-siguientes": "boe-modelo-303-2026-form-pdf",
-        }[revision_id]
         assert source in formula.source_refs
     assert all(expression == expressions[0] for expression in expressions)
 
 
-@pytest.mark.parametrize("revision_id", ["2024-desde-09-y-3t", "2025"])
-def test_historical_rectificativa_form_preserves_its_own_field_owners(revision_id: str) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[revision_id]
+def _assert_each_casilla_placed_once(revision: ModeloRevision) -> None:
+    # The edition's own casillas fix the count: each is placed once and nothing else is.
+    placed = [placement.casilla_id for placement in revision.form_layouts[0].placements]
+    assert len(placed) == len(set(placed))
+    assert set(placed) == {casilla.id for casilla in revision.casillas}
+
+
+@pytest.mark.parametrize("position", [3, 4])
+def test_historical_rectificativa_form_preserves_its_own_field_owners(position: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(position)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
     assert all(str(99216 + n) in (page.official_ref or "") for n, page in enumerate(layout.pages))
-    assert len(layout.placements) == len(revision.casillas) == 228
+    _assert_each_casilla_placed_once(revision)
     assert {source.source_ref for source in layout.design_sources} >= {"boe-modelo-303-2024-form-pdf"}
     blocks = [block for page in layout.pages for section in page.sections for block in section.blocks]
     assert not any(block.id in {"gasolinas", "c-112"} for block in blocks)
@@ -114,13 +130,13 @@ def test_historical_rectificativa_form_preserves_its_own_field_owners(revision_i
     assert form_layout_failures(revision.model_copy(update={"form_layouts": (corrupted,)}))
 
 
-@pytest.mark.parametrize(("revision_id", "count"), [("2023", 219), ("2024-hasta-08-y-2t", 220)])
-def test_complementaria_editions_do_not_inherit_rectificativa_fields(revision_id: str, count: int) -> None:
-    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[revision_id]
+@pytest.mark.parametrize("position", [1, 2])
+def test_complementaria_editions_do_not_inherit_rectificativa_fields(position: int) -> None:
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(position)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
     assert len(layout.pages) == 6
-    assert len(layout.placements) == len(revision.casillas) == count
+    _assert_each_casilla_placed_once(revision)
     assert all(str(158996 + n) in (page.official_ref or "") for n, page in enumerate(layout.pages))
     assert {source.source_ref for source in layout.design_sources} >= {"boe-modelo-303-2023-form-pdf"}
     amendment = layout.pages[2].sections[-1]
@@ -192,7 +208,8 @@ def test_official_page_order_and_scalar_simplified_totals() -> None:
     ]
     assert [block.export_field_id for block in annual_context] == [f"m303-2026.dp30304.f{n:03}" for n in range(6, 19)]
     assert all(resolve_form_context_field(revision, block).projection_ref is not None for block in annual_context)
-    assert len(layout.placements) == len(revision.casillas) == 229
+    assert len(layout.placements) == len(revision.casillas)
+    assert {placement.casilla_id for placement in layout.placements} == {casilla.id for casilla in revision.casillas}
     assert not any(placement.kind == "unplaced" for placement in layout.placements)
     # Placement coverage is not a claim of full paper or temporal fidelity.
     assert layout.review.state == "generated"
@@ -288,11 +305,11 @@ def test_missing_context_owner_fails_layout_integrity() -> None:
     assert form_layout_failures(revision.model_copy(update={"form_layouts": (layout,)}))
 
 
-def test_changed_activity_slot_invalidates_the_authored_source_digest() -> None:
+def _failures_after_moving_activity_slot(record_id: str, field_id: str) -> tuple[str, ...]:
     revision = _revision()
     export = revision.export_layouts[0]
-    record = next(record for record in export.records if record.id == "m303-regimen-simplificado")
-    field = next(field for field in record.fields if field.id == "m303-2026.dp30302.f024")
+    record = next(record for record in export.records if record.id == record_id)
+    field = next(field for field in record.fields if field.id == field_id)
     assert field.projection_ref is not None
     changed = field.model_copy(update={"projection_ref": field.projection_ref.model_copy(update={"slot": 2})})
     record = record.model_copy(
@@ -301,22 +318,14 @@ def test_changed_activity_slot_invalidates_the_authored_source_digest() -> None:
     export = export.model_copy(
         update={"records": tuple(record if item.id == record.id else item for item in export.records)}
     )
-    broken = revision.model_copy(update={"export_layouts": (export,)})
-    assert any("stale" in failure for failure in form_layout_failures(broken))
+    return tuple(form_layout_failures(revision.model_copy(update={"export_layouts": (export,)})))
+
+
+def test_changed_activity_slot_invalidates_the_authored_source_digest() -> None:
+    failures = _failures_after_moving_activity_slot("m303-regimen-simplificado", "m303-2026.dp30302.f024")
+    assert any("stale" in failure for failure in failures)
 
 
 def test_changed_annual_activity_slot_invalidates_the_authored_source_digest() -> None:
-    revision = _revision()
-    export = revision.export_layouts[0]
-    record = next(record for record in export.records if record.id == "m303-exonerado-390")
-    field = next(field for field in record.fields if field.id == "m303-2026.dp30304.f006")
-    assert field.projection_ref is not None
-    changed = field.model_copy(update={"projection_ref": field.projection_ref.model_copy(update={"slot": 2})})
-    record = record.model_copy(
-        update={"fields": tuple(changed if item.id == field.id else item for item in record.fields)}
-    )
-    export = export.model_copy(
-        update={"records": tuple(record if item.id == record.id else item for item in export.records)}
-    )
-    broken = revision.model_copy(update={"export_layouts": (export,)})
-    assert any("stale" in failure for failure in form_layout_failures(broken))
+    failures = _failures_after_moving_activity_slot("m303-exonerado-390", "m303-2026.dp30304.f006")
+    assert any("stale" in failure for failure in failures)

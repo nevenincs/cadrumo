@@ -15,14 +15,14 @@ from typing import Any, Final
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.product_environment import clean_product_env
 from dev.source_tree import repository_files, snapshot
 
-from ._distribution_limits import PYPI_FILE_CAP_BYTES
-from ._distribution_names import normalise_distribution_name
 from .authority_staging import stage_published_authority
 from .command_execution import CommandResult, run_command
+from .distribution_limits import PYPI_FILE_CAP_BYTES
+from .distribution_names import normalise_distribution_name
 from .evidence import PackagingSmokeManifest
 from .google_oauth import build_client_json, stage_build_client
 from .proof_ledger import (
@@ -343,7 +343,7 @@ def isolated_product_env(storage_root: Path) -> dict[str, str]:
     """Return a clean product environment rooted in isolated temporary storage."""
     return {
         **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
+        "CADRUMO_STORAGE_ROOT": str(storage_root),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}",
     }
 
@@ -397,7 +397,7 @@ print(root)
 
 
 def assert_attachment_and_llm_surfaces(work_dir: Path, venv_path: Path) -> None:
-    """Verify installed attachment storage and LLM optional-boundary behavior."""
+    """Verify installed attachment storage and the agent dispatch refusal."""
     runtime_root = work_dir / "runtime-surfaces"
     runtime_root.mkdir(parents=True, exist_ok=True)
     runtime_root_literal = repr(str(runtime_root))
@@ -419,7 +419,7 @@ from cadrumo.adapters.persistence.storage.master_key.bucket_session import Bucke
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.core.config import Settings
-from cadrumo.core.model_catalogue import ModelRole
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import (
     AttachmentBytesContent,
@@ -431,7 +431,7 @@ root = Path({runtime_root_literal})
 root.mkdir(parents=True, exist_ok=True)
 settings = Settings(
     cadrumo_database_url=f"sqlite:///{{(root / 'attachments.db').as_posix()}}",
-    cadrumo_local_storage_root=root / "state",
+    cadrumo_storage_root=root / "state",
 )
 opened_at = datetime.now(UTC).replace(microsecond=0)
 session = BucketSession.open_resumed(
@@ -481,7 +481,7 @@ agent_request = LLMRequest(
     model_role=ModelRole.TEXT_EXTRACTION,
 )
 try:
-    asyncio.run(LLMClient(settings=Settings(cadrumo_local_storage_root=root / "llm-state")).complete(agent_request))
+    asyncio.run(LLMClient(settings=Settings(cadrumo_storage_root=root / "llm-state")).complete(agent_request))
 except LLMConfigError as exc:
     if (exc.context or dict()).get("model_run_refusal") != "service_unavailable":
         raise SystemExit("an agent dispatch outside an operation refused for the wrong reason")
@@ -496,6 +496,21 @@ print("attachment-and-llm-surfaces-ok")
     )
     record_proof("attachment storage round-trip")
     record_proof("core LLM agent dispatch refuses without a service")
+
+
+def installed_supported_year(work_dir: Path, venv_path: Path) -> int:
+    """Return the newest filing year the installed build's pinned authority supports."""
+    code = (
+        "from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority\n"
+        "with bundled_indexed_authority().operation() as operation:\n"
+        "    print(operation.supported_filing_years().horizon)\n"
+    )
+    result = run_checked(
+        [str(venv_python_path(venv_path)), "-c", code],
+        cwd=work_dir,
+        env=installed_product_env(work_dir / "supported-year-state", venv_path),
+    )
+    return int(result.stdout.strip().splitlines()[-1])
 
 
 def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
@@ -518,10 +533,25 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     )
     assert_cadrumo_version_output(version, context="in core venv")
 
-    default_root = work_dir / "default-check-state"
+    default_root = work_dir / "default-refusal-state"
     default_env = installed_product_env(default_root, venv_path)
     default_check = run_checked(
-        [cadrumo, "--format", "json", "config", "check"],
+        [
+            cadrumo,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "303",
+            "--year",
+            str(installed_supported_year(work_dir, venv_path)),
+            "--period",
+            "1T",
+            "--missing",
+        ],
         cwd=work_dir,
         env=default_env,
         expected={2},
@@ -532,7 +562,9 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
         or default_payload.get("error", {}).get("code") != "REFUSED_CLI_BOUNDARY"
         or default_payload["error"]["action"]["action"]["action_id"] != "operator.profile.create"
     ):
-        raise SystemExit(f"default config check did not report the typed profile creation remedy: {default_payload!r}")
+        raise SystemExit(
+            f"a profile-less command did not report the typed profile creation remedy: {default_payload!r}"
+        )
 
     storage_root = work_dir / "profile-root"
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -585,9 +617,9 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     if create_payload.get("result", {}).get("profile_name") != "packaging-smoke":
         raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-    with installed_cli_runtime(Path(cadrumo), env, work_dir / "config-check-runtime.log"):
+    with installed_cli_runtime(Path(cadrumo), env, work_dir / "profile-status-runtime.log"):
         ready = run_checked(
-            [cadrumo, "--format", "json", "--profile-secrets-stdin", "config", "check"],
+            [cadrumo, "--format", "json", "--profile-secrets-stdin", "config", "profile", "status"],
             cwd=work_dir,
             env=env,
             input_text=profile_authentication_secrets(passphrase),
@@ -595,13 +627,13 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     ready_payload = _json_payload(ready.stdout)
     assert_no_diagnostic_notices(
         ready_payload,
-        command="config.check",
+        command="config.profile.status",
         error=InstalledTaxOracleError,
         excused_codes=ISOLATION_NOTICE_CODES,
     )
     result = ready_payload.get("result", {})
-    if result.get("ok") is not True or result.get("issues") != []:
-        raise SystemExit(f"opted-out config check did not pass cleanly: {ready_payload!r}")
+    if ready_payload.get("status") == "error" or result.get("active_profile") != "packaging-smoke":
+        raise SystemExit(f"the created profile did not report its status through the runtime: {ready_payload!r}")
     record_proof("installed CLI config/profile smoke")
 
 

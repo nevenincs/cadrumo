@@ -4,17 +4,28 @@ import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
+  CLOSE_UNKNOWN_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
   FIXTURE_TODAY,
   STRADDLING_CALENDAR,
+  UNKNOWN_YEAR_CALENDAR,
+  UNKNOWN_YEAR_EMPTY_CALENDAR,
 } from "@/dev/fixtures/calendar";
 import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
+import {
+  NONE_SUPPRESSED_CALENDAR,
+  SUPPRESSED_CALENDAR,
+  SUPPRESSED_ONLY_CALENDAR,
+} from "@/dev/fixtures/calendarSuppressed";
+import profiles from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
 import type { CalendarState } from "../shell/calendar";
+import type { UserProfile } from "../shell/userProfile";
 import { useStrings } from "../shell/strings";
 import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
 import { PaneHeader } from "./PaneHeader";
 import { SignedOut } from "./SignIn";
+import { fixtureDay, fixtureMonth } from "@/dev/fixtureDates";
 
 // The filing calendar page in every state, over a fixed calendar in the
 // product's own shape. The toolbar's language also sets how dates are
@@ -77,6 +88,11 @@ function Page({
       />
       <FilingCalendarView
         state={state}
+        profile={
+          (profiles[locale as keyof typeof profiles] ??
+            profiles.en) as UserProfile
+        }
+        onNavigate={noop}
         locale={locale}
         refreshing={refreshing}
         defaultView={view}
@@ -125,11 +141,67 @@ export const PaneList: Story = {
   args: { pane: true, view: "list" },
 };
 
+// Windows whose close the product could not work out: no day is drawn, and
+// the row says only the earliest it can close.
+export const CloseUnknown: Story = {
+  name: "Close unknown: months and list",
+  args: { state: { kind: "ready", calendar: CLOSE_UNKNOWN_CALENDAR } },
+};
+
+export const CloseUnknownPane: Story = {
+  name: "Close unknown: in a pane, the list",
+  args: {
+    state: { kind: "ready", calendar: CLOSE_UNKNOWN_CALENDAR },
+    pane: true,
+    view: "list",
+  },
+};
+
 export const Refreshing: Story = { args: { refreshing: true } };
 
 export const NothingDue: Story = {
   name: "Nothing in the range",
   args: { state: { kind: "ready", calendar: EMPTY_CALENDAR } },
+};
+
+// A year the registry has no deadline windows for is unknown, said in the
+// served words: an empty list there is not "nothing due".
+export const UnknownYearEmpty: Story = {
+  name: "Unknown year: no rows, said as unknown",
+  args: { state: { kind: "ready", calendar: UNKNOWN_YEAR_EMPTY_CALENDAR } },
+};
+
+export const UnknownYearBesideRows: Story = {
+  name: "Unknown year: beside known rows",
+  args: { state: { kind: "ready", calendar: UNKNOWN_YEAR_CALENDAR } },
+};
+
+// Obligations the read held off the schedule are set apart from the owed
+// ones, each in the served words of its verdict. The section is drawn only
+// where the read served any: the story above it has none, and so has this one
+// that was asked and served an empty list.
+export const SuppressedBesideOwed: Story = {
+  name: "Held off the schedule: beside what is owed",
+  args: { state: { kind: "ready", calendar: SUPPRESSED_CALENDAR } },
+};
+
+export const SuppressedInPane: Story = {
+  name: "Held off the schedule: in a pane",
+  args: {
+    state: { kind: "ready", calendar: SUPPRESSED_CALENDAR },
+    pane: true,
+    view: "list",
+  },
+};
+
+export const SuppressedNothingOwed: Story = {
+  name: "Held off the schedule: nothing owed in the range",
+  args: { state: { kind: "ready", calendar: SUPPRESSED_ONLY_CALENDAR } },
+};
+
+export const SuppressedNone: Story = {
+  name: "Held off the schedule: asked, none served",
+  args: { state: { kind: "ready", calendar: NONE_SUPPRESSED_CALENDAR } },
 };
 
 // Where the mark for today stands in each shape of range.
@@ -184,7 +256,7 @@ export const BusyWhole: Story = {
     state: { kind: "ready", calendar: BUSY_CALENDAR },
     today: BUSY_TODAY,
     pane: true,
-    left: { asked: new Set(["2027-01"]) },
+    left: { asked: new Set([fixtureMonth(1, 1)]) },
   },
 };
 
@@ -192,7 +264,7 @@ export const BusyWhole: Story = {
 // says the day, and does not call it today.
 export const AnotherDay: Story = {
   name: "Evaluated on another day",
-  args: { pane: true, view: "list", today: "2026-10-07" },
+  args: { pane: true, view: "list", today: fixtureDay(10, 7) },
 };
 
 export const Loading: Story = { args: { state: { kind: "loading" } } };
@@ -221,9 +293,23 @@ export const ServicesDown: Story = {
 
 export const FailedRefreshing: Story = {
   name: "Failed, reading again",
-  args: { state: { kind: "failed", code: "timed_out" }, refreshing: true },
+  args: {
+    state: { kind: "failed", code: "timed_out", words: null },
+    refreshing: true,
+  },
 };
 
 export const Failed: Story = {
-  args: { state: { kind: "failed", code: "timed_out" } },
+  args: { state: { kind: "failed", code: "timed_out", words: null } },
+};
+
+export const FailedWithWords: Story = {
+  name: "Failed, with the words the product served",
+  args: {
+    state: {
+      kind: "failed",
+      code: "refused",
+      words: "Synthetic words the product served for its refusal.",
+    },
+  },
 };

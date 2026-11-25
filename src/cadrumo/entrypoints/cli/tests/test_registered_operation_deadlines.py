@@ -10,8 +10,8 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationProgress
 from cadrumo_client.commands.registered_operation_deadlines import (
@@ -56,7 +56,7 @@ def test_exchange_refuses_an_expired_or_non_finite_settlement_deadline_before_th
     with pytest.raises(RefusalError) as refused:
         _exchange(deadline)(cast("OperationRequest", object()))
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
 
 
 @pytest.mark.parametrize("timeout", [math.nan, math.inf, -math.inf, 0.0, -1.0, 120.5])

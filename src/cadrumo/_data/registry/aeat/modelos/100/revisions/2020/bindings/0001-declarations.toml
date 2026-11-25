@@ -1,7 +1,25 @@
+# Casilla 0168 states the modalidad of the estimacion directa block as the design's
+# clave (E1MED, tipo_OpcionesSyN): N normal, S simplificada. The modalidad is a
+# taxpayer-wide fact the profile already holds as the estimation regime, so the clave
+# is derived from that regime rather than asked when calculating. A regime outside
+# direct estimation leaves the box unresolved.
+[[revisions."2020".bindings]]
+id = "renta-modelo-100-estimacion-directa-modalidad-clave"
+provider = { kind = "profile", profile_key = "irpf.estimation_directa_modalidad_clave", xsd_path = "/DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1MED", dictionary_field = "E1MED" }
+value = { data_type = "text", channel = "text" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd", "aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
+# The same modalidad read as a yes/no answer, for the formulas that branch on it
+# (casilla 0224 takes 0180 - 0220 under normal and 0180 - 0223 under simplificada).
 [[revisions."2020".bindings]]
 id = "renta-modelo-100-estimacion-directa-es-normal"
-provider = { kind = "manual_input", casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
-value = { data_type = "boolean", channel = "boolean", typed_enum = "EstimacionDirectaModalidad" }
+provider = { kind = "profile", profile_key = "irpf.estimation_directa_normal" }
+value = { data_type = "boolean", channel = "boolean" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2020-dictionary", "lirpf-cuota-chain-authority"]
@@ -9,6 +27,33 @@ source_refs = ["aeat-dr-100-2020-dictionary", "lirpf-cuota-chain-authority"]
 [[revisions."2020".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
+# The modality of the estimacion directa is read only for a filer that has an economic activity
+# (LIRPF art. 27): a salaried filer has no direct-estimation block and no regime to state.
+[[revisions."2020".bindings]]
+id = "renta-profile-has-economic-activity"
+provider = { kind = "profile", profile_key = "taxpayer_type.irpf_income_categories" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
+# The estimacion directa block exists only for a filer whose regime is direct estimation
+# (LIRPF arts. 28 and 30): an estimacion objetiva filer has none, so its net income and
+# modality are not read.
+[[revisions."2020".bindings]]
+id = "renta-profile-estimacion-directa"
+provider = { kind = "profile", profile_key = "irpf.estimation_directa" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
 [[revisions."2020".bindings]]
 id = "renta-profile-tax-residence-ccaa"
 provider = { kind = "profile", profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
@@ -20,30 +65,59 @@ source_refs = ["aeat-dr-100-2020-dictionary", "aeat-renta-2020-manual-parte1", "
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2020"]
+# Casilla 0604 credits the pagos fraccionados actually paid, read from the
+# effective (latest) Modelo 130 autoliquidacion of each quarter. Casilla 19 is
+# casilla 17 minus casilla 18, where casilla 18 holds what earlier
+# autoliquidaciones of the same quarter already resulted a ingresar (zero when
+# none did). A positive casilla 19 is paid; a negative one is not paid and is
+# deducted from a later quarter through casilla 15. So each quarter paid
+# casilla 18 plus the positive part of casilla 19, which the
+# pagos_fraccionados_ingresados fold applies to the declared ["19", "18"] pair.
 [[revisions."2020".bindings]]
 id = "renta-modelo-130-pagos-fraccionados"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "130", source_casilla_id = "19", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "130", source_casilla_ids = ["19", "18"], temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "sum" }
+aggregation = { op = "pagos_fraccionados_ingresados" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
-source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form", "aeat-modelo-130-instructions"]
 
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2020"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "el resultado a ingresar de las autoliquidaciones, modelo 130, presentadas anteriormente por el mismo ejercicio y período",
+    "podrá deducirse en cualquiera de los siguientes pagos fraccionados",
+    "Si la cantidad consignada en la casilla 19 es positiva",
+]
+# The Modelo 131 instructions lay out the same chain: casilla 15 is casilla 13
+# minus casilla 14, casilla 14 holds what earlier autoliquidaciones of the same
+# quarter already resulted a ingresar, and a negative casilla 15 is deducted
+# from a later quarter rather than paid. Each quarter paid casilla 14 plus the
+# positive part of casilla 15.
 [[revisions."2020".bindings]]
 id = "renta-modelo-131-pagos-fraccionados"
-provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "131", source_casilla_id = "15", temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "131", source_casilla_ids = ["15", "14"], temporal = { kind = "same_filing_year_periods", source_periods = ["1T", "2T", "3T", "4T"] } }
 applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
-aggregation = { op = "sum" }
+aggregation = { op = "pagos_fraccionados_ingresados" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
-source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form", "aeat-modelo-131-instructions"]
 
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Modelo 100", "ejercicio 2020"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "el resultado a ingresar de las autoliquidaciones, modelo 131, presentadas anteriormente por el mismo ejercicio y período",
+    "podrá deducirse en cualquiera de los siguientes pagos fraccionados",
+    "Si la cantidad consignada en la casilla 15 es positiva",
+]
 # Eligibility flag for the LIRPF art. 64/75 anualidades por alimentos separate-
 # escala régimen. Art. 64 grants the separate escala only to a payer who
 # satisfies judicial anualidades "sin derecho a la aplicación por estos últimos
@@ -108,3 +182,41 @@ source_refs = ["aeat-dr-100-2020-dictionary", "aeat-renta-2020-manual-parte1"]
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Mínimo por descendientes"]
+
+# Art. 59/61 LIRPF mínimo por ascendientes, parte estatal. The derived-fact injector
+# folds every stored ascendant row (renta_family.ascendiente.{n}) into one aggregate:
+# the art. 59.1 cuantía from the minimum age or a disability, the art. 59.2 increment
+# from the increment age, the art. 61 norma 4ª flat cuantía for a death in the period,
+# divided by the descendants the ascendant lives with (art. 61 normas 1ª and 5ª). A row
+# that leaves a deciding fact unstated withholds the aggregate. The selector carries no
+# year: every edition inherits this one declaration.
+[[revisions."2020".bindings]]
+id = "renta-profile-minimo-ascendientes-estatal"
+provider = { kind = "profile", profile_key = "renta_family.ascendientes_minimos_aggregate" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["El mínimo por ascendientes será de 1.150 euros anuales"]
+
+# Art. 56.3/59/61 LIRPF mínimo por ascendientes, parte autonómica. The same injector
+# folds the same rows with the same eligibility and sharing, taking the art. 59.1
+# cuantía and the art. 59.2 increment the filer's comunidad of residence approved
+# under Ley 22/2009 art. 46.1.a), read from the keyed tables
+# renta-minimo-ascendientes-mayor-65-autonomico and -mayor-75-autonomico. A comunidad
+# the edition's table does not list approved no amount of its own, so art. 56.3 leaves
+# the state figures. The selector carries no year: every edition inherits it.
+[[revisions."2020".bindings]]
+id = "renta-profile-minimo-ascendientes-autonomico"
+provider = { kind = "profile", profile_key = "renta_family.ascendientes_minimos_aggregate_autonomico" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-59", "ley-35-2006:art-61"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incrementados o disminuidos a efectos de cálculo del gravamen autonómico"]

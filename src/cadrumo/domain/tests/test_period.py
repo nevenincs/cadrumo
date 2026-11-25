@@ -89,7 +89,6 @@ def test_contiguous_helper_boundaries_match_canonical_period(registry_period: st
     ("registry_period", "expected"),
     (
         ("4P", date(2026, 12, 31)),
-        ("AD-HOC", date(2026, 12, 31)),
         ("EVENT-1", date(2026, 12, 31)),
         ("EVENT-42", date(2026, 12, 31)),
     ),

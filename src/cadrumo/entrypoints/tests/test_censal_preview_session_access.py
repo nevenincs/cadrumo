@@ -4,18 +4,18 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.access_resolution import OperationAccessContext
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
     CENSAL_PREVIEW_OPERATION_DEFINITION_ID,
     CensalPreviewOperationRequest,
     resolve_censal_preview_operation_access,
 )
-from cadrumo.core.operations import profile_operation_subject
-from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
+from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessRequest
+
+from .production_operation_registry import production_operation_registry
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -40,13 +40,12 @@ def test_preview_admits_guarded_session_publication(frontend: OperationFrontendP
         period_independent=True,
         destination_id=destination_id,
     )
-    context = OperationAccessContext(
+    context = operation_access_context(
+        production_operation_registry().lookup_public_contract(definition_id),
         profile_id=profile_id,
         destination_id=destination_id,
         action=AccessAction.COMMIT,
         frontend=frontend,
-        contract=build_production_operation_registry().lookup_public_contract(definition_id),
-        published_authority=Availability.AVAILABLE,
         admitted_request=admitted,
     )
     resolved = resolve_censal_preview_operation_access(request, context)

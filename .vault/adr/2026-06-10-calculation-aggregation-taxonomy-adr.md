@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
-modified: '2026-10-03'
-body_hash: 'sha256:a85027a5a5348d666ddda6b1282bd29766ba84836df17a9b76647d349d874dfe'
+modified: '2026-11-01'
+body_hash: 'sha256:6b3073ffbc1a16063707a2e2abf916ed72bbccaee6dcfcd3ed81c18839be37b2'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-research]]"
   - '[[2026-06-10-calculation-engine-foundations-adr]]'
@@ -224,7 +224,7 @@ post-mesh merge precedence at `_binding_resolution.py:112` (where
 `{**relation_binding_values, **resolved_bindings}` lets every other source override
 a relation value without a finding) is retired in favour of the mesh guard.
 
-**5. Declared precedence order (codifies D2/D3 out of inline comments).** For the
+**5. Declared precedence order (codifies D2/D3 out of inline comments; amended 2026-11-01).** For the
 decimal binding channel, lowest→highest:
 
 1. `profile` resolver (pre-mesh facts);
@@ -329,6 +329,10 @@ and no-parallel-write-path rules.
 ## Amendment (2026-09-07): unresolved sources are refusals, not lifecycle states
 
 The earlier allowance for a resolver-less binding to be labelled deferred and surfaced as a non-blocking advisory is withdrawn. `src/` may not encode development progress as enrolled, deferred, reserved, implemented, ignored, or equivalent source dispositions. A registry binding either has an executable owner on the production calculation route, is intrinsically supplied by its declared production channel such as manual input or a design constant, or calculation refuses it as unrouted. The live resolver ownership declarations are the only routability authority; no parallel set may make a missing resolver acceptable. Existing resolver semantics and the canonical mechanism table remain binding.
+
+## Amendment 2026-11-01: tier divergence on filing-bound bindings blocks
+
+The precedence ladder of item 5 is unchanged in order. A higher tier that replaces a different lower-tier value on a filing-bound binding no longer wins silently: the overlay compares typed values exactly and persists a `precedence_tier_divergence` finding naming each tier, its value and its provenance. While the finding is open, check, export and local filing are refused; calculation and preview proceed with the ladder's value. Equal values produce no finding. The finding is resolved by correcting the source or by the operator resolution record of `2026-09-27-export-parity-renta-withholding-sources-adr` Step 4. Lower tiers resolve without excluding higher-tier keys, so that suppression is compared too. The phrase "the engine's consistency check adjudicates divergence" in item 5.4, and "the D2 carve-out extension ... is the relief valve" under Consequences, are read under this amendment. Caller overrides of carried values remain permitted; one may carry its resolution reason in the same command, and a divergent one without it blocks until it is resolved. The IVA provisional-prorrata override has no keyed exception. `iva_wallet_decision` remains outside the ladder (D3). Decided and evidenced in `2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr`; authorized by the operator on 2026-11-01.
 
 ## Codification candidates
 

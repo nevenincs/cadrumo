@@ -109,6 +109,7 @@ class LedgerPreflightExecutor:
                 period=payload.period.to_period(),
                 transaction_repository=ports.transaction_repository,
                 usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                invoice_reader=ports.invoice_repository,
                 operation=operation,
             )
             if report.bucket_id != bucket_id or report.period != payload.period.to_period():

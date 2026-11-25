@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-import os
+from typing import NoReturn
+
+from cadrumo.core.pydantic_plugins import disable_pydantic_plugins
 
 
 def main() -> None:
     """Defer file-backed logging until parsed CLI preflight authorizes it."""
-    # Pydantic scans every installed distribution's entry points on its first
-    # model build, which costs about a tenth of a second in a process that
-    # builds models before it has parsed a command. Cadrumo declares no
-    # pydantic plugin, and a third-party one would observe taxpayer models it
-    # has no business seeing. ``setdefault`` leaves an operator's explicit
-    # value alone.
-    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    disable_pydantic_plugins()
 
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
@@ -45,4 +41,24 @@ def main() -> None:
         resume_logging_configuration()
 
 
-__all__ = ["main"]
+def console_main() -> NoReturn:
+    """Run ``aeat`` as the whole of its own process, then end that process once it has settled.
+
+    Only the console script owns the process it runs in. :func:`main` stays the
+    composable dispatch, so an in-process caller, including a test harness
+    that keeps working after the command, keeps the interpreter's own exit.
+    Any exception other than ``SystemExit`` propagates untouched, so the
+    interpreter reports it and chooses its status as before.
+    """
+    from .console_exit import exit_settled_console_process
+
+    try:
+        main()
+    except SystemExit as exit_request:
+        code = exit_request.code
+    else:
+        code = None
+    exit_settled_console_process(code)
+
+
+__all__ = ["console_main", "main"]

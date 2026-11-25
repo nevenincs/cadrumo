@@ -33,7 +33,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as tr
 from ...core.log_extra import LogExtra
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.invoice_bindings import (
     CollectibleInvoiceProvider,
@@ -43,7 +43,6 @@ from ...domain.calculations.registry.invoice_bindings import (
 )
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.modelos.codes import ModeloCode
-from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -53,6 +52,7 @@ from .counterpart import (
 from .errors import AggregationConfigError, AggregationUnsupportedModeloError
 from .foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
 from .modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+from .preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .retenciones import RetencionesAggregation, RetencionObservation
 from .withholding_source import WithholdingSourceResolver
 
@@ -84,7 +84,7 @@ class PerModeloAggregationContributor(StrEnum):
 class PerModeloAggregationLogFields(BaseModel):
     """Stable, non-secret log fields emitted by the aggregation service."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     service_name: str = "per_modelo_aggregation"
     modelo: ModeloCode
@@ -120,7 +120,7 @@ class PerModeloAggregationCommand(BaseModel):
     the listing the operator needs.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     period: Period
@@ -135,7 +135,7 @@ PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | 
 class PerModeloAggregationResult(BaseModel):
     """Result envelope returned by the central per-modelo aggregation service."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloCode
     period: Period
@@ -230,7 +230,7 @@ def _provider_for_modelo_revisions(
     return next(iter(providers), None)
 
 
-def _registered_per_modelo_provider_modelos(
+def registered_per_modelo_provider_modelos(
     *,
     operation: PinnedAuthorityOperation,
 ) -> Mapping[PerModeloAggregationContributor, tuple[str, ...]]:
@@ -253,12 +253,12 @@ def _registered_per_modelo_provider_modelos(
     return {contributor: tuple(sorted(modelos)) for contributor, modelos in grouped.items()}
 
 
-def _supported_per_modelo_modelos(
+def supported_per_modelo_modelos(
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return the exact accepted modelo ids in canonical registry order."""
-    grouped = _registered_per_modelo_provider_modelos(operation=operation)
+    grouped = registered_per_modelo_provider_modelos(operation=operation)
     return tuple(sorted(modelo for modelos in grouped.values() for modelo in modelos))
 
 
@@ -282,7 +282,7 @@ def provider_for_modelo(
         revisions = tuple(operation.revision(modelo, metadata.id) for metadata in directory.revisions)
         if (provider := _provider_for_modelo_revisions(modelo, revisions)) is not None and provider:
             return provider
-    supported = _supported_per_modelo_modelos(operation=operation)
+    supported = supported_per_modelo_modelos(operation=operation)
     raise AggregationUnsupportedModeloError(
         tr("aggregation.per_modelo.errors.unsupported_modelo"),
         context={"modelo": modelo},
@@ -323,7 +323,12 @@ def aggregate_per_modelo(
     # than asserting it.
     modelo = ModeloCode(command.modelo)
     if provider is PerModeloAggregationContributor.RETENCIONES:
-        aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)
+        aggregation = _aggregate_retenciones(
+            command.modelo,
+            command.period,
+            command.retencion_observations,
+            operation=operation,
+        )
     elif provider is PerModeloAggregationContributor.COUNTERPART:
         aggregation = _aggregate_counterpart(
             command.modelo,
@@ -414,6 +419,7 @@ def load_calculation_withholding_rows(
         period=period,
         revision=revision,
         cadence=cadence,
+        operation=operation,
     )
     return CalculationWithholdingRows(
         revision_id=revision.id,
@@ -426,13 +432,15 @@ def _aggregate_retenciones(
     modelo: str,
     period: Period,
     observations: tuple[RetencionObservation, ...],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     # Delegate to the ONE canonical mesh resolver aggregation entry point so the
     # per-modelo service (CLI aggregate / pull) and the live calculate mesh share
     # a single retenciones dispatch and cannot drift
     # (aeat-calculation-aggregation). ``provider_for_modelo`` has
     # already confirmed ``modelo`` is one of the retenciones modelos.
-    return RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
+    return RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period, operation=operation)
 
 
 def _aggregate_counterpart(

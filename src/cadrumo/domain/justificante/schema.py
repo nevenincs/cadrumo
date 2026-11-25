@@ -73,7 +73,7 @@ class Justificante(BaseModel):
 
     csv: AeatCsv
     modelo: str = Field(..., min_length=1, max_length=16)
-    ejercicio: str | None = Field(default=None, max_length=8)
+    ejercicio: str | None = Field(default=None, max_length=16)
     period: Period
     presentation_id: AeatPresentationId | None = None
     presented_at: datetime

@@ -11,7 +11,7 @@ from pydantic import BaseModel, ValidationError
 
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
-from ......core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ......core.models import STRICT_FROZEN_CONFIG
 from ...errors import ClassificationError, DecryptionError, EnvelopeVersionError, StorageValidationError
 from ..contract import EncryptionMetadata, Envelope, load_envelope, save_envelope
 
@@ -19,14 +19,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 class _DemoPayloadV1(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     count: int
 
 
 class _DemoPayloadV2(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     count: int

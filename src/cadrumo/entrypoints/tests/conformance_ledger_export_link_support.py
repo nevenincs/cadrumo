@@ -1,4 +1,4 @@
-"""Registered-executor conformance scenarios for ledger export and invoice linkage."""
+"""Registered-executor conformance scenarios for ledger export and invoice linkage and unlinkage."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_common import build_manual_ledger_result
 from ...application.ledger.actions_lifecycle import archive_manual_transaction
-from ...application.ledger.actions_manual import ledger_transaction_result_payload
+from ...application.ledger.actions_manual import link_manual_transaction_invoice
 from ...application.ledger.export_operation import (
     LEDGER_EXPORT_OPERATION_DEFINITION_ID,
     LedgerExportProjection,
@@ -25,13 +25,21 @@ from ...application.ledger.link_operation import (
     LedgerLinkProjection,
     LedgerLinkRequest,
 )
+from ...application.ledger.manual_read import ledger_transaction_result_payload
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
+from ...application.ledger.unlink_operation import (
+    LEDGER_UNLINK_OPERATION_DEFINITION_ID,
+    LedgerUnlinkRequest,
+    LedgerUnlinkResult,
+)
 from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
     ConformanceFamily,
@@ -125,9 +133,9 @@ def _seed_invoice(context: ConformanceFamilyContext) -> Invoice:
             "kind": InvoiceKind.RECEIVED,
             "bucket_id": str(context.profile_id),
             "invoice_number": "LINK-2025-001",
-            "issued_at": date(2025, 5, 1),
+            "issued_at": date(filing_year_envelope().horizon, 5, 1),
             "counterparty_name": "Conformance Supplier",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),
@@ -155,7 +163,10 @@ def _seed_invoice(context: ConformanceFamilyContext) -> Invoice:
 def _prepare_link(context: ConformanceFamilyContext) -> ConformancePreparation:
     bucket_id = str(context.profile_id)
     transaction_id = seed_manual_transaction(
-        context, booked_date=date(2025, 5, 1), amount=Decimal("121.00"), description="link row"
+        context,
+        booked_date=date(filing_year_envelope().horizon, 5, 1),
+        amount=Decimal("121.00"),
+        description="link row",
     )
     invoice = _seed_invoice(context)
     ports = ledger_action_ports(context)
@@ -211,19 +222,92 @@ def _prepare_link(context: ConformanceFamilyContext) -> ConformancePreparation:
     )
 
 
+def _prepare_unlink(context: ConformanceFamilyContext) -> ConformancePreparation:
+    bucket_id = str(context.profile_id)
+    transaction_id = seed_manual_transaction(
+        context,
+        booked_date=date(filing_year_envelope().horizon, 5, 1),
+        amount=Decimal("121.00"),
+        description="unlink row",
+    )
+    invoice = _seed_invoice(context)
+    ports = ledger_action_ports(context)
+    link_manual_transaction_invoice(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        invoice_id=invoice.invoice_id,
+        actor=SEED_ACTOR,
+        ports=ports,
+    )
+    linked = ports.transaction_repository.load().get(transaction_id)
+    assert linked is not None and linked.invoice_id == invoice.invoice_id
+    events_before = frozenset(ports.bucket_event_repository.load().events)
+    requested_prefix = transaction_id[:12]
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        after = ledger_action_ports(context)
+        # Unlinking is reciprocal: neither the row nor the invoice cites the other afterwards.
+        # invoice_unlink.py `unlink_manual_transaction_invoice`.
+        transaction = after.transaction_repository.load().get(transaction_id)
+        assert transaction is not None
+        assert transaction.invoice_id is None
+        unlinked_invoice = after.invoice_repository.load().get(invoice.invoice_id)
+        assert unlinked_invoice is not None
+        assert unlinked_invoice.linked_transaction_ids == ()
+
+        new_events = _new_events(context, events_before)
+        assert len(new_events) == 1
+        event = new_events[0]
+        assert event.event_type is BucketEventType.LEDGER_TRANSACTION_INVOICE_UNLINKED
+        assert event.object_id == transaction_id
+        assert event.actor == "conformance-operator"
+
+        result = outcome.resolve_result(LedgerUnlinkResult)
+        assert result.outcome == "unlinked" and result.refusal is None
+        assert (result.profile_id, result.transaction_id, result.invoice_id) == (
+            context.profile_id,
+            requested_prefix,
+            invoice.invoice_id,
+        )
+        assert result.actor == "conformance-operator"
+        assert result.invoice_linked_transaction_ids == ()
+        assert result.bucket_event_ids == (event.event_id,)
+        canonical = ledger_transaction_result_payload(
+            build_manual_ledger_result(bucket_id, transaction, (event.event_id,))
+        )
+        assert result.review_status == canonical.review_status
+        assert result.transaction == LedgerTransactionProjection.from_payload(canonical.transaction)
+
+    return ConformancePreparation(
+        subject_ref=profile_operation_subject(bucket_id),
+        request=LedgerUnlinkRequest(
+            profile_id=context.profile_id,
+            transaction_id=requested_prefix,
+            invoice_id=invoice.invoice_id,
+            expected_modified_at=linked.modified_at.isoformat(),
+            expected_invoice_linked_transaction_ids=(transaction_id,),
+            actor="conformance-operator",
+        ),
+        verify=verify,
+    )
+
+
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     definition_id = context.definition.definition_id
     if definition_id == LEDGER_EXPORT_OPERATION_DEFINITION_ID:
         return _prepare_export(context)
     if definition_id == LEDGER_LINK_OPERATION_DEFINITION_ID:
         return _prepare_link(context)
-    raise AssertionError(f"no ledger export/link conformance scenario for {definition_id}")
+    if definition_id == LEDGER_UNLINK_OPERATION_DEFINITION_ID:
+        return _prepare_unlink(context)
+    raise AssertionError(f"no ledger export/link/unlink conformance scenario for {definition_id}")
 
 
 LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
-        # Both publish the single phase named after the definition and persist a
-        # bucket event, so each settles UPDATED. export_operation.py, link_operation.py.
+        # Each publishes the single phase named after the definition and persists a
+        # bucket event, so each settles UPDATED. export_operation.py, link_operation.py,
+        # unlink_operation.py.
         RegisteredExecutorConformanceCase(
             LEDGER_EXPORT_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
@@ -235,6 +319,12 @@ LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY = ConformanceFamily(
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.UPDATED,
             (LEDGER_LINK_OPERATION_DEFINITION_ID,),
+        ),
+        RegisteredExecutorConformanceCase(
+            LEDGER_UNLINK_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.UPDATED,
+            (LEDGER_UNLINK_OPERATION_DEFINITION_ID,),
         ),
     ),
     prepare=_prepare,

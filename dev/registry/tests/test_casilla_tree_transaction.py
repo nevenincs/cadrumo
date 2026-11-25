@@ -80,7 +80,7 @@ def test_base_exception_rolls_back_the_whole_tree(tmp_path: Path, monkeypatch: p
     (root / "c00001.toml").write_bytes(b"old\n")
     before = _tree(root)
     calls = 0
-    real_replace = subject._replace_tree
+    real_replace = subject.casilla_tree_transaction_replace_tree
 
     class Interrupt(BaseException):
         pass

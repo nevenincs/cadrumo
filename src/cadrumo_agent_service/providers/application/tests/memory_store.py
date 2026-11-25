@@ -1,4 +1,4 @@
-"""An in-memory provider-settings store that keeps the port's revision contract.
+"""In-memory provider-settings and model list stores that keep the ports' revision contract.
 
 It stands in for encrypted custody so service tests isolate the service's own
 decisions: every write gets a fresh revision, and a write or delete whose guard
@@ -11,16 +11,22 @@ import secrets
 from typing import override
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
-from ...domain.record import ProviderSettingsRecord
+from ...domain.record import LocalModelListRecord, ProviderSettingsRecord
 from ..ports import (
+    AbsentLocalModelList,
     AbsentProviderRecord,
+    LocalModelListRead,
+    LocalModelListStore,
     ProviderRecordRead,
     ProviderSettingsStore,
+    StoredLocalModelList,
     StoredProviderRecord,
     StoreGenerations,
     StoreRefusal,
     StoreRefusalCode,
+    UnreadableLocalModelList,
     UnreadableProviderRecord,
 )
 
@@ -41,7 +47,9 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         return revision
 
     @override
-    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+    def read(
+        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
+    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         if self.refusal is not None:
             return self.refusal
         reads: list[ProviderRecordRead] = []
@@ -77,5 +85,48 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         return None
 
     @override
-    def observe_generations(self) -> StoreGenerations | None:
+    def observe_generations(self, *, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
+        return None
+
+
+class MemoryLocalModelListStore(LocalModelListStore):
+    """The model list record held in memory, guarded by per-write revisions."""
+
+    def __init__(self) -> None:
+        """Start with no record."""
+        self.stored: StoredLocalModelList | None = None
+        self.unreadable: str | None = None
+        self.refusal: StoreRefusal | None = None
+
+    @override
+    def read(self) -> LocalModelListRead | StoreRefusal:
+        if self.refusal is not None:
+            return self.refusal
+        if self.unreadable is not None:
+            return UnreadableLocalModelList(revision=self.unreadable)
+        return self.stored if self.stored is not None else AbsentLocalModelList()
+
+    def _revision(self) -> str:
+        if self.unreadable is not None:
+            return self.unreadable
+        return self.stored.revision if self.stored is not None else ABSENT_SECURE_OBJECT_REVISION_ID
+
+    @override
+    def write(self, record: LocalModelListRecord, *, expected_revision: str) -> StoreRefusal | None:
+        if self.refusal is not None:
+            return self.refusal
+        if self._revision() != expected_revision:
+            return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
+        self.unreadable = None
+        self.stored = StoredLocalModelList(record=record, revision=secrets.token_hex(32))
+        return None
+
+    @override
+    def delete(self, *, expected_revision: str) -> StoreRefusal | None:
+        if self.refusal is not None:
+            return self.refusal
+        if self._revision() != expected_revision:
+            return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
+        self.unreadable = None
+        self.stored = None
         return None

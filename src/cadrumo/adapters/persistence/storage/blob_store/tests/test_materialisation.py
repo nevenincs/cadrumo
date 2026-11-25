@@ -11,6 +11,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 
 from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
 from ...secret_store.store import SecretRecord
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ...tests.secure_sql import isolated_profile_storage_root
@@ -29,29 +31,21 @@ _SECRET_EXPIRES_AT = datetime(2099, 1, 1, tzinfo=UTC)
 
 def test_secret_store_factory_caches_each_explicit_route_independently(tmp_path: Path) -> None:
     """A second Settings route never inherits the first route's cached store."""
-    settings_a = Settings(
-        cadrumo_secret_store_dir=tmp_path / "root-a" / "fallback-store",
-        cadrumo_blob_store_dir=tmp_path / "root-a" / "blobs",
-    )
-    settings_b = Settings(
-        cadrumo_secret_store_dir=tmp_path / "root-b" / "fallback-store",
-        cadrumo_blob_store_dir=tmp_path / "root-b" / "blobs",
-    )
-    settings_c = Settings(
-        cadrumo_secret_store_dir=settings_a.cadrumo_secret_store_dir,
-        cadrumo_blob_store_dir=tmp_path / "root-c" / "blobs",
-    )
+    root_a = tmp_path / "root-a"
+    root_b = tmp_path / "root-b"
+    settings_a = Settings(cadrumo_storage_root=root_a)
+    settings_b = Settings(cadrumo_storage_root=root_b)
     store_a = get_secret_store(settings=settings_a)
     store_b = get_secret_store(settings=settings_b)
-    store_c = get_secret_store(settings=settings_c)
 
     assert store_a is get_secret_store(settings=settings_a)
     assert store_b is get_secret_store(settings=settings_b)
+    # The cache is keyed by the resolved route, not by the Settings instance.
+    assert store_a is get_secret_store(settings=Settings(cadrumo_storage_root=root_a))
     assert store_a is not store_b
-    assert store_a is not store_c
-    assert store_a.store_dir == settings_a.cadrumo_secret_store_dir
-    assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
-    assert store_c.store_dir == settings_c.cadrumo_secret_store_dir
+    secrets_subpath = storage_location(StorageCategory.SECRETS).relative_path()
+    assert store_a.store_dir == root_a / secrets_subpath
+    assert store_b.store_dir == root_b / secrets_subpath
 
 
 def _record(key: str = "materialisation-wiring:probe") -> SecretRecord:
@@ -78,7 +72,7 @@ def test_get_secret_store_writes_a_real_blob_at_the_declared_taxonomy_path(tmp_p
     not at whatever the store happened to be constructed with.
 
     Reproduces and closes the doubled-``blobs/blobs`` factory bug: ``root_dir``
-    was constructed from ``cadrumo_blob_store_dir`` (already
+    was constructed from the blobs member (already
     ``<storage_root>/blobs``), and ``EncryptedBlobStore`` appended its own
     ``blobs`` segment again.
     """
@@ -109,7 +103,7 @@ def test_the_doubled_blobs_wiring_would_have_been_caught_positive_control(tmp_pa
     above) is what makes the real write conform, not an accident of the matcher.
     """
     storage_root = tmp_path / "storage"
-    blob_store_dir = storage_root / "blobs"  # what cadrumo_blob_store_dir resolves to by default
+    blob_store_dir = storage_root / "blobs"  # what the blobs member resolves to beneath the root
     # The prior bug: passing the already-suffixed blob_store_dir as root_dir.
     with EphemeralBucketSession():
         buggy_store = EncryptedBlobStore(root_dir=blob_store_dir)

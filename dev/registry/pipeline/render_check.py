@@ -1,21 +1,9 @@
 """Re-render one modelo revision from its authored inputs and compare it to the shipped tree.
 
-The generation pipeline can render, validate, publish and check, but until now
-only tests assembled the inputs for a real modelo, and they did it with isolated
-fixtures. There was no supported way to ask whether the shipped export tree of a
-given revision still matches what its authored inputs produce, which meant a
-change to a semantic map or a render profile could not be verified without
-hand-driving the generator.
-
-That gap is not academic. A monetary field in a revision currently in force is
-emitted at the wrong magnitude, its root cause is proven and its corrected value
-is stated in the official design, and the correction is still unmade because
-nothing regenerates one revision from its inputs.
-
-This module closes the read-only half of that gap. It renders into a temporary
-directory and compares bytes against the committed tree. It never writes into
-the registry, so it is safe to run against filing data: publishing remains the
-pipeline's own concern and is deliberately not exposed here.
+Rendering happens in a temporary directory and the result is compared byte for
+byte against the committed tree. Nothing is written into the registry, so the
+comparison is safe to run against filing data; publishing remains the
+pipeline's own concern and is not exposed here.
 
 Everything the renderer needs is derived from the validated authority rather than
 declared in a table: the layout and its transport shape from the revision's own
@@ -23,26 +11,13 @@ export layout, the record design and its epoch from the revision's sources, and
 the filing year from the window the revision declares. A revision that carries no
 generated layout is refused by name rather than guessed at.
 
-Both outcomes are trustworthy, and that was established rather than assumed. The
-derivation was run across every published generated tree and its verdict compared
-with the reference implementation the test suite drives: twenty-one reproduce
-exactly, four differ only in their provenance attestation, and two differ in a
-record file. The two verdicts agree on all twenty-seven.
-
-An earlier revision of this module warned that a difference was inconclusive,
-because a modelo whose records repeat over binding rows re-rendered without that
-repeat and the loss was read as this module's incompleteness. The sweep showed
-otherwise: that modelo is the only one exhibiting it, the reference
-implementation reports the same record file, and the official design says the
-record must repeat. The missing repeat is a real defect in what the current
-inputs produce, not a gap in this comparison, and the caveat was excusing it.
+A difference in a record file is a real difference in what the current inputs
+produce, not a gap in this comparison.
 """
 
 from __future__ import annotations
 
-import argparse
 import json
-import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -52,20 +27,22 @@ from typing import Literal, cast
 
 import rtoml
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from cadrumo.core.period import Period, PeriodError, is_administrative_period_token, is_symbolic_event_selector
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
-from ._export_tree import render_complete_export_tree
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
+from .export_tree import render_complete_export_tree
 from .export_tree_models import ExportTreeTransportProfile
 from .export_tree_serialization import SERIALIZER_CONVENTION
 from .generated_export_inheritance import select_generated_export_inheritance
@@ -75,6 +52,7 @@ from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_loading import load_render_profile_for_revision
 from .render_profile_model import RenderProfile
 from .render_profile_source_reader import load_render_profile_source_evidence
+from .render_profile_statement import verify_alphanumeric_text_statement
 from .semantic_map import (
     SemanticMap,
     load_semantic_map_for_revision,
@@ -102,7 +80,7 @@ __all__ = [
 #: declaration - one filename, three spellings across this repository, of
 #: which this was the one nobody would have found when it changed.
 _PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
-_AUTHORED_ROOT = Path(__file__).resolve().parent.parent
+AUTHORED_ROOT = Path(__file__).resolve().parent.parent
 
 
 class RecordDesignFrameUnavailableError(ValueError):
@@ -275,7 +253,7 @@ def _record_design_refs(
     )
 
 
-def _select_record_design_source(
+def select_record_design_source(
     selected: ModeloRevision,
     sources: Mapping[SourceRefId, SourceReference],
     *,
@@ -285,6 +263,7 @@ def _select_record_design_source(
     filing_year: int,
     period: str | None,
 ) -> tuple[SourceRefId, str]:
+    """Select the record design source used by a revision's render check."""
     _validate_requested_administrative_period(
         selected, modelo=modelo, revision=revision, filing_year=filing_year, period=period
     )
@@ -428,7 +407,7 @@ def select_revision_record_design_source(
     definition = authority.modelo(modelo)
     if revision not in definition.revisions:
         raise ValueError(f"modelo {modelo} declares no revision {revision!r}")
-    return _select_record_design_source(
+    return select_record_design_source(
         definition.revisions[revision],
         authority.catalogues.sources,
         modelo=modelo,
@@ -439,7 +418,7 @@ def select_revision_record_design_source(
     )
 
 
-def _render_transport(
+def render_transport(
     selected: ModeloRevision,
     sources: Mapping[SourceRefId, SourceReference],
     *,
@@ -448,6 +427,7 @@ def _render_transport(
     selected_source_ref: SourceRefId,
     bootstrap_transport: GeneratedExportBootstrapTransport | None,
 ) -> tuple[str, Literal["crlf", "lf", "none"]]:
+    """Build the render transport check for the selected revision and its sources."""
     if bootstrap_transport is not None:
         return _bootstrap_render_transport(
             selected,
@@ -558,7 +538,7 @@ def revision_render_inputs(
             absent. Each is reported by name rather than substituted, because a
             silent fallback would derive the wrong thing and look like success.
     """
-    return _revision_render_inputs(
+    return build_revision_render_inputs(
         authority.modelo(modelo),
         authority.catalogues,
         modelo=modelo,
@@ -571,7 +551,7 @@ def revision_render_inputs(
     )
 
 
-def _revision_render_inputs(
+def build_revision_render_inputs(
     definition: ModeloDefinition,
     catalogues: RegistryCatalogues,
     *,
@@ -594,7 +574,7 @@ def _revision_render_inputs(
         effective_year, effective_period = _declared_render_frame(
             selected, catalogues, modelo=modelo, revision=revision, source_ref=source_ref
         )
-    selected_source_ref, epoch = _select_record_design_source(
+    selected_source_ref, epoch = select_record_design_source(
         selected,
         sources,
         modelo=modelo,
@@ -603,7 +583,7 @@ def _revision_render_inputs(
         filing_year=effective_year,
         period=effective_period,
     )
-    layout_id, line_ending = _render_transport(
+    layout_id, line_ending = render_transport(
         selected,
         sources,
         modelo=modelo,
@@ -612,8 +592,8 @@ def _revision_render_inputs(
         bootstrap_transport=bootstrap_transport,
     )
 
-    semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
-    profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
+    semantic_root = AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
+    profile_root = AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
     for root in (semantic_root, profile_root):
         if not root.is_dir():
             raise ValueError(f"{modelo}/{revision} has no authored inputs at {root}")
@@ -642,6 +622,7 @@ def _revision_render_inputs(
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     verify_requirement_statements(semantic_map, source_root=source_root, sources=design_sources)
+    verify_alphanumeric_text_statement(render_profile, source_root=source_root, sources=sources)
     evidence = load_render_profile_source_evidence(
         source_root / sources[selected_source_ref].corpus_path,
         render_profile,
@@ -679,16 +660,20 @@ def _declared_render_frame(
 ) -> tuple[int, str]:
     """Select the first source-covered declared coordinate for static reproduction.
 
-    Historical storage can be inspected below the runtime support floor. Explicit
+    A revision reaching the supported floor is reproduced at its first supported
+    coordinate, so a revision spanning two record designs renders the design the
+    product files with rather than one only its unsupported years used. Historical
+    storage lying wholly below the floor can still be inspected there. Explicit
     caller coordinates bypass this selection and retain their strict refusal.
     """
+    horizon = coverage_assessment_horizon(catalogues)
     coordinates = revision_selection_coordinates(
-        selected, assessment_horizon=coverage_assessment_horizon(catalogues), assessment_floor=2000
-    )
+        selected, assessment_horizon=horizon, assessment_floor=coverage_assessment_floor(catalogues)
+    ) or revision_selection_coordinates(selected, assessment_horizon=horizon, assessment_floor=FOUR_DIGIT_YEAR_FIRST)
     refusals: list[str] = []
     for year, declared_period in coordinates:
         try:
-            _select_record_design_source(
+            select_record_design_source(
                 selected,
                 catalogues.sources,
                 modelo=modelo,
@@ -744,7 +729,7 @@ def compare_revision_against_committed(
     )
 
     committed_root = resolved_registry_root / "modelos" / modelo / "revisions" / revision / "export"
-    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temp_root()) as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
             target,
@@ -823,36 +808,3 @@ def differing_manifest_fields(committed: bytes, rendered: bytes) -> tuple[str, .
         or name not in rendered_members
         or committed_members[name] != rendered_members[name]
     )
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Delegate the legacy entry point to canonical target-currentness semantics."""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
-    parser.add_argument("modelo")
-    parser.add_argument("revision")
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="exit 1 when the shipped tree is not reproduced (a difference is inconclusive)",
-    )
-    args = parser.parse_args(argv)
-
-    from .cli import target_currentness
-
-    fact = target_currentness(args.modelo, args.revision, None, None, None)
-    for name in fact.differing:
-        sys.stdout.write(f"render_check differs file={name}\n")
-    for name in fact.only_committed:
-        sys.stdout.write(f"render_check only_committed file={name}\n")
-    for name in fact.only_rendered:
-        sys.stdout.write(f"render_check only_rendered file={name}\n")
-    sys.stdout.write(
-        f"summary modelo={fact.modelo} revision={fact.revision} state={fact.state.value} "
-        f"differing={len(fact.differing)} serialization_only={len(fact.serialization_only)} "
-        f"detail={fact.detail!r}\n"
-    )
-    return 1 if args.check and fact.state.value != "current" else 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -1,0 +1,106 @@
+"""Check authored registry data against the form geometry the registry declares.
+
+These shapes are authored, so a runtime model cannot read the facts while the tree loads.
+The compiled registry answers them here, where a defect stops publication.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+
+from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
+from cadrumo.domain.calculations.registry.form_codes import FormCodes, resolve_form_codes
+from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, governed_facts_in_scope
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from cadrumo.domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
+from cadrumo.domain.calculations.registry.prorrata_register_models import ProrrataRegisterCatalogue
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
+from . import fact_providers
+
+
+def prorrata_catalogue_failures(catalogue: ProrrataRegisterCatalogue, codes: FormCodes) -> list[str]:
+    """Return failures for a prorrata register vocabulary whose size differs from the declared scope."""
+    failures = []
+    if len(catalogue.regimes) < int(codes.code("prorrata.catalogue.regimes_min")):
+        failures.append("prorrata register catalogue has fewer regimes than declared")
+    for key, values in (
+        ("prorrata.catalogue.apportioning_regimes", catalogue.apportioning_regimes),
+        ("prorrata.catalogue.transition_kinds", catalogue.transition_kinds),
+        ("prorrata.catalogue.provenances", catalogue.provenances),
+        ("prorrata.catalogue.sector_letters", catalogue.sector_letters),
+    ):
+        if len(values) != int(codes.code(key)):
+            failures.append(f"prorrata register catalogue does not have the {key} the scope declares")
+    return failures
+
+
+def modelo_geometry_failures(modelos: Iterable[ModeloDefinition], codes: FormCodes) -> list[str]:
+    """Return failures for modelo revisions whose authored shape differs from the declared geometry."""
+    prefix_fields = int(codes.code("aeat.aux.prefix_fields"))
+    tipo_renta_widths = codes.codes("m210.tipo_renta_digits")
+    failures: list[str] = []
+    for modelo in modelos:
+        for revision_id, revision in modelo.revisions.items():
+            for layout in derive_export_layouts_from_bindings(revision):
+                header = layout.auxiliary_envelope_header
+                if header is not None and len(header.prefix_fields) != prefix_fields:
+                    failures.append(
+                        f"modelo {modelo.id} revision {revision_id} auxiliary header does not declare "
+                        f"{prefix_fields} prefix fields",
+                    )
+            failures.extend(
+                f"modelo {modelo.id} revision {revision_id} deadline code {code!r} does not have the declared width"
+                for window in revision.deadline_windows
+                for code in window.tipo_renta_scope or ()
+                if str(len(code)) not in tipo_renta_widths
+            )
+    return failures
+
+
+def indice_corrector_slot_failures(modelos: Iterable[ModeloDefinition], codes: FormCodes) -> list[str]:
+    """Report an índices correctores formula missing a slot, which would drop that índice from the product unread."""
+    slots = codes.integer("m100.eo_agraria.indice_corrector_slots")
+    return [
+        f"{modelo.id} revision {revision_id} formula {formula.id} declares "
+        f"{len(formula.expression.args) - 1} índice corrector slots, not {slots}"
+        for modelo in modelos
+        for revision_id, revision in modelo.revisions.items()
+        for formula in revision.formulas
+        if formula.expression.op == "m100_resolve_eo_agraria_indices_correctores"
+        and len(formula.expression.args) - 1 != slots
+    ]
+
+
+def validate_form_geometry(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
+    """Return failures for authored data whose shape differs from the declared form geometry."""
+    authority = governed_facts_in_scope()
+    if authority is None:
+        return ()
+    if (
+        isinstance(authority, CandidateFactAuthority)
+        and not fact_providers.FACT_PROVIDER_REGISTRATIONS
+        and "form-row-codes" not in authority.catalogue.facts
+    ):
+        # A provider-free partial candidate may omit the entire geometry family.
+        return ()
+    codes = resolve_form_codes("form-row-codes")
+    tipo_renta_widths = codes.codes("m210.tipo_renta_digits")
+    failures = prorrata_catalogue_failures(resolve_prorrata_register_catalogue(), codes)
+    failures.extend(
+        f"official tipo-renta code {code!r} does not have the declared width"
+        for code in resolve_tipo_renta_irnr_catalogue().official_codes
+        if str(len(code)) not in tipo_renta_widths
+    )
+    modelos = tuple(modelos)
+    failures.extend(modelo_geometry_failures(modelos, codes))
+    failures.extend(indice_corrector_slot_failures(modelos, codes))
+    return tuple(failures)
+
+
+__all__ = [
+    "indice_corrector_slot_failures",
+    "modelo_geometry_failures",
+    "prorrata_catalogue_failures",
+    "validate_form_geometry",
+]

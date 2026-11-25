@@ -37,19 +37,19 @@ from .....domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed,
 )
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from .._html import parse_html
-from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
+from ..html import parse_html
+from .adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 _AMOUNT_SEPARATOR_CLASS = f"[{re.escape(AEAT_THOUSANDS_SEPARATORS)}]"
-_SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3})*,\d{2}|\d+,\d{2}")
+SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3})*,\d{2}|\d+,\d{2}")
 """Unanchored finder for the amount trailing AEAT's aggregate label on one line.
 
 The anchored counterpart -- mandating the printed figure IS the two-decimal
 comma-tailed AEAT money shape end to end rather than merely containing one --
 is :func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`, enforced by
-:func:`_parse_spanish_decimal` on every caller.
+:func:`parse_spanish_decimal` on every caller.
 
 The separator class is built from
 :data:`~cadrumo.core.decimal.printed_money.AEAT_THOUSANDS_SEPARATORS` rather than spelled
@@ -93,6 +93,10 @@ IVA_COMPENSATION_WALLET_READ_POLICY = RemoteStateGuardPolicy(
     requires_authentication=True,
     requires_aeat_authorization=True,
 )
+
+
+_INPUT_SAMPLE = 20
+_LINK_SAMPLE = 40
 
 
 def parse_iva_compensation_wallet_html(
@@ -176,7 +180,7 @@ def _parse_wallet_result_rows(soup: BeautifulSoup) -> tuple[list[IvaCompensation
             if len(cells) < 3:
                 continue
             try:
-                rows.append(_wallet_row_from_cells(cells))
+                rows.append(wallet_row_from_cells(cells))
             except SedeParseError:
                 raise
             except Exception as exc:
@@ -403,7 +407,7 @@ def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, ob
             "type": bounded_text(input_node.get("type", "")),
             "checked": _input_checked(input_node),
         }
-        for input_node in soup.find_all("input")[:20]
+        for input_node in soup.find_all("input")[:_INPUT_SAMPLE]
     )
     return {"landing_url": redacted_url(landing_url), "forms": forms, "inputs": inputs}
 
@@ -486,7 +490,7 @@ def wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShap
         entrypoint
         for entrypoint in (
             _wallet_entrypoint_path(str(node.get("href") if node.name == "a" else node.get("action") or ""))
-            for node in soup.find_all(["a", "form"])[:40]
+            for node in soup.find_all(["a", "form"])[:_LINK_SAMPLE]
         )
         if entrypoint is not None
     )
@@ -505,7 +509,7 @@ def wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShap
             name=bounded_text(input_node.get("name", "")),
             type=bounded_text(input_node.get("type", "")),
         )
-        for input_node in soup.find_all("input")[:20]
+        for input_node in soup.find_all("input")[:_INPUT_SAMPLE]
     )
     return _WalletPageShape(
         landing_url=redacted_url(landing_url),
@@ -579,7 +583,7 @@ def _normalised_title(soup: BeautifulSoup) -> str:
     return bounded_text(title.get_text(" ")) if title is not None else ""
 
 
-def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
+def wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     """Build one wallet row from a cartera detail row: Ejercicio, Período, Cuota Disponible.
 
     The AEAT cartera consultation surface exposes only the still-available balance
@@ -596,7 +600,7 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     return IvaCompensationWalletRow(
         generation_year=year,
         generation_period=Period.from_year_and_code(year, period_token),
-        pending_amount=_parse_spanish_decimal(cells[2]),
+        pending_amount=parse_spanish_decimal(cells[2]),
         raw_label=" | ".join(cells[:3]),
     )
 
@@ -608,12 +612,12 @@ def _parse_year(value: str) -> int:
     return int(match.group(1))
 
 
-def _parse_spanish_decimal(value: str) -> Decimal:
+def parse_spanish_decimal(value: str) -> Decimal:
     """Parse an AEAT wallet money cell, unconditionally reading a dot as a thousands separator.
 
     Unlike :func:`~adapters.inbound.pdf.label_regex.parse_spanish_decimal` (PDF receipts,
     which explicitly tolerate an English-rendered receipt per
-    :mod:`adapters.inbound.justificante._extract`) and
+    :mod:`adapters.inbound.justificante.extract`) and
     :func:`~adapters.inbound.financial.providers.base.parse_amount_value`
     (arbitrary-locale bank exports), the thousands-vs-decimal reading is
     never genuinely ambiguous here: this module reads exactly one
@@ -625,7 +629,7 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     What the cartera source DOES guarantee, and what this function enforces
     rather than assumes, is AEAT's own UNE 82100 printed-money convention: a
     mandatory two-decimal comma tail. The aggregate "pendientes de períodos
-    anteriores" total is read through :data:`_SPANISH_AMOUNT_RE`, which
+    anteriores" total is read through :data:`SPANISH_AMOUNT_RE`, which
     already mandates that shape; this shared parser applies the same
     anchored check (:func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`) to
     every caller, closing
@@ -670,10 +674,10 @@ def _extract_spanish_amount(text: str) -> Decimal | None:
     Used to read AEAT's aggregate "pendientes de períodos anteriores" line, where the
     amount trails a textual label on the same element.
     """
-    matches = _SPANISH_AMOUNT_RE.findall(text)
+    matches = SPANISH_AMOUNT_RE.findall(text)
     if not matches:
         return None
-    return _parse_spanish_decimal(matches[-1])
+    return parse_spanish_decimal(matches[-1])
 
 
 def _normalised_text(value: str) -> str:

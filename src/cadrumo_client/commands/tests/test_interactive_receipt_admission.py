@@ -56,7 +56,7 @@ def _authenticate(client: _ReceiptClient) -> None:
 def test_a_live_sign_in_admits_with_or_without_a_terminal(monkeypatch: pytest.MonkeyPatch, interactive: bool) -> None:
     client = _ReceiptClient()
     monkeypatch.setattr(admission, "terminal_can_prompt_for_secrets", lambda: interactive)
-    monkeypatch.setattr(admission, "_password", lambda *_args, **_kwargs: pytest.fail("asked for a password"))
+    monkeypatch.setattr(admission, "password", lambda *_args, **_kwargs: pytest.fail("asked for a password"))
 
     _authenticate(client)
 
@@ -87,7 +87,7 @@ def test_a_keychainless_logon_asks_for_the_password_only_at_a_terminal(
     ) -> None:
         prompted.append(selection)
 
-    monkeypatch.setattr(admission, "_password", password)
+    monkeypatch.setattr(admission, "password", password)
     monkeypatch.setattr(admission, "terminal_can_prompt_for_secrets", lambda: interactive)
     if interactive:
         _authenticate(client)
@@ -109,7 +109,7 @@ def test_explicit_password_never_borrows_a_receipt(monkeypatch: pytest.MonkeyPat
     ) -> None:
         channels.append(selection)
 
-    monkeypatch.setattr(admission, "_password", password)
+    monkeypatch.setattr(admission, "password", password)
     monkeypatch.setattr(admission, "terminal_can_prompt_for_secrets", lambda: False)
     admission.authenticate_profile_client(
         cast(FrontendClient, client),

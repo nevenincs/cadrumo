@@ -9,42 +9,50 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+    split_exercise_revisions,
+)
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.loader import load_modelo_directory
 from ...compiler.validate_export_field_placement import binding_export_spans, validate_export_record_field_placement
+from ...tests.authored_edition_support import source_first_exercise, source_reference
 from ..bootstrap_supersession import require_stable_layout_identity_for_storage_lineage
 from ..cli import GeneratedTreeInvocation, check_prepared_invocation, prepare_generated_tree_invocation
 from ..semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_M131_MAPPINGS = Path(__file__).resolve().parents[2] / "mappings" / "modelo_131"
+_M122_SOURCE = "aeat-dr-122-2016"
+
 
 def test_preparation_preserves_distinct_sibling_lineage_evidence_in_source_scope(tmp_path: Path) -> None:
     authority = compiled_bundled_authority()
-    sibling = authority.modelo("194").revisions["2023"]
+    oldest, sibling_id = (str(revision.id) for revision in authored_revisions("194")[:2])
+    sibling = authority.modelo("194").revisions[sibling_id]
     attestation = next(
         item for item in sibling.lineage_attestations if item.continuidad_id == "declarante-contacto-telefono"
     )
     field = next(item for item in sibling.casillas if item.continuidad_id == attestation.continuidad_id)
     assert attestation.source_refs != field.source_refs
-    invocation = GeneratedTreeInvocation("194", "2019", "aeat-dr-194-2019", 2022, "0A")
+    invocation = GeneratedTreeInvocation("194", oldest, "aeat-dr-194-2019", filing_year_envelope().floor, "0A")
     prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=authority)
     assert prepared.validation.scope_authority is authority
     assert prepared.validation.continuity_metadata_modelo_root is None
     assert not (tmp_path / "continuity-metadata").exists()
-    assert prepared.validation.scope_authority.modelo("194").revisions["2023"] == sibling
+    assert prepared.validation.scope_authority.modelo("194").revisions[sibling_id] == sibling
 
 
 @pytest.mark.parametrize(
     ("modelo_id", "revision", "stable_id"),
-    (
-        ("123", "2019-2023", "modelo-123-fichero-boe"),
-        ("123", "2024-y-siguientes", "modelo-123-fichero-boe"),
-        ("490", "2021", "modelo-490-fichero-boe"),
-        ("490", "2022-1t", "modelo-490-fichero-boe"),
-        ("490", "2022-2t-4t", "modelo-490-fichero-boe"),
-        ("490", "2023-y-siguientes", "modelo-490-fichero-boe"),
+    tuple(
+        (modelo_id, str(revision.id), f"modelo-{modelo_id}-fichero-boe")
+        for modelo_id in ("123", "490")
+        for revision in authored_revisions(modelo_id)
     ),
 )
 def test_linked_editions_require_their_reviewed_stable_layout_identity(
@@ -69,13 +77,17 @@ def test_linked_editions_require_their_reviewed_stable_layout_identity(
         )
 
 
-@pytest.mark.parametrize(
-    "invocation",
-    (
-        GeneratedTreeInvocation("122", "2017-y-siguientes", "aeat-dr-122-2016", 2022, "0A"),
-        GeneratedTreeInvocation("490", "2022-1t", "aeat-dr-490-2021", 2022, "1T"),
-    ),
-)
+def _static_export_invocations() -> tuple[GeneratedTreeInvocation, ...]:
+    early_490, _late = split_exercise_revisions("490", early_period="1T", late_period="2T")
+    return (
+        GeneratedTreeInvocation(
+            "122", str(open_ended_revision("122").id), _M122_SOURCE, filing_year_envelope().floor, "0A"
+        ),
+        GeneratedTreeInvocation("490", str(early_490.id), "aeat-dr-490-2021", early_490.valid_from.year, "1T"),
+    )
+
+
+@pytest.mark.parametrize("invocation", _static_export_invocations())
 def test_static_export_can_validate_at_the_revisions_applicability_grade(
     tmp_path: Path,
     invocation: GeneratedTreeInvocation,
@@ -97,18 +109,23 @@ def test_static_export_can_validate_at_the_revisions_applicability_grade(
 
 
 def test_static_export_refuses_unsupported_source_frame(tmp_path: Path) -> None:
-    invocation = GeneratedTreeInvocation("122", "2017-y-siguientes", "aeat-dr-122-2016", 2015, "0A")
-    with pytest.raises(ValueError, match=r"filing_year=2015.*eligible=\(\)"):
+    before_source = source_first_exercise(source_reference(_M122_SOURCE)) - 1
+    invocation = GeneratedTreeInvocation("122", str(open_ended_revision("122").id), _M122_SOURCE, before_source, "0A")
+    with pytest.raises(ValueError, match=rf"filing_year={before_source}.*eligible=\(\)"):
         prepare_generated_tree_invocation(invocation, tmp_path, authority=compiled_bundled_authority())
 
 
 def test_modelo_131_historical_page_is_source_complete_without_duplicate_binding_spans(tmp_path: Path) -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "131"))
     late_law = "real-decreto-ley-23-2026:art-1"
+    _early, late = split_exercise_revisions("131", early_period="2T", late_period="3T")
     assert late_law not in modelo.legal_refs
-    assert late_law in modelo.revisions["2026-3t-4t"].legal_refs
+    assert late_law in modelo.revisions[str(late.id)].legal_refs
 
-    invocation = GeneratedTreeInvocation("131", "2019-2023", "aeat-dr-131-2019-2023-v101", 2022, "1T")
+    historical = str(authored_revisions("131")[0].id)
+    invocation = GeneratedTreeInvocation(
+        "131", historical, "aeat-dr-131-2019-2023-v101", filing_year_envelope().floor, "1T"
+    )
     prepared = prepare_generated_tree_invocation(invocation, tmp_path, authority=compiled_bundled_authority())
     result, rendered, _target_state = check_prepared_invocation(prepared)
 
@@ -116,12 +133,12 @@ def test_modelo_131_historical_page_is_source_complete_without_duplicate_binding
     assert len(rendered.layout.records) == 1
     assert len(rendered.layout.records[0].fields) == 53
     assert rendered.layout.records[0].binding_record is None
-    assert all(str(field.id).startswith("modelo-131-2019-2023-") for field in rendered.layout.records[0].fields)
+    assert all(str(field.id).startswith(f"modelo-131-{historical}-") for field in rendered.layout.records[0].fields)
 
 
 def test_modelo_131_same_field_id_still_refuses_two_physical_writers() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "131"))
-    revision = modelo.revisions["2024"]
+    revision = modelo.revisions[str(authored_revisions("131")[1].id)]
     record = next(record for record in revision.export_layouts[0].records if record.binding_record == "DPA")
     spans = binding_export_spans(revision)
     selector = next(span for span in spans["DPA"] if span.offset == 13)
@@ -137,10 +154,9 @@ def test_modelo_131_same_field_id_still_refuses_two_physical_writers() -> None:
     assert "positions 13-16 are written twice" in failures[0]
 
 
-@pytest.mark.parametrize("epoch", ("2024", "2025", "2026", "2026-late"))
+@pytest.mark.parametrize("epoch", sorted(path.name for path in _M131_MAPPINGS.iterdir() if path.is_dir())[1:])
 def test_modelo_131_single_did_retains_positive_gate_while_dpa_retains_row_repeat(epoch: str) -> None:
-    root = Path(__file__).resolve().parents[2] / "mappings" / "modelo_131"
-    semantic_map = load_semantic_map(root / epoch)
+    semantic_map = load_semantic_map(_M131_MAPPINGS / epoch)
     records = {record.record_type: record for record in semantic_map.records}
 
     assert records["page_1"].binding_record is None

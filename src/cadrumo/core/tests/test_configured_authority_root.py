@@ -21,7 +21,7 @@ from ..config_state_root import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _AUTHORITY_ROOT_ENV = "CADRUMO_AUTHORITY_ROOT"
-_STORAGE_ROOT_ENV = "CADRUMO_LOCAL_STORAGE_ROOT"
+_STORAGE_ROOT_ENV = "CADRUMO_STORAGE_ROOT"
 _RETIRED_MARKER = b"retired-aeat-state-must-remain"
 
 
@@ -99,10 +99,9 @@ def test_authority_and_project_storage_ignore_unrelated_retired_state(
     (retired / "custody-marker.bin").write_bytes(_RETIRED_MARKER)
     storage = tmp_path / "project-storage"
     published = tmp_path / "published-authority"
-    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage))
-    monkeypatch.delenv(_STORAGE_ROOT_ENV, raising=False)
+    monkeypatch.setenv(_STORAGE_ROOT_ENV, str(storage))
     monkeypatch.setenv(_AUTHORITY_ROOT_ENV, str(published))
     assert _outside_every_override(configured_authority_root) == published.resolve()
-    assert Settings().cadrumo_local_storage_root == storage
+    assert Settings().cadrumo_storage_root == storage
     assert sorted(entry.name for entry in retired.iterdir()) == ["custody-marker.bin"]
     assert (retired / "custody-marker.bin").read_bytes() == _RETIRED_MARKER

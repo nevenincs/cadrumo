@@ -10,6 +10,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....tests.inventory import FIXTURES_DIR
+from .....tests.log_records import delivered_records
 from ..errors import DeclaracionParseError, TemplateNotDetectedError
 from ..parser import parse_declaracion
 
@@ -22,7 +23,7 @@ def test_parser_debug_log_does_not_expose_source_filename(caplog: pytest.LogCapt
     with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion.parser"):
         parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
 
-    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+    rendered_logs = "\n".join(record.getMessage() for record in delivered_records(caplog))
     assert pdf_path.name not in rendered_logs
     assert "source=<input-pdf>" in rendered_logs
 
@@ -53,7 +54,7 @@ def test_word_extraction_debug_log_does_not_expose_source_filename(
     ):
         parse_declaracion(pdf_path)
 
-    rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+    rendered_logs = "\n".join(record.getMessage() for record in delivered_records(caplog))
     assert pdf_path.name not in rendered_logs
     assert str(pdf_path) not in rendered_logs
     assert "source=<input-pdf>" not in rendered_logs

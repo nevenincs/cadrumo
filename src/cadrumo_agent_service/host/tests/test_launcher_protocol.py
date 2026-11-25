@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ..controller import AgentHostError, AgentHostRefusal
-from ..launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
+from ..launcher_protocol import AgentLauncherRefusal, launcher_refusal_for, runtime_launcher_refusal_for
 from ..native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -17,6 +19,8 @@ _EXPECTED = {
     AgentHostRefusal.CREDENTIALS_INVALID: AgentLauncherRefusal.PROVIDER_CREDENTIAL_MISSING,
     AgentHostRefusal.LAUNCH_FAILED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.LAUNCH_PROFILE_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
+    AgentHostRefusal.CANCELLED: AgentLauncherRefusal.SERVICE_FAILED,
+    AgentHostRefusal.TIMEOUT: AgentLauncherRefusal.TIMEOUT,
     AgentHostRefusal.NOT_READY: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.AGENT_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.ALREADY_RUNNING: AgentLauncherRefusal.SERVICE_FAILED,
@@ -58,6 +62,7 @@ def test_the_launcher_protocol_stays_the_desktops_closed_set() -> None:
         "agent_service_incompatible",
         "agent_provider_credential_missing",
         "agent_service_failed",
+        "agent_timeout",
     }
 
 
@@ -65,3 +70,26 @@ def test_the_launcher_protocol_stays_the_desktops_closed_set() -> None:
 def test_an_agent_that_does_not_speak_the_offered_contract_is_incompatible(code: str) -> None:
     error = AgentHostError(AgentHostRefusal.AGENT_REFUSED, agent_code=code)
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_INCOMPATIBLE
+
+
+@pytest.mark.parametrize(
+    "code", [RefusalCode.UNAVAILABLE, RefusalCode.ENDPOINT_NOT_READY, RefusalCode.DRAINING], ids=str
+)
+def test_a_runtime_that_is_not_there_to_serve_is_runtime_unavailable(code: RefusalCode) -> None:
+    assert runtime_launcher_refusal_for(RefusalError(code)) is AgentLauncherRefusal.RUNTIME_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        RefusalCode.ENDPOINT_UNTRUSTED,
+        RefusalCode.PEER_UNTRUSTED,
+        RefusalCode.VERSION_MISMATCH,
+        RefusalCode.TIMEOUT,
+        RefusalCode.CONTAINMENT_UNAVAILABLE,
+    ],
+    ids=str,
+)
+def test_an_untrusted_or_failed_runtime_exchange_is_not_mistaken_for_absence(code: RefusalCode) -> None:
+    expected = AgentLauncherRefusal.TIMEOUT if code is RefusalCode.TIMEOUT else None
+    assert runtime_launcher_refusal_for(RefusalError(code)) is expected

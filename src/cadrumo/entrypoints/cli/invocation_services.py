@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import typer
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ...application.bucket_maintenance.contracts import BucketDeletionAssessment
+if TYPE_CHECKING:
+    # Only the field annotation names it; the assessment's model graph loads with a deletion.
+    from ...application.bucket_maintenance.contracts import BucketDeletionAssessment
 
 _SERVICES_KEY = "cadrumo.cli.invocation_services"
 

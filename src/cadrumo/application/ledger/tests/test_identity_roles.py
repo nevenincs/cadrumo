@@ -8,7 +8,7 @@ tell. Every assertion about that shape below is written as an outcome -- what
 resolved -- rather than as a call count, because the defect is a wrong answer,
 not a wrong code path.
 
-The identifiers used here are checksum-real: `B17283946` and `A82645177` pass the
+The identifiers used here are checksum-real: `B00015024` and `A00010017` pass the
 AEAT control-character algorithm and `B17283945` fails it. That is verified by a
 control test rather than asserted in a comment, so a change to the validator
 cannot leave these cases silently testing nothing.
@@ -25,6 +25,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
 from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from ..confirmation_block_words import served_finding_words
 from ..identity_roles import (
     IdentityCandidate,
     canonical_identity_token,
@@ -38,13 +39,13 @@ _OWN_NIF = "12345678Z"
 
 #: A valid CIF belonging to an entity that is NOT the supplier -- a bank, a
 #: gestoría, a logo in the footer. This is the identifier the defect returns.
-_UNRELATED_VALID_CIF = "B17283946"
+_UNRELATED_VALID_CIF = "B00015024"
 
 #: A second valid identifier, for the genuine multi-candidate case.
-_OTHER_VALID_CIF = "A82645177"
+_OTHER_VALID_CIF = "A00010017"
 
 #: A third, for proving every competitor is surfaced rather than the first two.
-_THIRD_VALID_CIF = "B10000016"
+_THIRD_VALID_CIF = "B00015008"
 
 #: The true supplier's CIF, whose control character does not check out. This is
 #: why a validating scan walks past it and reaches the unrelated one.
@@ -127,7 +128,7 @@ def test_the_defect_shape_reports_both_the_bad_checksum_and_the_unresolved_role(
     assert DraftDiscrepancyKind.IDENTITY_UNVERIFIED in kinds
     assert DraftDiscrepancyKind.ROLE_UNRESOLVED in kinds
     unverified = next(f for f in resolution.findings if f.kind is DraftDiscrepancyKind.IDENTITY_UNVERIFIED)
-    assert _SUPPLIER_CIF_FAILING_CHECKSUM in unverified.detail
+    assert _SUPPLIER_CIF_FAILING_CHECKSUM in (served_finding_words(unverified.words)[0] or "")
 
 
 def test_a_lone_surviving_identifier_without_role_evidence_does_not_resolve(
@@ -426,5 +427,5 @@ def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish(opera
     # Positive controls: an absent country must not break the two cases that
     # can answer for themselves, or the assertion above would hold for a helper
     # that simply verifies nothing.
-    assert canonical_identity_token("A58818501", country_code=None, operation=operation) == "A58818501"
+    assert canonical_identity_token("B00010157", country_code=None, operation=operation) == "B00010157"
     assert canonical_identity_token("DE811907980", country_code=None, operation=operation) == "DE811907980"

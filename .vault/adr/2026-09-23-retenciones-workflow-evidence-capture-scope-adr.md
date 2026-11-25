@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#retenciones-workflow'
 date: '2026-09-23'
-modified: '2026-09-24'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca022b57a06e53038261362c7afe211b9a971f63c7f0e264a8626d61e3a6349b'
+body_hash: 'sha256:cbff9d8adba88dd25dd35c32217c6de8728140adbcdd7510aa293835f7c150b3'
 related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]"
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]"
@@ -19,13 +19,13 @@ Accepted 2026-09-23 by the coordinator's ruling under the user's standing pre-ap
 
 ## Problem Statement
 
-The withholding workflow's public capture was limited to invoice-backed professional and urban-rent evidence. An earlier policy refused every capital-income capture together with Modelo 123 (`src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`, the "Modelo 123 public capture is incomplete" refusal), because the official Modelo 123 "Número de rentas" count is unresolved. Refusing to store the evidence hides real withholding data from Modelo 193. The 2025-and-later 193 design is officially published, and the registry already resolves it, so the gap is not missing authority. Payroll (work income) also had no public producer, although the accepted payment contract names one.
+The withholding workflow's public capture was limited to invoice-backed professional and urban-rent evidence. An earlier policy refused every capital-income capture together with Modelo 123 (`src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`, the "Modelo 123 public capture is incomplete" refusal), because the official Modelo 123 "Número de rentas" count is unresolved. Refusing to store the evidence hides real withholding data from Modelo 193. The open-ended later Modelo 193 design is officially published, and the registry already resolves it, so the gap is not missing authority. Payroll (work income) also had no public producer, although the accepted payment contract names one.
 
 ## Considerations
 
 - The accepted contract `2026-09-21-retenciones-workflow-observation-payment-contract-adr` already requires invoice, payroll, rent, capital and manual producers to submit typed payment allocations through one shared service, with CLI and TUI as transports.
 - The Modelo 123 count has no official definition. The evidence record is `2026-09-24-retenciones-workflow-modelo-123-count-authority-research`.
-- Modelo 193 for ejercicio 2025 and later is governed by Orden HAC/1430/2025 with no end year. The evidence record is `2026-09-24-retenciones-workflow-modelo-193-later-year-design-research`.
+- Modelo 193 from the edition whose official design introduces the pending field is governed by Orden HAC/1430/2025 with no end year. The evidence record is `2026-09-24-retenciones-workflow-modelo-193-later-year-design-research`.
 - Payroll and capital income do not arrive as received invoices. Their payment is a ledger transaction, and their liability terms are declared by the payer.
 
 ## Considered options
@@ -41,7 +41,7 @@ The withholding workflow's public capture was limited to invoice-backed professi
 
 ## Implementation
 
-Payroll and capital income each get a public producer anchored to the ledger transaction that paid the recipient. The request declares the liability terms (gross base, withholding, net settlement) and the legally required annual detail. The paid amount must equal the declared settlement. Recognition follows the contract's rules: `PAID_OR_SATISFIED` for work, `EXIGIBILITY_OR_EARLIER_PAYMENT` for ordinary movable capital. Both producers submit through the shared service, the CLI and TUI expose them as transports, and invoice capture is unchanged. The capital capture path stores evidence into the Modelo 123 window without making that window calculable: the existing count-authority refusal moves from capture to calculation and filing. The Modelo 193 export consumes the phase materializer's PENDING and SETTLED_PRIOR_ACCRUAL rows through the canonical aggregation mechanism and is validated against the official 2025 design.
+Payroll and capital income each get a public producer anchored to the ledger transaction that paid the recipient. The request declares the liability terms (gross base, withholding, net settlement) and the legally required annual detail. The paid amount must equal the declared settlement. Recognition follows the contract's rules: `PAID_OR_SATISFIED` for work, `EXIGIBILITY_OR_EARLIER_PAYMENT` for ordinary movable capital. Both producers submit through the shared service, the CLI and TUI expose them as transports, and invoice capture is unchanged. The capital capture path stores evidence into the Modelo 123 window without making that window calculable: the existing count-authority refusal moves from capture to calculation and filing. The Modelo 193 export consumes the phase materializer's PENDING and SETTLED_PRIOR_ACCRUAL rows through the canonical aggregation mechanism and is validated against the official design of the edition that introduces the pending field.
 
 ## Rationale
 

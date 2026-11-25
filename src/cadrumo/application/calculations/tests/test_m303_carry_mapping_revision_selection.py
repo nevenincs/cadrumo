@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import date
 
 import pytest
 
 from ....core.filing_producer_key import FilingProducerKey
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ....domain.calculations.registry.export import resolve_export_layout
 from ....domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -21,12 +20,6 @@ from ..m303_carry_ingress import m303_declaration_type_header_key
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-
-
-@pytest.fixture
-def authority_operation() -> Iterator[PinnedAuthorityOperation]:
-    with bundled_indexed_authority().operation() as operation:
-        yield operation
 
 
 # Exercise every historical branch and the 2026 shared-end-date boundary.

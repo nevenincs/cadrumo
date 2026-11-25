@@ -31,11 +31,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.row_models import Modelo232VinculadaRow
-from .._calculation_modelo_adjustments import detail_row_declaration_modelos
+from ..calculation_modelo_adjustments import detail_row_declaration_modelos
 from ..work_amend_contracts import ModeloWorkAmendBaseline, ModeloWorkAmendOverride, ModeloWorkAmendRequest
-from .test_edit_detail_row_wire_mirror import _PAIRS
+from .test_edit_detail_row_wire_mirror import PAIRS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -43,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 #: test fails if the domain ever changes which they are rather than silently
 #: covering a set that no longer matches.
 _EXPECTED_BEARING = frozenset({"184", "232", "349"})
-_EFFECTIVE_DATE = date(2025, 12, 31)
+_EFFECTIVE_DATE = date(filing_year_envelope().horizon, 12, 31)
 
 
 def _request(**overrides: object) -> ModeloWorkAmendRequest:
@@ -55,7 +56,7 @@ def _request(**overrides: object) -> ModeloWorkAmendRequest:
     """
     valid = ModeloWorkAmendRequest(
         baseline=ModeloWorkAmendBaseline(from_filing_record_id="filing-1"),
-        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
         overrides=(ModeloWorkAmendOverride(casilla_id="01", value="1250.00"),),
         reason="corrected a mistyped base",
         actor="operator-1",
@@ -106,7 +107,7 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
     the request happens to hold.
     """
     row = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="Acme SL",
         pais="ES",
         importe=Decimal("1000.00"),
@@ -122,7 +123,7 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
     assert type(translated) is type(row)
 
 
-@pytest.mark.parametrize("kind", sorted(_PAIRS), ids=sorted(_PAIRS))
+@pytest.mark.parametrize("kind", sorted(PAIRS), ids=sorted(PAIRS))
 def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None:
     """All five kinds, not just the one a hand-picked example would exercise.
 
@@ -130,7 +131,7 @@ def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None
     request that admitted only some row kinds would refuse a lawful correction
     for reasons the operator could not see.
     """
-    mirror, expected = _PAIRS[kind]()
+    mirror, expected = PAIRS[kind]()
 
     request = _request(detail_rows=(mirror.model_dump(),))
 
@@ -146,7 +147,7 @@ def test_all_three_states_survive_request_json_round_trip() -> None:
     that declared nil, or restore the refusal this field removes.
     """
     row_payload = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="Acme SL",
         pais="ES",
         importe=Decimal("1000.00"),
@@ -172,7 +173,7 @@ def test_a_domain_row_cannot_be_submitted_in_place_of_its_mirror() -> None:
     would move that mismatch to where nothing checks for it.
     """
     row = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="Acme SL",
         pais="ES",
         importe=Decimal("1000.00"),

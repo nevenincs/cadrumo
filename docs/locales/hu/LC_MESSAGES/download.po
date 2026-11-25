@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"POT-Creation-Date: 2026-10-29 13:43+0100\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -101,18 +101,15 @@ msgstr "A telepítés megerősítése"
 
 #: ../../download.md:37
 msgid ""
-"A version number confirms the install. Then run the full workstation "
-"check and add the optional extras you want (Google export, the live AEAT "
-"browser, OFX/QFX import) by following [Install Cadrumo](workstation-"
-"setup.md), which covers the dependency report, platform checks, and per-"
-"extra install commands."
+"A version number confirms the install. Then add the optional extras you "
+"want (Google export, the live AEAT browser, OFX/QFX import) by following "
+"[Install Cadrumo](workstation-setup.md), which covers the per-extra "
+"install commands."
 msgstr ""
-"A verziószám megerősíti a telepítést. Ezután futtasd a teljes "
-"munkaállomás-ellenőrzést, és add hozzá a kívánt opcionális extrákat "
-"(Google-export, élő AEAT-böngésző, OFX/QFX-import) a [Cadrumo telepítése"
-"](workstation-setup.md) oldal alapján; ez ismerteti a függőségi "
-"jelentést, a platformellenőrzéseket és az egyes extrák telepítési "
-"parancsait."
+"A verziószám igazolja a telepítést. Ezután add hozzá a kívánt opcionális "
+"extrákat (Google-exportálás, élő AEAT-böngésző, OFX/QFX-import) a "
+"[Cadrumo telepítése](workstation-setup.md) útmutató szerint, amely az "
+"egyes extrák telepítési parancsait ismerteti."
 
 #: ../../download.md:42
 msgid ""
@@ -183,7 +180,7 @@ msgstr ""
 
 #: ../../download.md:82
 msgid "Platform"
-msgstr "Platform"
+msgstr "Rendszer"
 
 #: ../../download.md:83
 msgid "Channel"
@@ -211,7 +208,7 @@ msgstr "macOS (Apple silicon), Linux (x86-64 és arm64)"
 
 #: ../../download.md:89
 msgid "Homebrew formula"
-msgstr "Homebrew-formula"
+msgstr "Homebrew csomagleírás"
 
 #: ../../download.md:90
 msgid "Homebrew tap"
@@ -261,7 +258,9 @@ msgstr "Gyorsindító"
 
 #: ../../download.md:136
 msgid "Take the shortest path from an empty profile to an exported modelo file."
-msgstr "Tedd meg a legrövidebb utat az üres profiltól az exportált modelofájlig."
+msgstr ""
+"Tedd meg a legrövidebb utat az üres profiltól az exportált "
+"nyomtatványfájlig."
 
 #: ../../download.md:139
 msgid "Connect an agent (MCP)"

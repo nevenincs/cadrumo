@@ -78,26 +78,9 @@ def stage_generated_export_candidate(
         )
     source_modelo_root = source_root / "modelos" / modelo
     source_revision_root = source_modelo_root / "revisions" / revision
-    if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
-        validate_bootstrap_manual_export_layout_supersession(
-            source_modelo_root,
-            revision=revision,
-            superseded_layout_id=bootstrap_target.supersedes_layout_id,
-            expected_references=bootstrap_target.superseded_construct_references,
-            generated_layout_id=bootstrap_target.layout_id,
-            source_ref=bootstrap_target.source_ref,
-            source_sha256=bootstrap_target.source_sha256,
-            manual_origin_revision=bootstrap_target.manual_origin_revision,
-        )
-    elif (
-        inheritance is None
-        and not (source_revision_root / "export").is_dir()
-        and load_modelo_directory(source_modelo_root).revisions[revision].export_layouts
-    ):
-        raise ValueError(
-            f"unreviewed hydrated manual export layout for {modelo}/{revision}; "
-            "declare an exact bootstrap supersession before staging",
-        )
+    _validate_candidate_bootstrap(
+        source_modelo_root, source_revision_root, modelo, revision, bootstrap_target, inheritance
+    )
     _stage_shared_candidate_authority(source_root, candidate_root, modelos={modelo, *supporting_modelos})
     if retain_source_chain:
         if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
@@ -130,6 +113,36 @@ def stage_generated_export_candidate(
         )
     _stage_supporting_modelos(source_root, candidate_root, supporting_modelos)
     return staged_modelo_root
+
+
+def _validate_candidate_bootstrap(
+    source_modelo_root: Path,
+    source_revision_root: Path,
+    modelo: str,
+    revision: str,
+    bootstrap_target: GeneratedExportBootstrapTarget | None,
+    inheritance: GeneratedExportInheritanceContext | None,
+) -> None:
+    if bootstrap_target is not None and bootstrap_target.supersedes_layout_id is not None:
+        validate_bootstrap_manual_export_layout_supersession(
+            source_modelo_root,
+            revision=revision,
+            superseded_layout_id=bootstrap_target.supersedes_layout_id,
+            expected_references=bootstrap_target.superseded_construct_references,
+            generated_layout_id=bootstrap_target.layout_id,
+            source_ref=bootstrap_target.source_ref,
+            source_sha256=bootstrap_target.source_sha256,
+            manual_origin_revision=bootstrap_target.manual_origin_revision,
+        )
+    elif (
+        inheritance is None
+        and not (source_revision_root / "export").is_dir()
+        and load_modelo_directory(source_modelo_root).revisions[revision].export_layouts
+    ):
+        raise ValueError(
+            f"unreviewed hydrated manual export layout for {modelo}/{revision}; "
+            "declare an exact bootstrap supersession before staging",
+        )
 
 
 def stage_attested_inherited_modelo(
@@ -171,12 +184,21 @@ def stage_attested_inherited_modelo(
     if include_target_export:
         shutil.copytree(source_modelo_root / "revisions" / revision / "export", revisions_root / revision / "export")
     if include_target_export:
-        loaded = load_modelo_directory(staged_modelo_root)
-        if tuple(loaded.revisions) != (*ancestor_ids, revision):
-            raise ValueError("generated export inheritance staged an unexpected revision")
-        if loaded.revisions[ancestor_ids[-1]].export_layouts != (inheritance.baseline_layout,):
-            raise ValueError("generated export inheritance staged a different baseline layout")
+        _validate_staged_inheritance(staged_modelo_root, ancestor_ids, revision, inheritance)
     return staged_modelo_root
+
+
+def _validate_staged_inheritance(
+    staged_modelo_root: Path,
+    ancestor_ids: tuple[str, ...],
+    revision: str,
+    inheritance: GeneratedExportInheritanceContext,
+) -> None:
+    loaded = load_modelo_directory(staged_modelo_root)
+    if tuple(loaded.revisions) != (*ancestor_ids, revision):
+        raise ValueError("generated export inheritance staged an unexpected revision")
+    if loaded.revisions[ancestor_ids[-1]].export_layouts != (inheritance.baseline_layout,):
+        raise ValueError("generated export inheritance staged a different baseline layout")
 
 
 def _stage_shared_candidate_authority(

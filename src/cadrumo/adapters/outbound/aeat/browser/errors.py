@@ -32,6 +32,7 @@ class BrowserPreconditionCondition(StrEnum):
     """Stable failed conditions observed at the AEAT browser boundary."""
 
     OPTIONAL_EXTRA_AVAILABLE = "aeat.browser.optional_extra.available"
+    BROWSER_AVAILABLE = "aeat.browser.available"
     RUNTIME_STARTABLE = "aeat.browser.runtime.startable"
     RUNTIME_STOPPABLE = "aeat.browser.runtime.stoppable"
     SESSION_AVAILABLE = "aeat.browser.session.available"
@@ -128,7 +129,7 @@ class BrowserFailureMode(StrEnum):
     OPTIONAL_EXTRA_UNAVAILABLE = "optional_extra_unavailable"
     PLAYWRIGHT_RUNTIME_START_FAILED = "playwright_runtime_start_failed"
     PLAYWRIGHT_RUNTIME_STOP_FAILED = "playwright_runtime_stop_failed"
-    BROWSER_NOT_PROVISIONED = "browser_not_provisioned"
+    BROWSER_NOT_AVAILABLE = "browser_not_available"
     BROWSER_LAUNCH_FAILED = "browser_launch_failed"
     CONTEXT_CREATE_FAILED = "context_create_failed"
     EVASION_FAILED = "evasion_failed"
@@ -137,3 +138,29 @@ class BrowserFailureMode(StrEnum):
     NAVIGATION_TRANSPORT_ERROR = "navigation_transport_error"
     SITE_HEALTH_NON_OK = "site_health_non_ok"
     BROWSER_CLOSE_FAILED = "browser_close_failed"
+
+
+class BrowserNotReadyError(BrowserError):
+    """Raised when launching the browser finds no browser build to launch.
+
+    A refusal rather than a failure: no browser started, so the launch it
+    stops had no effect.
+
+    Its failure mode is always :attr:`BrowserFailureMode.BROWSER_NOT_AVAILABLE`
+    and is read from the class. The base keeps the mode in the error context and
+    as a public attribute, and both reach the person as context lines beside the
+    sentence; this refusal carries neither, so the person reads the sentence only.
+    """
+
+    failure_mode = BrowserFailureMode.BROWSER_NOT_AVAILABLE.value
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        translated_message: str,
+        precondition_verdict: PreconditionVerdict | None,
+    ) -> None:
+        """Construct the refusal from its message key and its verdict."""
+        super().__init__(message, translated_message=translated_message, precondition_verdict=precondition_verdict)
+        del self.failure_mode

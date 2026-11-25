@@ -30,7 +30,7 @@ class ModeloWorkMetadataSnapshot(BaseModel):
     filing_year: FilingYear
     period: PublicPeriod
     revision_id: RevisionId
-    name: Annotated[str, Field(min_length=1, max_length=200)]
+    name: Annotated[str, Field(min_length=1, max_length=256)]
     created_at: datetime
     updated_at: datetime
     state: WorkUnitState

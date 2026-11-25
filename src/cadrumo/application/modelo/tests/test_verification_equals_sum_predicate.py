@@ -15,12 +15,18 @@ import pytest
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.schema_verification import (
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+)
 from ....domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ..action_errors import ModeloVerificationPredicateMalformedError
 from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
     evaluate_advisory_predicate_fires,
     evaluate_predicate_expression,
     evaluate_verification_predicates,
@@ -84,13 +90,25 @@ def test_the_advisory_reading_fires_exactly_when_the_blocking_reading_fails() ->
         )
 
 
-def test_fewer_than_two_addends_neither_blocks_nor_fires() -> None:
-    """Registry validation refuses this arity; the runtime only defends against a bypass."""
+def test_fewer_than_two_addends_refuses_on_both_routes() -> None:
+    """A total with a single addend is a malformed predicate, refused on every call of either route."""
     malformed = 'equals_sum(["27", "09"])'
     values = {_TOTAL: Decimal("5.00"), _SECOND: Decimal("1.00")}
+    profile = workflow_profile()
 
-    assert evaluate_predicate_expression(malformed, values, workflow_profile()) is True
-    assert evaluate_advisory_predicate_fires(malformed, values) is False
+    for route, evaluate in (
+        (VerificationPredicateRoute.BLOCKING, lambda: evaluate_predicate_expression(malformed, values, profile)),
+        (VerificationPredicateRoute.ADVISORY, lambda: evaluate_advisory_predicate_fires(malformed, values)),
+    ):
+        for _ in range(3):
+            with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
+                evaluate()
+            assert raised.value.context == {
+                "predicate_expression_recognised": False,
+                "predicate_operator": VerificationPredicateOperator.EQUALS_SUM.value,
+                "predicate_refusal": VerificationPredicateRefusal.ARITY.value,
+                "predicate_route": route.value,
+            }
 
 
 def test_a_violation_raises_a_blocking_printed_total_finding_naming_the_box_and_the_printed_sum() -> None:

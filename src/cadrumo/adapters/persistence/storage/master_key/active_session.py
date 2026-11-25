@@ -42,7 +42,7 @@ from typing import TypeGuard, override
 from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
 from .....core.logging import get_logger
 from .....core.process_binding import ProcessScopedBinding
-from .....core.time.clock import now
+from .....core.time.clock import wall_now
 from ..bucket.errors import BucketLockedError
 from ..errors import SecretStoreError
 from .bucket_session import BucketSession
@@ -117,13 +117,18 @@ def bind_active_bucket_session(session: BucketSession) -> None:
     active_session.bind(session)
 
 
-def _require_fresh_active_session() -> BucketSession:
+def require_fresh_active_session() -> BucketSession:
     """Return the active, unexpired :class:`BucketSession` or raise.
 
     The shared resolution behind :func:`get_active_master_key` and
     :func:`get_active_hmac_subkey`: both key surfaces must refuse
     identically when no session is bound or the bound session expired,
     so the checks live once here.
+
+    A batch reader that resolves key material once for one storage call
+    calls this directly, keeps the returned session for that call only, and
+    calls it again before releasing what it decrypted, so the call still ends
+    in this refusal when the session lapsed while it ran.
 
     Raises:
         NoActiveBucketSessionError: When no :func:`activate_session` block is
@@ -134,7 +139,7 @@ def _require_fresh_active_session() -> BucketSession:
     profile_worker_binding.require_session(session)
     if session is None:
         raise NoActiveBucketSessionError()
-    if session.is_expired(now()):
+    if session.is_expired(wall_now()):
         bucket_id = session.bucket_id
         close_active_bucket_session()
         raise BucketLockedError(bucket_id=bucket_id)
@@ -157,7 +162,7 @@ def get_active_master_key() -> bytes:
             currently active on the calling thread or task.
         BucketLockedError: When the active session has expired.
     """
-    return _require_fresh_active_session().dek
+    return require_fresh_active_session().dek
 
 
 def get_active_hmac_subkey(context: bytes) -> bytes:
@@ -182,7 +187,7 @@ def get_active_hmac_subkey(context: bytes) -> bytes:
             currently active on the calling thread or task.
         BucketLockedError: When the active session has expired.
     """
-    return _require_fresh_active_session().hmac_subkey(context)
+    return require_fresh_active_session().hmac_subkey(context)
 
 
 def has_active_bucket_session() -> bool:
@@ -283,7 +288,26 @@ def close_active_bucket_session() -> None:
         active_session.clear_bound(session)
 
 
-def _close_active_session_at_exit() -> None:
+def seal_active_bucket_session() -> BucketSession | None:
+    """Seal and evict the currently bound :class:`BucketSession`, leaving its engines to dispose.
+
+    Does what :func:`close_active_bucket_session` does except closing the
+    bucket's engine pools: the key is zeroised and the binding removed before
+    this returns, and the caller disposes the returned session's engines with
+    :meth:`BucketSession.dispose_engines` once it no longer holds a lock that
+    other work waits on. Returns ``None`` when no session is bound.
+    """
+    session = active_session.get()
+    if session is None:
+        return None
+    try:
+        session.seal()
+    finally:
+        active_session.clear_bound(session)
+    return session
+
+
+def close_active_session_at_exit() -> None:
     """Best-effort close of every live session on interpreter shutdown.
 
     Registered as an :func:`atexit.register` hook below. If a session is
@@ -311,7 +335,7 @@ def _close_active_session_at_exit() -> None:
         return
 
 
-_atexit.register(_close_active_session_at_exit)
+_atexit.register(close_active_session_at_exit)
 
 
 __all__ = [
@@ -325,5 +349,7 @@ __all__ = [
     "get_active_hmac_subkey",
     "get_active_master_key",
     "has_active_bucket_session",
+    "require_fresh_active_session",
+    "seal_active_bucket_session",
     "session_serves_bucket",
 ]

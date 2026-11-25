@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#inventory-casilla-mapping'
 date: '2026-08-23'
-modified: '2026-08-23'
+modified: '2026-11-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5ba705162b6ecbb6a079802f280cbb9be750ff64660737e9a9f847e1116ffa6'
+body_hash: 'sha256:3b0ec414bb7e1c8001301e23c62456d0da1a89190731dfd50cefaf3e90459826'
 related:
   - "[[2026-08-23-inventory-casilla-grounding-research]]"
   - "[[2026-08-22-source-casilla-integration-adr]]"
@@ -16,14 +16,14 @@ related:
 
 ## Problem Statement
 
-The inventory domain now exposes a legally complete, source-owned 2025 projection at activity grain. S43 completed grounded operation templates, S170 through S175 completed typed row-source identity transport, encrypted persistence, replay validation, and ordinary-output redaction, and S176 completed runtime inventory cohort expansion. The remaining gaps are materialising those transported values as direct row-indexed casillas and grounding whether any official M100 XML or PDF representation supports structured activity rows. This decision defines that bounded materialisation and fail-closed representation boundary, grounded by `2026-08-23-inventory-casilla-grounding-research`.
+The inventory domain now exposes a legally complete, source-owned projection at activity grain. S43 completed grounded operation templates, S170 through S175 completed typed row-source identity transport, encrypted persistence, replay validation, and ordinary-output redaction, and S176 completed runtime inventory cohort expansion. The remaining gaps are materialising those transported values as direct row-indexed casillas and grounding whether any official M100 XML or PDF representation supports structured activity rows. This decision defines that bounded materialisation and fail-closed representation boundary, grounded by `2026-08-23-inventory-casilla-grounding-research`.
 
 ## Considerations
 
 - The connection must extend the accepted resolver, registry, provenance, secure-persistence, and connectivity-proof architecture rather than create a parallel calculation path; `2026-08-22-source-casilla-integration-adr`.
 - Casilla meaning, sign, grain, source authority, absence behavior, and override policy must be explicit before a source becomes connected; `2026-08-22-modelo-work-binding-architecture-inventory-gap-verification-reference`.
 - Complete acquisition cost, split variation, physical-closing authority, resolver enrollment, and source ownership are implemented prerequisites rather than remaining blockers; `2026-08-23-inventory-casilla-grounding-research`.
-- The supported legal slice is ejercicio 2025 only; repeated identifiers in other revisions do not authorize continuity; `2026-08-23-inventory-casilla-grounding-research`.
+- The supported legal slice is the grounded Modelo 100 edition only; repeated identifiers in other revisions do not authorize continuity; `2026-08-23-inventory-casilla-grounding-research`.
 - Immutable registry declarations cannot know taxpayer-specific activity identities, while the accepted source mesh already carries row-indexed binding values and established M303, M349, and M720 precedents preserve runtime row identity; `2026-08-23-inventory-casilla-grounding-research` and `2026-07-05-modelo-720-row-carrier-adr`.
 
 ## Considered options
@@ -58,7 +58,7 @@ Materialise each row binding through an independent `(CasillaId, row_index)` car
 
 ## Constraints
 
-- The initial mapping is limited to Modelo 100 ejercicio 2025. Earlier or later revisions require separately grounded authority.
+- The initial mapping is limited to the grounded Modelo 100 edition. Other revisions require separately grounded authority.
 - Resolution grain is exactly one taxpayer, filing year, and economic activity. Values must not be combined across activities; any cross-activity combination requires a later accepted ADR and explicit registry aggregation contract.
 - The immutable registry owns operation, destination casilla, legal/source grounding, revision scope, and row-template semantics. It must not contain a taxpayer activity ID, wildcard, or fabricated static activity roster.
 - The encrypted runtime inventory ledger is the sole source of canonical `actividad_id` instances. Expansion must be deterministic, preserve exact activity identity and provenance, and refuse duplicate or ambiguous activity rows.
@@ -83,7 +83,7 @@ Materialise each row binding through an independent `(CasillaId, row_index)` car
 
 ## Implementation
 
-Replace the stale `0155` inventory helper with a typed 2025 inventory activity-row projection that produces `0181`, `0177`, and `0182` for each taxpayer-year-activity coordinate. No compatibility alias or alternate signed-output path remains.
+Replace the stale `0155` inventory helper with a typed inventory activity-row projection that produces `0181`, `0177`, and `0182` for each taxpayer-year-activity coordinate. No compatibility alias or alternate signed-output path remains.
 
 Author one immutable registry row-template family for the three inventory operations and their exact destination casillas. At resolution time, enumerate canonical activity rows from the encrypted inventory document, sort by canonical `actividad_id`, assign 1-based row indexes, and expand every applicable operation template over each row. The registry declaration carries no literal `actividad_id`; the generic typed row-source identity member carries the opaque runtime identity, canonical source kind, and source/projection fingerprint beside the corresponding row binding coordinate.
 
@@ -109,7 +109,7 @@ The complete three-output runtime-row projection is the only option that preserv
 
 ## Consequences
 
-- Modelo 100 ejercicio 2025 gains one auditable inventory source contract at the correct activity grain.
+- The grounded Modelo 100 edition gains one auditable inventory source contract at the correct activity grain.
 - One registry template family can serve any valid runtime activity roster without static IDs, wildcards, or synthetic binding identifiers.
 - Calculation revisions and review surfaces must preserve row-to-activity identity in addition to row-indexed binding values, increasing the strict replay and mutation-test surface.
 - The generic identity association can support other row-producing sources without teaching the carrier inventory-specific fields.
@@ -124,3 +124,13 @@ The complete three-output runtime-row projection is the only option that preserv
 - Complete source state prevents caller overrides; absent or defective state remains visibly unresolved and preserves manual fallback.
 - The stale inventory meaning attached to `0155` disappears with no compatibility path.
 - Supporting earlier revisions, production-cost composition, or new valuation authorities requires further grounding and decision work.
+
+## Amendment 2026-10-30
+
+Authorized by the operator on 2026-10-30. The accepted body is preserved. `2026-08-22-source-casilla-integration-adr` retired the connectivity census from product code on 2026-09-07, so "connected" here means delivered through the registry binding and resolver path with the proofs this record requires. It names no status field and no census. This record's valuation and year scope are unchanged.
+
+## Amendment 2026-11-11: book-claimed purchases
+
+Accepted 2026-11-11 by PRIME under the operator's delegation, as recorded in `2026-11-11-inventory-casilla-mapping-book-claimed-purchases-adr`.
+
+Casilla 0181 remains sourced only from the inventory book. A ledger row that a purchase movement of the book claims is withheld from every Modelo 100 ledger expense destination, including 0183, through the shared register claim, and refuses on a missing transaction, a double claim or an amount mismatch, as `2026-11-11-inventory-casilla-mapping-book-claimed-purchases-adr` states. In the constraint defining 0181, 'non-recoverable IVA' reads 'non-recoverable indirect taxes, namely non-recoverable IVA and recargo de equivalencia (PGC NRV 10ª.1, LIVA art. 154)'. An unlinked purchase movement in an activity and year with ledger expense rows blocks Modelo 100 verification until it is linked or stated as having no ledger row.

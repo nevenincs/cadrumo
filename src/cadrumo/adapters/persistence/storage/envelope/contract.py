@@ -37,18 +37,16 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from .....core.atomic_write import atomic_write_text
 from .....core.classification.policies import SensitivityClass
 from .....core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import validate_utc_aware
 from ..crypto.aead import EncryptedBlob
 from ..errors import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
-)
-from ..errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from ..schema_lineage import inner_envelope_classification_is_expected
 
@@ -57,10 +55,10 @@ _log = get_logger(__name__)
 
 def _read_envelope_text(path: Path) -> str:
     try:
-        return path.read_text(encoding=_UTF_8_ENCODING)
+        return path.read_text(encoding=UTF_8_ENCODING)
     except (OSError, UnicodeDecodeError) as exc:
         _log.debug("envelope read failed error_type=%s", type(exc).__name__)
-        raise _storage_validation_error("envelope cannot be read") from exc
+        raise storage_validation_error("envelope cannot be read") from exc
 
 
 def _parse_model_json[T: BaseModel](model_type: type[T], raw: str, *, label: str) -> T:
@@ -68,7 +66,7 @@ def _parse_model_json[T: BaseModel](model_type: type[T], raw: str, *, label: str
         return model_type.model_validate_json(raw)
     except (ValidationError, ValueError) as exc:
         _log.debug("envelope JSON validation failed label=%s error_type=%s", label, type(exc).__name__)
-        raise _storage_validation_error(f"{label} envelope JSON is not valid") from exc
+        raise storage_validation_error(f"{label} envelope JSON is not valid") from exc
 
 
 class AeadAlgorithm(StrEnum):
@@ -98,7 +96,7 @@ class EncryptionMetadata(BaseModel):
             member is missing.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     algorithm: AeadAlgorithm = Field(default=AeadAlgorithm.AES_256_GCM_V1)
     nonce_b64: str
@@ -157,7 +155,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
             plaintext envelopes.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(ge=1)
     written_at: datetime
@@ -172,7 +170,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
         try:
             return validate_utc_aware(value)
         except CoreValidationError as exc:
-            error = _storage_validation_error(str(exc))
+            error = storage_validation_error(str(exc))
             # Pydantic only recognises builtin validation exceptions at this
             # callback boundary. Keep the registered storage error as the
             # cause so direct adapter code and diagnostics retain its type.
@@ -225,10 +223,10 @@ def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     target = path.resolve()
     payload = envelope.model_dump_json()
     try:
-        atomic_write_text(target, payload, encoding=_UTF_8_ENCODING)
+        atomic_write_text(target, payload, encoding=UTF_8_ENCODING)
     except OSError as exc:
         _log.error("envelope atomic write failed error_type=%s", type(exc).__name__)
-        raise _storage_validation_error("envelope cannot be written") from exc
+        raise storage_validation_error("envelope cannot be written") from exc
 
 
 def load_envelope[PayloadT: BaseModel](

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.calculations.registry.fixed_width_codec import ExportSignPosition
+
 from ..analysis.sign_position_coverage import (
     design_sign_positions,
     screen_authority,
@@ -50,7 +52,9 @@ def test_every_declared_sign_position_is_printed_by_its_own_design() -> None:
             for layout in revision.export_layouts:
                 for record in layout.records:
                     for field in record.fields:
-                        if field.sign_position is None:
+                        # A displacing minus reserves no byte, so the design prints no SIGNO for it;
+                        # its grounding is the note declaration.
+                        if field.sign_position in (None, ExportSignPosition.MINUS_DISPLACES_DIGIT):
                             continue
                         declared += 1
                         if field.offset not in positions:

@@ -4,7 +4,7 @@ CSV bulk classification parses
 :class:`~application.ledger.models.BulkClassifyRow` records, converts populated
 fields into :class:`~application.ledger.models.ManualLedgerTransactionPatch`,
 and applies them through
-:func:`~application.ledger.actions_manual.update_manual_transaction_fields`. Rule
+:func:`~application.ledger.manual_update.update_manual_transaction_fields`. Rule
 application evaluates :class:`~domain.transactions.classification_rule.LedgerClassificationRule`
 instances over active transactions and returns
 :class:`~application.ledger.models.ApplyRulesResult`.
@@ -19,7 +19,7 @@ from __future__ import annotations
 import csv
 import io
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from pydantic import ValidationError
 
@@ -31,11 +31,12 @@ if TYPE_CHECKING:
     from .models import LedgerRemovalBlocker
     from .rule_repository import LedgerClassificationRuleRepositoryProtocol
 
-from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
+from ...core.pattern_search import PatternSearchOverrunError, PatternSearchUnreadableError, first_matching_patterns
 from ...domain.buckets.event import BucketEvent
-from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
+from ...domain.transactions.classification_effects import takes_changes
+from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .action_ports import LedgerActionPorts
@@ -50,17 +51,9 @@ from .actions_common import (
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
 )
-from .actions_manual import (
-    command_from_patch as _command_from_patch,
-)
-from .actions_manual import (
-    prepare_manual_transaction_update as _prepare_manual_transaction_update,
-)
-from .actions_manual import (
-    update_manual_transaction_fields,
-)
 from .classify_patch import build_bulk_row_classification_patch
 from .id_resolution import resolve_transaction_id
+from .manual_update import command_from_patch, prepare_manual_transaction_update, update_manual_transaction_fields
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
     BulkClassifyFailure,
@@ -69,10 +62,22 @@ from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
 )
+from .validation_messages import ledger_refusal_sentence
 
 _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
 _BULK_CLASSIFY_PATCH_COLUMNS = BULK_CLASSIFY_ALLOWED_COLUMNS - _BULK_CLASSIFY_NON_PATCH_COLUMNS
 type _ParsedBulkClassifyRow = tuple[int, BulkClassifyRow, frozenset[str]]
+
+
+def _row_refusal(error: Exception) -> str:
+    """Say why one row was not taken, in the operator's language.
+
+    A row refused by a registered rule carries that rule's own translated
+    sentence, whether it was raised directly or re-raised across Pydantic's
+    validator protocol. Pydantic's own text, its documentation URL and the
+    cell values it echoes never reach the result a person reads.
+    """
+    return ledger_refusal_sentence(error, fallback=type(error).__name__)
 
 
 def _raw_csv_text(value: object) -> str:
@@ -164,7 +169,7 @@ def _parse_bulk_classify_data_row(
             BulkClassifyFailure(
                 row_index=idx,
                 transaction_id=transaction_id,
-                reason=str(exc),
+                reason=_row_refusal(exc),
             ),
         )
     if not is_classified(parsed.classification):
@@ -195,7 +200,7 @@ def _provided_bulk_classify_patch_columns(normalised_row: Mapping[str, str | Non
     )
 
 
-def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
+def parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
     """Parse the CSV header and collect localized row failures in input order."""
     # Parse the CSV header to detect unknown columns before touching storage.
     reader = csv.DictReader(io.StringIO(csv_text))
@@ -252,7 +257,7 @@ def _apply_one_bulk_classify_row(
     try:
         resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
         current = require_transaction(working, resolved_transaction_id)
-        if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        if not takes_changes(current.lifecycle_state):
             raise TransactionValidationError(
                 "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
                 context={
@@ -265,14 +270,14 @@ def _apply_one_bulk_classify_row(
         )
         source_ids = transaction_modelo_source_ids(current)
         blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
-        command = _command_from_patch(
+        command = command_from_patch(
             bucket_id=bucket_id,
             current=current,
             patch=patch,
             actor=actor,
             source_command=source_command,
         )
-        prepared = _prepare_manual_transaction_update(
+        prepared = prepare_manual_transaction_update(
             current=current,
             command=command,
             previous_transaction_id=resolved_transaction_id,
@@ -289,11 +294,10 @@ def _apply_one_bulk_classify_row(
         updated = replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
         return _BulkRowOutcome(updated, tuple(events), applied=True, skipped=False, failure=None)
     except (CadrumoError, ValidationError, ValueError) as exc:
-        reason = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
         failure = BulkClassifyFailure(
             row_index=idx,
             transaction_id=row.transaction_id,
-            reason=reason or type(exc).__name__,
+            reason=_row_refusal(exc),
         )
         return _BulkRowOutcome(working, (), applied=False, skipped=False, failure=failure)
 
@@ -379,7 +383,7 @@ def bulk_classify_from_csv(
     classification row preserves existing tax facts instead of clearing them
     accidentally. Populated tax facts ride the same
     :class:`~application.ledger.models.ManualLedgerTransactionPatch` and the
-    :func:`~application.ledger.actions_manual.update_manual_transaction_fields` write
+    :func:`~application.ledger.manual_update.update_manual_transaction_fields` write
     path the single-classify surface uses, so a bulk row persists the same typed
     ``taxable_base``/``iva_rate``/``iva_amount``/``iva_category``/
     ``irpf_category`` values as ``--id``-mode classify with identical
@@ -391,7 +395,7 @@ def bulk_classify_from_csv(
 
     Returns a :class:`~application.ledger.models.BulkClassifyResult`.
     """
-    parsed_rows, parse_failures = _parse_bulk_classify_rows(csv_text)
+    parsed_rows, parse_failures = parse_bulk_classify_rows(csv_text)
     if not parsed_rows and not parse_failures:
         return BulkClassifyResult(total=0, applied=0, skipped=0)
 
@@ -433,14 +437,16 @@ def add_classification_rule(
 
     Raises :exc:`ValueError` when ``description_pattern`` is not a valid
     regex, as validated by
-    :class:`~domain.transactions.classification_rule.LedgerClassificationRule`.
+    :class:`~domain.transactions.classification_rule.LedgerClassificationRule`,
+    and when no classification write could carry out the rule's decision.
     """
-    from ...domain.transactions.classification_rule import LedgerClassificationRule
+    from ...domain.transactions.classification_rule import LedgerClassificationRule, require_new_rule_decision
     from .rule_repository import ledger_classification_rule_repository
 
     repo = (
         rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
     )
+    require_new_rule_decision(classification, category_id)
     rule = LedgerClassificationRule.create(
         description_pattern=description_pattern,
         classification=classification,
@@ -476,9 +482,9 @@ class ClassificationRulePlan(NamedTuple):
     matches: tuple[ClassificationRulePlanRow, ...]
 
 
-def _classification_rule_in_scope(transaction: Transaction, *, reaffirm: bool) -> bool:
+def classification_rule_in_scope(transaction: Transaction, *, reaffirm: bool) -> bool:
     """Return whether one transaction belongs to the rule-engine scan."""
-    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(transaction.lifecycle_state):
         return False
     if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
         return True
@@ -494,24 +500,48 @@ def _classification_rule_scope(
     in_scope = tuple(
         transaction
         for transaction in catalogue.transactions.values()
-        if _classification_rule_in_scope(transaction, reaffirm=reaffirm)
+        if classification_rule_in_scope(transaction, reaffirm=reaffirm)
     )
     skipped_already_classified = sum(
         1
         for transaction in catalogue.transactions.values()
-        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and not _classification_rule_in_scope(transaction, reaffirm=reaffirm)
+        if takes_changes(transaction.lifecycle_state)
+        and not classification_rule_in_scope(transaction, reaffirm=reaffirm)
         and transaction.business_classification is not BusinessClassification.NOT_YET_PROCESSED
     )
     return in_scope, skipped_already_classified
 
 
-def _winning_classification_rule(
-    transaction: Transaction,
+class ClassificationRuleSearchRefusedError(CadrumoError):
+    """A stored rule could not be searched with, so the scan has no answer and nothing was written."""
+
+    reason: Literal["pattern_overrun", "invalid_pattern"]
+
+    def __init__(self, rule_id: str, *, reason: Literal["pattern_overrun", "invalid_pattern"]) -> None:
+        """Name the rule and why it has no answer."""
+        super().__init__(f"classification rule {rule_id} could not be searched with")
+        self.rule_id = rule_id
+        self.reason = reason
+
+
+def _winning_rule_positions(
+    transactions: tuple[Transaction, ...],
     rules: tuple[LedgerClassificationRule, ...],
-) -> LedgerClassificationRule | None:
-    """Return the first stored rule matching a transaction description."""
-    return next((rule for rule in rules if rule.matches(transaction.raw.description)), None)
+) -> tuple[int | None, ...]:
+    """Find each description's first matching rule in one bounded batch."""
+    try:
+        return first_matching_patterns(
+            [rule.description_pattern for rule in rules],
+            [transaction.raw.description for transaction in transactions],
+        )
+    except PatternSearchOverrunError as error:
+        raise ClassificationRuleSearchRefusedError(
+            rules[error.pattern_index].rule_id, reason="pattern_overrun"
+        ) from None
+    except PatternSearchUnreadableError as error:
+        raise ClassificationRuleSearchRefusedError(
+            rules[error.pattern_index].rule_id, reason="invalid_pattern"
+        ) from None
 
 
 def _planned_rule_matches(
@@ -521,11 +551,11 @@ def _planned_rule_matches(
     """Build ordered winning-rule rows and count transactions with no match."""
     matches: list[ClassificationRulePlanRow] = []
     no_match = 0
-    for transaction in transactions:
-        winner = _winning_classification_rule(transaction, rules)
-        if winner is None:
+    for transaction, position in zip(transactions, _winning_rule_positions(transactions, rules), strict=True):
+        if position is None:
             no_match += 1
             continue
+        winner = rules[position]
         matches.append(
             ClassificationRulePlanRow(
                 transaction_id=transaction.transaction_id,
@@ -617,7 +647,9 @@ def apply_classification_rule_match(
 
 
 __all__ = [
+    "ClassificationRuleSearchRefusedError",
     "add_classification_rule",
     "apply_classification_rule_match",
     "bulk_classify_from_csv",
+    "classification_rule_in_scope",
 ]

@@ -378,47 +378,7 @@ def _config_help() -> HelpDocument:
                     ),
                 ),
             ),
-            HelpSection(
-                title=tr("cli.operator_surface.help.config.section_authentication"),
-                entries=(
-                    HelpEntry(
-                        command="cadrumo-runtime config auth providers",
-                        description=tr("cli.operator_surface.help.config.auth_providers"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth configure",
-                        description=tr("cli.operator_surface.help.config.auth_configure"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth status",
-                        description=tr("cli.operator_surface.help.config.auth_status"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth test",
-                        description=tr("cli.operator_surface.help.config.auth_test"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth logout",
-                        description=tr("cli.operator_surface.help.config.auth_logout"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth reset",
-                        description=tr("cli.operator_surface.help.config.auth_reset"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth certificate check",
-                        description=tr("cli.operator_surface.help.config.certificate_check"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth certificate secret set",
-                        description=tr("cli.operator_surface.help.config.certificate_secret_set"),
-                    ),
-                    HelpEntry(
-                        command="cadrumo-runtime config auth certificate secret remove",
-                        description=tr("cli.operator_surface.help.config.certificate_secret_remove"),
-                    ),
-                ),
-            ),
+            _config_authentication_section(),
             HelpSection(
                 title=tr("cli.operator_surface.help.config.section_diagnostics"),
                 entries=(
@@ -481,71 +441,7 @@ def _app_help() -> HelpDocument:
                     ),
                 ),
             ),
-            HelpSection(
-                title=tr("cli.operator_surface.help.app.section_ledger"),
-                entries=(
-                    HelpEntry(
-                        command="aeat app ledger import",
-                        description=tr("cli.operator_surface.help.app.ledger_import"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger add",
-                        description=tr("cli.operator_surface.help.app.ledger_add"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger list",
-                        description=tr("cli.operator_surface.help.app.ledger_list"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger view",
-                        description=tr("cli.operator_surface.help.app.ledger_view"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger status",
-                        description=tr("cli.operator_surface.help.app.ledger_status"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger review",
-                        description=tr("cli.operator_surface.help.app.ledger_review"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger update",
-                        description=tr("cli.operator_surface.help.app.ledger_update"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger classify",
-                        description=tr("cli.operator_surface.help.app.ledger_classify"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger allocate",
-                        description=tr("cli.operator_surface.help.app.ledger_allocate"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger attach",
-                        description=tr("cli.operator_surface.help.app.ledger_attach"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger archive",
-                        description=tr("cli.operator_surface.help.app.ledger_archive"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger stash",
-                        description=tr("cli.operator_surface.help.app.ledger_stash"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger remove",
-                        description=tr("cli.operator_surface.help.app.ledger_remove"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger reset",
-                        description=tr("cli.operator_surface.help.app.ledger_reset"),
-                    ),
-                    HelpEntry(
-                        command="aeat app ledger export",
-                        description=tr("cli.operator_surface.help.app.ledger_export"),
-                    ),
-                ),
-            ),
+            _app_ledger_section(),
             HelpSection(
                 title=tr("cli.operator_surface.help.app.section_modelo"),
                 entries=(
@@ -637,3 +533,75 @@ __all__ = [
     "build_root_landing_report",
     "render_help_text",
 ]
+
+
+def _config_authentication_section() -> HelpSection:
+    return HelpSection(
+        title=tr("cli.operator_surface.help.config.section_authentication"),
+        entries=(
+            HelpEntry(
+                command="cadrumo-runtime config auth providers",
+                description=tr("cli.operator_surface.help.config.auth_providers"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth configure",
+                description=tr("cli.operator_surface.help.config.auth_configure"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth status",
+                description=tr("cli.operator_surface.help.config.auth_status"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth test", description=tr("cli.operator_surface.help.config.auth_test")
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth logout",
+                description=tr("cli.operator_surface.help.config.auth_logout"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth reset",
+                description=tr("cli.operator_surface.help.config.auth_reset"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth certificate check",
+                description=tr("cli.operator_surface.help.config.certificate_check"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth certificate secret set",
+                description=tr("cli.operator_surface.help.config.certificate_secret_set"),
+            ),
+            HelpEntry(
+                command="cadrumo-runtime config auth certificate secret remove",
+                description=tr("cli.operator_surface.help.config.certificate_secret_remove"),
+            ),
+        ),
+    )
+
+
+def _app_ledger_section() -> HelpSection:
+    return HelpSection(
+        title=tr("cli.operator_surface.help.app.section_ledger"),
+        entries=(
+            HelpEntry(command="aeat app ledger import", description=tr("cli.operator_surface.help.app.ledger_import")),
+            HelpEntry(command="aeat app ledger add", description=tr("cli.operator_surface.help.app.ledger_add")),
+            HelpEntry(command="aeat app ledger list", description=tr("cli.operator_surface.help.app.ledger_list")),
+            HelpEntry(command="aeat app ledger view", description=tr("cli.operator_surface.help.app.ledger_view")),
+            HelpEntry(command="aeat app ledger status", description=tr("cli.operator_surface.help.app.ledger_status")),
+            HelpEntry(command="aeat app ledger review", description=tr("cli.operator_surface.help.app.ledger_review")),
+            HelpEntry(command="aeat app ledger update", description=tr("cli.operator_surface.help.app.ledger_update")),
+            HelpEntry(
+                command="aeat app ledger classify", description=tr("cli.operator_surface.help.app.ledger_classify")
+            ),
+            HelpEntry(
+                command="aeat app ledger allocate", description=tr("cli.operator_surface.help.app.ledger_allocate")
+            ),
+            HelpEntry(command="aeat app ledger attach", description=tr("cli.operator_surface.help.app.ledger_attach")),
+            HelpEntry(
+                command="aeat app ledger archive", description=tr("cli.operator_surface.help.app.ledger_archive")
+            ),
+            HelpEntry(command="aeat app ledger stash", description=tr("cli.operator_surface.help.app.ledger_stash")),
+            HelpEntry(command="aeat app ledger remove", description=tr("cli.operator_surface.help.app.ledger_remove")),
+            HelpEntry(command="aeat app ledger reset", description=tr("cli.operator_surface.help.app.ledger_reset")),
+            HelpEntry(command="aeat app ledger export", description=tr("cli.operator_surface.help.app.ledger_export")),
+        ),
+    )

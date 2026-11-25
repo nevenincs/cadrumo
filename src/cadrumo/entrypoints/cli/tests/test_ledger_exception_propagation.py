@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionle
 from ....core.bucket_pointer import pointer_path
 from ....tests.cli_envelope import require_error_document
 from .cli_runner import invoke_cached_cli
-from .sessionless_root_fixtures import _sessionless_root
+from .sessionless_root_fixtures import sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -40,7 +40,7 @@ def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
     return {str(name): value for name, value in member.items()}
 
 
-__all__ = ["_sessionless_root"]
+__all__ = ["sessionless_root"]
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
 # ---------------------------------------------------------------------------
 
 
-def test_no_pointer_projects_the_canonical_profile_action(_sessionless_root: Path) -> None:
+def test_no_pointer_projects_the_canonical_profile_action(sessionless_root: Path) -> None:
     """With no pointer file the expected NoActiveProfileError surfaces as the
     profile-create guidance — the narrow except still catches it correctly."""
     result = invoke_cached_cli(["--format", "json", "app", "ledger", "ratios", "list"])

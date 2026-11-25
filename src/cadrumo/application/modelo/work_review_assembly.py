@@ -1,0 +1,732 @@
+"""Private backend for assembling the canonical Modelo work review.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
+from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+from ...core.authority_grade import RegistryAuthorityGrade
+from ...core.casilla_id import CasillaId
+from ...core.estado_casilla_oficial import EstadoCasillaOficial
+from ...core.identity.bucket import BucketId
+from ...core.modelo import Modelo
+from ...core.modelo_work_progress_state import ModeloWorkProgressState
+from ...core.operator_action_enums import OperatorActionAxis
+from ...core.period import Period
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
+from ...domain.calculations.registry.bindings import CasillaObservation, CasillaObservationValueKind
+from ...domain.calculations.registry.export import (
+    clasificar_casillas_oficiales,
+    derive_export_layouts_from_bindings,
+)
+from ...domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
+from ...domain.calculations.registry.handoffs import (
+    RelationConsumptionChannel,
+    relation_consumption_channels,
+    relation_consumption_index,
+)
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    FormulaId,
+    RevisionId,
+)
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
+from ...domain.calculations.registry.runtime_graph import (
+    enum_consumed_binding_ids,
+    expression_binding_refs,
+    expression_casilla_refs,
+    revision_date_binding_ids,
+)
+from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_scalars import registry_scalar_value_type
+from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.calculations.registry.source_byte_availability import layout_embedded_source_ids
+from ...domain.filing.schema import ModeloScalar, ModeloValueKind
+from ...domain.modelos.calculation_binding_values import persisted_boolean_binding_value
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+)
+from ...domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
+from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+)
+from ...domain.modelos.verification_report import (
+    OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
+    ModeloVerificationFinding,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+)
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
+from .action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError, WorkUnitNotFoundError
+from .calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+    SOURCE_DISAGREEMENT_FINDING_ID_LENGTH,
+    SourceDisagreementResolutions,
+    blocking_calculation_issues,
+    note_subject_facts,
+)
+from .calculation_notes import PROFILE_REASONS, RECORDS_REASONS
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .row_source_identity_replay import revision_row_source_fingerprints_for_review
+from .work_review import (
+    BlockerRef,
+    ModeloWorkBindingOrigin,
+    ModeloWorkFormulaOrigin,
+    ModeloWorkOriginAnomaly,
+    ModeloWorkProgress,
+    ModeloWorkProgressDenominator,
+    ModeloWorkRelationConsumption,
+    ModeloWorkReview,
+    ModeloWorkReviewCasilla,
+)
+from .work_selection import ModeloWorkSelectorRequest, ModeloWorkSelectorState, select_modelo_work_resolution
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+@dataclass(frozen=True, slots=True)
+class _ReviewRowContext:
+    """Precomputed registry and persistence facts shared by every review row."""
+
+    bindings_by_id: Mapping[BindingId, BindingDefinition]
+    formulas_by_id: Mapping[FormulaId, FormulaDefinition]
+    binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]]
+    fold_binding_ids: frozenset[BindingId]
+    relation_channels: Mapping[BindingId, tuple[RelationConsumptionChannel, ...]]
+    persisted_decimal_bindings: Mapping[BindingId, Decimal]
+    persisted_binding_ids: frozenset[BindingId]
+    estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial]
+    official_references: Mapping[CasillaId, str | None]
+    blocking_findings: tuple[ModeloVerificationFinding, ...]
+    #: Each casilla's first persisted observation, so every row reads its own without scanning them all.
+    observations: Mapping[CasillaId, CasillaObservation]
+
+
+def _work_unit_for_target(
+    *,
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    registry_revision_id: RevisionId,
+    catalogue: WorkUnitCatalogue,
+) -> WorkUnit:
+    resolution = select_modelo_work_resolution(
+        ModeloWorkSelectorRequest(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision_id=registry_revision_id,
+        ),
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+    )
+    if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={
+                "bucket_id": bucket_id,
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+            },
+        )
+    return resolution.work_unit
+
+
+def _current_revision(
+    work_unit: WorkUnit,
+    repository: CalculationRevisionCatalogueRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+) -> CalculationRevision | None:
+    revision_id = work_unit.current_calculation_revision_id
+    if revision_id is None:
+        return None
+    catalogue = calculation_catalogue if calculation_catalogue is not None else repository.load(operation=operation)
+    revision = catalogue.get(revision_id)
+    if revision is None:
+        raise CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": revision_id, "work_unit_id": work_unit.work_unit_id},
+        )
+    if revision.work_unit_id != work_unit.work_unit_id:
+        raise CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={
+                "calculation_revision_id": revision.calculation_revision_id,
+                "work_unit_id": work_unit.work_unit_id,
+                "stored_work_unit_id": revision.work_unit_id,
+            },
+        )
+    require_calculation_revision_coordinates_current(revision, operation=operation)
+    return revision
+
+
+def _latest_verification(
+    revision: CalculationRevision | None,
+    repository: VerificationReportCatalogueRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> VerificationReport | None:
+    if revision is None:
+        return None
+    reports = require_verification_report_coordinates_current(
+        repository.load(operation=operation),
+        operation=operation,
+    ).for_calculation_revision(revision.calculation_revision_id)
+    return reports[-1] if reports else None
+
+
+def _persisted_decimal_bindings(
+    *, snapshot: RegistrySnapshot, revision: CalculationRevision | None
+) -> Mapping[BindingId, Decimal]:
+    """Read only historical decimal replay facts, never live profile state."""
+    if revision is None:
+        empty_bindings: dict[BindingId, Decimal] = {}
+        return empty_bindings
+    enum_ids = enum_consumed_binding_ids(snapshot.revision)
+    date_ids = revision_date_binding_ids(snapshot.revision)
+    channels = {binding.id: binding.value.channel for binding in snapshot.revision.bindings}
+    decimal_bindings: dict[BindingId, Decimal] = {}
+    for binding_id, raw_value in revision.binding_overrides.items():
+        # A text binding read by no formula, such as a row's country code, is no quantity either.
+        if binding_id in enum_ids or binding_id in date_ids or channels.get(binding_id) is BindingValueChannel.TEXT:
+            continue
+        # A boolean-channel binding is persisted as a truth token, which is a
+        # fact about the taxpayer rather than a quantity to replay. A 1/0 on the
+        # same binding still reads as a decimal, as the runtime accepts it.
+        if (
+            channels.get(binding_id) is BindingValueChannel.BOOLEAN
+            and persisted_boolean_binding_value(raw_value) is not None
+        ):
+            continue
+        try:
+            parsed_value: Decimal = Decimal(raw_value)
+            decimal_bindings[binding_id] = parsed_value
+        except InvalidOperation as exc:
+            raise StoredCalculationDriftError(
+                translated_message="errors.storage.stored_data_validation_boundary",
+                context={
+                    "calculation_revision_id": revision.calculation_revision_id,
+                    "binding_id": binding_id,
+                    "work_unit_id": revision.work_unit_id,
+                },
+            ) from exc
+    return decimal_bindings
+
+
+def _official_references(
+    snapshot: RegistrySnapshot,
+    estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial],
+    *,
+    source_payloads: Mapping[str, bytes],
+) -> Mapping[CasillaId, str | None]:
+    layouts = derive_export_layouts_from_bindings(snapshot.revision)
+    xml_paths: dict[CasillaId, str] = {}
+    for layout in layouts:
+        if layout.dictionary_source_ref is None:
+            continue
+        for entry in xml_dictionary_entries(
+            layout,
+            sources=snapshot.sources,
+            source_payloads=source_payloads,
+            casillas=snapshot.revision.casillas,
+        ):
+            if entry.casilla_id is not None:
+                xml_paths.setdefault(entry.casilla_id, entry.path)
+    return {
+        casilla.id: xml_paths.get(casilla.id, casilla.number)
+        if estados_casillas_oficiales[casilla.id] is EstadoCasillaOficial.ADDRESSED
+        else None
+        for casilla in snapshot.revision.casillas
+    }
+
+
+def _blocker_ref(finding: ModeloVerificationFinding) -> BlockerRef:
+    return BlockerRef(
+        axis=OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND[finding.kind],
+        native_code=finding.kind.value,
+        facts=finding.message_facts,
+    )
+
+
+def _calculation_note_axis(reason: str) -> OperatorActionAxis:
+    """The operator action that clears a blocking calculation note of ``reason``."""
+    if reason in DISAGREEMENT_REASONS:
+        return OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+    if reason in PROFILE_REASONS:
+        return OperatorActionAxis.SET_PROFILE_FACT
+    if reason in RECORDS_REASONS:
+        return OperatorActionAxis.IMPORT_LEDGER_DATA
+    return OperatorActionAxis.SUPPLY_MANUAL_INPUT
+
+
+def _calculation_note_blocker_ref(issue: CalculationSourceIssue) -> BlockerRef:
+    """Project one note that withholds checking onto the blocker the review lists.
+
+    The note names its own record and the amount it leaves out, so the review
+    tells the filer what to correct, as the refusal of the check does.
+    """
+    facts: dict[str, str] = dict(note_subject_facts(issue))
+    if issue.casilla_id is not None:
+        facts["casilla_id"] = str(issue.casilla_id)
+    if issue.disagreement is not None:
+        facts["finding_id"] = issue.disagreement.finding_key[:SOURCE_DISAGREEMENT_FINDING_ID_LENGTH]
+    return BlockerRef(axis=_calculation_note_axis(issue.reason), native_code=issue.reason, facts=facts)
+
+
+def _calculation_note_blockers(
+    revision: CalculationRevision | None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+) -> tuple[BlockerRef, ...]:
+    """The blockers for every persisted note that refuses checking, exporting and recording ``revision``.
+
+    A check that a note refuses persists no verification report, so a review
+    read from the report alone would show nothing while the check refuses. The
+    notes come from :func:`~.calculation_note_gate.blocking_calculation_issues`,
+    the same selection the refusal makes, so the two always agree. Without
+    ``resolutions`` no accepted source disagreement is honoured, as the gate
+    does without them.
+    """
+    if revision is None:
+        return ()
+    return tuple(_calculation_note_blocker_ref(issue) for issue in blocking_calculation_issues(revision, resolutions))
+
+
+def _casilla_observations(revision: CalculationRevision | None) -> dict[CasillaId, CasillaObservation]:
+    """Each casilla's first observation in ``revision``, the one a scan in persisted order meets first."""
+    observations: dict[CasillaId, CasillaObservation] = {}
+    for item in () if revision is None else revision.observations:
+        observations.setdefault(item.casilla_id, item)
+    return observations
+
+
+def _persisted_binding_values(
+    binding_ids: tuple[BindingId, ...],
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> tuple[Decimal, ...]:
+    return tuple(resolved_bindings[item] for item in binding_ids if item in resolved_bindings)
+
+
+def _classify_observed_value(
+    *,
+    observation: CasillaObservation,
+    input_kind: InputKind,
+    formula_id: FormulaId | None,
+    binding_ids: tuple[BindingId, ...],
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> tuple[ModeloValueKind, ModeloScalar, ModeloWorkOriginAnomaly | None]:
+    if formula_id is not None:
+        return ModeloValueKind.COMPUTED, observation.value, None
+    if input_kind is not InputKind.BOUND:
+        return ModeloValueKind.LITERAL, observation.value, None
+    if observation.absent_by_design:
+        return ModeloValueKind.INHERITED, observation.value, None
+    binding_values = _persisted_binding_values(binding_ids, resolved_bindings)
+    if binding_values and observation.value not in binding_values:
+        return ModeloValueKind.LITERAL, observation.value, ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE
+    return ModeloValueKind.INHERITED, observation.value, None
+
+
+def _holds_date_placeholder(observation: CasillaObservation, data_type: str) -> bool:
+    """Whether a date box holds only the numeric zero calculation seeds for a date nobody supplied.
+
+    No date is zero, so the zero is the absence the filing replay already
+    omits rather than files, and it reads as empty here too.
+    """
+    return (
+        registry_scalar_value_type(data_type) == "date"
+        and observation.value_kind == CasillaObservationValueKind.DECIMAL
+        and observation.value == 0
+    )
+
+
+def _realised_value(
+    *,
+    input_kind: InputKind,
+    formula_id: FormulaId | None,
+    binding_ids: tuple[BindingId, ...],
+    observation: CasillaObservation | None,
+    resolved_bindings: Mapping[BindingId, Decimal],
+    data_type: str,
+) -> tuple[ModeloValueKind, ModeloScalar, ModeloWorkOriginAnomaly | None]:
+    """Classify the realised value from persisted observations and replay facts.
+
+    ``OPERATOR_OVERRIDE`` is emitted only for an observable disagreement between
+    a persisted bound value and the persisted casilla observation. Caller
+    casilla inputs have final precedence during calculation, so that mismatch is
+    durable evidence of an override. An equal-value explicit input is not
+    distinguishable after persistence and therefore does not claim an anomaly.
+    """
+    if observation is None:
+        anomaly = ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN if input_kind is InputKind.COMPUTED else None
+        return ModeloValueKind.EMPTY, None, anomaly
+    if formula_id is None and _holds_date_placeholder(observation, data_type):
+        return ModeloValueKind.EMPTY, None, None
+    return _classify_observed_value(
+        observation=observation,
+        input_kind=input_kind,
+        formula_id=formula_id,
+        binding_ids=binding_ids,
+        resolved_bindings=resolved_bindings,
+    )
+
+
+def _casilla_binding_ids(
+    casilla_id: CasillaId,
+    binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]],
+) -> tuple[BindingId, ...]:
+    return tuple(binding_id for binding_id, casilla_ids in binding_to_casillas.items() if casilla_id in casilla_ids)
+
+
+def _formula_origin(formula: FormulaDefinition | None) -> ModeloWorkFormulaOrigin | None:
+    if formula is None:
+        return None
+    return ModeloWorkFormulaOrigin(
+        formula_id=formula.id,
+        operand_refs=tuple(
+            dict.fromkeys(
+                (
+                    *expression_casilla_refs(formula.expression),
+                    *expression_binding_refs(formula.expression),
+                ),
+            ),
+        ),
+    )
+
+
+def _relation_consumptions(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    formula: FormulaDefinition | None,
+    context: _ReviewRowContext,
+) -> tuple[ModeloWorkRelationConsumption, ...]:
+    formula_binding_ids: set[BindingId] = set() if formula is None else set(expression_binding_refs(formula.expression))
+    candidate_ids = {
+        binding_id for binding_id in (*binding_ids, *formula_binding_ids) if binding_id in context.fold_binding_ids
+    }
+    return tuple(
+        ModeloWorkRelationConsumption(
+            relation_id=binding_id,
+            channels=context.relation_channels[binding_id],
+        )
+        for binding_id in sorted(context.fold_binding_ids)
+        if binding_id in candidate_ids
+    )
+
+
+def _binding_origins(
+    binding_ids: tuple[BindingId, ...],
+    context: _ReviewRowContext,
+) -> tuple[ModeloWorkBindingOrigin, ...]:
+    return tuple(
+        ModeloWorkBindingOrigin(
+            binding_id=binding_id,
+            source=context.bindings_by_id[binding_id].source,
+            resolved=binding_id in context.persisted_binding_ids,
+        )
+        for binding_id in binding_ids
+    )
+
+
+def _observation_is_absent_by_design(observation: CasillaObservation | None) -> bool:
+    """Return whether the persisted observation marks the casilla absent by design."""
+    return observation is not None and observation.absent_by_design
+
+
+def _review_casilla(
+    casilla: CasillaDefinition,
+    context: _ReviewRowContext,
+) -> ModeloWorkReviewCasilla:
+    binding_ids = _casilla_binding_ids(casilla.id, context.binding_to_casillas)
+    formula = context.formulas_by_id.get(casilla.formula) if casilla.formula is not None else None
+    observation = context.observations.get(casilla.id)
+    realised_kind, value, anomaly = _realised_value(
+        input_kind=casilla.input_kind,
+        formula_id=casilla.formula,
+        binding_ids=binding_ids,
+        observation=observation,
+        resolved_bindings=context.persisted_decimal_bindings,
+        data_type=casilla.data_type,
+    )
+    return ModeloWorkReviewCasilla(
+        casilla_id=casilla.id,
+        number=casilla.number,
+        segmento=casilla.segmento,
+        official_reference=context.official_references[casilla.id],
+        section_path=casilla.section,
+        label=casilla.label,
+        semantic_role=casilla.semantic_role,
+        data_type=casilla.data_type,
+        constraints=casilla.constraints,
+        declared_input_kind=casilla.input_kind,
+        concrete_bindings=_binding_origins(binding_ids, context),
+        concrete_formula=_formula_origin(formula),
+        relation_consumption=_relation_consumptions(
+            binding_ids=binding_ids,
+            formula=formula,
+            context=context,
+        ),
+        realised_kind=realised_kind,
+        value=value,
+        absent_by_design=_observation_is_absent_by_design(observation),
+        origin_anomaly=anomaly,
+        estado_casilla_oficial=context.estados_casillas_oficiales[casilla.id],
+        legal_refs=tuple(casilla.legal_refs),
+        source_refs=tuple(casilla.source_refs),
+        formula_id=casilla.formula,
+        blocked_by=tuple(
+            _blocker_ref(finding) for finding in context.blocking_findings if finding.casilla_id == casilla.id
+        ),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _OfficialCasillaReading:
+    """How the filed return carries each casilla of one registry revision, read from published content alone."""
+
+    estados: Mapping[CasillaId, EstadoCasillaOficial]
+    references: Mapping[CasillaId, str | None]
+
+
+@dataclass(frozen=True, slots=True)
+class _OfficialReadingKey:
+    """The pinned snapshot coordinate a shared official reading is derived from, besides the generation."""
+
+    modelo_id: str
+    filing_year: int
+    period: str
+    grade: RegistryAuthorityGrade
+
+
+def _official_casilla_reading(
+    snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
+) -> _OfficialCasillaReading:
+    # Only embedded dictionary and XSD bytes are fetched; the rows still cite
+    # every casilla source reference, including record designs without bytes.
+    layouts = derive_export_layouts_from_bindings(snapshot.revision)
+    source_ids = layout_embedded_source_ids(layouts, sources=snapshot.sources)
+    source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
+    estados = clasificar_casillas_oficiales(
+        snapshot.revision,
+        sources=snapshot.sources,
+        source_payloads=source_payloads,
+    )
+    references = _official_references(snapshot, estados, source_payloads=source_payloads)
+    return _OfficialCasillaReading(
+        estados=MappingProxyType(dict(estados)), references=MappingProxyType(dict(references))
+    )
+
+
+def _shared_official_casilla_reading(
+    key: _OfficialReadingKey, *, operation: PinnedAuthorityOperation
+) -> _OfficialCasillaReading:
+    """The official reading of the snapshot ``operation`` selects for ``key``, derived once per generation.
+
+    It reads only the pinned generation's registry and source evidence, never
+    a calculation revision, so every later read of the coordinate shares it.
+    """
+
+    def build() -> _OfficialCasillaReading:
+        snapshot = operation.snapshot(key.modelo_id, filing_year=key.filing_year, period=key.period, grade=key.grade)
+        return _official_casilla_reading(snapshot, operation=operation)
+
+    return operation.retained_projection(key, kind=_OfficialCasillaReading, build=build)
+
+
+def _review_row_context(
+    *,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+    official: _OfficialCasillaReading,
+) -> _ReviewRowContext:
+    consumption_index = relation_consumption_index(snapshot.revision)
+    return _ReviewRowContext(
+        bindings_by_id={binding.id: binding for binding in snapshot.revision.bindings},
+        formulas_by_id={formula.id: formula for formula in snapshot.revision.formulas},
+        binding_to_casillas=casillas_by_binding(snapshot.revision),
+        fold_binding_ids=frozenset(
+            binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)
+        ),
+        relation_channels={
+            binding.id: relation_consumption_channels(binding.id, consumption_index)
+            for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)
+        },
+        persisted_decimal_bindings=_persisted_decimal_bindings(snapshot=snapshot, revision=revision),
+        persisted_binding_ids=frozenset(() if revision is None else revision.binding_overrides),
+        estados_casillas_oficiales=official.estados,
+        official_references=official.references,
+        blocking_findings=blocking_findings,
+        observations=_casilla_observations(revision),
+    )
+
+
+def _review_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+    official: _OfficialCasillaReading,
+) -> tuple[ModeloWorkReviewCasilla, ...]:
+    context = _review_row_context(
+        snapshot=snapshot,
+        revision=revision,
+        blocking_findings=blocking_findings,
+        official=official,
+    )
+    return tuple(_review_casilla(casilla, context) for casilla in snapshot.revision.casillas)
+
+
+def assemble_modelo_work_review_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+    operation: PinnedAuthorityOperation,
+) -> tuple[ModeloWorkReviewCasilla, ...]:
+    """Project every casilla the :class:`RegistrySnapshot` declares onto its review row.
+
+    Each row is realised from the :class:`CalculationRevision` when one is given.
+    """
+    return _review_casillas(
+        snapshot=snapshot,
+        revision=revision,
+        blocking_findings=blocking_findings,
+        official=_official_casilla_reading(snapshot, operation=operation),
+    )
+
+
+def _work_progress(
+    *,
+    snapshot: RegistrySnapshot,
+    rows: tuple[ModeloWorkReviewCasilla, ...],
+    verification: VerificationReport | None,
+) -> ModeloWorkProgress:
+    manifest = snapshot.revision.completeness_manifest
+    if manifest is None:
+        return ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED)
+
+    target_ids = frozenset(item.casilla_id for item in manifest.casillas)
+    materialised_count = sum(
+        row.casilla_id in target_ids and row.realised_kind is not ModeloValueKind.EMPTY for row in rows
+    )
+    if verification is not None and verification.completeness_status is VerificationCompletenessStatus.BLOCKED:
+        state = ModeloWorkProgressState.BLOCKED
+    elif (
+        verification is not None
+        and verification.completeness_status is VerificationCompletenessStatus.COMPLETE
+        and materialised_count == len(target_ids)
+    ):
+        state = ModeloWorkProgressState.COMPLETE
+    else:
+        state = ModeloWorkProgressState.IN_PROGRESS
+    return ModeloWorkProgress(
+        state=state,
+        materialised_count=materialised_count,
+        target_count=len(target_ids),
+        denominator=ModeloWorkProgressDenominator(
+            registry_revision_id=snapshot.revision.id,
+            source_ref=manifest.source_ref,
+        ),
+    )
+
+
+def assemble_modelo_work_review(
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
+) -> ModeloWorkReview:
+    """Assemble the casilla-level review of a work unit from its snapshot, calculation revision and verification.
+
+    Its blockers are the verification report's blocking findings and every
+    persisted calculation note that refuses the check, judged with
+    ``resolutions`` as the check judges them.
+    """
+    reading_key = _OfficialReadingKey(
+        modelo_id=Modelo(modelo).value,
+        filing_year=filing_year,
+        period=period.registry_token,
+        grade=operation.reachable_authority_grade(modelo, filing_year=filing_year, period=period.registry_token),
+    )
+    snapshot = operation.snapshot(
+        reading_key.modelo_id, filing_year=filing_year, period=reading_key.period, grade=reading_key.grade
+    )
+    work_units = work_unit_repository.load()
+    calculation_repo = calculation_repository
+    verification_repo = verification_repository
+    work_unit = _work_unit_for_target(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        registry_revision_id=snapshot.revision.id,
+        catalogue=work_units,
+    )
+    revision = _current_revision(
+        work_unit,
+        calculation_repo,
+        operation=operation,
+        calculation_catalogue=calculation_catalogue,
+    )
+    verification = _latest_verification(revision, verification_repo, operation=operation)
+    findings = () if verification is None else verification.findings
+    blocking_findings = tuple(
+        finding for finding in findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    )
+    blockers = (
+        *(_blocker_ref(finding) for finding in blocking_findings),
+        *_calculation_note_blockers(revision, resolutions),
+    )
+    rows = _review_casillas(
+        snapshot=snapshot,
+        revision=revision,
+        blocking_findings=blocking_findings,
+        official=_shared_official_casilla_reading(reading_key, operation=operation),
+    )
+    return ModeloWorkReview(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        registry_revision_id=snapshot.revision.id,
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=None if revision is None else revision.calculation_revision_id,
+        lifecycle_state=None if revision is None else revision.state,
+        verification_outcome=None if verification is None else verification.completeness_status,
+        verification_sources_digest=None if verification is None else verification.source_transactions_digest,
+        progress=_work_progress(snapshot=snapshot, rows=rows, verification=verification),
+        casillas=rows,
+        findings=findings,
+        blockers=blockers,
+        row_source_fingerprints=revision_row_source_fingerprints_for_review(revision),
+    )

@@ -39,9 +39,9 @@ from .snapshot_factory import create_user_profile_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROFILE_ID = "a4f1c2e0-1111-4222-8333-444455556666"
-_UTC_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
-_NAIVE_INSTANT = datetime(2026, 1, 1, 10, 0, 0)
-_OFFSET_INSTANT = datetime(2026, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))
+_UTC_INSTANT = datetime(1980, 1, 1, 10, 0, 0, tzinfo=UTC)
+_NAIVE_INSTANT = datetime(1980, 1, 1, 10, 0, 0)
+_OFFSET_INSTANT = datetime(1980, 1, 1, 10, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 _SCHEMA = published_profile_schema()
 _PIN = AuthorityGenerationPin(
     content_hash_hex({"generation": "profile-lifecycle-fixture"}),
@@ -93,7 +93,7 @@ def test_record_refuses_a_non_utc_instant_from_serialized_text() -> None:
     """Hydration is the path that mattered: a stored naive value must not reload."""
     record = _record()
     payload = record.model_dump(mode="json")
-    payload["updated_at"] = "2026-01-01T10:00:00"
+    payload["updated_at"] = _NAIVE_INSTANT.isoformat()
 
     with pytest.raises(ValidationError):
         decode_user_profile_record(payload, context=_DECODE)

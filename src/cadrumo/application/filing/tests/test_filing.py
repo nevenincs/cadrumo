@@ -37,7 +37,8 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 
 
 _M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing.casilla")
-_M130_CASILLA_02: CasillaId = validated_casilla_id("02", surface="test_filing.casilla")
+_M130_GASTOS_PREVIOS: CasillaId = validated_casilla_id("gastos-deducibles-previos", surface="test_filing.casilla")
+_M130_MODALIDAD = "modelo-130-estimacion-directa-modalidad"
 _M130_CASILLA_05: CasillaId = validated_casilla_id("05", surface="test_filing.casilla")
 _M130_CASILLA_06: CasillaId = validated_casilla_id("06", surface="test_filing.casilla")
 _M130_CASILLA_08: CasillaId = validated_casilla_id("08", surface="test_filing.casilla")
@@ -79,7 +80,6 @@ _M115_CASILLA_02: CasillaId = validated_casilla_id("02", surface="test_filing.ca
 _M115_CASILLA_03: CasillaId = validated_casilla_id("03", surface="test_filing.casilla")
 _M115_CASILLA_04: CasillaId = validated_casilla_id("04", surface="test_filing.casilla")
 _M115_CASILLA_05: CasillaId = validated_casilla_id("05", surface="test_filing.casilla")
-_M115_CASILLA_03_TRACE: tuple[CasillaId, ...] = (_M115_CASILLA_02,)
 _M115_CASILLA_05_TRACE: tuple[CasillaId, ...] = (_M115_CASILLA_03, _M115_CASILLA_04)
 
 _M123_CASILLA_01: CasillaId = validated_casilla_id("01", surface="test_filing.casilla")
@@ -109,6 +109,32 @@ _M131_CASILLA_09: CasillaId = validated_casilla_id("09", surface="test_filing.ca
 _M131_CASILLA_12: CasillaId = validated_casilla_id("12", surface="test_filing.casilla")
 _M131_CASILLA_14: CasillaId = validated_casilla_id("14", surface="test_filing.casilla")
 _M131_CASILLA_15: CasillaId = validated_casilla_id("15", surface="test_filing.casilla")
+
+
+_M111_INPUTS = {
+    _M111_CASILLA_03: Decimal("180.25"),
+    _M111_CASILLA_06: Decimal("12.10"),
+    _M111_CASILLA_09: Decimal("300.00"),
+    _M111_CASILLA_12: Decimal("14.40"),
+    _M111_CASILLA_15: Decimal("25.00"),
+    _M111_CASILLA_18: Decimal("0.50"),
+    _M111_CASILLA_21: Decimal("7.00"),
+    _M111_CASILLA_24: Decimal("8.00"),
+    _M111_CASILLA_27: Decimal("9.00"),
+    _M111_CASILLA_29: Decimal("40.00"),
+}
+
+_M123_INPUTS = {
+    _M123_CASILLA_01: Decimal("2"),
+    _M123_CASILLA_02: Decimal("3"),
+    _M123_CASILLA_04: Decimal("1000.25"),
+    _M123_CASILLA_05: Decimal("200.75"),
+    _M123_CASILLA_07: Decimal("190.05"),
+    _M123_CASILLA_08: Decimal("38.14"),
+    _M123_CASILLA_10: Decimal("0"),
+    _M123_CASILLA_11: Decimal("7.50"),
+    _M123_CASILLA_13: Decimal("12.25"),
+}
 
 
 def _profile() -> ModeloOperatorProfile:
@@ -153,7 +179,8 @@ def _draft(
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("12500.00"),
-            _M130_CASILLA_02: Decimal("3500.00"),
+            _M130_GASTOS_PREVIOS: Decimal("3500.00"),
+            _M130_MODALIDAD: "directa_normal",
             _M130_CASILLA_05: Decimal("250"),
             _M130_CASILLA_06: retenciones,
             _M130_CASILLA_08: Decimal("2000"),
@@ -175,7 +202,8 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("10000"),
-            _M130_CASILLA_02: Decimal("4000"),
+            _M130_GASTOS_PREVIOS: Decimal("4000"),
+            _M130_MODALIDAD: "directa_normal",
             _M130_CASILLA_05: Decimal("250"),
             _M130_CASILLA_06: Decimal("100"),
             _M130_CASILLA_08: Decimal("2000"),
@@ -234,18 +262,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
         modelo="111",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M111_CASILLA_03: Decimal("180.25"),
-            _M111_CASILLA_06: Decimal("12.10"),
-            _M111_CASILLA_09: Decimal("300.00"),
-            _M111_CASILLA_12: Decimal("14.40"),
-            _M111_CASILLA_15: Decimal("25.00"),
-            _M111_CASILLA_18: Decimal("0.50"),
-            _M111_CASILLA_21: Decimal("7.00"),
-            _M111_CASILLA_24: Decimal("8.00"),
-            _M111_CASILLA_27: Decimal("9.00"),
-            _M111_CASILLA_29: Decimal("40.00"),
-        },
+        inputs=_M111_INPUTS,
         schema_provider=_unscoped_schema_provider(),
     )
 
@@ -293,6 +310,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
         inputs={
             _M115_CASILLA_01: Decimal("1"),
             _M115_CASILLA_02: Decimal("1250.50"),
+            _M115_CASILLA_03: Decimal("237.60"),
             _M115_CASILLA_04: Decimal("10.00"),
         },
         schema_provider=_unscoped_schema_provider(),
@@ -302,8 +320,8 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:115:2019-y-siguientes"
     assert {_M115_CASILLA_03, _M115_CASILLA_05} <= set(values)
-    assert values[_M115_CASILLA_03].kind is ModeloValueKind.COMPUTED
-    assert values[_M115_CASILLA_03].formula_trace_casilla_ids == _M115_CASILLA_03_TRACE
+    assert values[_M115_CASILLA_03].value == Decimal("237.60")
+    assert values[_M115_CASILLA_05].kind is ModeloValueKind.COMPUTED
     assert values[_M115_CASILLA_05].formula_trace_casilla_ids == _M115_CASILLA_05_TRACE
 
 
@@ -313,17 +331,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123(operation: PinnedAuth
         modelo="123",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M123_CASILLA_01: Decimal("2"),
-            _M123_CASILLA_02: Decimal("3"),
-            _M123_CASILLA_04: Decimal("1000.25"),
-            _M123_CASILLA_05: Decimal("200.75"),
-            _M123_CASILLA_07: Decimal("190.05"),
-            _M123_CASILLA_08: Decimal("38.14"),
-            _M123_CASILLA_10: Decimal("0"),
-            _M123_CASILLA_11: Decimal("7.50"),
-            _M123_CASILLA_13: Decimal("12.25"),
-        },
+        inputs=_M123_INPUTS,
         schema_provider=build_runtime_schema_provider(
             modelos=("123",), filing_year=_PERIOD.filing_year, period=_PERIOD, operation=operation
         ),
@@ -405,7 +413,6 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
             "modelo-131.page1.actividad-1-epigrafe": "722",
             "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
             "modelo-131.page1.actividad-1-porcentaje": Decimal("2"),
-            "modelo-131.page1.declaracion-complementaria": "no",
             "modelo-131.page1.justificante-anterior": "1234567890123",
         },
         schema_provider=_period_schema_provider(),
@@ -417,7 +424,6 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
     assert binding_values["modelo-131.page1.actividad-1-epigrafe"] == "722"
     assert binding_values["modelo-131.page1.actividad-1-rendimiento-neto"] == Decimal("1200.50")
     assert binding_values["modelo-131.page1.actividad-1-porcentaje"] == Decimal("2")
-    assert binding_values["modelo-131.page1.declaracion-complementaria"] is False
     assert binding_values["modelo-131.page1.justificante-anterior"] == "1234567890123"
 
 
@@ -501,7 +507,8 @@ def test_approve_draft_uses_registry_schema_fingerprint(operation: PinnedAuthori
         profile=_profile(),
         inputs={
             _M130_CASILLA_01: Decimal("100"),
-            _M130_CASILLA_02: Decimal("25"),
+            _M130_GASTOS_PREVIOS: Decimal("25"),
+            _M130_MODALIDAD: "directa_normal",
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
@@ -571,18 +578,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint(operation: Pi
         modelo="111",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M111_CASILLA_03: Decimal("180.25"),
-            _M111_CASILLA_06: Decimal("12.10"),
-            _M111_CASILLA_09: Decimal("300.00"),
-            _M111_CASILLA_12: Decimal("14.40"),
-            _M111_CASILLA_15: Decimal("25.00"),
-            _M111_CASILLA_18: Decimal("0.50"),
-            _M111_CASILLA_21: Decimal("7.00"),
-            _M111_CASILLA_24: Decimal("8.00"),
-            _M111_CASILLA_27: Decimal("9.00"),
-            _M111_CASILLA_29: Decimal("40.00"),
-        },
+        inputs=_M111_INPUTS,
         schema_provider=schema_provider,
     )
 
@@ -612,6 +608,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint(operation: Pi
         inputs={
             _M115_CASILLA_01: Decimal("1"),
             _M115_CASILLA_02: Decimal("1250.50"),
+            _M115_CASILLA_03: Decimal("237.60"),
             _M115_CASILLA_04: Decimal("10.00"),
         },
         schema_provider=schema_provider,
@@ -643,17 +640,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint(operation: Pi
         modelo="123",
         period=_PERIOD,
         profile=_profile(),
-        inputs={
-            _M123_CASILLA_01: Decimal("2"),
-            _M123_CASILLA_02: Decimal("3"),
-            _M123_CASILLA_04: Decimal("1000.25"),
-            _M123_CASILLA_05: Decimal("200.75"),
-            _M123_CASILLA_07: Decimal("190.05"),
-            _M123_CASILLA_08: Decimal("38.14"),
-            _M123_CASILLA_10: Decimal("0"),
-            _M123_CASILLA_11: Decimal("7.50"),
-            _M123_CASILLA_13: Decimal("12.25"),
-        },
+        inputs=_M123_INPUTS,
         schema_provider=schema_provider,
     )
 

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#tui-startup'
 date: '2026-10-15'
-modified: '2026-10-15'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:02bb257c509675b98c6e4b2516fb435a961b3606be47ae952954c429ecae5dbe'
+body_hash: 'sha256:82b0a88f343db7b5502193867a82abf70dec861ef82f9daf2c2901d96b000e73'
 related:
   - "[[2026-10-15-tui-startup-plan]]"
 ---
@@ -48,6 +48,12 @@ related:
 - `S03` `verify:` `operation_contract_manifest.generate --check` -> `pass`
 - `S03` `verify:` `scoped Ruff lint and format` -> `pass`
 - `S03` `verify:` `scoped ty check` -> `pass`
+- `S01` `verify:` `locator-check: runtime_initial_root.py:1, installed_session.py:264, tui/app.py:210` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S02` `verify:` `locator-check: native/desktop/src-tauri/src/shell/sign_in/mod.rs:364-373` -> `pass`
+- `S02` `by:` `plan-closure`
+- `S03` `verify:` `locator-check: src/cadrumo/application/user_profile/view_operation.py:35` -> `pass`
+- `S03` `by:` `plan-closure`
 
 ## Notes
 

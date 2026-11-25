@@ -11,25 +11,29 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
-from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.parsing.codes import IsoCurrencyCodeText
 from ...domain.calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 from ...domain.invoices.business_premises import (
     BusinessPremisesLease,
-    SituacionInmueble,
     business_premises_lease_from_inputs,
 )
 from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ...domain.iva.schema import InvoiceKind, IvaRateKind
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.public_scalar import PublicDecimal
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 
 INVOICE_ADD_OPERATION_DEFINITION_ID = "ledger.invoice.add"
 INVOICE_ADD_VALIDATION_REFUSAL_CODE = "REFUSED_INVOICE_ADD_VALIDATION"
+INVOICE_LINE_DESCRIPTION_MAX_LENGTH = 4096
 
 
 class InvoiceAddValidationRefusedError(CadrumoError):
@@ -46,7 +50,7 @@ class InvoiceAddLine(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    description: str = Field(min_length=1, max_length=4096)
+    description: str = Field(min_length=1, max_length=INVOICE_LINE_DESCRIPTION_MAX_LENGTH)
     quantity: PublicDecimal
     unit_price: PublicDecimal
     subtotal: PublicDecimal
@@ -113,14 +117,23 @@ class InvoiceAddBusinessPremisesLease(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    situacion_inmueble: SituacionInmueble | None = None
-    referencia_catastral: str | None = Field(default=None, max_length=25)
+    situacion_inmueble: str | None = Field(default=None, min_length=1)
+    referencia_catastral: str | None = Field(default=None, max_length=32)
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_valid_domain_facts(self) -> InvoiceAddBusinessPremisesLease:
-        self._construct_domain()
-        return self
+    @classmethod
+    def from_inputs(
+        cls,
+        *,
+        lease_selected: bool,
+        situacion_inmueble: str | None,
+        referencia_catastral: str | None,
+    ) -> InvoiceAddBusinessPremisesLease | None:
+        """Carry the operator's typed premises facts to the worker, which reads the situation."""
+        if lease_selected:
+            return cls(situacion_inmueble=situacion_inmueble, referencia_catastral=referencia_catastral)
+        if situacion_inmueble is not None or referencia_catastral is not None:
+            raise InvoiceValidationError("premises facts require the business-premises lease choice")
+        return None
 
     @classmethod
     def from_domain(
@@ -131,7 +144,7 @@ class InvoiceAddBusinessPremisesLease(BaseModel):
         if lease is None:
             return None
         return cls(
-            situacion_inmueble=lease.situacion_inmueble,
+            situacion_inmueble=None if lease.situacion_inmueble is None else lease.situacion_inmueble.value,
             referencia_catastral=lease.referencia_catastral,
         )
 
@@ -165,14 +178,14 @@ class InvoiceAddRequest(BaseModel):
 
     profile_id: UUID
     kind: InvoiceKind
-    counterparty_name: str = Field(min_length=1)
+    counterparty_name: str = Field(min_length=1, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     counterparty_tax_id: str | None = None
     counterparty_country: CountryCodeAlpha2
     invoice_number: str = Field(min_length=1)
     issued_at: date
     taxable_base: PublicDecimal | None = None
     iva_rate: PublicDecimal | None = None
-    currency: str = Field(min_length=1, max_length=16)
+    currency: IsoCurrencyCodeText
     notes: str = ""
     iva_category: str | None = Field(default=None, min_length=1, max_length=128)
     operation_type: IntracomOperationType | None = None
@@ -182,9 +195,37 @@ class InvoiceAddRequest(BaseModel):
     invoice_class: str | None = Field(default=None, min_length=1, max_length=64)
     series: str | None = None
     rectifies_invoice_number: str | None = None
+    #: The facts a factura rectificativa states, as the stable tokens fact 0141
+    #: declares and the invoice's own boundary projects. The request carries
+    #: text rather than a projected token because the worker owns the dated
+    #: authority this profile is pinned to, and it carries each fact
+    #: independently because a rectificativa may reach the catalogue stating
+    #: only some of them.
+    rectification_method: str | None = Field(default=None, min_length=1, max_length=128)
+    rectification_cause: str | None = Field(default=None, min_length=1, max_length=128)
+    rectification_direction: str | None = Field(default=None, min_length=1, max_length=128)
+    #: When the recipient received the rectificativa (LIVA art. 114.Dos); a
+    #: received-side fact the invoice refuses on an issued one.
+    document_received_on: date | None = None
+    #: The elections and the attestation LIVA art. 89.Cinco, art. 114.Dos and
+    #: art. 80.Tres leave the taxpayer. Each is recorded, never made: the
+    #: declaration refuses naming the one it needs rather than choosing a
+    #: route. The elections travel as stable tokens and each elected period as
+    #: the canonical ``"YYYY <code>"`` display form of
+    #: :class:`~cadrumo.core.period.Period`, which the boundary parses; a
+    #: combined calendar string is refused there.
+    issuer_increase_election: str | None = Field(default=None, min_length=1, max_length=128)
+    issuer_minoracion_election: str | None = Field(default=None, min_length=1, max_length=128)
+    issuer_minoracion_regularisation_period: str | None = Field(default=None, min_length=1, max_length=32)
+    recipient_increase_period: str | None = Field(default=None, min_length=1, max_length=32)
+    art_80_tres_obligations_attested: bool | None = None
+    exercised_deduction_period: str | None = Field(default=None, min_length=1, max_length=32)
     recargo_amount: PublicDecimal | None = None
     business_premises_lease: InvoiceAddBusinessPremisesLease | None = None
     lines: tuple[InvoiceAddLine, ...] = ()
+    #: The euro value of one unit of ``currency`` the operator states was in
+    #: force at the invoice date; it wins over the published rate.
+    declared_fx_rate: PublicDecimal | None = None
 
     @model_validator(mode="after")
     def _line_input_shape(self) -> InvoiceAddRequest:
@@ -208,6 +249,10 @@ class InvoiceAddResult(BaseModel):
     euro_value_pending: bool = False
     simplificada_tax_id_advisory_required: bool = False
     validation_code: Literal["invalid_invoice", "duplicate_invoice"] | None = None
+    #: The finished sentence a frontend shows for a refusal, worded by the
+    #: operation error detail's rules, and the language it is in.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     def _complete_outcome(self) -> InvoiceAddResult:
@@ -224,13 +269,16 @@ class InvoiceAddResult(BaseModel):
         *,
         code: Literal["invalid_invoice", "duplicate_invoice"],
         invoice_id: str | None = None,
+        words: tuple[str, OutputLanguage] | None = None,
     ) -> InvoiceAddResult:
-        """Build a safe detail for a deterministic refusal before invoice creation."""
+        """Build a safe detail for a deterministic refusal before invoice creation, with its served sentence."""
         return cls(
             outcome="validation_error",
             profile_id=profile_id,
             invoice_id=invoice_id,
             validation_code=code,
+            refusal_words=None if words is None else words[0],
+            refusal_words_language=None if words is None else words[1],
         )
 
     @classmethod
@@ -288,6 +336,8 @@ def _require_created_invoice_result(result: InvoiceAddResult) -> None:
         or len(result.bucket_event_ids) != 1
         or result.invoice_id is not None
         or result.validation_code is not None
+        or result.refusal_words is not None
+        or result.refusal_words_language is not None
     ):
         raise ValueError("created invoice result is incomplete or belongs to another profile")
 
@@ -300,6 +350,7 @@ def _require_invoice_validation_refusal(result: InvoiceAddResult) -> None:
         or result.simplificada_tax_id_advisory_required
         or result.validation_code is None
         or (result.validation_code == "duplicate_invoice") != (result.invoice_id is not None)
+        or (result.refusal_words is None) != (result.refusal_words_language is None)
     ):
         raise ValueError("invoice validation refusal detail is incomplete")
 
@@ -336,6 +387,7 @@ def _require_invoice_add_refusal_receipt(receipt: OperationTerminalReceipt, resu
 __all__ = [
     "INVOICE_ADD_OPERATION_DEFINITION_ID",
     "INVOICE_ADD_VALIDATION_REFUSAL_CODE",
+    "INVOICE_LINE_DESCRIPTION_MAX_LENGTH",
     "InvoiceAddBusinessPremisesLease",
     "InvoiceAddExecutionResult",
     "InvoiceAddLine",

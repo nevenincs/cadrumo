@@ -17,34 +17,6 @@ def fingerprint(directory: Path) -> dict[str, str]:
     return {item.relative_path: item.sha256 for item in fingerprint_source_tree(directory).files}
 
 
-def toml_comments(text: str) -> list[str]:
-    """Retain full-line and trailing comments without treating hashes in strings as comments."""
-    comments: list[str] = []
-    quote = ""
-    index = 0
-    while index < len(text):
-        if quote:
-            if quote.startswith('"') and text[index] == "\\":
-                index += 2
-                continue
-            if text.startswith(quote, index):
-                index += len(quote)
-                quote = ""
-                continue
-        elif text[index] in {"'", '"'}:
-            quote = text[index] * (3 if text.startswith(text[index] * 3, index) else 1)
-            index += len(quote)
-            continue
-        elif text[index] == "#":
-            end = text.find("\n", index)
-            if end < 0:
-                end = len(text)
-            comments.append(text[index:end].rstrip("\r"))
-            index = end
-        index += 1
-    return comments
-
-
 def _pending_install_file(target: Path) -> Path:
     with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".registry-install-", delete=False) as stream:
         return Path(stream.name)
@@ -213,4 +185,4 @@ def install_proven_tree(directory: Path, staged: Path, originals: Path, before: 
         ) from exc
 
 
-__all__ = ["fingerprint", "install_proven_tree", "replace_file_if_unchanged", "toml_comments"]
+__all__ = ["fingerprint", "install_proven_tree", "replace_file_if_unchanged"]

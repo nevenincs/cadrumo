@@ -17,10 +17,10 @@ from ..models import FindingReviewItem
 from ..operator import (
     ACCEPTED_KINDS,
     ReviewQueueRow,
-    _resolve_internal_kinds,
-    _row_matches,
-    _to_row,
     project_review_item,
+    resolve_internal_kinds,
+    row_matches,
+    to_row,
 )
 from .draft_review_test_support import draft_review_ports
 
@@ -33,7 +33,7 @@ def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
     sensitive_kind = "client-tax-id-12345678Z-private-note"
 
     with pytest.raises(UnknownReviewKindError) as exc_info:
-        _resolve_internal_kinds([sensitive_kind])
+        resolve_internal_kinds([sensitive_kind])
 
     assert exc_info.value.translated_message == "review.operator.errors.unknown_kind"
     assert get_registered_error_code(exc_info.value).code == "REFUSED_REVIEW_UNKNOWN_KIND"
@@ -118,20 +118,20 @@ def test_finding_row_carries_the_advertised_token_on_both_filter_axes() -> None:
     advertised token select the row as ``--kind`` and silently drop it as
     ``--source-kind`` -- no refusal, no diagnostic, one fewer finding.
     """
-    row = _to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
+    row = to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
 
     assert row.kind == "modelo_finding"
     assert row.source_kind == "modelo_finding"
-    assert _row_matches(row, frozenset({"modelo_finding"}), frozenset()) is True
-    assert _row_matches(row, frozenset(), frozenset({"modelo_finding"})) is True
-    assert _row_matches(row, frozenset({"modelo_finding"}), frozenset({"modelo_finding"})) is True
+    assert row_matches(row, frozenset({"modelo_finding"}), frozenset()) is True
+    assert row_matches(row, frozenset(), frozenset({"modelo_finding"})) is True
+    assert row_matches(row, frozenset({"modelo_finding"}), frozenset({"modelo_finding"})) is True
 
 
 def test_finding_row_still_refuses_a_foreign_source_filter() -> None:
     """The parity fix must not make the row match every source filter."""
-    row = _to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
+    row = to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
 
-    assert _row_matches(row, frozenset(), frozenset({"ledger_transaction"})) is False
+    assert row_matches(row, frozenset(), frozenset({"ledger_transaction"})) is False
 
 
 def test_every_advertised_kind_is_selectable_on_both_axes() -> None:
@@ -140,7 +140,7 @@ def test_every_advertised_kind_is_selectable_on_both_axes() -> None:
     Locks the class of defect rather than the one branch: a future row type
     that advertises a kind but leaves ``source_kind`` unset fails here.
     """
-    row = _to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
+    row = to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
     assert row.kind in ACCEPTED_KINDS
     assert row.source_kind is not None
     assert row.source_kind == row.kind

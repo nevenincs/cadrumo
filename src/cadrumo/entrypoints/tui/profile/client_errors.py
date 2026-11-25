@@ -2,9 +2,22 @@
 
 from __future__ import annotations
 
-from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion
+from cadrumo_client.transport.profile_mutations import ProfileMutationCompletion, ProfileMutationRunError
 
+from ....application.user_profile.capsule_record import ProfileRecordConflictError
+from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CadrumoError
+from ....core.operations import OperationEffect, OperationTerminalCondition
+
+
+def is_profile_edit_conflict(error: BaseException | None) -> bool:
+    """Recognize a local or settled remote refusal before any profile write."""
+    return isinstance(error, ProfileRecordConflictError) or (
+        isinstance(error, ProfileMutationRunError)
+        and error.reason == get_registered_error_code(ProfileRecordConflictError).code
+        and error.terminal_condition is OperationTerminalCondition.FAILED
+        and error.effect is OperationEffect.NONE
+    )
 
 
 class ProfileManagerCompletedViewUnavailableError(CadrumoError):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -27,9 +28,10 @@ from ....application.live.remote_state_models import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from .. import app_live_commands as handler
+from .. import app_live_iva_commands as handler
 from .. import operation_iva_remote_state_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletPullEvidenceResult
+from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -85,36 +87,13 @@ def _projection() -> IvaRemoteStateCapturePublicResultV1:
     )
 
 
-def _bind(
-    monkeypatch: pytest.MonkeyPatch,
-    projection: IvaRemoteStateCapturePublicResultV1,
-    *,
-    effect: OperationEffect = OperationEffect.UPDATED,
-    condition: OperationTerminalCondition = OperationTerminalCondition.SUCCEEDED,
-    refusal_code: str | None = None,
-) -> tuple[list[tuple[IvaRemoteStateCaptureRequest, dict[str, object]]], list[UUID]]:
-    monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: str(_PROFILE))
-    bound_profiles: list[UUID] = []
-
-    def require_client(_ctx: object, *, expected_profile_id: UUID):
-        bound_profiles.append(expected_profile_id)
-        return object()
-
-    monkeypatch.setattr(bridge, "require_profile_client", require_client)
-    submitted: list[tuple[IvaRemoteStateCaptureRequest, dict[str, object]]] = []
-
-    def submit(_client: object, request: IvaRemoteStateCaptureRequest, **kwargs: object):
-        submitted.append((request, kwargs))
-        return RegisteredOperationCompletion(
-            operation_id=_OPERATION_ID,
-            projection=projection,
-            effect=effect,
-            terminal_condition=condition,
-            refusal_code=refusal_code,
-        )
-
-    monkeypatch.setattr(bridge, "run_registered_operation", submit)
-    return submitted, bound_profiles
+_bind = partial(
+    bind_profile_submission,
+    bridge=bridge,
+    operation_id=_OPERATION_ID,
+    profile_id=_PROFILE,
+    effect=OperationEffect.UPDATED,
+)
 
 
 def _read() -> bridge.IvaRemoteStateCaptureRead:
@@ -125,7 +104,7 @@ def _read() -> bridge.IvaRemoteStateCaptureRead:
         year_to=2024,
         target_year=2025,
         target_period=Period.from_year_and_code(2025, "1T"),
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
 
 
@@ -155,7 +134,7 @@ def test_registered_combined_capture_uses_exact_profile_scope_and_restores_conte
         year_to=2024,
         target_year=2025,
         target_period="1T",
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
     assert options["definition_id"] == IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
@@ -233,7 +212,7 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
         projection=projection,
         effect=OperationEffect.UPDATED,
     )
-    report = bridge._report(
+    report = bridge.operation_iva_remote_state_capture_report(
         projection,
         request=IvaRemoteStateCaptureRequest(
             profile_id=_PROFILE,
@@ -242,7 +221,7 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
             year_to=2024,
             target_year=2025,
             target_period="1T",
-            taxpayer_nif="X1234567L",
+            taxpayer_nif="X0001500M",
         ),
     )
     read = bridge.IvaRemoteStateCaptureRead(completion=completion, projection=projection, report=report)
@@ -257,7 +236,7 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
         year_to=2024,
         target_year=2025,
         target_period="1T",
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
         output_root=_OUTPUT_ROOT,
     )
 

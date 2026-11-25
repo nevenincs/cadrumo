@@ -21,13 +21,14 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -46,6 +47,8 @@ from ..party_colocation import (
     resolve_party_attribution_by_colocation,
 )
 
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SUPPLIER_HEADING: Final = "Reformas Delta SL"
@@ -59,7 +62,7 @@ _PAGE: Final = "\n".join(
         _SUPPLIER_HEADING,
         "Calle Sin Nombre 0",
         "28901 Getafe",
-        "NIF B12345674",
+        "NIF B00015016",
         "Emitida 2026-06-11",
         _CUSTOMER_HEADING,
         "Nordeste Estudio Creativo, S.L.",
@@ -105,7 +108,7 @@ def _envelope(field: str, anchor: str, *, role_evidence: str | None = None) -> F
 def _draft(*, supplier_postal: str, customer_postal: str) -> InvoiceDraft:
     """Return the draft a reader proposes, role evidence quoted for identities only."""
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name=_SUPPLIER_HEADING,
         supplier_postal_code=supplier_postal,
         customer_tax_id="B44444444",
@@ -113,7 +116,7 @@ def _draft(*, supplier_postal: str, customer_postal: str) -> InvoiceDraft:
         customer_postal_code=customer_postal,
         taxable_base=Decimal("766.30"),
         provenance=(
-            _envelope("supplier_tax_id", "B12345674", role_evidence=_SUPPLIER_HEADING),
+            _envelope("supplier_tax_id", "B00015016", role_evidence=_SUPPLIER_HEADING),
             _envelope("customer_tax_id", "B44444444", role_evidence=_CUSTOMER_HEADING),
             _envelope("supplier_postal_code", supplier_postal),
             _envelope("customer_postal_code", customer_postal),
@@ -173,7 +176,7 @@ def test_the_interim_stamp_is_absent_on_a_co_located_value() -> None:
     side: the resolver attributes the value while the envelope still says nothing
     verified it, and every reader downstream sees the weaker claim.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_straight(),
             transcription=_transcription(),
@@ -188,7 +191,7 @@ def test_the_interim_stamp_is_absent_on_a_co_located_value() -> None:
 
 def test_a_transposed_value_keeps_the_stamp_rather_than_reading_as_attributed() -> None:
     """A contradiction must never clear the stamp -- it is the opposite of a clean bill."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_transposed(),
             transcription=_transcription(),
@@ -255,7 +258,7 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
     Detecting a swap and discarding it is the same shape as evidence no resolver
     consumes: the check runs, nothing acts, and the draft confirms clean.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..confirmation_gate import confirmation_blockers
 
         grounded = ground_draft_against_transcription(
@@ -277,7 +280,7 @@ def test_a_transposition_reaches_the_operator_as_a_blocking_refusal() -> None:
 
 def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
     """The ordinary case must not be refused, or the blocker trains operators to ignore it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..confirmation_gate import confirmation_blockers
 
         grounded = ground_draft_against_transcription(
@@ -293,7 +296,7 @@ def test_a_correctly_filed_document_raises_no_attribution_blocker() -> None:
 
 def test_an_unresolvable_document_advises_rather_than_refuses() -> None:
     """A layout that cannot be separated stays on the advisory, never the blocker."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = _straight()
         unanchorable = draft.model_copy(
             update={
@@ -326,7 +329,7 @@ _TWO_COLUMN_PAGE: Final = "\n".join(
         f"{_SUPPLIER_HEADING}  {_CUSTOMER_HEADING}",
         "Calle Sin Nombre 0  Poligono Industrial Asipo, Nave 27",
         "28901 Getafe  35001 Las Palmas",
-        "NIF B12345674  NIF/CIF B44444444",
+        "NIF B00015016  NIF/CIF B44444444",
         "Base imponible 766,30",
         "TOTAL 890,00 EUR",
     ),
@@ -446,7 +449,7 @@ def test_a_two_column_document_clears_the_stamp_and_drops_the_advisory(
     to dismiss, and it would hide the document that genuinely cannot be
     separated.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_straight(),
             transcription=_transcription(_TWO_COLUMN_PAGE),
@@ -463,6 +466,7 @@ def test_a_two_column_document_clears_the_stamp_and_drops_the_advisory(
                 grounded,
                 legends=_registry_legends(operation),
                 operation=operation,
+                effective_date=_ON_DATE,
             )
             is None
         )
@@ -482,7 +486,7 @@ def test_an_unsplittable_column_keeps_the_stamp_and_the_operator_keeps_the_advis
     and refusing the draft over it would train operators to dismiss the refusal
     that matters.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
             draft=_straight(),
             transcription=_transcription(_FLATTENED_TWO_COLUMN_PAGE),
@@ -499,6 +503,7 @@ def test_an_unsplittable_column_keeps_the_stamp_and_the_operator_keeps_the_advis
                 grounded,
                 legends=_registry_legends(operation),
                 operation=operation,
+                effective_date=_ON_DATE,
             )
             is not None
         )

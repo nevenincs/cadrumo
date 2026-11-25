@@ -10,11 +10,11 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 
 from ...contracts import deadline_budget
-from ...contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from .. import credentials
 from ..frontend_client import FrontendClient
 
@@ -52,7 +52,7 @@ async def test_protected_reference_uses_profile_admission_budget_and_preserves_e
 
     monkeypatch.setattr(credentials, "effective_storage_root", lambda: tmp_path)
     monkeypatch.setattr(credentials, "open_installed_client", open_client)
-    monkeypatch.setattr(credentials, "_authenticate_reference", authenticate)
+    monkeypatch.setattr(credentials, "authenticate_reference", authenticate)
     monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: 100.0))
     if explicit_timeout is None:
         admitted = await credentials.open_installed_credential_client(
@@ -67,9 +67,9 @@ async def test_protected_reference_uses_profile_admission_budget_and_preserves_e
             frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             timeout=explicit_timeout,
         )
-    expected = PROFILE_ADMISSION_TIMEOUT_SECONDS if explicit_timeout is None else explicit_timeout
+    expected = DEFAULT_TIMEOUT_POLICY.timeout_seconds if explicit_timeout is None else explicit_timeout
     assert admitted is client
     assert opened == [expected] and authenticated == [100.0 + expected]
     assert inspect.signature(FrontendClient.login_api_key).parameters["timeout"].default == (
-        PROFILE_ADMISSION_TIMEOUT_SECONDS
+        DEFAULT_TIMEOUT_POLICY.timeout_seconds
     )

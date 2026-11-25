@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -10,18 +12,29 @@ import {
 } from "@/components/ui/dialog";
 import { failureCode } from "../../errors";
 import { useStrings, type Translate } from "../../shell/strings";
+import type { ProviderSignIn } from "../../shell/providerSettings";
 import type {
-  ProviderSignIn,
   ProviderSignInEvent,
   ProviderSignInMethod,
   ProviderSignInSnapshot,
-} from "../../shell/providerSettings";
+} from "../../shell/providerSettingsContract";
+import {
+  cliStateCause,
+  logRef,
+  nextStep,
+  signInCause,
+  type CliStateCause,
+  type NextStep,
+  type SignInCause,
+} from "../../shell/providerSignInWords";
+import { SignInAdvice } from "./SignInAdvice";
 import type { ProviderStatus } from "./types";
 
 const EVENTS: readonly ProviderSignInEvent[] = [
   "starting",
   "started",
   "browser_action",
+  "authorization_code_required",
   "succeeded",
   "cancelled",
   "failed",
@@ -30,12 +43,24 @@ const ACTIVE = new Set<ProviderSignInEvent>([
   "starting",
   "started",
   "browser_action",
+  "authorization_code_required",
 ]);
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const REVISION = /^[0-9a-f]{64}$/;
 const LIFETIME_MS = 300_000;
 const OBSERVE_MS = 1_000;
+/** Status reads in a row that may fail for a passing reason before the
+ * attempt is given up and the failure is said, rather than waited out until
+ * the attempt's lifetime ends. */
+const STATUS_MISSES = 5;
+/** How far apart, and for how long in all, a start refused while the agent
+ * is being stopped for a terminal sign-in is tried again on its own: the
+ * service retires the agent and refuses until it is gone, so the window asks
+ * again with the freshly read revision, and after the bound it offers the
+ * person's own retry. */
+const AGENT_STOP_RETRY_MS = 3_000;
+const AGENT_STOP_WAIT_MS = 60_000;
 const TRANSIENT_STATUS_FAILURES = new Set([
   "read_failed",
   "timed_out",
@@ -98,15 +123,63 @@ function isProviderSignInFailureCode(
   return typeof code === "string" && FAILURE_CODES.has(code);
 }
 
-function safeFailureCode(error: unknown): ProviderSignInFailureCode {
+/** Why a failure happened and where the host logged it, in the closed words
+ * a snapshot or a refusal carries; any other word is dropped. */
+type FailureDetail = {
+  cause?: SignInCause;
+  next_step?: NextStep;
+  status_cause?: CliStateCause;
+  log_ref?: string;
+};
+
+type Failure = { code: ProviderSignInFailureCode; detail: FailureDetail };
+
+function detailOf(value: object): FailureDetail {
+  const raw = value as Record<string, unknown>;
+  const cause = signInCause(raw.cause);
+  const step = nextStep(raw.next_step);
+  const statusCause = cliStateCause(raw.status_cause);
+  const reference = logRef(raw.log_ref);
+  return {
+    ...(cause ? { cause } : {}),
+    ...(step ? { next_step: step } : {}),
+    ...(statusCause ? { status_cause: statusCause } : {}),
+    ...(reference ? { log_ref: reference } : {}),
+  };
+}
+
+/** A rejected call as the window words it: its code where the window names
+ * it, else the closed reason it carries, with its cause and log reference. */
+function rejectionOf(
+  error: unknown,
+  fallback: ProviderSignInFailureCode = "unknown",
+): Failure {
+  const raw: object = typeof error === "object" && error !== null ? error : {};
   const code = failureCode(error);
-  return isProviderSignInFailureCode(code) ? code : "unknown";
+  const reason = (raw as { reason?: unknown }).reason;
+  return {
+    code:
+      isProviderSignInFailureCode(code) && code !== "unknown"
+        ? code
+        : isProviderSignInFailureCode(reason) && reason !== "unknown"
+          ? reason
+          : fallback,
+    detail: detailOf(raw),
+  };
 }
 
 /** A missing status reply is not evidence that sign-in failed. Keep observing
  * this bounded attempt after transient bridge/runtime errors. */
 function canRetryStatus(error: unknown): boolean {
   return TRANSIENT_STATUS_FAILURES.has(failureCode(error));
+}
+
+/** A start the service refused because it is stopping the agent for this
+ * terminal sign-in: an expected step, not a fault. */
+function agentStopping(failure: Failure | null): boolean {
+  return (
+    failure?.code === "busy" && failure.detail.cause === "agent_tree_running"
+  );
 }
 
 function snapshotFailureCode(
@@ -117,11 +190,52 @@ function snapshotFailureCode(
     : "unknown";
 }
 
+/** The last cause and log reference said of an attempt while it was live. */
+type SeenDetail = { attemptId: string; detail: FailureDetail };
+
+/** The window's own timeout of an attempt: it says what the service last said
+ * of that attempt, and what the cancel answered, and nothing else. */
+function timedOut(
+  seen: SeenDetail | null,
+  attemptId: string,
+  answered: FailureDetail = {},
+): Failure {
+  return {
+    code: "timeout",
+    detail: {
+      ...(seen?.attemptId === attemptId ? seen.detail : {}),
+      ...answered,
+    },
+  };
+}
+
+function hasDetail(detail: FailureDetail): boolean {
+  return Object.keys(detail).length > 0;
+}
+
+/** The failure a failed attempt's snapshot says, or none for another. */
+function snapshotFailure(snapshot: ProviderSignInSnapshot): Failure | null {
+  return snapshot.event === "failed"
+    ? {
+        code: snapshotFailureCode(snapshot),
+        detail: detailOf(snapshot),
+      }
+    : null;
+}
+
 function hasControlCharacter(value: string): boolean {
   return Array.from(value).some((character) => {
     const code = character.charCodeAt(0);
     return code <= 0x1f || code === 0x7f;
   });
+}
+
+function validAuthorizationCode(code: string): boolean {
+  if (!/^[!-~]{1,2048}$/.test(code)) return false;
+  let length =
+    JSON.stringify({ version: 1, action: "auth_code", code: "" }).length + 1;
+  for (const char of code) length += char === '"' || char === "\\" ? 2 : 1;
+  return length <= 4096;
 }
 
 type Props = {
@@ -131,6 +245,9 @@ type Props = {
   revision: string;
   signIn: ProviderSignIn;
   methods: readonly ProviderSignInMethod[];
+  /** The served console command template, for a failure whose next step is
+   * to sign in from a console. */
+  consoleSignInCommand?: string;
   onOpenChange: (open: boolean) => void;
   onTerminal: (providerId: string) => Promise<string | undefined>;
 };
@@ -182,18 +299,25 @@ function snapshotOf(
     isProviderSignInFailureCode(raw.reason)
       ? raw.reason
       : undefined;
+  // Why and what next are the service's closed words, on a failed or
+  // cancelled attempt only; any other word is dropped.
+  const advised = event === "failed" || event === "cancelled";
   if (terminal)
     return {
       attempt_id: raw.attempt_id,
       provider: providerId,
       event,
       ...(reason ? { reason } : {}),
+      ...(advised ? detailOf(raw) : {}),
     };
 
   // During cancellation the service may still report browser_action while it
   // finishes helper cleanup, but it has already removed the one-time URL.
   // Treat that as active progress with no browser action available.
-  const url = event === "browser_action" ? safeUrl(raw.url) : undefined;
+  const url =
+    event === "browser_action" || event === "authorization_code_required"
+      ? safeUrl(raw.url)
+      : undefined;
   const userCode =
     typeof raw.user_code === "string" &&
     raw.user_code.length <= 128 &&
@@ -205,6 +329,7 @@ function snapshotOf(
     provider: providerId,
     event,
     ...(reason ? { reason } : {}),
+    ...detailOf(raw),
     ...(url ? { url } : {}),
     ...(userCode ? { user_code: userCode } : {}),
   };
@@ -212,11 +337,21 @@ function snapshotOf(
 
 function failureWords(
   t: Translate,
-  code: ProviderSignInFailureCode,
+  failure: Failure,
   providerName: string,
   method: ProviderSignInMethod | null,
+  /** The attempt had asked for the provider's code before it ended. */
+  codeAsked = false,
 ): string {
-  switch (code) {
+  if (codeAsked && failure.detail.cause === "login_not_completed")
+    return t("desktop.providers.sign_in_code_unfinished", {
+      provider: providerName,
+    });
+  if (agentStopping(failure))
+    return t("desktop.providers.sign_in_agent_still_running", {
+      provider: providerName,
+    });
+  switch (failure.code) {
     case "not_signed_in":
     case "signed_out":
     case "profile_required":
@@ -291,11 +426,39 @@ function activeWords(
       return method === "device" && snapshot.user_code
         ? t("desktop.providers.sign_in_waiting_device")
         : t("desktop.providers.sign_in_waiting");
+    case "authorization_code_required":
+      return t("desktop.providers.sign_in_code_prompt");
     case "succeeded":
     case "cancelled":
     case "failed":
       return "";
   }
+}
+
+/** The code is a secret: it stays hidden unless the person shows it, and it
+ * is hidden again whenever the field is drawn anew. */
+function AuthorizationCodeField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const t = useStrings();
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <PasswordInput
+      id="provider-authorization-code"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      revealed={revealed}
+      onRevealedChange={setRevealed}
+      showLabel={t("desktop.signin.show_code")}
+      hideLabel={t("desktop.signin.hide_code")}
+      autoComplete="one-time-code"
+      maxLength={2048}
+    />
+  );
 }
 
 /**
@@ -309,25 +472,34 @@ export function ProviderSignInDialog({
   revision,
   signIn,
   methods,
+  consoleSignInCommand,
   onOpenChange,
   onTerminal,
 }: Props) {
   const t = useStrings();
   const [snapshot, setSnapshot] = useState<ProviderSignInSnapshot | null>(null);
-  const [failure, setFailure] = useState<ProviderSignInFailureCode | null>(
-    null,
-  );
+  const [failure, setFailure] = useState<Failure | null>(null);
   const [method, setMethod] = useState<ProviderSignInMethod | null>(null);
   const [starting, setStarting] = useState(false);
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const submittedAttempt = useRef<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [retryRevision, setRetryRevision] = useState<string | null>(null);
   const [retryState, setRetryState] = useState<
     "idle" | "checking" | "ready" | "unavailable"
   >("idle");
+  /** The window is trying a start again on its own while the agent stops. */
+  const [awaitingStop, setAwaitingStop] = useState(false);
+  /** When the first refusal of this run of retries came, for its bound. */
+  const stopWaitSince = useRef<number | null>(null);
   const currentAttempt = useRef<string | null>(null);
   const generation = useRef(0);
   const deadline = useRef(0);
   const openedAttempt = useRef<string | null>(null);
+  const seenDetail = useRef<SeenDetail | null>(null);
+  /** The attempt that asked for the provider's code, once it has. */
+  const codeAskedAttempt = useRef<string | null>(null);
   const clearedAttempt = useRef<string | null>(null);
   const api = useRef(signIn);
   const completed = useRef(onTerminal);
@@ -335,6 +507,15 @@ export function ProviderSignInDialog({
   api.current = signIn;
   completed.current = onTerminal;
   close.current = onOpenChange;
+
+  /** Keeps what the service said of a live attempt, for a timeout to say. */
+  const noteSeen = useCallback((next: ProviderSignInSnapshot) => {
+    if (next.event === "authorization_code_required")
+      codeAskedAttempt.current = next.attempt_id;
+    const detail = detailOf(next);
+    if (ACTIVE.has(next.event) && hasDetail(detail))
+      seenDetail.current = { attemptId: next.attempt_id, detail };
+  }, []);
 
   const refreshAfterTerminal = useCallback(
     (retryable: boolean, forGeneration: number) => {
@@ -367,11 +548,16 @@ export function ProviderSignInDialog({
   );
 
   const cancelQuietly = useCallback(
-    (attemptId: string, retryGeneration?: number) => {
+    (
+      attemptId: string,
+      retryGeneration?: number,
+      answered?: (detail: FailureDetail) => void,
+    ) => {
       void api.current
         .cancel({ attemptId })
         .then((answer) => {
-          snapshotOf(answer, provider.id, attemptId);
+          const next = snapshotOf(answer, provider.id, attemptId);
+          answered?.(detailOf(next));
         })
         .catch(() => undefined)
         .finally(() =>
@@ -384,6 +570,21 @@ export function ProviderSignInDialog({
     [provider.id, refreshAfterTerminal],
   );
 
+  /** The window gave up on the attempt: it says the timeout, with the cause
+   * and log reference the cancel's answer adds to what was seen. */
+  const cancelTimedOut = useCallback(
+    (attemptId: string, forGeneration: number) =>
+      cancelQuietly(attemptId, forGeneration, (detail) => {
+        if (!hasDetail(detail)) return;
+        setFailure((shown) =>
+          shown?.code === "timeout" && generation.current === forGeneration
+            ? { ...shown, detail: { ...shown.detail, ...detail } }
+            : shown,
+        );
+      }),
+    [cancelQuietly],
+  );
+
   const activeAttemptId =
     snapshot && ACTIVE.has(snapshot.event) ? snapshot.attempt_id : null;
 
@@ -391,6 +592,7 @@ export function ProviderSignInDialog({
     if (!open || !activeAttemptId) return;
     let current = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let misses = 0;
     const attemptId = activeAttemptId;
     const schedule = () => {
       const remaining = deadline.current - Date.now();
@@ -404,15 +606,18 @@ export function ProviderSignInDialog({
       if (Date.now() >= deadline.current) {
         currentAttempt.current = null;
         setSnapshot(null);
-        setFailure("timeout");
+        setCode("");
+        setFailure(timedOut(seenDetail.current, attemptId));
         setCancelling(false);
-        cancelQuietly(attemptId, generation.current);
+        cancelTimedOut(attemptId, generation.current);
         return;
       }
       try {
         const answer = await api.current.status({ attemptId });
         if (!current || currentAttempt.current !== attemptId) return;
         const next = snapshotOf(answer, provider.id, attemptId);
+        misses = 0;
+        noteSeen(next);
         if (ACTIVE.has(next.event)) {
           currentAttempt.current = attemptId;
           setSnapshot(
@@ -425,10 +630,9 @@ export function ProviderSignInDialog({
           setFailure(null);
         } else {
           currentAttempt.current = null;
+          setCode("");
           setSnapshot(next);
-          setFailure(
-            next.event === "failed" ? snapshotFailureCode(next) : null,
-          );
+          setFailure(snapshotFailure(next));
           setCancelling(false);
           refreshAfterTerminal(
             next.event === "failed" ||
@@ -438,7 +642,13 @@ export function ProviderSignInDialog({
         }
       } catch (error) {
         if (!current || currentAttempt.current !== attemptId) return;
-        if (canRetryStatus(error) && Date.now() < deadline.current) {
+        const passing = canRetryStatus(error);
+        misses = passing ? misses + 1 : 0;
+        if (
+          passing &&
+          misses < STATUS_MISSES &&
+          Date.now() < deadline.current
+        ) {
           // The host may be temporarily unable to read its status while it
           // starts or cleans up the helper. Preserve the active presentation
           // and let the next bounded poll determine the terminal result.
@@ -446,12 +656,19 @@ export function ProviderSignInDialog({
           return;
         }
         currentAttempt.current = null;
+        setCode("");
         setSnapshot(null);
+        // Reads that kept failing lost the attempt: said as lost contact,
+        // with whatever cause and reference the last refusal carried.
+        const lateTimeout = Date.now() >= deadline.current;
         setFailure(
-          Date.now() >= deadline.current ? "timeout" : safeFailureCode(error),
+          lateTimeout
+            ? timedOut(seenDetail.current, attemptId, rejectionOf(error).detail)
+            : rejectionOf(error, passing ? "host_disconnected" : "unknown"),
         );
         setCancelling(false);
-        cancelQuietly(attemptId, generation.current);
+        if (lateTimeout) cancelTimedOut(attemptId, generation.current);
+        else cancelQuietly(attemptId, generation.current);
       }
       if (current && currentAttempt.current === attemptId) schedule();
     };
@@ -463,7 +680,9 @@ export function ProviderSignInDialog({
   }, [
     activeAttemptId,
     cancelQuietly,
+    cancelTimedOut,
     identity,
+    noteSeen,
     open,
     provider.id,
     refreshAfterTerminal,
@@ -472,6 +691,7 @@ export function ProviderSignInDialog({
   useEffect(
     () => () => {
       generation.current += 1;
+      setCode("");
       const attemptId = currentAttempt.current;
       currentAttempt.current = null;
       if (attemptId) cancelQuietly(attemptId);
@@ -483,6 +703,7 @@ export function ProviderSignInDialog({
     next: ProviderSignInSnapshot,
     forGeneration = generation.current,
   ) => {
+    noteSeen(next);
     if (ACTIVE.has(next.event)) {
       currentAttempt.current = next.attempt_id;
       setSnapshot(
@@ -497,10 +718,11 @@ export function ProviderSignInDialog({
       return;
     }
     currentAttempt.current = null;
+    setCode("");
     openedAttempt.current = null;
     clearedAttempt.current = null;
     setSnapshot(next);
-    setFailure(next.event === "failed" ? snapshotFailureCode(next) : null);
+    setFailure(snapshotFailure(next));
     setStarting(false);
     setCancelling(false);
     deadline.current = 0;
@@ -514,14 +736,26 @@ export function ProviderSignInDialog({
   const start = async (
     nextMethod: ProviderSignInMethod,
     nextRevision = revision,
+    /** The window's own retry while the agent stops: what is shown stays as
+     * it is until the service answers. */
+    afterStop = false,
   ) => {
     if (starting || currentAttempt.current) return;
     const mine = ++generation.current;
+    if (!afterStop) stopWaitSince.current = null;
     openedAttempt.current = null;
     clearedAttempt.current = null;
+    submittedAttempt.current = null;
+    seenDetail.current = null;
+    codeAskedAttempt.current = null;
+    setCode("");
+    setSubmitting(false);
     setMethod(nextMethod);
     setStarting(true);
-    setFailure(null);
+    if (!afterStop) {
+      setFailure(null);
+      setAwaitingStop(false);
+    }
     setSnapshot(null);
     setRetryRevision(null);
     setRetryState("idle");
@@ -542,18 +776,30 @@ export function ProviderSignInDialog({
         currentAttempt.current = next.attempt_id;
         setStarting(false);
         currentAttempt.current = null;
-        setFailure("timeout");
-        cancelQuietly(next.attempt_id, mine);
+        noteSeen(next);
+        setFailure(timedOut(seenDetail.current, next.attempt_id));
+        cancelTimedOut(next.attempt_id, mine);
         return;
       }
       setStarting(false);
+      setAwaitingStop(false);
+      stopWaitSince.current = null;
       accept(next, mine);
     } catch (error) {
       if (mine !== generation.current) return;
       currentAttempt.current = null;
       setSnapshot(null);
       setStarting(false);
-      setFailure(safeFailureCode(error));
+      const refused = rejectionOf(error);
+      setFailure(refused);
+      if (agentStopping(refused)) {
+        const now = Date.now();
+        stopWaitSince.current ??= now;
+        setAwaitingStop(now - stopWaitSince.current < AGENT_STOP_WAIT_MS);
+      } else {
+        stopWaitSince.current = null;
+        setAwaitingStop(false);
+      }
       deadline.current = 0;
       refreshAfterTerminal(true, mine);
     }
@@ -568,9 +814,10 @@ export function ProviderSignInDialog({
     // Deferring one task prevents StrictMode's setup/cleanup replay from
     // starting an abandoned authentication attempt.
     const timer = setTimeout(() => {
-      void startCurrent.current(
-        methodsCurrent.current.includes("browser") ? "browser" : "device",
-      );
+      const next = methodsCurrent.current.includes("browser")
+        ? "browser"
+        : methodsCurrent.current[0];
+      if (next) void startCurrent.current(next);
     }, 0);
     return () => clearTimeout(timer);
   }, [open, identity]);
@@ -579,13 +826,34 @@ export function ProviderSignInDialog({
     if (snapshot?.event === "succeeded") close.current(false);
   }, [snapshot?.event]);
 
+  // While the service stops the agent for this sign-in, the start is asked
+  // again with the revision just read, a few seconds apart, until it is let
+  // through or the bound set when the first refusal came is passed.
+  useEffect(() => {
+    if (
+      !open ||
+      !awaitingStop ||
+      retryState !== "ready" ||
+      !retryRevision ||
+      method === null
+    )
+      return;
+    const timer = setTimeout(
+      () => void startCurrent.current(method, retryRevision, true),
+      AGENT_STOP_RETRY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [awaitingStop, method, open, retryRevision, retryState]);
+
   const cancel = async () => {
+    setCode("");
     const attemptId = currentAttempt.current;
     if (!attemptId) {
       close.current(false);
       return;
     }
     const mine = generation.current;
+    clearedAttempt.current = attemptId;
     setCancelling(true);
     setFailure(null);
     try {
@@ -614,7 +882,7 @@ export function ProviderSignInDialog({
           ? { ...current, url: undefined, user_code: undefined }
           : current,
       );
-      setFailure("cancel_failed");
+      setFailure({ code: "cancel_failed", detail: {} });
       setCancelling(false);
       refreshAfterTerminal(false, -1);
     }
@@ -649,7 +917,7 @@ export function ProviderSignInDialog({
         }
         currentAttempt.current = null;
         setSnapshot(null);
-        setFailure("open_external_failed");
+        setFailure({ code: "open_external_failed", detail: {} });
         cancelQuietly(attemptId, mine);
       }
     },
@@ -660,14 +928,18 @@ export function ProviderSignInDialog({
   // Open it once as soon as the host supplies a validated address; the URL is
   // cleared from React state before the native browser handoff begins.
   useEffect(() => {
-    if (snapshot?.event === "browser_action" && snapshot.url) {
+    if (
+      (snapshot?.event === "browser_action" ||
+        snapshot?.event === "authorization_code_required") &&
+      snapshot.url
+    ) {
       if (!api.current.openExternal) {
         const attemptId = snapshot.attempt_id;
         const mine = generation.current;
         if (currentAttempt.current === attemptId) {
           currentAttempt.current = null;
           setSnapshot(null);
-          setFailure("open_external_failed");
+          setFailure({ code: "open_external_failed", detail: {} });
           cancelQuietly(attemptId, mine);
         }
         return;
@@ -676,12 +948,70 @@ export function ProviderSignInDialog({
     }
   }, [cancelQuietly, continueInBrowser, snapshot]);
 
+  const submitCode = async () => {
+    const attemptId = currentAttempt.current;
+    if (
+      !attemptId ||
+      snapshot?.event !== "authorization_code_required" ||
+      submittedAttempt.current === attemptId ||
+      !validAuthorizationCode(code)
+    )
+      return;
+    const mine = generation.current;
+    const submitted = code;
+    submittedAttempt.current = attemptId;
+    setCode("");
+    setSubmitting(true);
+    setFailure(null);
+    try {
+      const next = snapshotOf(
+        await signIn.submitCode({ attemptId, code: submitted }),
+        provider.id,
+        attemptId,
+      );
+      if (
+        generation.current === mine &&
+        currentAttempt.current === attemptId &&
+        clearedAttempt.current !== attemptId
+      )
+        accept(next, mine);
+    } catch (error) {
+      if (
+        generation.current === mine &&
+        currentAttempt.current === attemptId &&
+        clearedAttempt.current !== attemptId
+      ) {
+        currentAttempt.current = null;
+        setSnapshot(null);
+        setFailure(rejectionOf(error));
+        cancelQuietly(attemptId, mine);
+      }
+    } finally {
+      if (generation.current === mine) setSubmitting(false);
+    }
+  };
+
   const active = snapshot !== null && ACTIVE.has(snapshot.event);
+  const checkingCode =
+    active && submittedAttempt.current === snapshot.attempt_id;
   const terminalSuccess = snapshot?.event === "succeeded";
   const terminalCancelled = snapshot?.event === "cancelled";
   const terminalFailure = snapshot?.event === "failed";
   const terminalFailureReason =
     terminalFailure || (terminalCancelled && snapshot?.reason !== undefined);
+  // What is said of a failure: an ended attempt's own snapshot first, else
+  // the refusal or local failure that ended it.
+  const shownFailure: Failure | null =
+    terminalFailureReason && snapshot
+      ? { code: snapshotFailureCode(snapshot), detail: detailOf(snapshot) }
+      : failure;
+  // The agent is being stopped and the window tries again on its own: said
+  // as progress, not as a failure, unless a fresh revision cannot be read.
+  const stopping =
+    awaitingStop &&
+    retryState !== "unavailable" &&
+    shownFailure !== null &&
+    agentStopping(shownFailure);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -706,20 +1036,54 @@ export function ProviderSignInDialog({
               terminalSuccess || active || starting ? "polite" : undefined
             }
           >
-            {terminalSuccess
+            {terminalSuccess || stopping
               ? ""
               : starting
                 ? t("desktop.providers.sign_in_starting")
-                : active && snapshot
-                  ? activeWords(t, snapshot, method)
-                  : failure || terminalCancelled || terminalFailure
-                    ? ""
-                    : t("desktop.providers.sign_in_starting")}
+                : checkingCode
+                  ? t("desktop.providers.sign_in_code_checking")
+                  : active && snapshot
+                    ? activeWords(t, snapshot, method)
+                    : failure || terminalCancelled || terminalFailure
+                      ? ""
+                      : t("desktop.providers.sign_in_starting")}
           </DialogDescription>
         </DialogHeader>
 
         {active && snapshot && (
-          <div className="grid gap-2">
+          <div
+            data-slot="sign-in-attempt"
+            data-attempt-id={snapshot.attempt_id}
+            className="grid gap-2"
+          >
+            {checkingCode && <Spinner className="size-4" />}
+            {snapshot.event === "authorization_code_required" &&
+              submittedAttempt.current !== snapshot.attempt_id &&
+              clearedAttempt.current !== snapshot.attempt_id && (
+                <div className="grid gap-2">
+                  <label htmlFor="provider-authorization-code">
+                    {t("desktop.providers.sign_in_code_label")}
+                  </label>
+                  <AuthorizationCodeField value={code} onChange={setCode} />
+                  <p
+                    data-slot="sign-in-code-time-limited"
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t("desktop.providers.sign_in_code_time_limited", {
+                      provider: provider.name,
+                    })}
+                  </p>
+                  <Button
+                    size="sm"
+                    disabled={
+                      submitting || cancelling || !validAuthorizationCode(code)
+                    }
+                    onClick={() => void submitCode()}
+                  >
+                    {t("desktop.providers.sign_in_code_submit")}
+                  </Button>
+                </div>
+              )}
             {method === "device" && snapshot.user_code && (
               <p className="grid justify-items-start gap-1 text-sm">
                 <span className="text-muted-foreground">
@@ -737,19 +1101,67 @@ export function ProviderSignInDialog({
             {t("desktop.providers.sign_in_cancelled")}
           </p>
         )}
-        {(failure || terminalFailureReason) && (
-          <p role="alert" className="text-sm text-destructive">
+        {shownFailure && stopping && (
+          <p
+            role="status"
+            aria-live="polite"
+            data-slot="sign-in-agent-stopping"
+            data-reason={shownFailure.code}
+            data-cause={shownFailure.detail.cause}
+            data-next-step={shownFailure.detail.next_step}
+            data-status-cause={shownFailure.detail.status_cause}
+            data-log-ref={shownFailure.detail.log_ref}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <Spinner className="size-4" />
+            {t("desktop.providers.sign_in_agent_stopping", {
+              provider: provider.name,
+            })}
+          </p>
+        )}
+        {shownFailure && !stopping && (
+          <p
+            role="alert"
+            data-reason={shownFailure.code}
+            data-cause={shownFailure.detail.cause}
+            data-next-step={shownFailure.detail.next_step}
+            data-status-cause={shownFailure.detail.status_cause}
+            data-log-ref={shownFailure.detail.log_ref}
+            className="text-sm text-destructive"
+          >
             {failureWords(
               t,
-              terminalFailureReason
-                ? snapshotFailureCode(snapshot)
-                : (failure ?? "unknown"),
+              shownFailure,
               provider.name,
               method,
+              snapshot !== null &&
+                codeAskedAttempt.current === snapshot.attempt_id,
             )}
           </p>
         )}
-        {retryState === "checking" && (
+        {shownFailure && !stopping && (
+          <SignInAdvice
+            causes={[
+              shownFailure.detail.cause,
+              shownFailure.detail.status_cause,
+            ]}
+            step={shownFailure.detail.next_step}
+            command={consoleSignInCommand}
+            provider={provider.provider}
+          />
+        )}
+        {shownFailure?.detail.log_ref && (
+          <p
+            data-slot="sign-in-log-ref"
+            className="text-sm text-muted-foreground"
+          >
+            {t("desktop.providers.sign_in_log_ref")}{" "}
+            <code className="font-mono text-foreground select-all">
+              {shownFailure.detail.log_ref}
+            </code>
+          </p>
+        )}
+        {retryState === "checking" && !stopping && (
           <p role="status" className="text-sm text-muted-foreground">
             {t("desktop.providers.sign_in_retry_checking")}
           </p>
@@ -763,14 +1175,16 @@ export function ProviderSignInDialog({
         <DialogFooter>
           {retryRevision &&
             retryState === "ready" &&
+            !stopping &&
             !active &&
-            methods.includes(method ?? "browser") && (
+            method !== null &&
+            methods.includes(method) && (
               <Button
                 variant="primary"
                 size="sm"
                 disabled={starting}
                 pending={starting}
-                onClick={() => void start(method ?? "browser", retryRevision)}
+                onClick={() => void start(method!, retryRevision)}
               >
                 {t("desktop.providers.sign_in_retry")}
               </Button>

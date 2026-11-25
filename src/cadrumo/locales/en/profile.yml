@@ -12,8 +12,8 @@ profile:
     source:
       censal_review:
         action: Review census
-        description: Read the taxpayer's own censal record and review any proposed
-          changes before adopting them.
+        description: Read the taxpayer's own tax registration record and review any
+          proposed changes before adopting them.
         title: AEAT census
       credential_requirement:
         held: AEAT credential on file
@@ -29,7 +29,8 @@ profile:
         know it)
     capabilities:
       google_export: Enable Google Sheets export?
-      llm_vision: Enable on-host LLM vision for reading invoices?
+      llm_vision: Allow reading scanned or image documents with the image-reading
+        model you selected?
     censo:
       activity_start_date: From what date do you have filing obligations / when did
         you register? (YYYY-MM-DD, optional)
@@ -42,22 +43,15 @@ profile:
     identity:
       legal_name: Legal or company name for export headers
       name: Display name shown in local reviews
-      notes: Notes for your own records (optional)
       surnames: Surnames or company name for export headers
       tax_id: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
     irpf:
+      activity_income_imputation_criterion: Which criterion places your business income
+        and expenses in a tax year?
       art109_activity_income_withholding_ge_70pct: Art. 109 70% activity-income coverage
         exception applies
+      codigo_comercio_accounting: Do you keep Código de Comercio accounting?
       estimation_regime: IRPF estimation regime
-      objective_estimation_modulos_iae_epigraph: IAE epigraph for objective-estimation
-        modules
-      objective_estimation_modulos_module_1_units: Annual module 1 units
-      objective_estimation_modulos_module_2_units: Annual module 2 units
-      objective_estimation_modulos_module_3_units: Annual module 3 units
-      objective_estimation_modulos_module_4_units: Annual module 4 units
-      objective_estimation_modulos_module_5_units: Annual module 5 units
-      objective_estimation_modulos_module_6_units: Annual module 6 units
-      objective_estimation_modulos_module_7_units: Annual module 7 units
       special_regime: IRPF special regime (Beckham Law / Art. 93 LIRPF)
       special_regime_start_date: Special regime election date (YYYY-MM-DD)
     iva:
@@ -82,9 +76,11 @@ profile:
         threshold
       monedas_virtuales_extranjero_above_threshold: Virtual currencies held abroad
         above Modelo 721 threshold
+      patrimonio_declaration_threshold_met: 'Required to file Impuesto sobre el Patrimonio:
+        tax payable or assets and rights above 2,000,000 euros'
       premio_loteria_gravamen_especial_sin_retencion: Lottery or betting prize subject
-        to the gravamen especial obtained without retención or ingreso a cuenta (Modelo
-        136)
+        to the gravamen especial obtained without withholding or a payment on account
+        (Modelo 136)
       premio_loteria_gravamen_especial_trimestres: Quarters in which such a lottery
         or betting prize was cashed (Modelo 136), as YYYY-nT tokens separated by |
       third_party_transactions_above_347_threshold: In the calendar year the Modelo
@@ -94,6 +90,8 @@ profile:
     preferences:
       output_language: CLI output language for this profile
     renta_family:
+      convive_con_otro_progenitor: 'Single-parent unit: lives with the other parent
+        of a child in the unit'
       descendants_eu_eea_deduction: EU/EEA descendants in family-unit deduction
       minor_children_in_unit: Minor children in family unit
       situacion_familiar: Family situation (Art. 82 LIRPF)
@@ -119,29 +117,41 @@ profile:
     tax:
       id: Tax identifier (NIF/CIF/DNI/NIE)
     tax_residence:
-      ccaa: Tax-residence autonomous community
+      ccaa: Tax-residence autonomous community or city
       jurisdiction_scope: Which tax territory applies to this Modelo 303?
     taxpayer_type:
+      cierre_ejercicio_dia: On which day of the month does the entity's financial
+        year end?
+      cierre_ejercicio_mes: In which month does the entity's financial year end?
+      cooperativa_fiscalmente_protegida: Is the entity a tax-protected cooperative?
       country_of_fiscal_residence: Country of fiscal residence (ISO 3166-1 alpha-2
         code, e.g. GB, DE, FR)
       declaration_roles: Does the declaring entity hold any of these institutional
         roles for Modelo 347 (third-party operations) purposes?
       entity_type: Entity type
+      erd_tipo_gravamen_especifico: Is the entity a small company taxed at its specific
+        rate under art. 101 LIS?
+      fecha_constitucion: When was the entity constituted?
       fiscal_residency: Fiscal residency category
       incn_prior_12_months: What was your net turnover over the past 12 months? (in
         euros, optional)
       irpf_income_categories: IRPF income categories
       legal_entity_form: Legal form
-      ley_49_2002_special_regime_option_date: Date declared for the Ley 49/2002 special-regime
-        option
-      ley_49_2002_special_regime_option_declared: Has the entity filed the Modelo
-        036 option for the Title II Ley 49/2002 special fiscal regime?
-      ley_49_2002_special_regime_renunciation_date: Date declared for the Ley 49/2002
-        special-regime renunciation
-      ley_49_2002_special_regime_renunciation_declared: Has the entity filed a Modelo
-        036 renunciation of the Title II Ley 49/2002 special fiscal regime?
+      marca_instrumental: Does the instrumental mark of the design's Nota 7 apply
+        to the entity?
       new_entity_first_two_profit_periods: Is this a newly-created legal entity in
         one of its first two profit-making tax periods?
+      pago_fraccionado_art_40_3_elected: Did the entity elect, in its census declaration,
+        the Art. 40.3 LIS option for its instalment payments?
+      principal_cnae: What is the four-digit CNAE code of the entity's main activity?
+      principal_cnae_classification: Which CNAE classification is your principal activity
+        code stated in?
+      regimen_entidad_capital_riesgo: Is the entity a venture capital entity under
+        art. 50 LIS?
+      regimen_entidades_navieras_tonelaje: Does the entity apply the shipping tonnage
+        regime?
+      regimen_ley_49_2002: Does the entity apply the Ley 49/2002 regime?
+      regimen_socimi: Does the entity apply the SOCIMI regime (Ley 11/2009)?
       representante_fiscal_nif: NIF/NIE of fiscal representative in Spain (required
         outside EU/EEA)
       representante_fiscal_nombre: Name of fiscal representative in Spain
@@ -151,30 +161,51 @@ profile:
       modelo_115_no_relevant_payment_periods: Modelo 115 periods with no relevant
         payment
       pays_capital_income_with_retencion: Pays capital income with withholding
+      pays_non_resident_income_with_retencion: Pays income subject to withholding
+        to non-residents without a permanent establishment
       pays_professionals_with_retencion: Pays professionals with withholding
       pays_rent_with_retencion: Pays local rent with withholding
   schema:
     field:
       activities:
-        cnae:
-          label: CNAE code
+        cuota_provincial_province_code:
+          label: Province of the provincial quota
         description:
           label: Activity description
+        expositores_autoventa:
+          label: Self-sale display units
         iae_epigraph:
           label: IAE epigraph
-      attribution_entity:
-        legal_form:
+        local_afecto_indirectamente:
+          label: Has premises used indirectly
+        maquinas_recreativas_tipo_a:
+          label: Type A recreational machines
+        maquinas_recreativas_tipo_b:
+          label: Type B recreational machines
+        municipality_code:
+          label: Activity municipality code
+        municipality_name:
+          label: Activity municipality
+        province_code:
+          label: Activity province code
+        tipo_actividad:
           choices:
-            comunidad_bienes: Joint ownership (comunidad de bienes)
-            herencia_yacente: Undivided estate (herencia yacente)
-            other: Other
-            sociedad_civil: Civil partnership (sociedad civil)
-          label: Attribution entity legal form
+            A01: Lessors of real estate
+            A02: Independent livestock farming
+            A03: Other business activities not included elsewhere
+            A04: Artistic or sporting professional activities
+            A05: Other professional activities
+            B01: Agricultural activity
+            B02: Dependent livestock activity
+            B03: Forestry activity
+            B04: Raft mussel farming
+            B05: Fishing activity, except raft mussel farming
+          label: Activity type (Modelo 036)
       attribution_entity_socios:
         base_imponible_assigned:
           label: Assigned taxable base
         clave:
-          label: Income line clave (Modelo 184)
+          label: Income line code (Modelo 184)
         clave_declarado:
           label: Property ownership key
         codigo_provincia:
@@ -197,7 +228,7 @@ profile:
         nif:
           label: Member NIF
         participe_clave:
-          label: Type of member (Modelo 184 clave)
+          label: Type of member (Modelo 184 code)
         porcentaje_titularidad_inmueble:
           label: Property ownership percentage
         reduccion:
@@ -208,12 +239,6 @@ profile:
           label: Reduced agricultural net yield (estimación objetiva)
         rendimiento_neto_previo_eo:
           label: Prior net yield (estimación objetiva)
-        role:
-          choices:
-            comunero: Co-owner
-            participe: Participant
-            socio: Partner
-          label: Member role
         share_pct:
           label: Participation percentage
         situacion_inmueble:
@@ -234,8 +259,6 @@ profile:
       auth:
         clave_movil_route:
           label: Cl@ve Móvil route
-        dni_nie:
-          label: DNI or NIE for Cl@ve
         fecha_validez:
           label: Validity date
         numero_soporte:
@@ -248,22 +271,20 @@ profile:
         google_export:
           label: Google export
         llm_vision:
-          label: On-host image reading
+          label: Image reading
       censo:
         activity_end_date:
           label: Activity end date
         activity_start_date:
           label: Activity start date
+        aeat_administracion_code:
+          label: AEAT administración code
+        aeat_administracion_name:
+          label: AEAT administración
+        aeat_delegacion_code:
+          label: AEAT delegación code
         divergencia:
           label: Censo divergence rows
-        elected_withholding_pct:
-          label: Elected withholding rate
-        establecimiento_type:
-          choices:
-            arrendado: Rented
-            cedido_gratuitamente: Provided free of charge
-            propio: Owned
-          label: Establishment type
         large_company:
           label: Large-company condition
         public_administration_budget_gt_6000000:
@@ -283,10 +304,80 @@ profile:
           label: Fiscal address
         fiscal_address_cadastral_reference:
           label: Cadastral reference of the fiscal address
-        fiscal_address_is_habitual_vivienda:
-          label: Fiscal address is the habitual residence
+        fiscal_address_municipality_code:
+          label: Fiscal address municipality code
+        fiscal_address_municipality_name:
+          label: Fiscal address municipality
+        fiscal_address_province_code:
+          label: Fiscal address province code
         postcode:
           label: Postcode
+      iae_elemento_tributario:
+        actividad:
+          label: Activity
+        code:
+          label: Tax element code
+        description:
+          label: Tax element description
+        linea:
+          label: Line
+        numero:
+          label: Quantity
+      iae_local:
+        actividad:
+          label: Activity
+        afectacion:
+          choices:
+            ejercicio: Where the activity is carried on
+            indirecta: Used indirectly by the activity
+          label: Use of the premises
+        escalera:
+          label: Staircase
+        km:
+          label: Km
+        municipality_code:
+          label: Municipality code
+        municipality_name:
+          label: Municipality
+        numero:
+          label: Street number
+        piso:
+          label: Floor
+        portal:
+          label: Entrance
+        postcode:
+          label: Postcode
+        province_code:
+          label: Province code
+        puerta:
+          label: Door
+        superficie_computable:
+          label: Computable surface (m²)
+        superficie_rectificada:
+          label: Rectified surface (m²)
+        superficie_total:
+          label: Total surface (m²)
+        telefono:
+          label: Phone
+        uso_destino_code:
+          label: Use or purpose code
+        uso_destino_description:
+          label: Use or purpose
+        via_nombre:
+          label: Street name
+        via_sg:
+          label: Street type
+      iae_local_superficie:
+        clase:
+          label: Surface class (Regla 14)
+        computable:
+          label: Computable (m²)
+        local:
+          label: Premises
+        rectificada:
+          label: Rectified (m²)
+        total:
+          label: Total (m²)
       identity:
         email:
           label: Contact email
@@ -294,20 +385,37 @@ profile:
           label: Legal or company name
         name:
           label: Given name
-        notes:
-          label: Notes
         surnames:
           label: Surnames
         tax_id:
-          help:
-            what: 'Your tax identification number: the NIF of your DNI, your NIE if
-              you are a foreign national, or the NIF of an entity.'
-            where: On your DNI or NIE card, or on the NIF card issued by the AEAT.
-              It also appears on any past declaration or AEAT letter.
-            why: Every declaration is filed under this number; it is how the AEAT
-              identifies you.
           label: Tax ID (NIF/NIE/CIF)
+      inversiones_posicion:
+        fecha_fin:
+          label: Share held until
+        fecha_inicio:
+          label: Share held from
+        identificador:
+          label: Your identifier for the position
+        pagador_nif:
+          label: Payer tax ID
+        pagador_nombre:
+          label: Payer name
+        pais_origen:
+          label: State the income comes from
+        porcentaje_titularidad:
+          label: Your ownership share
+        tipo:
+          choices:
+            cuenta: Current or savings account
+            deposito: Term deposit
+            valores_negociables: Securities account
+          label: Kind of position
       irpf:
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: When paid or collected (art. 7.2 RIRPF)
+            devengo: On an accrual basis
+          label: Income and expense timing
         activity_kind:
           choices:
             profesional: Professional activity
@@ -315,28 +423,14 @@ profile:
           label: Activity type
         art109_activity_income_withholding_ge_70pct:
           label: Meets Art. 109 RIRPF 70% exception
+        codigo_comercio_accounting:
+          label: Keeps Código de Comercio accounting
         estimation_regime:
           choices:
             directa_normal: Direct assessment, normal
             directa_simplificada: Direct assessment, simplified
             objetiva: Objective assessment (módulos)
           label: Estimation regime
-        objective_estimation_modulos_iae_epigraph:
-          label: IAE epigraph (modules)
-        objective_estimation_modulos_module_1_units:
-          label: Module 1 units
-        objective_estimation_modulos_module_2_units:
-          label: Module 2 units
-        objective_estimation_modulos_module_3_units:
-          label: Module 3 units
-        objective_estimation_modulos_module_4_units:
-          label: Module 4 units
-        objective_estimation_modulos_module_5_units:
-          label: Module 5 units
-        objective_estimation_modulos_module_6_units:
-          label: Module 6 units
-        objective_estimation_modulos_module_7_units:
-          label: Module 7 units
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Prior-year agricultural, livestock and forestry income
         objective_estimation_prior_year_gross_income_eur:
@@ -353,8 +447,6 @@ profile:
           label: Total work income
         plantilla_media:
           label: Average workforce by calendar year
-        professional_income_withholding_ge_70pct:
-          label: Professional withholding reaches 70%
         special_regime:
           choices:
             general: General regime
@@ -366,54 +458,26 @@ profile:
         autoconsumo_promotor_base:
           label: Self-supply taxable base (developer)
         cash_accounting_regime_enrolled:
-          help:
-            what: Whether you opted into the special cash-accounting IVA regime (criterio
-              de caja).
-            where: It is chosen on modelo 036 and shows in your census details. If
-              you did not opt in, the answer is No.
-            why: Under it, IVA is due when invoices are paid rather than when they
-              are issued, which changes each period's figures.
           label: Cash-accounting regime enrolment
         does_intracomunitario:
-          label: Intracommunity operations
+          label: Intra-community operations
         group_dominant_entity_enrolled:
           label: IVA group dominant entity (Modelo 353)
         group_member_enrolled:
           label: IVA group member (Modelo 322)
         hydrocarbon_deposit_advance_payment_deduction_entitled:
-          help:
-            what: Whether you may deduct IVA advance payments made when taking hydrocarbons
-              out of a tax-deposit regime.
-            where: It only concerns businesses that take fuel out of a tax warehouse
-              (depósito fiscal). Most taxpayers answer No.
-            why: Those advance payments are deducted in the IVA declaration, so the
-              entitlement changes the amount due.
           label: Hydrocarbon tax-deposit advance-payment deduction entitlement
         intracommunity_operations_exceed_50000_eur:
-          label: Intracommunity operations over 50,000 EUR
+          label: Intra-community operations over 50,000 EUR
         m303_regime_composition:
           choices:
             general: General regime only
             mixed: General and simplified together
             simplified: Simplified regime only
-          help:
-            what: 'Which IVA regimes your modelo 303 combines: general only, simplified
-              only, or both.'
-            where: It follows from the IVA regime of each of your activities in your
-              census registration.
-            why: Modelo 303 has a separate part for each regime; this decides which
-              parts are filled in.
           label: Modelo 303 regime composition
         oss_enrolled:
           label: OSS/IOSS enrolment
         redeme_enrolled:
-          help:
-            what: Whether you are registered in REDEME, the register for monthly IVA
-              refunds.
-            where: It is requested on modelo 036 and shows in your census details.
-              If you never requested it, the answer is No.
-            why: Registration makes your IVA declaration monthly instead of quarterly
-              and makes SII mandatory.
           label: REDEME enrolment
         regime:
           choices:
@@ -422,26 +486,130 @@ profile:
             REAGP: Agriculture, livestock and fishing special regime (REAGP)
             RECARGO_EQUIVALENCIA: Equivalence surcharge
             SIMPLIFICADO: Simplified
-          help:
-            what: The IVA (VAT) regime your activity is registered under.
-            where: On your census registration (modelo 036 or 037), or in your census
-              details at the AEAT electronic office.
-            why: It decides which IVA declarations you file and how IVA is calculated
-              on your sales and purchases.
           label: IVA regime
         roi_enrolled:
           label: ROI/VIES enrolment
         sii_enrolled:
           label: SII enrolment
         voluntary_sii_enrolled:
-          help:
-            what: Whether you voluntarily joined SII, the immediate electronic supply
-              of your IVA record books to the AEAT.
-            where: Voluntary membership is requested on modelo 036 and shows in your
-              census details. If you never requested it, the answer is No.
-            why: SII members keep their IVA books online with the AEAT, which changes
-              some obligations and deadlines.
           label: Voluntary SII enrolment
+      m200_administrador:
+        apellidos_nombre_razon_social:
+          label: Surnames and first name, or company name
+        codigo_provincia:
+          label: Province code
+        domicilio_fiscal:
+          label: Tax address of the representative in Spain
+        forma_juridica:
+          label: F/J (individual or legal entity)
+        nif:
+          label: NIF
+        representante:
+          label: Representative (RPTE.)
+      m200_entidad_menor_dependiente:
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Name or company name
+      m200_establecimiento_permanente:
+        beneficio_o_perdida:
+          label: Profit or loss
+        identificacion:
+          label: Identification
+        pais_residencia_fiscal:
+          label: Country of tax residence
+        suma_ajustes_resultado_contable:
+          label: Sum of adjustments to the accounting result
+        suma_deducciones_di_internacional_anteriores:
+          label: Sum of international double taxation deductions from earlier periods
+        volumen_operaciones:
+          label: Volume of operations
+      m200_participacion_directa:
+        ajuste_valor_razonable:
+          label: Fair value adjustment
+        capital:
+          label: Share capital
+        codigo_provincia_pais:
+          label: Province/country code
+        correccion_valor_perdidas_ganancias:
+          label: Value adjustment in profit and loss
+        efecto_correccion_valorativa_base_imponible:
+          label: Effect of the valuation adjustment on the taxable base
+        eliminacion_deterioro_contable:
+          label: Elimination of accounting impairment
+        eliminacion_deterioro_valores_participacion:
+          label: Elimination of impairment of securities representing the holding
+        ingresos_por_dividendos:
+          label: Dividend income
+        nif:
+          label: NIF
+        nombre_o_razon_social:
+          label: Name or company name
+        otras_partidas_patrimonio_neto:
+          label: Other net equity items
+        porcentaje_participacion:
+          label: Percentage of participation
+        reservas_y_otras_partidas_fondos_propios:
+          label: Reserves and other equity items
+        resultado_ultimo_ejercicio:
+          label: Result of the last financial year
+        reversion_perdidas_deterioro_valores:
+          label: Reversal of impairment losses on securities
+        saldo_correcciones_fiscales_pendientes:
+          label: Balance of pending tax adjustments
+        valor_en_libros:
+          label: Carrying amount
+        valor_nominal_total:
+          label: Total nominal value
+      m200_participacion_socio:
+        apellidos_nombre_razon_social:
+          label: Surnames and first name, or company name
+        codigo_provincia_pais:
+          label: Province/country code
+        forma_juridica:
+          label: F/J/Other (legal form)
+        nif:
+          label: NIF
+        nominal:
+          label: Nominal value
+        porcentaje_participacion:
+          label: Percentage of participation
+        representante:
+          label: Representative (RPTE.)
+      m200_relaciones:
+        has_entidad_menor_dependiente:
+          label: Does your entity include dependent minor entities?
+        has_establecimiento_permanente:
+          label: Does your entity have permanent establishments abroad?
+        has_participacion_directa:
+          label: Does your entity hold direct interests in other entities?
+        has_participacion_socio:
+          label: Does your entity have partners or shareholders with a direct interest?
+        has_representante_legal:
+          label: Does your entity have attorneys-in-fact or legal representatives?
+        has_secretario_consejo:
+          label: Does your entity have a Secretary of the Board of Directors?
+        has_socio_sicav_disolucion:
+          label: Is your entity a partner of a dissolved SICAV?
+      m200_representante_legal:
+        apellidos_y_nombre:
+          label: Surnames and first name
+        fecha_poder:
+          label: Date of the power of attorney
+        nif:
+          label: NIF
+        notaria_otros:
+          label: Notary/other
+      m200_secretario_consejo:
+        apellidos_y_nombre:
+          label: Surnames and first name
+        nif:
+          label: NIF
+      m200_socio_sicav_disolucion:
+        nif_iic_reinversion:
+          label: NIF of the reinvestment collective investment scheme
+        nif_sociedad_disuelta:
+          label: NIF of the dissolved company
       maritime_worker:
         annual_salary:
           label: Annual salary
@@ -483,8 +651,10 @@ profile:
           label: Modelo 720 threshold exceeded
         monedas_virtuales_extranjero_above_threshold:
           label: Modelo 721 threshold exceeded
+        patrimonio_declaration_threshold_met:
+          label: Required to file Impuesto sobre el Patrimonio (Modelo 714)
         premio_loteria_gravamen_especial_sin_retencion:
-          label: Lottery prize without retención (Modelo 136)
+          label: Lottery prize without withholding (Modelo 136)
         premio_loteria_gravamen_especial_trimestres:
           label: Prize quarters (Modelo 136)
         third_party_transactions_above_347_threshold:
@@ -493,17 +663,6 @@ profile:
       preferences:
         output_language:
           label: Output language
-      properties:
-        cadastral_reference:
-          label: Cadastral reference
-        use_type:
-          choices:
-            habitual: Main home
-            imputed_income: Imputed income (not rented out)
-            mixed: Mixed use
-            other: Other
-            rental: Rented out
-          label: Property use
       provenance:
         source:
           choices:
@@ -518,11 +677,54 @@ profile:
           label: Valid from
         valid_to:
           label: Valid to
+      renta_arrendamiento:
+        arrendatario_entidad_finalidad:
+          choices:
+            otra: Other
+            vivienda_asequible_o_social: Affordable or social housing
+          label: Entity's purpose for the dwelling
+        arrendatario_entidad_tipo:
+          choices:
+            administracion_publica: Public administration
+            entidad_sin_fines_lucro: Non-profit entity
+          label: Type of tenant that is not an individual
+        arrendatario_pariente_art24:
+          label: Tenant is a relative (art. 24)
+        fecha_contrato:
+          label: Contract date
+        fecha_fin:
+          label: End date
+        fecha_inicio:
+          label: Start date
+        incumple_lau_17_6:
+          label: Breaches art. 17.6 LAU (designated housing stress area)
+        inmueble:
+          label: Let property (row key)
+        inquilinos:
+          label: Tenants
+        primer_arrendamiento_vivienda:
+          label: First letting of the dwelling
+        rehabilitacion_fecha:
+          label: Rehabilitation completion date
+        renta_inicial:
+          label: Initial rent
+        renta_ultima_contrato_anterior:
+          label: Last rent of the previous contract
+        uso_vivienda:
+          label: Dwelling lease
+        zona_tensionada:
+          label: Designated area of housing market stress
       renta_family:
         anualidades_alimentos_euros:
           label: Court-ordered child maintenance annuities paid
         ascendants:
           label: Ascendants
+        ascendiente:
+          label: Ascendant
+        ascendientes_count:
+          label: Ascendant count
+        convive_con_otro_progenitor:
+          label: Lives with the other parent of a child in the household
         cotizaciones_ss_madre_2024:
           label: Mother's Social Security contributions (2024)
         descendants:
@@ -550,14 +752,80 @@ profile:
       renta_filing:
         declaration_type:
           label: Declaration type
-      renta_rental:
-        reduccion_art_23_2_tier_2024:
+      renta_inmueble:
+        adquisicion_titulo:
           choices:
-            tier-50: 50 % reduction
-            tier-60: 60 % reduction
-            tier-70: 70 % reduction
-            tier-90: 90 % reduction
-          label: Rental reduction tier (art. 23.2)
+            lucrativa: For free
+            onerosa: For value
+          label: Acquisition title
+        amortizacion_acumulada:
+          label: Attested cumulative amortisation
+        amortizacion_acumulada_desde:
+          label: Date the cumulative amortisation refers to
+        arrendado_desde:
+          label: Date the property was first let
+        direccion:
+          label: Property address
+        fecha_adquisicion:
+          label: Acquisition date
+        fecha_transmision:
+          label: Transfer date
+        gastos_tributos_adquisicion:
+          label: Acquisition expenses and taxes
+        importe_adquisicion:
+          label: Acquisition amount
+        importes_movimientos:
+          choices:
+            inmueble_completo: Whole-property amounts
+            parte_propia: Your own share
+          label: Amounts in the linked ledger rows
+        inmueble_principal:
+          label: Principal property (row key)
+        mejoras:
+          label: Improvements before the ledger
+        naturaleza:
+          choices:
+            rustica: Rustic
+            urbana: Urban
+          label: Property nature
+        porcentaje_propiedad:
+          label: Ownership percentage
+        porcentaje_usufructo:
+          label: Usufruct percentage
+        referencia_catastral:
+          label: Cadastral reference
+        sin_arrendar:
+          label: Property never let
+        situacion:
+          choices:
+            '1': With cadastral reference, in common territory
+            '2': With cadastral reference, in the Basque Country
+            '3': With cadastral reference, in Navarre
+            '4': In Spain, without a cadastral reference
+            '5': Abroad
+          label: Property location
+        titular:
+          choices:
+            comun: Common to both spouses
+            conyuge: Spouse
+            hijo: Child
+            primer_declarante: First declarant
+          label: Property holder
+        titular_hijo_ordinal:
+          label: Ordinal of the holder child
+        titularidad_regimen:
+          choices:
+            nuda_propiedad: Bare ownership
+            pleno_dominio: Full ownership
+            pleno_dominio_y_usufructo: Full ownership and usufruct
+            usufructo: Usufruct
+          label: Ownership regime
+        usos:
+          label: Uses other than letting
+        valor_suelo:
+          label: Land value
+        valores_catastrales:
+          label: Cadastral values by IBI year
       renta_spouse:
         birth_date:
           label: Spouse birth date
@@ -614,27 +882,28 @@ profile:
             castilla_la_mancha: Castilla-La Mancha
             castilla_y_leon: Castilla y León
             cataluna: Catalonia
+            ceuta: Ceuta (autonomous city)
             comunidad_valenciana: Valencian Community
             extremadura: Extremadura
             galicia: Galicia
             la_rioja: La Rioja
             madrid: Madrid
+            melilla: Melilla (autonomous city)
             murcia: Murcia
-          label: Autonomous community of residence (CCAA)
+          label: Autonomous community or city of residence (CCAA)
         jurisdiction_scope:
           choices:
             common_regime: Common territory
             foral_unsupported: Foral territory (Basque Country or Navarre) - not supported
               yet
-          help:
-            what: Whether your taxes follow the common territory or a foral territory
-              (Basque Country or Navarre).
-            where: 'It follows from your fiscal address: an address in Álava, Bizkaia,
-              Gipuzkoa or Navarre is foral; elsewhere in Spain it is common territory.'
-            why: It decides which tax administration and rules apply. Foral territories
-              file with their own tax office, which is not supported yet.
           label: Territorial regime
       taxpayer_type:
+        cierre_ejercicio_dia:
+          label: Financial year-end day
+        cierre_ejercicio_mes:
+          label: Financial year-end month
+        cooperativa_fiscalmente_protegida:
+          label: Tax-protected cooperative
         country_of_fiscal_residence:
           label: Country of fiscal residence
         declaration_roles:
@@ -645,6 +914,10 @@ profile:
             legal_entity: Legal entity (company)
             natural_person: Individual
           label: Entity type
+        erd_tipo_gravamen_especifico:
+          label: Small company with its specific rate (art. 101 LIS)
+        fecha_constitucion:
+          label: Constitution date
         fiscal_residency:
           choices:
             non_resident_irnr: Non-resident (IRNR)
@@ -665,33 +938,30 @@ profile:
             sll: Employee-owned limited company (S.L.L.)
             sociedad_civil_mercantil: Civil partnership with a commercial purpose
           label: Legal form
-        ley_49_2002_special_regime_option_date:
-          label: Ley 49/2002 option date
-        ley_49_2002_special_regime_option_declared:
-          label: Ley 49/2002 regime opted for
-        ley_49_2002_special_regime_renunciation_date:
-          label: Ley 49/2002 renunciation date
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Ley 49/2002 regime renounced
+        marca_instrumental:
+          label: Instrumental mark (Nota 7)
         new_entity_first_two_profit_periods:
           label: In one of the first two profit periods
+        pago_fraccionado_art_40_3_elected:
+          label: Art. 40.3 LIS instalment election
+        principal_cnae:
+          label: Main activity CNAE
+        principal_cnae_classification:
+          label: Principal CNAE classification
+        regimen_entidad_capital_riesgo:
+          label: Venture capital entity (art. 50 LIS)
+        regimen_entidades_navieras_tonelaje:
+          label: Shipping tonnage regime
+        regimen_ley_49_2002:
+          label: Ley 49/2002 regime
+        regimen_socimi:
+          label: SOCIMI regime (Ley 11/2009)
         representante_fiscal_nif:
           label: Fiscal representative NIF
         representante_fiscal_nombre:
           label: Fiscal representative name
-        sal_capital_social:
-          label: Share capital
-        sal_reserva_especial_dotada:
-          label: Special reserve already provisioned
-        sal_socios_trabajadores_count:
-          label: Worker-shareholder count
         tributacion_estado_porcentaje:
           label: State taxation percentage
-      usage_ratios:
-        business_ratio:
-          label: Business-use ratio
-        category_id:
-          label: Category
       vivienda_office:
         office_m2:
           label: Office floor area (m2)
@@ -708,6 +978,9 @@ profile:
           label: Modelo 115 no-relevant-payment periods
         pays_capital_income_with_retencion:
           label: Pays capital income with withholding
+        pays_non_resident_income_with_retencion:
+          label: Pays income subject to withholding to non-residents (Modelos 216
+            and 296)
         pays_professionals_with_retencion:
           label: Pays professionals with withholding
         pays_rent_with_retencion:
@@ -716,14 +989,10 @@ profile:
       activities:
         summary: The economic activities you carry out, one row per activity.
         title: Business activities
-      attribution_entity:
-        summary: The legal form of an entity under income attribution (comunidad de
-          bienes, sociedad civil) that you run.
-        title: Attribution entity legal shape
       attribution_entity_socios:
         summary: The partners of that entity and the share of income attributed to
           each.
-        title: Attribution entity socios
+        title: Attribution entity members
       attribution_received:
         summary: Income attributed to you by entities in which you are a partner.
         title: Attribution received from entities
@@ -733,7 +1002,7 @@ profile:
         title: AEAT authentication
       capabilities:
         summary: Which optional services this profile may use, such as reading scanned
-          documents on this machine.
+          or image documents with a model you select.
         title: Service capabilities
       censo:
         summary: Your registration in the AEAT census (modelo 036/037) and its dates.
@@ -741,9 +1010,23 @@ profile:
       contact:
         summary: Where the AEAT can reach you and your fiscal address.
         title: Contact and fiscal address
+      iae_elemento_tributario:
+        summary: The tax elements of each activity for Modelo 840, one row per line.
+        title: IAE tax elements
+      iae_local:
+        summary: 'The premises of each activity, one row per premises: where you carry
+          it on or what you use indirectly.'
+        title: IAE premises
+      iae_local_superficie:
+        summary: The surfaces of each premises by Regla 14 class, one row per class.
+        title: Premises surfaces (Regla 14)
       identity:
         summary: 'Your name and NIF: who the declarations are prepared for.'
         title: Identity
+      inversiones_posicion:
+        summary: Your bank accounts, term deposits and securities accounts, one row
+          per position. Their fixed facts go here; amounts come from the ledger.
+        title: Savings positions
       irpf:
         summary: How your personal income tax is calculated and how much tax is withheld
           from your income.
@@ -751,6 +1034,41 @@ profile:
       iva:
         summary: Your IVA (VAT) regime and how often you file it.
         title: IVA profile
+      m200_administrador:
+        summary: The people who administer, manage or control the entity, one row
+          per person.
+        title: Directors and administrators
+      m200_entidad_menor_dependiente:
+        summary: The dependent minor entities you include in your return, one row
+          per entity.
+        title: Dependent minor entities
+      m200_establecimiento_permanente:
+        summary: The permanent establishments operating abroad, one row per establishment.
+        title: Permanent establishments
+      m200_participacion_directa:
+        summary: The entities in which you hold a direct interest at the end of the
+          period, one row per investee.
+        title: Direct holdings
+      m200_participacion_socio:
+        summary: The people and entities that hold a direct interest in your entity,
+          one row per partner.
+        title: Shareholders or partners
+      m200_relaciones:
+        summary: Whether your entity has rows in each optional section of page 2 of
+          Modelo 200.
+        title: Declared relationships
+      m200_representante_legal:
+        summary: The attorneys-in-fact or legal representatives of the entity, one
+          row per person.
+        title: Legal representative
+      m200_secretario_consejo:
+        summary: The Secretary of the Board of Directors, or whoever performs those
+          duties.
+        title: Secretary of the Board of Directors
+      m200_socio_sicav_disolucion:
+        summary: The dissolved SICAVs of which you are a partner and the institution
+          in which you reinvest the liquidation share.
+        title: Partners of dissolved SICAVs
       maritime_worker:
         summary: 'Only for seafarers: the classification that decides special deductions.'
         title: Maritime worker classification
@@ -760,21 +1078,23 @@ profile:
       preferences:
         summary: How the application talks to you, such as the language of every screen.
         title: Operator preferences
-      properties:
-        summary: Properties you own or rent out, one row per property.
-        title: Properties and rental
       provenance:
         summary: Where the profile data came from and from when it applies.
         title: Provenance and effective dating
+      renta_arrendamiento:
+        summary: The lease contracts of your properties, one row per contract, with
+          the facts fixed at signing.
+        title: Leases
       renta_family:
         summary: Children and other relatives who can give you family allowances.
         title: Family (Renta)
       renta_filing:
         summary: How you file your annual income tax return (Renta).
         title: Filing context (Renta)
-      renta_rental:
-        summary: Context for rental income in your annual return.
-        title: Rental context (Renta)
+      renta_inmueble:
+        summary: The properties you let, one row per property. Their fixed facts go
+          here; amounts come from the ledger.
+        title: Let properties
       renta_spouse:
         summary: Your spouse's details, needed for a joint return.
         title: Spouse (Renta)
@@ -788,9 +1108,6 @@ profile:
       taxpayer_type:
         summary: What kind of taxpayer you are and which types of income you receive.
         title: Taxpayer entity type and income categories
-      usage_ratios:
-        summary: The business-use share of shared assets such as a car or a phone.
-        title: Usage ratios and deductibility
       vivienda_office:
         summary: Whether part of your main home is used as an office for your activity.
         title: Home-office use of the habitual residence
@@ -811,4 +1128,5 @@ profile:
     modelo_work_profile_baseline_missing: Modelo work profile baseline is missing
     numeric_field_invalid: Numeric field is invalid
     required_field_missing: Required profile field missing.
+    text_too_long: Text too long
     unknown_field: Unknown field

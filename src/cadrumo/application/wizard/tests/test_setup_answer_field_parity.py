@@ -26,9 +26,10 @@ from ....domain.user_profile.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
     SetupAnswers,
 )
+from ..imputation_election import YEAR_QUESTION_ID
 from ..models import WizardQuestion
 from ..persistence import project_answers
-from ..widgets import _POSTCODE_QUESTION_IDS
+from ..widgets import POSTCODE_QUESTION_IDS
 
 pytestmark = [
     pytest.mark.usefixtures("operation"),
@@ -36,15 +37,8 @@ pytestmark = [
     pytest.mark.hex_application,
 ]
 
-_TABLE_ONLY_FIELDS = frozenset(
-    {"professional_income_withholding_ge_70pct", "irpf_activity_kind", "colegio_concertado"},
-)
+_TABLE_ONLY_FIELDS = frozenset({"irpf_activity_kind", "colegio_concertado"})
 """Table rows the wizard deliberately never asked for.
-
-The Modelo 130 exemption flag has a declared schema path and a declared
-model selector, but no setup question ever collected it, so the engine
-read the model default and could not see a taxpayer who had recorded the
-fact by any other route. The table reads it; the retired wizard did not.
 
 ``irpf_activity_kind`` is derived from a taxpayer's declared ledger
 ``tipo_actividad`` rows (see
@@ -61,11 +55,22 @@ surface, and until they do, filing the modelo refuses rather than assuming.
 """
 
 
+_ANSWER_ONLY_QUESTION_IDS = frozenset({YEAR_QUESTION_ID})
+"""Questions that scope other answers and are stored nowhere, so the table has no row for them.
+
+The imputation ejercicio dates the criterion and accounting facts it accompanies;
+persisting it as a profile value of its own would let it drift from them.
+"""
+
+
 def test_every_question_has_a_matching_table_row(*, registry_setup_flow: WizardFlow) -> None:
     """Path, type and default must agree field by field."""
     questions = tuple(question for section in registry_setup_flow.sections for question in section.questions)
+    assert {question.id for question in questions if question.profile_key is None} == _ANSWER_ONLY_QUESTION_IDS
     mismatches: list[str] = []
     for question in questions:
+        if question.id in _ANSWER_ONLY_QUESTION_IDS:
+            continue
         field = question.id.replace("-", "_")
         spec = setup_answer_fields().get(field)
         if spec is None:
@@ -126,15 +131,9 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
         "renta_taxpayer.death_date",
         "renta_taxpayer.marriage_date",
         "renta_spouse.birth_date",
-        "taxpayer_type.ley_49_2002_special_regime_option_date",
-        "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
     ):
         values[date_path] = "2024-03-01"
-    for decimal_path in (
-        "taxpayer_type.incn_prior_12_months",
-        *(f"irpf.objective_estimation_modulos_module_{index}_units" for index in range(1, 8)),
-    ):
-        values[decimal_path] = "12.5"
+    values["taxpayer_type.incn_prior_12_months"] = "12.5"
 
     from_table = project_setup_answers(values)
     from_catalogue = project_answers(registry_setup_flow, values)
@@ -142,23 +141,6 @@ def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: Wi
     ignored = {*_TABLE_ONLY_FIELDS}
     assert from_table.model_dump(exclude=ignored) == from_catalogue.model_dump(exclude=ignored)
     assert from_table.has_employees is True, "the fixture must not be all-defaults"
-
-
-def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_for(
-    *, registry_setup_flow: WizardFlow
-) -> None:
-    """The under-declaration this relocation closed, pinned.
-
-    A profile that records the art. 109 professional-withholding fact now
-    reaches the engine with it set. Before, the value was unreachable and
-    every taxpayer looked like they had never declared it.
-    """
-    declared = {"identity.tax_id": "12345678Z", "irpf.professional_income_withholding_ge_70pct": "true"}
-    from_catalogue = project_answers(registry_setup_flow, declared)
-    assert isinstance(from_catalogue, SetupAnswers)
-
-    assert project_setup_answers(declared).professional_income_withholding_ge_70pct is True
-    assert from_catalogue.professional_income_withholding_ge_70pct is False
 
 
 def _non_default_token(question: WizardQuestion) -> str:
@@ -174,6 +156,6 @@ def _non_default_token(question: WizardQuestion) -> str:
         return "false" if question.default == "true" else "true"
     if question.choices:
         return next(choice.value for choice in question.choices if choice.value != question.default)
-    if question.id in _POSTCODE_QUESTION_IDS:
+    if question.id in POSTCODE_QUESTION_IDS:
         return "28001"
     return "sample"

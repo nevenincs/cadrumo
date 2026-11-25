@@ -27,13 +27,13 @@ from typing import Literal, Self, override
 
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
 
-from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import packaged_data
 from ...core.type_guards import is_object_list, is_object_list_or_tuple, is_str_keyed_dict
 from ..operator_actions.models import ActionReference
-from ._registry_contracts import declared_public_schema_identities
+from .errors import OperationContractStaleError
 from .operation_definition import OperationDefinition
 from .registry import (
     OperationPublicContractSetV1,
@@ -42,6 +42,7 @@ from .registry import (
     OperationRegistry,
     OperationSchemaBindingV1,
 )
+from .registry_contracts import declared_public_schema_identities
 from .schema_identity import OperationSchemaIdentityV1
 
 #: Where the generated manifest ships, under ``cadrumo/_data``.
@@ -67,7 +68,7 @@ class OperationContractManifestEntryV1(BaseModel):
 
     group: str = Field(min_length=1)
     module: str = Field(min_length=1)
-    ephemeral_secret_lifetime_seconds: float | None = Field(default=None, gt=0, le=3600)
+    ephemeral_secret_lifetime_seconds: float | None = Field(default=None, gt=0, le=4096)
     contract: OperationPublicDefinitionContractV1
 
 
@@ -197,13 +198,7 @@ class ManifestOperationRegistry(OperationRegistry):
         definitions = {definition.definition_id: definition for definition in built.definitions}
         registrations = {item.contract.definition_id: item for item in built.registrations}
         expected = self._manifest.groups[group]
-        if (
-            len(definitions) != len(built.definitions)
-            or len(registrations) != len(built.registrations)
-            or frozenset(definitions) != expected
-            or frozenset(registrations) != expected
-        ):
-            raise InternalInvariantError(f"operation group {group!r} does not compose what the contract manifest names")
+        _assert_group_population(group, built, definitions, registrations, expected)
         schema_models = dict(self._schema_models)
         for definition_id, definition in definitions.items():
             registration = registrations[definition_id]
@@ -211,14 +206,14 @@ class ManifestOperationRegistry(OperationRegistry):
             self._validate_public_registration(definition, registration)
             lifetime = definition.ephemeral_secret.lifetime if definition.ephemeral_secret is not None else None
             if registration.contract != entry.contract or lifetime != _lifetime(entry):
-                raise InternalInvariantError(
+                raise OperationContractStaleError(
                     f"operation {definition_id!r} no longer matches the contract manifest; regenerate it"
                 )
             for binding in registration.schema_bindings:
                 key = (binding.identity.schema_id, binding.identity.schema_version)
                 current = (binding.identity.schema_fingerprint, binding.model_type)
                 if schema_models.setdefault(key, current) != current:
-                    raise InternalInvariantError(
+                    raise OperationContractStaleError(
                         "one operation schema identity must bind one exact model and fingerprint"
                     )
         self._schema_models = schema_models
@@ -278,18 +273,38 @@ class ManifestOperationRegistry(OperationRegistry):
         return tuple(lifetime for entry in self._manifest.operations if (lifetime := _lifetime(entry)) is not None)
 
 
+def _assert_group_population(
+    group: str,
+    built: OperationGroupBuild,
+    definitions: Mapping[str, OperationDefinition],
+    registrations: Mapping[str, OperationPublicDefinitionRegistrationV1],
+    expected: frozenset[str],
+) -> None:
+    if (
+        len(definitions) != len(built.definitions)
+        or len(registrations) != len(built.registrations)
+        or frozenset(definitions) != expected
+        or frozenset(registrations) != expected
+    ):
+        raise OperationContractStaleError(
+            f"operation group {group!r} does not compose what the contract manifest names"
+        )
+
+
 def _ordered_sets(value: object, dumped: object) -> object:
     """Sort every set-valued field of a JSON dump, which otherwise follows the process's hash seed."""
     if isinstance(value, BaseModel) and is_str_keyed_dict(dumped):
-        fields = type(value).model_fields
-        return {
-            key: _ordered_sets(getattr(value, key), item) if key in fields else item for key, item in dumped.items()
-        }
+        return _ordered_model_fields(value, dumped)
     if is_object_list_or_tuple(value) and is_object_list(dumped) and len(value) == len(dumped):
         return [_ordered_sets(member, item) for member, item in zip(value, dumped, strict=True)]
     if isinstance(value, frozenset | set) and is_object_list(dumped):
         return sorted(dumped, key=_canonical_json)
     return dumped
+
+
+def _ordered_model_fields(value: BaseModel, dumped: dict[str, object]) -> dict[str, object]:
+    fields = type(value).model_fields
+    return {key: _ordered_sets(getattr(value, key), item) if key in fields else item for key, item in dumped.items()}
 
 
 def _canonical_json(value: object) -> str:

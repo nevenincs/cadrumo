@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#source-casilla-integration'
 date: '2026-08-25'
-modified: '2026-08-25'
+modified: '2026-11-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:3248f2553accc1920644a7ef9f33fcf833dd52631837be6433affa9aa675e213'
+body_hash: 'sha256:55f99474475fe735578dad442f30b06505e749ce707eddbf15052f1e841065ee'
 related:
   - "[[2026-08-25-source-casilla-integration-modelo-220-group-value-source-grounding-research]]"
 ---
@@ -19,8 +19,8 @@ or must remain a bounded source-owner deferral.
 
 ## Considerations
 
-- The M220 grounding research establishes separate 2024/2025 designs and a
-  composite group/member grain.
+- The M220 grounding research establishes separate designs for successive annual
+  editions and a composite group/member grain.
 - The accepted connectivity ADR requires source ownership and a complete
   lifecycle before a connection is admitted.
 
@@ -51,7 +51,7 @@ member/group value role, unit, and value identity; capture provenance and
 fingerprint; and distinct absent/inapplicable/zero semantics. It must also
 prove resolver enrollment, diagnostics/provenance, encrypted persistence and
 replay, operator/review reachability, and source-owned supported export for
-each 2024 and 2025 era.
+each authored design era.
 
 ## Rationale
 

@@ -1,16 +1,15 @@
 """Prove a review-gated operation's reject and apply paths through a built package's own programs.
 
 Everything runs as real processes on a fresh storage root: the package's
-``cadrumo-runtime --configured-root``, its ``aeat`` command line, its
-``cadrumo-mcp`` server driven by an MCP client, and the local model server
-reading an existing model store. The person's steps go through the command
-line with the password on its standard input; the agent's steps go through an
-attended MCP connection the person approved. The run proves, one receipt line
-per step:
+``cadrumo-runtime --configured-root``, its ``aeat`` command line and its
+``cadrumo-mcp`` server driven by an MCP client. The person's steps go through
+the command line with the password on its standard input; the agent's steps go
+through an attended MCP connection the person approved. The run proves, one
+receipt line per step:
 
 - a disposable profile with synthetic taxpayer facts and one ledger row;
-- ``ledger.classify.review`` pauses with the local model's proposal and has
-  written nothing before the decision;
+- ``ledger.classify.review`` pauses with the text-extraction reader's proposal
+  and has written nothing before the decision;
 - a rejected review leaves the row exactly as before, as the command line, an
   independent reader, lists it, and adds exactly one rejection to the row's
   audit history;
@@ -21,11 +20,13 @@ per step:
 
 The attendance approval admits the MCP connection; it is not the review's
 answer, which is given by ``respond`` on the review's own interaction. Run it
-with ``just verify-reviewed-operation PACKAGE``. It needs the local
-``qwen3:1.7b`` model in an Ollama store (``--ollama-models``, by default
-Cadrumo's own) and reports the review unproven without it, or when the package
-was built without the optional ``llm`` extra and so refuses local-model work;
-nothing is downloaded.
+with ``just verify-reviewed-operation PACKAGE``.
+
+The review reads through an agent run on the person's text-extraction
+selection, which needs an admitted agent service and a stored selection. This
+run arranges neither, so a review refused for want of either
+(``service_unavailable`` or ``no_selection``) is reported unproven, not
+contradicted. Every other refusal fails the run. Nothing is downloaded.
 """
 
 from __future__ import annotations
@@ -37,10 +38,13 @@ import shutil
 import tempfile
 import time
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+from dev.temporary_output import prepare_temp_root
 
 from .caller_owned_root import (
     AcceptanceError,
@@ -55,9 +59,7 @@ from .mcp_proof_support import (
     McpSession,
     ask_and_decide,
     execute,
-    local_model,
     mcp_session,
-    model_store,
     observe,
     settled,
 )
@@ -69,19 +71,63 @@ from .proof_support import (
     package_identity,
     started_processes,
     state_taxpayer,
+    supported_filing_year,
 )
 from .session_holder import AsyncRuntimeSessionHolder
 
 _PROFILE = "reviewed-operation-acceptance"
 _REJECTED = "ledger.transaction.llm_suggestion.rejected"
 _CLASSIFIED = "ledger.transaction.classified"
-_EXTRA_MISSING = "ERROR_OPTIONAL_EXTRA_MISSING"
 
 _REVIEW_SECONDS = 600
 
 
-class _ModelUnpackagedError(Exception):
-    """The package refuses local-model work because it was built without the optional ``llm`` extra."""
+#: The model-run refusals that say the review had no lane to run on: no agent
+#: service is admitted, or no text-extraction selection is stored. This run
+#: arranges neither, so either leaves the review unproven rather than
+#: contradicted.
+UNPROVABLE_REFUSALS: Final = frozenset({ModelRunRefusalCode.SERVICE_UNAVAILABLE, ModelRunRefusalCode.NO_SELECTION})
+
+
+class _ReviewUnprovableError(Exception):
+    """The review's model run was refused for want of an admitted agent service or a stored selection."""
+
+    def __init__(self, refusal: ModelRunRefusalCode) -> None:
+        super().__init__(refusal.value)
+        self.refusal = refusal
+
+
+def unprovable_review_refusal(result: Mapping[str, Any]) -> ModelRunRefusalCode | None:
+    """Return the model-run refusal that leaves a stopped review unproven, or ``None`` for any other ending.
+
+    ``result`` is the MCP ``result`` reply of the stopped review. Only the
+    typed verdict of a refused model run counts, and only for an absent agent
+    service or an absent selection; every other refusal, and a result that
+    carries no such verdict, is ``None`` so the caller fails the run.
+    """
+    detail = result.get("error_detail")
+    verdict_json = detail.get("precondition_verdict_json") if isinstance(detail, dict) else None
+    if not isinstance(verdict_json, str):
+        return None
+    try:
+        verdict = json.loads(verdict_json)
+    except ValueError:
+        return None
+    if not isinstance(verdict, dict):
+        return None
+    if verdict.get("failed_condition_id") != LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value:
+        return None
+    return _unprovable_evidence(verdict)
+
+
+def _unprovable_evidence(verdict: Mapping[str, Any]) -> ModelRunRefusalCode | None:
+    """Select only an explicitly allowed model-run refusal from evidence."""
+    for evidence in verdict.get("evidence") or ():
+        values = evidence.get("values") if isinstance(evidence, dict) else None
+        refusal = values.get("model_run_refusal") if isinstance(values, dict) else None
+        if any(refusal == code.value for code in UNPROVABLE_REFUSALS):
+            return ModelRunRefusalCode(refusal)
+    return None
 
 
 def _ledger_rows(programs: Programs, environment: Mapping[str, str], profile: Profile) -> list[dict[str, Any]]:
@@ -156,7 +202,7 @@ def _row(rows: list[dict[str, Any]], transaction_id: str) -> dict[str, Any]:
 
 
 async def _pending_review(session: McpSession, profile: Profile, transaction_id: str) -> tuple[str, dict[str, Any]]:
-    """Submit a classification review and return it once the local model's proposal waits for an answer."""
+    """Submit a classification review and return it once the reader's proposal waits for an answer."""
     review_id = await execute(
         session,
         "ledger.classify.review",
@@ -173,11 +219,13 @@ async def _pending_review(session: McpSession, profile: Profile, transaction_id:
         pending = projection.get("pending_interaction") or {}
         if pending.get("disposition") == "review_available":
             break
-        if projection.get("failure_error_code") == _EXTRA_MISSING:
+        if projection.get("terminal_condition") is not None:
+            refusal = unprovable_review_refusal(await settled(session, review_id))
+            if refusal is None:
+                raise AcceptanceError(f"the review ended without a decision: {projection}")
             require(projection.get("effect") == "none", f"the refused review wrote: {projection}")
-            raise _ModelUnpackagedError
-        require(projection.get("terminal_condition") is None, f"the review ended without a decision: {projection}")
-        require(time.monotonic() < deadline, "the local model proposed nothing in time")
+            raise _ReviewUnprovableError(refusal)
+        require(time.monotonic() < deadline, "the reader proposed nothing in time")
         await asyncio.sleep(2)
     require(projection.get("effect") == "none", f"something was written before the decision: {projection}")
     is_error, proposal = await session.call("review", {"review": {"reference": pending["review_reference"]}})
@@ -199,7 +247,7 @@ async def _reject_then_apply(
             "ledger.add",
             {
                 "profile_id": str(profile.profile_id),
-                "booked_date": "2026-07-15",
+                "booked_date": date(supported_filing_year(), 7, 15).isoformat(),
                 "amount": "121.00",
                 "direction": "OUTGOING",
                 "description": "Papeleria y material de oficina",
@@ -243,15 +291,12 @@ async def _reject_then_apply(
     stored = classified.get("transaction") or {}
     require(classified.get("outcome") == "classified", f"not classified: {result}")
     require(classified.get("review_status") == "reviewed", f"not reviewed: {result}")
-    require(str(stored.get("classified_by", "")).startswith("llm:local-text:"), f"not the local model: {stored}")
+    require(str(stored.get("classified_by", "")).startswith("llm:agent-text:"), f"not the agent's reader: {stored}")
     after_apply = _ledger_rows(programs, environment, profile)
     require(len(after_apply) == len(rows), f"rows changed on apply: {len(rows)} -> {len(after_apply)}")
     applied_row = _row(after_apply, transaction_id)
     require(applied_row != before, "the applied review left the row as it was")
-    classification = stored.get("business_classification")
-    if not isinstance(classification, str) or not classification:
-        raise AcceptanceError(f"no classification was stored: {stored}")
-    require(classification in json.dumps(applied_row), f"the command line reads another classification: {applied_row}")
+    _require_stored_classification(stored, applied_row)
     applied_history = _history(programs, environment, profile, transaction_id)
     _one_more_event(rejected_history, applied_history, _CLASSIFIED, "apply")
 
@@ -272,13 +317,20 @@ async def _reject_then_apply(
     )
 
 
-async def run(programs: Programs, package: Path | None, scratch: Path, *, models: Path) -> Receipt:
+def _require_stored_classification(stored: Mapping[str, object], applied_row: Mapping[str, object]) -> None:
+    """Check that the command-line row contains the stored classification."""
+    classification = stored.get("business_classification")
+    if not isinstance(classification, str) or not classification:
+        raise AcceptanceError(f"no classification was stored: {stored}")
+    require(classification in json.dumps(applied_row), f"the command line reads another classification: {applied_row}")
+
+
+async def run(programs: Programs, package: Path | None, scratch: Path) -> Receipt:
     """Execute the reviewed operation on a fresh root below ``scratch``."""
     receipt = Receipt()
     receipt.record("artifact", **package_identity(package))
-    root, secret_store = scratch / "storage", scratch / "secrets"
-    secret_store.mkdir(parents=True)
-    environment = consumer_environment(root, secret_store)
+    root = scratch / "storage"
+    environment = consumer_environment(root)
     profile = create_profile(programs, environment, _PROFILE)
 
     with caller_owned_runtime(programs, environment, scratch / "runtime-stderr.log") as runtime:
@@ -287,34 +339,29 @@ async def run(programs: Programs, package: Path | None, scratch: Path, *, models
         profile = identify_profile(programs, environment, profile)
         state_taxpayer(programs, environment, profile)
         receipt.record("profile_ready")
-        with local_model(scratch, models) as available:
-            if not available:
-                receipt.unproven.append("reviewed operation: no local qwen3:1.7b model in the given store")
-            else:
-                if profile.profile_id is None:
-                    raise AcceptanceError("created profile has no verified identity")
-                holder = await AsyncRuntimeSessionHolder.start(
-                    programs.runtime,
-                    profile_id=profile.profile_id,
-                    environment=environment,
-                    password=bytearray(profile.password, "utf-8"),
-                )
+        if profile.profile_id is None:
+            raise AcceptanceError("created profile has no verified identity")
+        holder = await AsyncRuntimeSessionHolder.start(
+            programs.runtime,
+            profile_id=profile.profile_id,
+            environment=environment,
+            password=bytearray(profile.password, "utf-8"),
+        )
+        try:
+            async with mcp_session(programs, environment, scratch) as agent:
+                is_error, content = await ask_and_decide(holder, agent, approve=True, receipt=receipt, step="attended")
+                require(not is_error, f"the approved connection was refused: {content}")
                 try:
-                    async with mcp_session(programs, environment, scratch) as agent:
-                        is_error, content = await ask_and_decide(
-                            holder, agent, approve=True, receipt=receipt, step="attended"
-                        )
-                        require(not is_error, f"the approved connection was refused: {content}")
-                        try:
-                            await _reject_then_apply(agent, programs, environment, profile, receipt)
-                        except _ModelUnpackagedError:
-                            receipt.unproven.append(
-                                "reviewed operation: the package was built without the optional llm extra"
-                            )
-                    closed = await holder.command("close")
-                    require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
-                finally:
-                    await holder.close()
+                    await _reject_then_apply(agent, programs, environment, profile, receipt)
+                except _ReviewUnprovableError as unprovable:
+                    receipt.unproven.append(
+                        f"reviewed operation: the review's model run refused {unprovable.refusal.value}; "
+                        "this run admits no agent service and stores no text-extraction selection"
+                    )
+            closed = await holder.command("close")
+            require(closed.get("kind") == "session_closed", "runtime did not acknowledge held-session closure")
+        finally:
+            await holder.close()
         stopped = runtime.stop()
         require(stopped == 64, f"runtime exit: {stopped}")
         receipt.record("runtime_stopped", exit_code=stopped)
@@ -329,17 +376,11 @@ def main(arguments: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="reviewed-operation", description=__doc__.splitlines()[0])
     parser.add_argument("--package", type=Path, required=True, help="A built package directory.")
     parser.add_argument("--keep", action="store_true", help="Keep the disposable root for inspection.")
-    parser.add_argument(
-        "--ollama-models",
-        type=Path,
-        default=None,
-        help="An existing Ollama model store to read (default: Cadrumo's own); nothing is pulled or pruned.",
-    )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=prepare_temporary_directory()))
+    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=prepare_temp_root()))
     try:
-        receipt = asyncio.run(run(Programs.of(package), package, scratch, models=model_store(options.ollama_models)))
+        receipt = asyncio.run(run(Programs.of(package), package, scratch))
     except (AcceptanceError, BaseExceptionGroup) as failure:
         reason = acceptance_failure(failure)
         if reason is None:

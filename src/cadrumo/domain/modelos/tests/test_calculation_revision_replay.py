@@ -11,12 +11,12 @@ from pydantic import ValidationError
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..errors import ModeloValidationError
-from ._calculation_revision_test_support import (
-    _INPUT_CASILLA_001,
-    _NONCANONICAL_CASILLA_KEY,
-    _OUTPUT_CASILLA_002,
-    _PAGOS_RELATION,
-    _WHITESPACE_CASILLA_KEY,
+from .calculation_revision_test_support import (
+    INPUT_CASILLA_001,
+    NONCANONICAL_CASILLA_KEY,
+    OUTPUT_CASILLA_002,
+    PAGOS_RELATION,
+    WHITESPACE_CASILLA_KEY,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -89,19 +89,19 @@ def test_revision_id_changes_when_relation_override_changes() -> None:
     """Relation replay values are part of the immutable calculation attempt."""
     id_a = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        relation_overrides={_PAGOS_RELATION: "725.75"},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        relation_overrides={PAGOS_RELATION: "725.75"},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        relation_overrides={_PAGOS_RELATION: "725.76"},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        relation_overrides={PAGOS_RELATION: "725.76"},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -113,9 +113,9 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
     with pytest.raises(ModeloValidationError, match=r"input_values_by_casilla_id contains non-canonical casilla\.id"):
         derive_calculation_revision_id(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_NONCANONICAL_CASILLA_KEY: "10.00"},
+            input_values_by_casilla_id={NONCANONICAL_CASILLA_KEY: "10.00"},
             binding_overrides={},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -123,9 +123,9 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
     with pytest.raises(ModeloValidationError, match=r"casilla_values contains non-canonical casilla\.id"):
         derive_calculation_revision_id(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+            input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
-            casilla_values={_NONCANONICAL_CASILLA_KEY: Decimal("15.00")},
+            casilla_values={NONCANONICAL_CASILLA_KEY: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -133,9 +133,9 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
     with pytest.raises(ModeloValidationError, match=r"input_values_by_casilla_id contains non-canonical casilla\.id"):
         derive_calculation_revision_id(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_WHITESPACE_CASILLA_KEY: "10.00"},
+            input_values_by_casilla_id={WHITESPACE_CASILLA_KEY: "10.00"},
             binding_overrides={},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -145,7 +145,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             work_unit_id="a" * 64,
             input_values_by_casilla_id={1: "10.00"},
             binding_overrides={},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -153,7 +153,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
     with pytest.raises(ModeloValidationError, match=r"casilla_values contains non-canonical casilla\.id"):
         _derive_with_invalid_input(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+            input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
             casilla_values={1: Decimal("15.00")},
             filing_instance_evidence=None,
@@ -163,9 +163,9 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
     with pytest.raises(ModeloValidationError, match="binding_overrides contains non-canonical binding id"):
         derive_calculation_revision_id(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+            input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
             binding_overrides={"Bad Binding": "10.00"},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -173,10 +173,10 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
     with pytest.raises(ModeloValidationError, match="relation_overrides contains non-canonical relation id"):
         derive_calculation_revision_id(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+            input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
             relation_overrides={"Bad Relation": "10.00"},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=None,
             source_provenance=(),
         )
@@ -215,8 +215,8 @@ def test_calculation_revision_rejects_persisted_non_canonical_casilla_keys() -> 
             work_unit_id="a" * 64,
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
-            input_values_by_casilla_id={_NONCANONICAL_CASILLA_KEY: "10.00"},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            input_values_by_casilla_id={NONCANONICAL_CASILLA_KEY: "10.00"},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
             filing_instance_evidence=None,
@@ -229,10 +229,10 @@ def test_calculation_revision_rejects_legacy_inputs_snapshot_key() -> None:
     from datetime import UTC, datetime
 
     created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
-    output_values = {_OUTPUT_CASILLA_002: Decimal("15.00")}
+    output_values = {OUTPUT_CASILLA_002: Decimal("15.00")}
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values=output_values,
         filing_instance_evidence=None,
@@ -245,8 +245,8 @@ def test_calculation_revision_rejects_legacy_inputs_snapshot_key() -> None:
                 "work_unit_id": "a" * 64,
                 "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
                 "state": CalculationRevisionState.BORRADOR,
-                "input_values_by_casilla_id": {_INPUT_CASILLA_001: "10.00"},
-                "inputs_snapshot": {_INPUT_CASILLA_001: "10.00"},
+                "input_values_by_casilla_id": {INPUT_CASILLA_001: "10.00"},
+                "inputs_snapshot": {INPUT_CASILLA_001: "10.00"},
                 "casilla_values": output_values,
                 "source_provenance": (),
                 "created_at": created,
@@ -271,7 +271,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             binding_overrides={"Bad Binding": "10.00"},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
             filing_instance_evidence=None,
@@ -285,7 +285,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             bindings_sourced_from_borrador=("Bad Binding",),
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
             filing_instance_evidence=None,
@@ -337,7 +337,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
         input_values_by_casilla_id={},
         binding_overrides={replay_id: "1.00"},
         relation_overrides={replay_id: "1.00"},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -349,7 +349,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
             state=CalculationRevisionState.BORRADOR,
             binding_overrides={replay_id: "1.00"},
             relation_overrides={replay_id: "1.00"},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
             filing_instance_evidence=None,

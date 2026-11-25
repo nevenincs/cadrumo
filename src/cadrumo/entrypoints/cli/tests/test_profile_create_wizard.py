@@ -10,11 +10,6 @@ boundary of a naked ``create`` -- it reaches its own refusal without a
 missing-argument error and without being pre-empted by the storage
 runtime's no-active-session refusal -- plus the verb-path preference and
 the pinned question inventory the flags are derived from.
-
-Two interactive-run tests were retired with the wizard: their premise --
-that a console-less ``create`` is refused -- died when the scripted arm
-landed, and their refusal and JSON-parseability shapes are asserted by
-the scripted-creation module.
 """
 
 from __future__ import annotations
@@ -25,14 +20,14 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from ....application.wizard.models import WizardFlow
 from ....application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from .._root_support import _prefer_complete_verb_path
+from ..root_support import prefer_complete_verb_path
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -81,7 +76,7 @@ def test_partial_click_path_cannot_mask_the_profile_create_leaf() -> None:
     shorter path reproduces the live login refusal before the TUI opens.
     """
     assert (
-        _prefer_complete_verb_path(
+        prefer_complete_verb_path(
             context_path="config profile",
             argv_path="config profile create",
         )
@@ -89,8 +84,7 @@ def test_partial_click_path_cannot_mask_the_profile_create_leaf() -> None:
     )
 
 
-# The pinned profile-create prompted-question inventory (see the question-count
-# decision note in the cli-authority-quality-backlog plan): the full declared question set
+# The pinned profile-create prompted-question inventory: the full declared question set
 # of the setup flow, which is exactly the ``supplied_question_ids`` frozenset the
 # ``create`` path writes to the payload. This is the single place the inventory is
 # pinned; a legitimate add or drop updates this set here, and any silent change
@@ -102,33 +96,26 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "address-postcode",
         "art109-activity-income-withholding-ge-70pct",
         "bienes-extranjero-above-threshold",
-        # NOT "cloud-evidence-upload". It was a setup question and was deliberately
-        # retired with the off-host read path (04561ef0f6, which names "the setup-wizard
-        # question that asked the operator to opt in" among what it deleted). That commit
-        # did not update this pin, so the entry outlived the question it named and this
-        # gate has been red ever since -- reported as a moved COUNT rather than a named
-        # id until the tally was removed.
-        #
-        # The capability's later return (069e0f5a96, 1ba2eb3633) did not reverse that.
-        # Both are scoped to the ELIGIBILITY BAR and say so: the enum member and its
-        # profile-schema field, restored because the enum/schema parity gate was red, and
-        # a per-locale label because the translation-honesty ratchet refuses a
-        # placeholder. Neither touches the wizard catalogue or this file. The operator
-        # sets it through --cloud-evidence-upload/--no-cloud-evidence-upload, which is a
-        # deliberate posture for a capability governing off-host transmission: settable,
-        # but not offered in the interactive walk-through.
+        # NOT "cloud-evidence-upload": that capability is not a setup question. The
+        # operator sets it through --cloud-evidence-upload/--no-cloud-evidence-upload,
+        # a deliberate posture for a capability governing off-host transmission:
+        # settable, but not offered in the interactive walk-through.
         "country-of-fiscal-residence",
         "declaration-roles",
         "does-intracomunitario",
         "enrollment-large-company",
         "enrollment-public-administration-budget-gt-6000000",
         "entity-type",
+        "family-convive-con-otro-progenitor",
         "family-descendants-eu-eea-deduction",
         "family-minor-children-in-unit",
         "fiscal-residency",
         "google-export",
         "has-employees",
         "incn-prior-12-months",
+        "irpf-activity-income-imputation-criterion",
+        "irpf-activity-income-imputation-year",
+        "irpf-codigo-comercio-accounting",
         "irpf-estimation-regime",
         "irpf-income-categories",
         "irpf-special-regime",
@@ -147,27 +134,17 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "iva-voluntary-sii-enrolled",
         "legal-entity-form",
         "legal-name",
-        "ley-49-2002-option-date",
-        "ley-49-2002-option-declared",
-        "ley-49-2002-renunciation-date",
-        "ley-49-2002-renunciation-declared",
         "llm-vision",
         "modelo-111-no-retenciones-periods",
         "modelo-115-no-relevant-payment-periods",
         "monedas-virtuales-extranjero-above-threshold",
         "name",
         "new-entity-first-two-profit-periods",
-        "notes",
-        "objective-estimation-modulos-iae-epigraph",
-        "objective-estimation-modulos-module-1-units",
-        "objective-estimation-modulos-module-2-units",
-        "objective-estimation-modulos-module-3-units",
-        "objective-estimation-modulos-module-4-units",
-        "objective-estimation-modulos-module-5-units",
-        "objective-estimation-modulos-module-6-units",
-        "objective-estimation-modulos-module-7-units",
         "output-language",
+        "pago-fraccionado-art-40-3-elected",
+        "patrimonio-declaration-threshold-met",
         "pays-capital-income-with-retencion",
+        "pays-non-resident-income-with-retencion",
         "pays-professionals-with-retencion",
         "pays-rent-with-retencion",
         "premio-loteria-gravamen-especial-sin-retencion",
@@ -212,9 +189,7 @@ def test_profile_create_prompted_question_inventory_is_pinned(*, registry_setup_
     property: it trains everyone to bump the constant, and once bumped it detects
     nothing the set does not already catch. It is also strictly worse at
     reporting — a count answers "something moved", the set answers WHICH question
-    moved, which is the fact a reader needs. This gate previously failed with
-    ``assert 75 == 76`` while the id naming the real defect sat one assertion
-    below, unreached.
+    moved, which is the fact a reader needs.
 
     Duplicates are still refused, as a property of the declaration rather than a
     size: the list being longer than the set means an id appears twice, and that

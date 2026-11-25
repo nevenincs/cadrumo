@@ -6,7 +6,9 @@ engine evaluates its :class:`ModeloRevision`.
 Profile, backend mesh, borrador, and caller values are normalised as
 :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution` tiers, then
 the calculation assembly layer overlays them by precedence: profile, backend
-mesh, borrador, and finally caller overrides.
+mesh, borrador, and finally caller overrides. Each tier resolves every key it
+can without looking at the tiers above it, so the overlay alone decides which
+value is used and can see every value it replaces.
 
 Projecting resolved binding values onto bound
 :class:`~cadrumo.core.casilla_id.CasillaId` inputs is registry-owned rather than an
@@ -31,9 +33,9 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core.aggregation import BindingSourceKind as _BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
-from ...core.period import Period as _Period
+from ...core.period import Period
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -51,7 +53,9 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.filing_record import FilingDeclarationKind
 from ..aggregation.source_mesh import CalculationSourceResolution
 from .borrador_binding import Modelo100BorradorSourceResolver
+from .calculation_input_refusal_doors import semantic_role_ambiguous_verdict
 from .calculation_route import require_calculation_route_resolver
+from .refusal_door_verdicts import caller_defect_verdict, registry_defect_verdict
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -65,10 +69,8 @@ def resolve_borrador_source_tier(
     bucket_id: str,
     snapshot: RegistrySnapshot,
     filing_year: int,
-    period: _Period,
+    period: Period,
     borrador_snapshot_id: str | None,
-    caller_binding_values: Mapping[BindingId, Decimal],
-    caller_enum_binding_values: Mapping[BindingId, str],
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
@@ -82,9 +84,8 @@ def resolve_borrador_source_tier(
     persistence boundary consumes.
 
     Caller-supplied :class:`~cadrumo.domain.calculations.registry.ids.BindingId` values
-    remain higher precedence than the snapshot, so the resolver receives both
-    decimal and enum caller channels and omits any borrador value already owned
-    by the caller.
+    remain higher precedence than the snapshot, but the borrador still states
+    every value it holds: the overlay keeps the caller's and compares the two.
 
     See Also:
         :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`:
@@ -98,8 +99,6 @@ def resolve_borrador_source_tier(
         filing_year=filing_year,
         period=period,
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
         operation=operation,
@@ -110,10 +109,6 @@ def resolve_profile_source_tier(
     *,
     bucket_id: str,
     snapshot: RegistrySnapshot,
-    caller_binding_values: Mapping[BindingId, Decimal],
-    caller_enum_binding_values: Mapping[BindingId, str],
-    borrador_resolution: CalculationSourceResolution,
-    backend_binding_values: Mapping[BindingId, Decimal],
     operation: PinnedAuthorityOperation,
     profile: ModeloWorkProfile,
 ) -> CalculationSourceResolution:
@@ -121,14 +116,11 @@ def resolve_profile_source_tier(
 
     The :class:`RegistrySnapshot` identifies
     the revision whose ``source = "profile"`` bindings are enrolled through the
-    source mesh. Profile is the LOWEST precedence tier, so every binding the
-    caller, borrador, or mesh backend already supplied is excluded here (the
-    profile resolver never overrides a higher tier).
-
-    The ``borrador_resolution`` and backend values are passed only as ownership
-    exclusions. They do not change profile facts; they prevent the profile tier
-    from claiming a :class:`~cadrumo.domain.calculations.registry.ids.BindingId` that a
-    higher-precedence source already supplied.
+    source mesh. Profile is the LOWEST precedence tier, yet it resolves every
+    binding it can, including those a higher tier also supplies: the overlay
+    keeps the higher tier's value and compares it with the profile's. A fact
+    the profile does not hold is absent from the tier rather than refused, so
+    a binding a higher tier was meant to supply never fails here.
 
     See Also:
         :class:`~cadrumo.application.aggregation.source_profile.ProfileSourceResolver`:
@@ -138,31 +130,19 @@ def resolve_profile_source_tier(
 
     Returns:
         A :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceResolution`
-        carrying the profile-owned bindings not already claimed by
-        higher-precedence tiers.
+        carrying every profile-sourced binding the profile holds a fact for.
     """
     from ..aggregation.source_mesh import CalculationSourceContext
     from ..aggregation.source_profile import ProfileSourceResolver
 
-    caller_owned = (
-        set(caller_binding_values)
-        | set(caller_enum_binding_values)
-        | set(borrador_resolution.binding_values)
-        | set(borrador_resolution.enum_binding_values)
-        | set(backend_binding_values)
-    )
-    resolver = ProfileSourceResolver(
-        caller_binding_ids=caller_owned,
-        registry_snapshot=snapshot,
-        operation=operation,
-    )
+    resolver = ProfileSourceResolver(registry_snapshot=snapshot, operation=operation)
     require_calculation_route_resolver("pre_mesh", resolver)
     return resolver.resolve(
         CalculationSourceContext(
             bucket_id=bucket_id,
             modelo=snapshot.modelo.id,
             filing_year=snapshot.filing_year,
-            period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+            period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
             revision=snapshot.revision,
             profile=profile,
         ),
@@ -239,7 +219,7 @@ def resolve_declaration_period_inputs(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: _Period,
+    period: Period,
     declaration_kind: FilingDeclarationKind,
 ) -> DeclarationPeriodInputs:
     """Resolve the declaration's filing context into informational casilla inputs.
@@ -283,6 +263,7 @@ def _reject_binding_channel_mismatch(
     if misrouted_to_decimal:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=caller_defect_verdict("binding_channel_decimal"),
             context={
                 "misrouted_binding_ids": ", ".join(misrouted_to_decimal),
                 "expected_input_channel": "enum",
@@ -296,6 +277,7 @@ def _reject_binding_channel_mismatch(
     if misrouted_to_enum:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=caller_defect_verdict("binding_channel_enum"),
             context={
                 "misrouted_binding_ids": ", ".join(misrouted_to_enum),
                 "expected_input_channel": "decimal",
@@ -323,13 +305,14 @@ def _reject_boolean_binding_channel_mismatch(
     boolean_profile_binding_ids = {
         binding.id
         for binding in revision.bindings
-        if binding.value.channel is BindingValueChannel.BOOLEAN and binding.source is _BindingSourceKind.PROFILE
+        if binding.value.channel is BindingValueChannel.BOOLEAN and binding.source is BindingSourceKind.PROFILE
     }
     misrouted = sorted(boolean_profile_binding_ids & set(binding_values) - set(boolean_binding_values))
     if not misrouted:
         return
     raise ModeloError(
         translated_message="errors.error.error_modelos",
+        precondition_verdict=caller_defect_verdict("binding_channel_boolean"),
         context={
             "misrouted_binding_ids": ", ".join(misrouted),
             "expected_input_channel": "boolean",
@@ -348,10 +331,8 @@ def _resolve_borrador_bindings_for_calculation(
     bucket_id: str,
     modelo: str,
     filing_year: int,
-    period: _Period,
+    period: Period,
     borrador_snapshot_id: str | None,
-    caller_binding_values: Mapping[BindingId, Decimal],
-    caller_enum_binding_values: Mapping[BindingId, str],
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
     operation: PinnedAuthorityOperation,
@@ -367,8 +348,6 @@ def _resolve_borrador_bindings_for_calculation(
 
     resolver = Modelo100BorradorSourceResolver(
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
         operation=operation,
@@ -403,7 +382,7 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
         ):
             continue
         binding = bindings_by_id.get(casilla.binding)
-        if binding is None or binding.source != _BindingSourceKind.PREVIOUS_FILING:
+        if binding is None or binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
         if casilla.binding in resolved_bindings:
             continue
@@ -415,7 +394,7 @@ def _resolve_declaration_period_inputs(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    period: _Period,
+    period: Period,
     declaration_kind: FilingDeclarationKind,
 ) -> DeclarationPeriodInputs:
     """Return informational-casilla inputs sourced from the declaration's filing context."""
@@ -438,13 +417,19 @@ def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_r
     try:
         casilla_id = casilla_id_for_unique_revision_semantic_role(revision, semantic_role)
     except AmbiguousSemanticRoleCasillaError as exc:
-        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+        raise ModeloError(
+            str(exc),
+            translated_message="application.modelo.errors.semantic_role_ambiguous",
+            context=exc.ambiguity.context(),
+            precondition_verdict=semantic_role_ambiguous_verdict(exc.ambiguity.semantic_role),
+        ) from exc
     if casilla_id is None:
         return None
     casilla = casillas_by_id(revision).get(casilla_id)
     if casilla is None or casilla.input_kind != InputKind.INFORMATIONAL:
         raise ModeloError(
             translated_message="errors.error.error_modelos",
+            precondition_verdict=registry_defect_verdict("informational_semantic_role_casilla"),
             context={
                 "semantic_role": semantic_role,
                 "casilla_id": casilla_id,

@@ -11,7 +11,7 @@ from uuid import UUID
 
 import pytest
 from mcp.server import Server
-from pydantic import AllowInfNan, Field
+from pydantic import AllowInfNan, BaseModel, ConfigDict, Field
 from sphinx.application import Sphinx
 
 from cadrumo.application.operations.models import CredentialFreeOperationRequest
@@ -28,16 +28,18 @@ from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import (
 from cadrumo_runtime.host.frontend.tui.secret.runtime_login_session import (
     RuntimeClientOpener as SessionRuntimeClientOpener,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..manager import _public_type_aliases
-from ..rendering import TypeHintsFormatter, format_type_hint
-from ._sphinx_probe import run_sphinx_probe
+from ..rendering import TypeHintsFormatter, complete_deferred_model, constructor_signature, format_type_hint
+from ..type_aliases import public_type_aliases
+from .sphinx_probe import run_sphinx_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-_FRESH_PASSWORD_ANNOTATION = inspect.signature(FreshPasswordAuthorization).parameters["verified_monotonic"].annotation
+_FRESH_PASSWORD_ANNOTATION = (
+    constructor_signature(FreshPasswordAuthorization).parameters["verified_monotonic"].annotation
+)
 
 
 def _fresh_password_signature_probe(value: object) -> None:
@@ -63,7 +65,7 @@ _SIGNATURE_PROBES = (
     (_worker_signature_probe, ProfileWorkerSettlementRequest, "wait_seconds"),
 )
 for _probe, _model, _parameter in _SIGNATURE_PROBES:
-    _probe.__annotations__["value"] = inspect.signature(_model).parameters[_parameter].annotation
+    _probe.__annotations__["value"] = constructor_signature(_model).parameters[_parameter].annotation
 
 
 _ALLOW_INF_NAN_ANNOTATION = get_type_hints(AccessSession, include_extras=True)["issued_monotonic"]
@@ -118,11 +120,40 @@ def test_generated_constructor_signatures_preserve_finite_float_metadata() -> No
     )
 
     for model, parameter in constructors:
-        annotation = inspect.signature(model).parameters[parameter].annotation
+        annotation = constructor_signature(model).parameters[parameter].annotation
         rendered = format_type_hint(annotation)
         assert rendered is not None, f"{model.__name__}.{parameter} bypassed constrained metadata formatting"
         assert "AllowInfNan(allow_inf_nan=False)" in rendered
         assert "AllowInfNan`" not in rendered
+
+
+class _DeferredBuildModel(BaseModel):
+    """A synthetic model whose schema stays unbuilt until first use."""
+
+    model_config = ConfigDict(defer_build=True, frozen=True)
+
+    name: str
+    count: int
+
+
+def test_deferred_model_renders_its_real_constructor_signature() -> None:
+    assert not _DeferredBuildModel.__pydantic_complete__
+    assert list(inspect.signature(_DeferredBuildModel).parameters) == ["data"]
+
+    signature = constructor_signature(_DeferredBuildModel)
+
+    assert _DeferredBuildModel.__pydantic_complete__
+    assert list(signature.parameters) == ["name", "count"]
+    assert complete_deferred_model(_DeferredBuildModel) is False
+    assert complete_deferred_model(int) is False
+
+
+def test_the_pydantic_base_class_is_not_treated_as_a_deferred_model() -> None:
+    # autodoc imports every module member, BaseModel included, before it skips
+    # imported names; rebuilding the base class raised and aborted the build.
+    assert not BaseModel.__pydantic_complete__
+
+    assert complete_deferred_model(BaseModel) is False
 
 
 def test_typehints_formatter_config_value_is_pickleable() -> None:
@@ -175,6 +206,7 @@ def test_type_alias_class_references_and_regex_fields_render_in_sphinx(tmp_path:
 def _build_type_alias_and_regex_probe(tmp_path: Path) -> None:
     """The generated alias target and formatter resolve under nitpicky Sphinx."""
     request_annotations = dict(CredentialFreeOperationRequest.__annotations__)
+    assert not _DeferredBuildModel.__pydantic_complete__
     assert build_server.__annotations__["return"] == "Server"
     dependency_types = (UUID, FrontendClient, McpSurface)
     assert tuple((value.__module__, value.__qualname__) for value in dependency_types) == (
@@ -194,7 +226,7 @@ def _build_type_alias_and_regex_probe(tmp_path: Path) -> None:
     docs.mkdir()
     alias_module = "cadrumo_client.transport.automation_decision"
     alias_source = REPO_ROOT / "src" / "cadrumo_client" / "transport" / "automation_decision.py"
-    alias_target = "\n".join(_public_type_aliases(alias_module, alias_source))
+    alias_target = "\n".join(public_type_aliases(alias_module, alias_source))
     assert ".. py:type:: AutomationDecision" in alias_target
     unresolved_reference = format_type_hint("Annotated[MissingFirstParty, Field(pattern='^[A-Z]+$')]")
     assert unresolved_reference is not None
@@ -209,7 +241,6 @@ from dev.docs.apidocs.rendering import TypeHintsFormatter
 
 repo = Path({str(REPO_ROOT)!r})
 os.environ["CADRUMO_DOCS_PROJECT_ROOT"] = str(repo)
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = {str(tmp_path / "storage")!r}
 os.environ["CADRUMO_STORAGE_ROOT"] = {str(tmp_path / "storage")!r}
 sys.path.insert(0, str(repo))
 sys.path.insert(0, str(repo / "src"))
@@ -254,7 +285,7 @@ def setup(app):
     rendered_allow_inf_nan_type = format_annotation(_ALLOW_INF_NAN_INSTANCE, app.config)
     rendered_server_type = format_annotation(Server, app.config)
     constructor_annotations = tuple(
-        inspect.signature(model).parameters[parameter].annotation
+        constructor_signature(model).parameters[parameter].annotation
         for model, parameter in (
             (FreshPasswordAuthorization, "verified_monotonic"),
             (AccessSession, "issued_monotonic"),
@@ -289,6 +320,7 @@ def setup(app):
         "   :annotation:\n"
         "   :no-value:\n\n"
         ".. autofunction:: cadrumo_mcp.mcp.server.build_server\n\n"
+        ".. autoclass:: dev.docs.apidocs.tests.test_rendering._DeferredBuildModel\n   :no-members:\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._fresh_password_signature_probe\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_session_signature_probe\n\n"
         ".. autofunction:: dev.docs.apidocs.tests.test_rendering._access_context_signature_probe\n\n"
@@ -325,6 +357,12 @@ def setup(app):
     rendered_html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
     assert "AllowInfNan(allow_inf_nan=False)" in rendered_html
     assert rendered_html.count("Constraint for") >= 4
+    assert _DeferredBuildModel.__pydantic_complete__
+    deferred_entry = rendered_html.partition('id="dev.docs.apidocs.tests.test_rendering._DeferredBuildModel"')[2]
+    deferred_parameters = deferred_entry.partition("</dl>")[0]
+    assert "<strong>name</strong>" in deferred_parameters
+    assert "<strong>count</strong>" in deferred_parameters
+    assert "<strong>data</strong>" not in deferred_parameters
     assert "https://py.sdk.modelcontextprotocol.io/api/mcp/server/lowlevel/server/" in rendered_html
     assert "cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts.RuntimeClientOpener" in rendered_html
     assert "bearer" in rendered_html and "gateway_bearer" in rendered_html

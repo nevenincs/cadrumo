@@ -9,6 +9,7 @@ from textual.await_remove import AwaitRemove
 
 from .....application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from .....application.modelo.work_form_models import ModeloWorkForm
+from .....application.modelo.work_form_wording import aeat_imported_on
 from .....core.i18n.render import tr
 from .casilla_list import CasillaList
 from .casilla_list_models import CasillaListEntry
@@ -20,15 +21,15 @@ from .editor import (
     read_only_reason,
 )
 from .editor_explanations import affects_text
-from .header import ResultView, result_view
+from .header import HeaderResult, header_result
 from .ports import ModeloWorkbenchActionsV1, WorkbenchChangeKind
 from .screen_constants import (
-    _DOCKED_FROM,
-    _FOLLOWING_LINES,
+    DOCKED_FROM,
+    FOLLOWING_LINES,
 )
 from .session import StagedChange, StageRefusal, WorkbenchEditSession
 from .sources import OpenSourceSurface
-from .vocabulary import aeat_imported_on
+from .vocabulary import states_something
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -55,14 +56,14 @@ class WorkbenchEditorMixin:
         recorded = self.recorded
         form = self.form
         result = self._editor_result(form, recorded)
-        docked = self._height() >= _DOCKED_FROM
+        docked = self._height() >= DOCKED_FROM
         panel = self._editor_panel(entry, actions, card, form, result, recorded, docked)
         self._show_editor(entry, panel, docked)
 
-    def _editor_result(self: ModeloWorkbenchScreen, form: ModeloWorkForm | None, recorded: bool) -> ResultView | None:
+    def _editor_result(self: ModeloWorkbenchScreen, form: ModeloWorkForm | None, recorded: bool) -> HeaderResult | None:
         if form is None:
             return None
-        return result_view(form, self._language, staged=len(self._session.changes), recorded=recorded)
+        return header_result(form, self._language, staged=len(self._session.changes), recorded=recorded)
 
     def _editor_panel(
         self: ModeloWorkbenchScreen,
@@ -70,7 +71,7 @@ class WorkbenchEditorMixin:
         actions: ModeloWorkbenchActionsV1,
         card: ModeloCasillaHelpCardV1 | None,
         form: ModeloWorkForm | None,
-        result: ResultView | None,
+        result: HeaderResult | None,
         recorded: bool,
         docked: bool,
     ) -> CasillaEditorPanel:
@@ -90,6 +91,7 @@ class WorkbenchEditorMixin:
             # Docked, the header stays in view and the panel need not repeat its result line.
             status_line=None if docked else self._status_line(),
             recorded=recorded,
+            calculated=entry.calculated,
             aeat_imported=aeat_imported_on(self.form),
             staged=self._staged_change(entry),
         )
@@ -118,7 +120,7 @@ class WorkbenchEditorMixin:
         self._docked = (entry, panel)
         self.add_class("-editing")
         # The list keeps the rows after the box in view itself, whenever it brings the box in.
-        self.query_one(CasillaList).keep_following(_FOLLOWING_LINES)
+        self.query_one(CasillaList).keep_following(FOLLOWING_LINES)
         removed = None if previous is None else previous[1].remove()
         self.run_worker(self._mount_docked(panel, removed), group="workbench-dock")
 
@@ -197,8 +199,11 @@ class WorkbenchEditorMixin:
     def _stage(self: ModeloWorkbenchScreen, entry: CasillaListEntry, decision: EditorDecision) -> StageRefusal | None:
         """Stage what the filer decided in a box's panel, then show the workbench with it or say why it was refused."""
         field = entry.field
+        form = self.form
         if decision.kind is WorkbenchChangeKind.SET:
             refusal = self._session.stage_value(field, decision.value, decision.display)
+        elif states_something(field) and form is not None:
+            refusal = self._session.withdraw_stated(form, field)
         elif decision.kind is WorkbenchChangeKind.CLEAR:
             refusal = self._session.stage_clear(field)
         else:
@@ -208,7 +213,7 @@ class WorkbenchEditorMixin:
 
     def _after_stage(self: ModeloWorkbenchScreen, refusal: StageRefusal | None) -> None:
         if refusal is not None:
-            self._notice(tr(f"tui.modelo.workbench.stage_refused.{refusal.value}"))
+            self._notice(tr(f"workspace.modelo.stage_refused.{refusal.value}"))
             return
         self._notice("")
         self._refresh_after_staging()

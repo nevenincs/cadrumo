@@ -24,7 +24,7 @@ import pytest
 
 from ......core.config import Settings
 from ...bucket.errors import BucketLockedError
-from ..bucket_session import _ROUTED_SETTINGS_MEMO_SIZE, BucketSession
+from ..bucket_session import ROUTED_SETTINGS_MEMO_SIZE, BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -57,8 +57,8 @@ def test_two_alternating_sources_are_both_retained(tmp_path) -> None:
     the defect itself.
     """
     session = _session()
-    first = Settings(cadrumo_local_storage_root=tmp_path / "one")
-    second = Settings(cadrumo_local_storage_root=tmp_path / "two")
+    first = Settings(cadrumo_storage_root=tmp_path / "one")
+    second = Settings(cadrumo_storage_root=tmp_path / "two")
 
     session.routed_settings(first)
     session.routed_settings(second)
@@ -79,8 +79,8 @@ def test_each_source_gets_its_own_route(tmp_path) -> None:
     reuse test above while handing callers the wrong database.
     """
     session = _session()
-    first = Settings(cadrumo_local_storage_root=tmp_path / "one")
-    second = Settings(cadrumo_local_storage_root=tmp_path / "two")
+    first = Settings(cadrumo_storage_root=tmp_path / "one")
+    second = Settings(cadrumo_storage_root=tmp_path / "two")
 
     routed_first = session.routed_settings(first)
     routed_second = session.routed_settings(second)
@@ -94,21 +94,21 @@ def test_the_memo_stays_bounded(tmp_path) -> None:
     """Control: retention is bounded, so a long session cannot grow without limit."""
     session = _session()
 
-    for index in range(_ROUTED_SETTINGS_MEMO_SIZE + 6):
-        session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / f"root-{index}"))
+    for index in range(ROUTED_SETTINGS_MEMO_SIZE + 6):
+        session.routed_settings(Settings(cadrumo_storage_root=tmp_path / f"root-{index}"))
 
-    assert _derivations(session) <= _ROUTED_SETTINGS_MEMO_SIZE
+    assert _derivations(session) <= ROUTED_SETTINGS_MEMO_SIZE
 
 
 def test_a_sealed_session_serves_no_route(tmp_path) -> None:
     """Closing a session must not leave a usable route behind it."""
     session = _session()
-    session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / "one"))
+    session.routed_settings(Settings(cadrumo_storage_root=tmp_path / "one"))
     session.close()
 
     assert _derivations(session) == 0
     with pytest.raises(BucketLockedError):
-        session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / "one"))
+        session.routed_settings(Settings(cadrumo_storage_root=tmp_path / "one"))
 
 
 def test_deadline_is_untouched_by_route_derivation(tmp_path) -> None:
@@ -121,8 +121,8 @@ def test_deadline_is_untouched_by_route_derivation(tmp_path) -> None:
     session = _session()
     before = session._idle_deadline
 
-    session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / "one"))
-    session.routed_settings(Settings(cadrumo_local_storage_root=tmp_path / "two"))
+    session.routed_settings(Settings(cadrumo_storage_root=tmp_path / "one"))
+    session.routed_settings(Settings(cadrumo_storage_root=tmp_path / "two"))
 
     assert session._idle_deadline == before
     assert session._idle_deadline < _NOW + timedelta(days=1)

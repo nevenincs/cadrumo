@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._bootstrap_exempt import is_bootstrap_exempt
+from ..bootstrap_exempt import is_bootstrap_exempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

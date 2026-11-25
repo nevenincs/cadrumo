@@ -8,11 +8,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_mcp.mcp.access_scope import surface_scope
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 
@@ -20,6 +19,7 @@ from .. import runtime_adapter as mcp_runtime
 from ..protocol_contract import SIGN_IN_REMEDY
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
+from .admitted_lease import admitted_access_status
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -95,31 +95,8 @@ class _RuntimeClientStub:
 
     def status(self) -> SimpleNamespace:
         return SimpleNamespace(
-            status=ProfileAccessStatus(
-                connected=True,
-                credential_authenticated=True,
-                profile_id=self.profile_id,
-                session_id=self.session_id,
-                session_expires_at=self.session_expires_at,
-                grant_state=AuthorityState.ACTIVE,
-                grant_expires_at=self.session_expires_at,
-                grant_valid=True,
-                profile_bound=True,
-                storage=Availability.AVAILABLE,
-                automation_custody=Availability.AVAILABLE,
-                published_authority=Availability.AVAILABLE,
-                provider=Availability.NOT_REQUIRED,
-                effective_scope=EffectiveScopeSummary.summarize(
-                    AccessScope(
-                        operations=frozenset(),
-                        actions=frozenset(),
-                        disclosures=frozenset(),
-                        periods=None,
-                        allow_period_independent=True,
-                        allow_delegation=False,
-                    )
-                ),
-                denial=None,
+            status=admitted_access_status(
+                self.profile_id, self.session_id, expires_at=self.session_expires_at, operations=frozenset()
             )
         )
 
@@ -150,7 +127,7 @@ async def test_the_configured_key_admits_exact_profile_for_mcp_and_close_release
         timeout: float,
         scope: AccessScope,
     ) -> _RuntimeClientStub:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         opened.append((profile_id, credential_reference, frontend))
         return admitted

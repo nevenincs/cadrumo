@@ -44,7 +44,7 @@ def active_profile(tmp_path: Path) -> Iterator[None]:
     in their body.
 
     The package-level `_isolated_aeat_root` conftest fixture handles
-    `cadrumo_local_storage_root` redirection separately.
+    `cadrumo_storage_root` redirection separately.
     """
 
     from ....core.config import override_settings
@@ -94,15 +94,13 @@ def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path)
     assert result_a.storage_state != result_b.storage_state
 
 
-def test_storage_state_paths_is_independent_of_plaintext_token_dir(tmp_path: Path) -> None:
-    """Encrypted session object keys must not depend on the plaintext token dir."""
-    from ....core.config import Settings, override_settings
+def test_storage_state_paths_is_independent_of_storage_root(tmp_path: Path) -> None:
+    """Encrypted session object keys must not depend on where the storage root sits."""
+    from ....core.config import override_settings
 
-    with override_settings(cadrumo_token_dir=tmp_path / "tokens-a"):
-        Settings()
+    with override_settings(cadrumo_storage_root=tmp_path / "root-a"):
         result_a = storage_state_paths(AuthProviderKind.CERTIFICATE)
-    with override_settings(cadrumo_token_dir=tmp_path / "tokens-b"):
-        Settings()
+    with override_settings(cadrumo_storage_root=tmp_path / "root-b"):
         result_b = storage_state_paths(AuthProviderKind.CERTIFICATE)
 
     assert result_a.storage_state == result_b.storage_state

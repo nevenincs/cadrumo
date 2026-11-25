@@ -1,0 +1,343 @@
+"""A profile worker whose event loop stalls leaves every thread's stack in its own dump file.
+
+The tests stall a real running loop with one short synchronous block and read
+what the native ``faulthandler`` timer wrote; healthy loops must write nothing.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import ctypes
+import logging
+import os
+import re
+import stat
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import cast
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.core.config import override_settings
+from cadrumo.core.logging import default_log_file_path
+from cadrumo.tests.log_records import delivered_records
+
+from ...adapters.worker_transport import WorkerChannel
+from .. import worker_service
+from ..operation_host import ProfileWorkerOperationHost
+from ..profile_login import ProfileWorkerHumanLogin
+from ..worker import serve_watched
+from ..worker_stall_watchdog import (
+    DUMP_NAME_PREFIX,
+    DUMP_NAME_SUFFIX,
+    HEADER_NOTE,
+    RETAINED_DUMP_FILES,
+    watch_event_loop,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_PRIVATE_LOCAL = "synthetic-private-local-canary"
+_LOGGER_NAME = "cadrumo_runtime.host.worker_stall_watchdog"
+
+
+def _dump_path(directory: Path) -> Path:
+    return directory / f"{DUMP_NAME_PREFIX}{os.getpid()}{DUMP_NAME_SUFFIX}"
+
+
+def _header_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8").splitlines(keepends=True)[0]
+
+
+def _is_header_only(path: Path) -> bool:
+    text = path.read_text(encoding="utf-8")
+    return text == _header_text(path) and text.startswith("armed ") and text.endswith(chr(10))
+
+
+def _block_the_loop(seconds: float) -> None:
+    private_local = _PRIVATE_LOCAL
+    time.sleep(seconds)
+    del private_local
+
+
+def _hold_the_interpreter_lock(seconds: float) -> None:
+    """Sleep in a native call that keeps the GIL, so no other Python thread can run meanwhile."""
+    native = ctypes.PyDLL("kernel32" if sys.platform == "win32" else None)
+    if sys.platform == "win32":
+        native.Sleep(int(seconds * 1000))
+    else:
+        native.usleep(int(seconds * 1_000_000))
+
+
+def _events(caplog: pytest.LogCaptureFixture, name: str) -> list[logging.LogRecord]:
+    return [record for record in delivered_records(caplog, _LOGGER_NAME) if record.getMessage() == name]
+
+
+@pytest.mark.asyncio
+async def test_a_stalled_loop_writes_every_thread_stack_and_reports_it_once_the_loop_turns(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    dump = _dump_path(tmp_path)
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        async with watch_event_loop(directory=tmp_path, stall_seconds=0.2, tick_seconds=0.05):
+            await asyncio.sleep(0.1)
+            assert _is_header_only(dump)
+            _block_the_loop(0.6)
+            written = dump.stat().st_size
+            await asyncio.sleep(0.15)
+
+    text = dump.read_text(encoding="utf-8")
+    assert written > len(_header_text(dump))
+    assert text.startswith("armed ")
+    assert (
+        f"pid {os.getpid()}; a stack follows only if the worker stalled" + chr(10) in text.splitlines(keepends=True)[0]
+    )
+    assert re.search(r"^Timeout \(", text, re.MULTILINE)
+    assert "(most recent call first):" in text
+    assert "in _block_the_loop" in text
+    assert _PRIVATE_LOCAL not in text
+    armed = _events(caplog, "profile_worker_stall_watchdog_armed")
+    dumped = _events(caplog, "profile_worker_event_loop_stall_dumped")
+    assert [record.__dict__["dump_file"] for record in armed + dumped] == [dump.name] * 2
+    assert dumped[0].levelno == logging.WARNING
+    assert dumped[0].__dict__["outcome"] == "dumped"
+    assert dumped[0].__dict__["timeout_seconds"] == 0.2
+    assert dumped[0].__dict__["elapsed_seconds"] >= 0.5
+    assert str(tmp_path) not in repr([record.__dict__ for record in armed + dumped])
+
+
+@pytest.mark.asyncio
+async def test_a_loop_stalled_while_holding_the_interpreter_lock_is_still_dumped(tmp_path: Path) -> None:
+    dump = _dump_path(tmp_path)
+    async with watch_event_loop(directory=tmp_path, stall_seconds=0.2, tick_seconds=0.05):
+        await asyncio.sleep(0.1)
+        _hold_the_interpreter_lock(0.6)
+        written = dump.stat().st_size
+
+    assert written > len(_header_text(dump))
+    assert "in _hold_the_interpreter_lock" in dump.read_text(encoding="utf-8")
+
+
+@pytest.mark.asyncio
+async def test_a_healthy_loop_writes_nothing_and_leaves_no_file(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    dump = _dump_path(tmp_path)
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        async with watch_event_loop(directory=tmp_path, stall_seconds=0.3, tick_seconds=0.05):
+            # Far longer than the stall bound: only the loop's own re-arming keeps the timer from firing.
+            await asyncio.sleep(0.8)
+            assert _is_header_only(dump)
+        assert not dump.exists()
+        # Disarmed on exit: a thread blocked past the bound writes nowhere.
+        _block_the_loop(0.5)
+
+    assert not dump.exists()
+    assert _events(caplog, "profile_worker_event_loop_stall_dumped") == []
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows files take the log directory's access list")
+def test_the_dump_file_is_owner_only_where_the_platform_has_modes(tmp_path: Path) -> None:
+    async def scenario() -> int:
+        async with watch_event_loop(directory=tmp_path, stall_seconds=5.0):
+            return stat.S_IMODE(_dump_path(tmp_path).stat().st_mode)
+
+    assert asyncio.run(scenario()) == 0o600
+
+
+@pytest.mark.asyncio
+async def test_a_full_dump_file_stops_taking_dumps(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    dump = _dump_path(tmp_path)
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        async with watch_event_loop(directory=tmp_path, stall_seconds=0.2, tick_seconds=0.05, max_bytes=1):
+            _block_the_loop(0.5)
+            await asyncio.sleep(0.15)
+            first = dump.stat().st_size
+            _block_the_loop(0.5)
+            await asyncio.sleep(0.15)
+            second = dump.stat().st_size
+
+    assert first > len(_header_text(dump))
+    assert second == first
+    assert [record.__dict__["outcome"] for record in _events(caplog, "profile_worker_event_loop_stall_dumped")] == [
+        "capped"
+    ]
+
+
+@pytest.mark.asyncio
+async def test_old_dump_files_are_pruned_to_the_retention_count_and_other_files_are_left(tmp_path: Path) -> None:
+    stale = [
+        tmp_path / f"{DUMP_NAME_PREFIX}{1000 + index}{DUMP_NAME_SUFFIX}" for index in range(RETAINED_DUMP_FILES + 3)
+    ]
+    for index, path in enumerate(stale):
+        path.write_text("synthetic earlier dump", encoding="utf-8")
+        os.utime(path, (1_000_000 + index, 1_000_000 + index))
+    unrelated = tmp_path / "cadrumo.log"
+    unrelated.write_text("synthetic log", encoding="utf-8")
+
+    async with watch_event_loop(directory=tmp_path, stall_seconds=5.0):
+        remaining = sorted(path for path in tmp_path.glob(f"{DUMP_NAME_PREFIX}*{DUMP_NAME_SUFFIX}"))
+        assert _dump_path(tmp_path) in remaining
+
+    newest = stale[len(stale) - (RETAINED_DUMP_FILES - 1) :]
+    assert sorted([*newest, _dump_path(tmp_path)]) == remaining
+    assert unrelated.read_text(encoding="utf-8") == "synthetic log"
+
+
+def _named_for(directory: Path, pid: int) -> Path:
+    return directory / f"{DUMP_NAME_PREFIX}{pid}{DUMP_NAME_SUFFIX}"
+
+
+@pytest.mark.asyncio
+async def test_a_new_watchdog_removes_only_the_empty_files_of_workers_that_no_longer_run(tmp_path: Path) -> None:
+    ended = subprocess.Popen([sys.executable, "-I", "-c", "pass"])
+    ended.wait(timeout=60)
+    running = subprocess.Popen([sys.executable, "-I", "-c", "import sys; sys.stdin.read()"], stdin=subprocess.PIPE)
+    try:
+        abandoned = _named_for(tmp_path, ended.pid)
+        abandoned.touch()
+        header_only = _named_for(tmp_path, ended.pid + 2)
+        header_only.write_text(
+            f"armed 2026-11-10T00:00:00Z pid {ended.pid + 2}{HEADER_NOTE}" + chr(10), encoding="utf-8"
+        )
+        header_then_stack = _named_for(tmp_path, ended.pid + 3)
+        header_then_stack.write_text(
+            f"armed 2026-11-10T00:00:00Z pid {ended.pid + 3}{HEADER_NOTE}" + chr(10) + "Timeout (0:00:10)!" + chr(10),
+            encoding="utf-8",
+        )
+        still_armed = _named_for(tmp_path, running.pid)
+        still_armed.touch()
+        stalled_then_ended = _named_for(tmp_path, ended.pid + 1)
+        stalled_then_ended.write_text("synthetic earlier dump", encoding="utf-8")
+        unnumbered = tmp_path / f"{DUMP_NAME_PREFIX}other{DUMP_NAME_SUFFIX}"
+        unnumbered.touch()
+
+        async with watch_event_loop(directory=tmp_path, stall_seconds=5.0):
+            remaining = {path.name for path in tmp_path.iterdir()}
+    finally:
+        if running.stdin is not None:
+            running.stdin.close()
+        running.wait(timeout=60)
+
+    assert abandoned.name not in remaining
+    assert header_only.name not in remaining
+    assert {header_then_stack.name, still_armed.name, stalled_then_ended.name, unnumbered.name} <= remaining
+
+
+@pytest.mark.asyncio
+async def test_a_worker_that_never_stalls_leaves_no_file_while_one_that_stalls_leaves_its_stacks(
+    tmp_path: Path,
+) -> None:
+    quiet, stalling = tmp_path / "quiet", tmp_path / "stalling"
+    async with watch_event_loop(directory=quiet, stall_seconds=5.0):
+        await asyncio.sleep(0.05)
+    async with watch_event_loop(directory=stalling, stall_seconds=0.2, tick_seconds=0.05):
+        _block_the_loop(0.6)
+        await asyncio.sleep(0.15)
+
+    assert list(quiet.iterdir()) == []
+    assert "(most recent call first):" in _dump_path(stalling).read_text(encoding="utf-8")
+
+
+@pytest.mark.asyncio
+async def test_an_unusable_directory_never_stops_the_worker_from_serving(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("a file where the log directory should be", encoding="utf-8")
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        async with watch_event_loop(directory=blocker / "logs"):
+            served = True
+
+    assert served
+    unavailable = _events(caplog, "profile_worker_stall_watchdog_unavailable")
+    assert [record.levelno for record in unavailable] == [logging.WARNING]
+    assert unavailable[0].__dict__["outcome"] == "unavailable"
+
+
+@pytest.mark.asyncio
+async def test_the_worker_serves_both_channels_inside_the_watchdog(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    served: list[bool] = []
+
+    async def serve(*_owners: object) -> None:
+        served.append(_dump_path(default_log_file_path().parent).exists())
+
+    monkeypatch.setattr(worker_service, "serve", serve)
+    with override_settings(cadrumo_storage_root=tmp_path):
+        await serve_watched(
+            cast(WorkerChannel, object()),
+            cast(WorkerChannel, object()),
+            cast(WorkerChannel, object()),
+            cast(ProfileWorkerCustody, object()),
+            cast(ProfileWorkerHumanLogin, object()),
+            cast(ProfileWorkerOperationHost, object()),
+        )
+        assert not _dump_path(default_log_file_path().parent).exists()
+
+    assert served == [True]
+
+
+def _interpreter_itself() -> tuple[list[str], dict[str, str]]:
+    """Start this environment's interpreter as the child itself, not through a launcher process.
+
+    A Windows virtual environment's ``python.exe`` is a launcher that starts the base interpreter as a
+    second process. Ending the launcher ends the interpreter only through its job, so waiting for the
+    launcher returns while the interpreter may still hold its dump file open, and does not keep the
+    interpreter's process id from being reused. The base interpreter adopts the environment from the
+    variable the launcher would set.
+    """
+    environment = dict(os.environ)
+    base = getattr(sys, "_base_executable", None)
+    if sys.platform != "win32" or sys.prefix == sys.base_prefix or not isinstance(base, str) or not base:
+        return [sys.executable], environment
+    if Path(base) == Path(sys.executable) or not Path(base).is_file():
+        return [sys.executable], environment
+    environment["__PYVENV_LAUNCHER__"] = sys.executable
+    return [base], environment
+
+
+def test_a_worker_ended_while_armed_leaves_a_header_only_file_the_next_watchdog_removes(tmp_path: Path) -> None:
+    code = chr(10).join(
+        [
+            "import asyncio, os, sys",
+            "from pathlib import Path",
+            "from cadrumo_runtime.host.worker_stall_watchdog import watch_event_loop",
+            "async def main():",
+            "    async with watch_event_loop(directory=Path(sys.argv[1]), stall_seconds=60.0):",
+            "        print(os.getpid(), flush=True)",
+            "        sys.stdin.readline()",
+            "asyncio.run(main())",
+        ]
+    )
+    interpreter, environment = _interpreter_itself()
+    child = subprocess.Popen(  # noqa: S603 - exact interpreter and a fixed in-test script
+        [*interpreter, "-c", code, str(tmp_path)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=environment,
+    )
+    try:
+        assert child.stdout is not None
+        pid = int(child.stdout.readline())
+        # Waiting for the child is then waiting for the process that holds the file to have closed it.
+        assert pid == child.pid
+        leftover = _named_for(tmp_path, pid)
+        assert _is_header_only(leftover)
+        assert f"pid {pid}" in _header_text(leftover)
+    finally:
+        child.kill()
+        child.wait(timeout=60)
+
+    async def next_worker() -> None:
+        async with watch_event_loop(directory=tmp_path, stall_seconds=5.0):
+            pass
+
+    assert leftover.exists()
+    asyncio.run(next_worker())
+    assert not leftover.exists()

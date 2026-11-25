@@ -4,7 +4,7 @@ Each case names one supported (record kind, file format, importing frontend)
 combination and writes its own synthetic source.  The expected stored
 locator is computed here from the file's own layout, independently of the
 product: delimited and workbook sources count physical rows with the header
-as row 1, while OFX and N26 PDF statements have no row concept and store the
+as row 1, while OFX and PDF statements have no row concept and store the
 1-based ordinal of the transaction in the document.  Non-target filler rows
 put the target at a position other than the first, so a hard-coded row
 number cannot satisfy the check.
@@ -20,12 +20,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
+from .installed_tui_contracts import YEAR
+
 type RecordKind = Literal["transaction", "invoice"]
 type ImportFrontend = Literal["cli", "tui"]
 type LocatorKind = Literal["physical_row", "transaction_ordinal"]
 
-_YEAR = 2025
-_N26_HEADER = ("Date", "Payee", "Payment reference", "Amount (EUR)", "Currency", "Transaction ID")
+_STATEMENT_CSV_HEADER = ("Date", "Payee", "Payment reference", "Amount (EUR)", "Currency", "Transaction ID")
 _INVOICE_COLUMNS = (
     "counterparty_nif",
     "counterparty_name",
@@ -37,7 +38,6 @@ _INVOICE_COLUMNS = (
     "notes",
 )
 _INVOICE_NIF = "B12345674"
-_PDF_HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +66,7 @@ class InvoiceRow:
             _INVOICE_NIF,
             "Synthetic supplier SL",
             self.invoice_number,
-            f"{_YEAR}-03-{self.day:02d}",
+            f"{YEAR}-03-{self.day:02d}",
             format(self.taxable_base, "f"),
             "21",
             "ES",
@@ -170,7 +170,7 @@ def _invoice_rows(case_id: str, *, target_position: int, count: int, base: Decim
 
 def _statement_cells(row: StatementRow) -> tuple[str, ...]:
     return (
-        f"{_YEAR}-03-{row.day:02d}",
+        f"{YEAR}-03-{row.day:02d}",
         row.payee,
         row.description,
         format(row.amount, "f"),
@@ -200,20 +200,20 @@ def _write_workbook(path: Path, header: tuple[str, ...], rows: list[tuple[str, .
 
 
 def statement_delimited_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
-    """Write an N26-layout CSV statement."""
-    return lambda path: _write_delimited(path, _N26_HEADER, [_statement_cells(row) for row in rows], ",")
+    """Write a CSV statement in the generic header vocabulary."""
+    return lambda path: _write_delimited(path, _STATEMENT_CSV_HEADER, [_statement_cells(row) for row in rows], ",")
 
 
 def statement_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
-    """Write an N26-layout XLSX statement with the header on worksheet row 1."""
-    return lambda path: _write_workbook(path, _N26_HEADER, [_statement_cells(row) for row in rows])
+    """Write a generic-header XLSX statement with the header on worksheet row 1."""
+    return lambda path: _write_workbook(path, _STATEMENT_CSV_HEADER, [_statement_cells(row) for row in rows])
 
 
 def _ofx_document(rows: tuple[StatementRow, ...]) -> str:
     transactions = "".join(
         "          <STMTTRN>\n"
         f"            <TRNTYPE>{'CREDIT' if row.amount > 0 else 'DEBIT'}\n"
-        f"            <DTPOSTED>{_YEAR}03{row.day:02d}000000\n"
+        f"            <DTPOSTED>{YEAR}03{row.day:02d}000000\n"
         f"            <TRNAMT>{format(row.amount, 'f')}\n"
         f"            <FITID>{row.external_id}\n"
         f"            <NAME>{row.payee}\n"
@@ -225,15 +225,15 @@ def _ofx_document(rows: tuple[StatementRow, ...]) -> str:
         "OFXHEADER:100\nDATA:OFXSGML\nVERSION:102\nSECURITY:NONE\nENCODING:USASCII\nCHARSET:1252\n"
         "COMPRESSION:NONE\nOLDFILEUID:NONE\nNEWFILEUID:NONE\n\n"
         "<OFX>\n  <SIGNONMSGSRSV1>\n    <SONRS>\n      <STATUS>\n        <CODE>0\n        <SEVERITY>INFO\n"
-        f"      </STATUS>\n      <DTSERVER>{_YEAR}0331090000\n      <LANGUAGE>ENG\n    </SONRS>\n"
+        f"      </STATUS>\n      <DTSERVER>{YEAR}0331090000\n      <LANGUAGE>ENG\n    </SONRS>\n"
         "  </SIGNONMSGSRSV1>\n  <BANKMSGSRSV1>\n    <STMTTRNRS>\n      <TRNUID>1\n      <STATUS>\n"
         "        <CODE>0\n        <SEVERITY>INFO\n      </STATUS>\n      <STMTRS>\n        <CURDEF>EUR\n"
         "        <BANKACCTFROM>\n          <BANKID>0000\n          <ACCTID>SYNTHETIC-LEDGER\n"
         "          <ACCTTYPE>CHECKING\n        </BANKACCTFROM>\n        <BANKTRANLIST>\n"
-        f"          <DTSTART>{_YEAR}0301000000\n          <DTEND>{_YEAR}0331235959\n"
+        f"          <DTSTART>{YEAR}0301000000\n          <DTEND>{YEAR}0331235959\n"
         f"{transactions}"
         "        </BANKTRANLIST>\n        <LEDGERBAL>\n          <BALAMT>0.00\n"
-        f"          <DTASOF>{_YEAR}0331235959\n        </LEDGERBAL>\n      </STMTRS>\n    </STMTTRNRS>\n"
+        f"          <DTASOF>{YEAR}0331235959\n        </LEDGERBAL>\n      </STMTRS>\n    </STMTTRNRS>\n"
         "  </BANKMSGSRSV1>\n</OFX>\n"
     )
 
@@ -247,27 +247,26 @@ def statement_ofx_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], Non
     return write
 
 
-def _n26_pdf_lines(rows: tuple[StatementRow, ...]) -> tuple[str, ...]:
+def _statement_pdf_lines(rows: tuple[StatementRow, ...]) -> tuple[str, ...]:
+    """Print one dated, signed movement per line, its text first, so a reader copies it whole."""
     lines = [
-        f"Kontoauszug Nr. 3/{_YEAR}",
-        "N26 Bank SE",
-        f"01.03.{_YEAR} bis 31.03.{_YEAR}",
-        _PDF_HEADER_LINE,
+        "Account statement",
+        f"01.03.{YEAR} to 31.03.{YEAR}",
+        "Description Date Amount",
     ]
     for row in rows:
         amount = format(row.amount, "f").replace(".", ",")
         sign = "+" if row.amount > 0 else ""
-        lines.append(f"{row.payee} {row.day:02d}.03.{_YEAR} {sign}{amount}EUR")
-        lines.append(row.description)
+        lines.append(f"{row.description} {row.day:02d}.03.{YEAR} {sign}{amount} EUR")
     return tuple(lines)
 
 
 def statement_pdf_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
-    """Write a one-page synthetic statement in the N26 text-line layout."""
+    """Write a one-page synthetic statement in a bank-neutral text-line layout."""
     from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
     def write(path: Path) -> None:
-        path.write_bytes(text_pdf_bytes(_n26_pdf_lines(rows)))
+        path.write_bytes(text_pdf_bytes(_statement_pdf_lines(rows)))
 
     return write
 
@@ -277,24 +276,24 @@ def invoice_delimited_writer(rows: tuple[InvoiceRow, ...], *, delimiter: str) ->
     return lambda path: _write_delimited(path, _INVOICE_COLUMNS, [row.values() for row in rows], delimiter)
 
 
-def _write_legacy_workbook(path: Path, header: tuple[str, ...], rows: list[tuple[object, ...]]) -> None:
+def _write_xls_workbook(path: Path, header: tuple[str, ...], rows: list[tuple[object, ...]]) -> None:
     from cadrumo.tests.xls_fixtures import xls_workbook_bytes
 
     path.write_bytes(xls_workbook_bytes([("Sheet1", [list(header), *(list(row) for row in rows)])]))
 
 
-def statement_legacy_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
-    """Write an N26-layout Excel 97-2003 statement with typed date and amount cells."""
+def statement_xls_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
+    """Write a generic-header Excel 97-2003 statement with typed date and amount cells."""
 
     def cells(row: StatementRow) -> tuple[object, ...]:
-        return (date(_YEAR, 3, row.day), row.payee, row.description, float(row.amount), "EUR", row.external_id)
+        return (date(YEAR, 3, row.day), row.payee, row.description, float(row.amount), "EUR", row.external_id)
 
-    return lambda path: _write_legacy_workbook(path, _N26_HEADER, [cells(row) for row in rows])
+    return lambda path: _write_xls_workbook(path, _STATEMENT_CSV_HEADER, [cells(row) for row in rows])
 
 
-def invoice_legacy_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
+def invoice_xls_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
     """Write an Excel 97-2003 invoice book with the header on worksheet row 1."""
-    return lambda path: _write_legacy_workbook(path, _INVOICE_COLUMNS, [row.values() for row in rows])
+    return lambda path: _write_xls_workbook(path, _INVOICE_COLUMNS, [row.values() for row in rows])
 
 
 def invoice_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
@@ -318,7 +317,7 @@ def _statement_case(
     elif file_format == "xlsx":
         writer, locator_kind, locator = statement_workbook_writer(rows), "physical_row", target_position + 1
     elif file_format == "xls":
-        writer, locator_kind, locator = statement_legacy_workbook_writer(rows), "physical_row", target_position + 1
+        writer, locator_kind, locator = statement_xls_workbook_writer(rows), "physical_row", target_position + 1
     elif file_format in {"ofx", "qfx"}:
         writer, locator_kind, locator = statement_ofx_writer(rows), "transaction_ordinal", target_position
     elif file_format == "pdf":
@@ -359,7 +358,7 @@ def _invoice_case(
     elif file_format in {"xlsx", "xlsm"}:
         writer = invoice_workbook_writer(rows)
     elif file_format == "xls":
-        writer = invoice_legacy_workbook_writer(rows)
+        writer = invoice_xls_workbook_writer(rows)
     else:
         raise ValueError(f"unsupported synthetic invoice-book format {file_format}")
     return ProvenanceCase(
@@ -383,7 +382,7 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
 
     CLI statements use explicit provider tokens except ``auto``, which covers
     detection for the ``.txt``, ``.qfx`` and legacy ``.xls`` files.  The TUI
-    exposes ``auto``, ``csv``, ``ofx``, ``xlsx`` and ``pdf-n26``; invoice books
+    exposes ``auto``, ``csv``, ``ofx``, ``xlsx`` and ``pdf``; invoice books
     take no provider in either frontend.
     """
     return (
@@ -403,7 +402,7 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
             "cli-qfx", frontend="cli", file_format="qfx", provider="auto", target_position=1, count=1, base="50.00"
         ),
         _statement_case(
-            "cli-pdf", frontend="cli", file_format="pdf", provider="pdf-n26", target_position=2, count=2, base="-60.00"
+            "cli-pdf", frontend="cli", file_format="pdf", provider="pdf", target_position=2, count=2, base="-60.00"
         ),
         _statement_case(
             "cli-xls", frontend="cli", file_format="xls", provider="auto", target_position=2, count=3, base="55.00"
@@ -466,7 +465,7 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
             "tui-qfx", frontend="tui", file_format="qfx", provider="auto", target_position=1, count=1, base="95.00"
         ),
         _statement_case(
-            "tui-pdf", frontend="tui", file_format="pdf", provider="pdf-n26", target_position=3, count=3, base="-66.00"
+            "tui-pdf", frontend="tui", file_format="pdf", provider="pdf", target_position=3, count=3, base="-66.00"
         ),
         _statement_case(
             "tui-xls", frontend="tui", file_format="xls", provider="auto", target_position=3, count=3, base="97.00"

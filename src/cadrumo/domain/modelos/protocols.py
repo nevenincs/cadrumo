@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     # pragma: no cover - typing-only boundary DTO (lives in core, not adapters)
-    from ...core.secure_object_write import SecureObjectWrite
+    from ...core.secure_object_write import SecureObjectRevisionAssertion, SecureObjectWrite, SecureObjectWriteUnit
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from .calculation_revision import CalculationRevisionCatalogue
     from .filing_record import ModeloRecordCatalogue
@@ -45,6 +45,13 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
 
     def exists(self) -> bool:
         """Return whether a calculation-revision catalogue object has been persisted."""
+        ...
+
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        """Return whether the stored catalogue is already known to hold no relation override.
+
+        ``False`` means unknown: the caller must read the catalogue to find out.
+        """
         ...
 
     def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
@@ -76,13 +83,18 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
-    def to_secure_object_write(
+    def to_secure_object_write_unit(
         self,
         catalogue: CalculationRevisionCatalogue,
         *,
         expected_revision_id: str | None = None,
-    ) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
+    ) -> SecureObjectWriteUnit:
+        """Return the writes and assertions that persist ``catalogue``, without committing them.
+
+        A catalogue is stored across several rows: the catalogue row and the
+        rendering bodies its revisions refer to. A caller composing it into
+        another repository's batch carries every write and every assertion of
+        the unit into that one batch.
 
         ``expected_revision_id`` is the compare-and-swap half. These
         catalogues are SINGLETON rows, so a co-commit composed from an
@@ -171,8 +183,13 @@ class ModeloRecordCatalogueRepositoryProtocol(Protocol):
         extra_writes: tuple[SecureObjectWrite, ...],
         *,
         expected_revision_id: str | None = None,
+        assertions: tuple[SecureObjectRevisionAssertion, ...] = (),
     ) -> None:
-        """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
+        """Persist ``catalogue`` plus co-emitted secure-object writes atomically.
+
+        ``assertions`` are the source revisions a co-emitted write unit
+        requires; the batch commits only while each still holds.
+        """
         ...
 
 

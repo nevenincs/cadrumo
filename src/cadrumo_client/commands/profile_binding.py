@@ -13,11 +13,12 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.click_context import json_output_requested
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.core.tty import stderr_is_tty, stdin_is_tty
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -63,7 +64,7 @@ def _raise_release_setup_failure(
     raise primary from None
 
 
-def _release_profile_client(client: FrontendClient, primary: BaseException | None) -> None:
+def release_profile_client(client: FrontendClient, primary: BaseException | None) -> None:
     """Preserve a rendered typed primary if its actual native owner stays unsettled."""
     # The command boundary renders a typed error, then raises Exit from
     # that exact error. An unresolved owner cannot be reduced to an int.
@@ -100,10 +101,10 @@ def _owned_profile_client(client: FrontendClient) -> Generator[FrontendClient]:
     try:
         yield client
     except BaseException as error:
-        _release_profile_client(client, error)
+        release_profile_client(client, error)
         raise
     else:
-        _release_profile_client(client, None)
+        release_profile_client(client, None)
 
 
 def bind_profile_client(ctx: typer.Context, client: FrontendClient, *, profile_id: UUID) -> None:
@@ -128,7 +129,7 @@ def subscribe_profile_notices(ctx: typer.Context, client: FrontendClient) -> Non
 
         def notice(_event: object) -> None:
             with suppress(OSError):
-                typer.echo(message, err=True)
+                typer.echo(encode_terminal_text(message), err=True)
 
         ctx.call_on_close(client.subscribe_lifecycle_notices(notice))
         subscriptions.clients.add(client)

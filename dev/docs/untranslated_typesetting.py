@@ -7,7 +7,7 @@ in English and as “Mis expedientes” in Spanish.
 
 A page that declares itself generator-owned is English-only by policy: it is
 excluded from the localized surface, nobody translates it, and every language's
-build reads the same English prose (:func:`dev.docs.i18n._is_generated_page`
+build reads the same English prose (:func:`dev.docs.i18n.is_generated_page`
 says why). The only thing a language then changes about such a page is that
 typesetting. Educating English prose with Spanish quotation marks is not a
 translation; it is one page typeset four ways for no reader's benefit, and it
@@ -42,7 +42,7 @@ from sphinx.transforms import SphinxTransform
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from .i18n import _DOC_SUFFIXES, _is_generated_page
+from .i18n import DOC_SUFFIXES, is_generated_page
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -70,9 +70,9 @@ def source_language_pages(docs_root: Path) -> tuple[str, ...]:
     """
     pages: list[str] = []
     for source in sorted(docs_root.rglob("*")):
-        if source.suffix not in _DOC_SUFFIXES or not source.is_file():
+        if source.suffix not in DOC_SUFFIXES or not source.is_file():
             continue
-        if _is_generated_page(source):
+        if is_generated_page(source):
             pages.append(source.relative_to(docs_root).with_suffix("").as_posix())
     return tuple(pages)
 

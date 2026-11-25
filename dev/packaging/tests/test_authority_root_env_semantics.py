@@ -1,7 +1,7 @@
 """Every authority-root seed reads the environment variable the same way.
 
 Three places resolve where a working tree keeps its published authority:
-``dev._paths`` seeds it for every ``python -m dev.*`` entry point, the
+``dev.paths`` seeds it for every ``python -m dev.*`` entry point, the
 repository ``conftest.py`` seeds it for pytest without importing ``dev``, and
 ``dev.packaging.authority_staging`` resolves it when staging a build root. They
 must agree, and agreeing on the PATH is not enough -- they must also agree on
@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
 from dev.packaging.authority_staging import AUTHORING_AUTHORITY_DIRECTORY, authoring_authority_root
+from dev.paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -58,7 +58,7 @@ def test_staging_strips_a_padded_override(monkeypatch: pytest.MonkeyPatch, tmp_p
 
 @pytest.mark.parametrize("blank", _BLANK_VALUES)
 def test_the_dev_seed_replaces_a_blank_value(blank: str, monkeypatch: pytest.MonkeyPatch) -> None:
-    """``dev._paths`` seeds over a blank value rather than preserving it.
+    """``dev.paths`` seeds over a blank value rather than preserving it.
 
     The seed runs at import, so the behaviour is re-derived here from the same
     expression rather than re-imported: a module already imported by the test

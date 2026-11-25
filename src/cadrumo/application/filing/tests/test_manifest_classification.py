@@ -32,38 +32,61 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
+from ....core.authority_grade import RegistryAuthorityGrade
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.tests.authored_editions import (
+    authored_revisions_where,
+    filing_year_envelope,
+    first_calculation_grade_edition,
+    revision_covering,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # (modelo, filing_year, period, on) — manifest-bearing modelos across the gated set,
 # spanning every shape: pagos fraccionados (130/131), retenciones (111/115/123),
 # IVA (303), sociedades (202/200), and informativas (190/180/349/232/720).
+# Every coordinate is the newest supported exercise, which each of these modelos
+# serves at filing grade; a quarterly coordinate is filed in June of its exercise
+# and an annual one in June of the next.
 #
-# Modelo 200 enters only from its 2025 design, the first it declares at filing
-# grade. Its 2024 revision stays at calculation grade and refuses at the
-# snapshot boundary before the gate runs; that refusal is asserted explicitly in
-# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below.
+# Modelo 200 joins the table only while the edition serving that exercise declares
+# filing grade, read from the registry. An edition below it refuses at the snapshot
+# boundary before the gate runs; that refusal is asserted in
+# ``test_calculation_grade_coordinate_refuses_at_the_manifest_gate`` below, which
+# takes that edition as its subject whenever Modelo 200 is left out of the table.
+_NEWEST_EXERCISE = filing_year_envelope().horizon
+_M200_NEWEST_IS_FILING_GRADE = str(revision_covering("200", _NEWEST_EXERCISE).id) in {
+    str(revision.id)
+    for revision in authored_revisions_where(
+        "200", lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+    )
+}
 _MANIFEST_MODELOS = [
-    ("130", 2025, "1T", date(2025, 6, 1)),
-    ("111", 2025, "1T", date(2025, 6, 1)),
-    ("115", 2025, "1T", date(2025, 6, 1)),
-    ("123", 2025, "1T", date(2025, 6, 1)),
-    ("131", 2025, "1T", date(2025, 6, 1)),
-    ("303", 2025, "1T", date(2025, 6, 1)),
-    ("202", 2025, "1P", date(2025, 6, 1)),
-    ("200", 2025, "0A", date(2026, 7, 1)),
-    ("190", 2025, "0A", date(2026, 6, 1)),
-    ("180", 2025, "0A", date(2026, 6, 1)),
-    ("349", 2025, "1T", date(2025, 6, 1)),
-    ("232", 2024, "0A", date(2025, 6, 1)),
-    ("720", 2024, "0A", date(2025, 6, 1)),
+    (modelo, _NEWEST_EXERCISE, period, date(_NEWEST_EXERCISE + (1 if period == "0A" else 0), 6, 1))
+    for modelo, period in (
+        ("130", "1T"),
+        ("111", "1T"),
+        ("115", "1T"),
+        ("123", "1T"),
+        ("131", "1T"),
+        ("303", "2T"),
+        ("202", "1P"),
+        *((("200", "0A"),) if _M200_NEWEST_IS_FILING_GRADE else ()),
+        ("190", "0A"),
+        ("180", "0A"),
+        ("349", "1T"),
+        ("232", "0A"),
+        ("720", "0A"),
+    )
 ]
 
 
 def _manifest_and_casillas(modelo: str, year: int, period: str, on: date) -> tuple[Any, dict[str, Any]]:
-    snapshot = published_snapshot(modelo, filing_year=year, period=period, on=on)
+    # The completeness gate guards a filing, so its snapshot is asked for at
+    # filing grade; a reading snapshot would open a lower edition at its own rung.
+    snapshot = published_snapshot(modelo, filing_year=year, period=period, on=on, grade=RegistryAuthorityGrade.FILING)
     revision = snapshot.revision
     manifest = revision.completeness_manifest
     assert manifest is not None, f"modelo {modelo} must declare a completeness manifest"
@@ -98,11 +121,21 @@ def test_gate_required_set_equals_computed_plus_schema_required(modelo: str, yea
     assert required, f"modelo {modelo} has an empty gate-required set (vacuous gate)"
 
 
-# A coordinate whose registry revision declares a rung below filing. Modelo
-# 200's 2024 revision declares `calculation`: it computes, but it ships no
-# export layout, so claiming filing authority for it would be a false
-# capability claim.
-_CALCULATION_GRADE_COORDINATE = ("200", 2024, "0A", date(2024, 12, 31))
+def _calculation_grade_coordinate() -> tuple[str, int, str, date]:
+    """Return the coordinate the refusal test demands filing grade of.
+
+    While Modelo 200's newest edition is below filing grade it is the gap the
+    table leaves, so it is the coordinate proven to refuse. Once it is gated,
+    the refusal is still exercised on a real calculation-grade edition read from
+    the registry, since a calculation-grade revision computes without
+    established filing evidence and claiming filing authority for it would be a
+    false capability claim.
+    """
+    if not _M200_NEWEST_IS_FILING_GRADE:
+        return ("200", _NEWEST_EXERCISE, "0A", date(_NEWEST_EXERCISE, 12, 31))
+    edition = first_calculation_grade_edition()
+    assert edition is not None, "the registry authors no calculation-grade edition inside the support envelope"
+    return (edition.modelo, edition.filing_year, edition.period, date(edition.filing_year, 12, 31))
 
 
 def test_calculation_grade_coordinate_refuses_at_the_manifest_gate() -> None:
@@ -115,7 +148,7 @@ def test_calculation_grade_coordinate_refuses_at_the_manifest_gate() -> None:
     declared rung, so a future promotion to filing grade turns this test red
     instead of letting the modelo re-enter the gate unnoticed.
     """
-    modelo, year, period, on = _CALCULATION_GRADE_COORDINATE
+    modelo, year, period, on = _calculation_grade_coordinate()
 
     with pytest.raises(RegistryValidationError) as exc_info:
         _manifest_and_casillas(modelo, year, period, on)

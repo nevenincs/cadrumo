@@ -1,17 +1,21 @@
 """Every registered operation is answered alike on every frontend: the person's and the delegated clients'.
 
-The one exception is the person's own act: a credential or access act, or a
+One exception is the person's own act: a credential or access act, or a
 request carrying the person's consent to send a stored document off this
 machine. It is answered alike on the person's frontends, and on external client and the
 automation host it is either answered the same or refused with the typed
 person-act refusal.
 
+The person-driven Sede browser view additionally requires the desktop window
+that displays and drives its stream. Every other frontend must receive a
+typed frontend or person-act refusal; ordinary operations retain parity.
+
 No definition declares the frontends it is open to: every registered
-operation is open to all of them. What a submission is answered is decided in
+ordinary operation is open to all of them. What a submission is answered is decided in
 two places, the operation's own access resolver and the access policy that
-holds the resolved access to the session, and neither may tell the frontends
-apart. This file puts both to every registered operation, through the
-production registry and with the real policy evaluation.
+holds the resolved access to the session. Apart from the Sede view's window
+requirement, neither may tell the person's frontends apart. This file puts both
+to every registered operation, through the production registry and with the real policy evaluation.
 
 Each operation is asked on requests built from its registered schema alone
 and admitted through its own decoder. Where its resolver admits none of those,
@@ -48,7 +52,6 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -59,13 +62,14 @@ from cadrumo.application.user_profile.operation_access_policy import evaluate_op
 from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.errors.hierarchy import CadrumoError
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 from cadrumo.entrypoints.tests.test_operation_subject_binding import (
@@ -245,18 +249,19 @@ def test_every_persons_act_is_refused_on_each_automation_frontend_and_admitted_o
 # Requests built from the registered schema alone
 # ---------------------------------------------------------------------------
 
-_PROBE_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
+PROBE_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _PROBE_DESTINATION = UUID("5aa00000-0000-4000-8000-0000000000bb")
-_PROBE_PERIOD = Period.from_year_and_code(2025, "1T")
+_YEAR = filing_year_envelope().horizon
+_PROBE_PERIOD = Period.from_year_and_code(_YEAR, "1T")
 _RESOLVED = "resolved"
 
 _PATTERN_SAMPLES: tuple[str, ...] = (
-    str(_PROBE_PROFILE),
+    str(PROBE_PROFILE),
     "0" * 64,
     f"sha256:{'0' * 64}",
     "0" * 10,
     "303",
-    "2025",
+    str(_YEAR),
     "1T",
     "es",
     "ES",
@@ -284,7 +289,7 @@ class _SampleChoice:
 _SAMPLE_CHOICES: tuple[_SampleChoice, ...] = tuple(
     _SampleChoice(text=text, whole_number=whole_number, alternative=alternative)
     for alternative in range(8)
-    for whole_number in (0, 2025)
+    for whole_number in (0, _YEAR)
     for text in ("0", "1T", "x", "0" * 12)
 )
 
@@ -296,11 +301,11 @@ class _NoGenericSampleError(Exception):
 def _string_sample(schema: Mapping[str, Any], choice: _SampleChoice) -> str:
     text_format = schema.get("format")
     if text_format == "uuid":
-        return str(_PROBE_PROFILE)
+        return str(PROBE_PROFILE)
     if text_format == "date":
-        return "2025-01-01"
+        return f"{_YEAR}-01-01"
     if text_format == "date-time":
-        return "2025-01-01T00:00:00Z"
+        return f"{_YEAR}-01-01T00:00:00Z"
     minimum = int(schema.get("minLength", 0))
     maximum = schema.get("maxLength")
     pattern = schema.get("pattern")
@@ -375,7 +380,7 @@ def _decoded_request(definition_id: str, sample: str) -> OperationRequest[BaseMo
     try:
         return OperationRequest(
             definition_id=definition_id,
-            subject_ref=profile_operation_subject(str(_PROBE_PROFILE)),
+            subject_ref=profile_operation_subject(str(PROBE_PROFILE)),
             payload=production_operation_registry().decode_request_payload(definition_id, sample),
         )
     except (CadrumoError, ValueError, LookupError):
@@ -383,7 +388,7 @@ def _decoded_request(definition_id: str, sample: str) -> OperationRequest[BaseMo
 
 
 @cache
-def _probe_requests(definition_id: str) -> tuple[OperationRequest[BaseModel], ...]:
+def probe_requests(definition_id: str) -> tuple[OperationRequest[BaseModel], ...]:
     """Every distinct request the operation's own registered schema and decoder accept.
 
     Each sample is built from the registered request schema alone and admitted
@@ -410,7 +415,7 @@ def _probe_contexts(
     otherwise read the addressed record's period can still be asked.
     """
     submit = OperationAccessContext(
-        profile_id=_PROBE_PROFILE,
+        profile_id=PROBE_PROFILE,
         destination_id=_PROBE_DESTINATION,
         action=AccessAction.SUBMIT,
         frontend=frontend,
@@ -424,7 +429,7 @@ def _probe_contexts(
     )
     for label, periods in replayed_scopes:
         admitted = OperationAccessRequest(
-            profile_id=_PROBE_PROFILE,
+            profile_id=PROBE_PROFILE,
             definition_id=registration.contract.definition_id,
             action=AccessAction.SUBMIT,
             frontend=frontend,
@@ -463,10 +468,10 @@ def test_the_schema_sample_keeps_to_required_members_and_declared_shapes() -> No
         },
         "$defs": {"Nested": {"type": "object", "required": ["flag"], "properties": {"flag": {"type": "boolean"}}}},
     }
-    fixed = {"profile_id": str(_PROBE_PROFILE), "digest": "0" * 64, "nested": {"flag": False}, "kind": "thing"}
+    fixed = {"profile_id": str(PROBE_PROFILE), "digest": "0" * 64, "nested": {"flag": False}, "kind": "thing"}
 
     first = _schema_sample(schema, schema["$defs"], _SampleChoice(text="0", whole_number=0, alternative=0))
-    second = _schema_sample(schema, schema["$defs"], _SampleChoice(text="1T", whole_number=2025, alternative=1))
+    second = _schema_sample(schema, schema["$defs"], _SampleChoice(text="1T", whole_number=_YEAR, alternative=1))
 
     assert first == {**fixed, "mode": "preview", "count": 1, "label": "000"}
     assert second == {**fixed, "mode": "apply", "count": 50, "label": "1T1"}
@@ -503,7 +508,7 @@ stored while this file runs, so the resolver answers every frontend for a
 record it cannot find, and that answer is still held to be the same on each."""
 
 _SAMPLE_EVIDENCE = "e" * 16
-_M145_DRAFT: Mapping[str, Any] = {"communication_year": 2026, "period_token": "comunicacion", "actor": "synthetic"}
+_M145_DRAFT: Mapping[str, Any] = {"communication_year": _YEAR, "period_token": "comunicacion", "actor": "synthetic"}
 _M145_WORKER = {"casilla_id": "perceptor.nif", "value": "12345678Z"}
 _LOCAL_OBSERVATION: Mapping[str, Any] = {
     "modelo": "130",
@@ -515,12 +520,11 @@ _STATED_FOR_THE_PERSON: Mapping[str, tuple[Mapping[str, Any], ...]] = {
     "ledger.evidence.extract": tuple(
         {"evidence_id": _SAMPLE_EVIDENCE, "off_host_provider": provider.value, "acknowledge_off_host": True}
         for provider in LLMProvider
-        if provider is not LLMProvider.LOCAL
     ),
     "ledger.own_account": (
         {"action": "add", "label": "synthetic", "holding": "titular", "iban": _SAMPLE_IBAN},
         {"action": "update", "own_account_id": _SAMPLE_ACCOUNT, "label": "synthetic"},
-        {"action": "close", "own_account_id": _SAMPLE_ACCOUNT, "closed_on": "2026-06-30"},
+        {"action": "close", "own_account_id": _SAMPLE_ACCOUNT, "closed_on": f"{_YEAR}-06-30"},
         {"action": "remove", "own_account_id": _SAMPLE_ACCOUNT},
         {"action": "designate", "own_account_id": _SAMPLE_ACCOUNT, "role": "charge"},
         {"action": "undesignate", "role": "charge"},
@@ -531,8 +535,8 @@ _STATED_FOR_THE_PERSON: Mapping[str, tuple[Mapping[str, Any], ...]] = {
         {**_M145_DRAFT, "field_values": [{"casilla_id": "acuse-recibo.tipo-firma", "value": "1"}, _M145_WORKER]},
     ),
     "modelo.m360_solicitud": (
-        {"action": "declare", "filing_year": 2025, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
-        {"action": "remove", "filing_year": 2025},
+        {"action": "declare", "filing_year": _YEAR, "own_account_id": _SAMPLE_ACCOUNT, "facts": _SOLICITUD_FACTS},
+        {"action": "remove", "filing_year": _YEAR},
     ),
     "modelo.observation.local": ({**_LOCAL_OBSERVATION, "action": "clear"},),
     "modelo.work.calculate": (
@@ -591,8 +595,8 @@ def _sample_request(definition_id: str, document: Mapping[str, Any]) -> Operatio
     """Admit one written-out document through the registry's own decoder; a stale sample fails here."""
     record_member = _RECORD_ADDRESSED.get(definition_id)
     if record_member is None:
-        subject_ref = profile_operation_subject(str(_PROBE_PROFILE))
-        document = {"profile_id": str(_PROBE_PROFILE), **document}
+        subject_ref = profile_operation_subject(str(PROBE_PROFILE))
+        document = {"profile_id": str(PROBE_PROFILE), **document}
     else:
         subject_ref = str(document[record_member])
     return OperationRequest(
@@ -623,6 +627,16 @@ def _answers_on(
 
 _PERSON_ACT_REQUIRED = AccessDenialCode.PERSON_ACT_REQUIRED.value
 _REFUSED_AS_PERSONS_ACT = f"refused:{_PERSON_ACT_REQUIRED}"
+_REFUSED_AS_FRONTEND = f"refused:{AccessDenialCode.FRONTEND_DENIED.value}"
+
+
+def _has_only_refusals(answer: object, permitted: frozenset[str]) -> bool:
+    """Check every probed position, including access-policy decisions, for a typed refusal."""
+    if isinstance(answer, _Decision):
+        return answer.resolution in permitted
+    if isinstance(answer, Mapping):
+        return bool(answer) and all(_has_only_refusals(value, permitted) for value in answer.values())
+    return answer in permitted if isinstance(answer, str) else False
 
 
 def _is_persons_act(request: OperationRequest[BaseModel]) -> bool:
@@ -663,7 +677,19 @@ def _on_the_persons_frontends[AnswerT](
 
     An automation is answered either as the person is, where a later door refuses
     it, or with the person-act refusal; never with anything else.
+    The Sede view separately proves the window requirement's typed refusals.
     """
+    if request.definition_id == "live.sede.view":
+        # Only the desktop window consumes and drives the person-held browser
+        # stream. Every excluded frontend must still prove its typed refusal.
+        for frontend, answer in by_frontend.items():
+            if frontend is OperationFrontendProjection.DESKTOP:
+                continue
+            permitted = frozenset({_REFUSED_AS_FRONTEND})
+            if frontend in _AUTOMATION_FRONTENDS:
+                permitted |= {_REFUSED_AS_PERSONS_ACT}
+            assert _has_only_refusals(answer, permitted), (request.definition_id, frontend.value, answer)
+        return {OperationFrontendProjection.DESKTOP: by_frontend[OperationFrontendProjection.DESKTOP]}
     if not _is_persons_act(request):
         return by_frontend
     for frontend in _AUTOMATION_FRONTENDS:
@@ -690,7 +716,7 @@ def test_every_schema_built_request_is_answered_alike_on_every_frontend() -> Non
     admitted = 0
     for definition_id in _definition_ids(resolved=True):
         registration = production_operation_registry().lookup_public_registration(definition_id)
-        for index, request in enumerate(_probe_requests(definition_id)):
+        for index, request in enumerate(probe_requests(definition_id)):
             by_frontend = {frontend: _answers_on(registration, request, frontend) for frontend in _FRONTENDS}
             admitted += _RESOLVED in by_frontend[_CLI].values()
             found = _differing(_on_the_persons_frontends(by_frontend, request))
@@ -709,7 +735,7 @@ def test_every_admission_a_schema_built_request_reports_is_refused_for_another_p
     unrefused: list[tuple[str, str, str]] = []
     for definition_id in _definition_ids(resolved=True):
         registration = registry.lookup_public_registration(definition_id)
-        for request in _probe_requests(definition_id)[:1]:
+        for request in probe_requests(definition_id)[:1]:
             for frontend in _FRONTENDS:
                 for position, context in _probe_contexts(registration, frontend):
                     if _resolution(request, context) != _RESOLVED:
@@ -867,9 +893,9 @@ def test_the_real_resolver_and_policy_answer_every_frontend_alike_for_a_request_
     """Admitted with the same policy or refused with the same code, for a human session and for a key session."""
     probed = [
         _answers_at_every_judged_access(
-            production_operation_registry(), request, profile_id=_PROBE_PROFILE, operation=operation
+            production_operation_registry(), request, profile_id=PROBE_PROFILE, operation=operation
         )
-        for request in _probe_requests(definition_id)
+        for request in probe_requests(definition_id)
     ]
     for index, answers in enumerate(probed):
         assert not _unlike(answers), (
@@ -881,7 +907,7 @@ def test_the_real_resolver_and_policy_answer_every_frontend_alike_for_a_request_
     # No schema-built request is admitted, so the comparison above rests on refusals alone. The
     # request the operation's own scenario seeds into a real profile is one its resolver admits.
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             _driver,
             registry,
@@ -915,13 +941,13 @@ def test_a_reviewed_decision_is_answered_alike_on_every_frontend(
     registry = production_operation_registry()
     definition = registry.lookup(definition_id)
     payload = definition.request_type.model_validate(
-        {"profile_id": _PROBE_PROFILE, "request_id": UUID(int=1), "review_digest": OPERATION_REVIEW_DIGEST}, strict=True
+        {"profile_id": PROBE_PROFILE, "request_id": UUID(int=1), "review_digest": OPERATION_REVIEW_DIGEST}, strict=True
     )
-    subject_ref = expected_operation_subject(definition.subject_reference, profile_id=_PROBE_PROFILE, payload=payload)
+    subject_ref = expected_operation_subject(definition.subject_reference, profile_id=PROBE_PROFILE, payload=payload)
     assert subject_ref is not None
     request = OperationRequest[BaseModel](definition_id=definition_id, subject_ref=subject_ref, payload=payload)
 
-    answers = _answers_at_every_judged_access(registry, request, profile_id=_PROBE_PROFILE, operation=operation)
+    answers = _answers_at_every_judged_access(registry, request, profile_id=PROBE_PROFILE, operation=operation)
     assert answers[AccessAction.SUBMIT][_CLI].resolution == _RESOLVED, answers[AccessAction.SUBMIT][_CLI]
     assert not _unlike(answers), _unlike(answers)
 

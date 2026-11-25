@@ -20,6 +20,7 @@ import asyncio
 import contextlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import BaseModel, Field
@@ -28,18 +29,10 @@ from cadrumo.adapters.persistence.operations.journal import OperationJournalRepo
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import (
     OperationSecureReferenceRepository,
-    operation_secure_reference_repository,
 )
-from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.capabilities import (
-    OperationBaselinePolicy,
-    OperationCapabilities,
-    OperationConflictScope,
     OperationOwnedResource,
-    OperationReplayPolicy,
-    OperationRequestStoragePolicy,
-    OperationSensitiveInputPolicy,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition, OperationExecutorFactory
@@ -58,15 +51,18 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
-    OperationClosePolicy,
     OperationDeadline,
-    OperationDurability,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    GovernedFactSource,
+    governed_facts_in_scope,
+)
 
 from .supervision_support import run_to_settlement
+from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -193,22 +189,6 @@ class HeldExecutor:
         return None
 
 
-def _capabilities() -> OperationCapabilities:
-    return OperationCapabilities(
-        durability=OperationDurability.RECORDED,
-        cancellation=OperationCancellation.COOPERATIVE,
-        deadline=OperationDeadline.COOPERATIVE,
-        replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-        baseline=OperationBaselinePolicy.NONE,
-        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
-        sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
-        conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-        owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
-        permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),
-        close_policy=OperationClosePolicy.DETACH_ALLOWED,
-    )
-
-
 def _definition(executor: HeldExecutor) -> OperationDefinition:
     return OperationDefinition(
         definition_id=_DEFINITION_ID,
@@ -222,20 +202,13 @@ def _definition(executor: HeldExecutor) -> OperationDefinition:
         ),
         phase_codes=(_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
+        capabilities=supervisor_capabilities(
+            cancellation=OperationCancellation.COOPERATIVE,
+            deadline=OperationDeadline.COOPERATIVE,
+            owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
+            permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),
+        ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-    )
-
-
-def _repositories(
-    *,
-    storage_root: Path,
-    profile_objects: SecureObjectRepository,
-) -> tuple[OperationJournalRepository, OperationLeaseFilesystemRepository, OperationSecureReferenceRepository]:
-    return (
-        OperationJournalRepository(storage_root=storage_root),
-        OperationLeaseFilesystemRepository(storage_root=storage_root),
-        operation_secure_reference_repository(objects=profile_objects),
     )
 
 
@@ -304,7 +277,7 @@ async def _assert_no_terminal_published(
 def test_elapsed_aggregate_deadline_publishes_nothing_while_the_executor_continues(tmp_path: Path) -> None:
     """An outrun executor keeps the record open until it actually stops."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )
@@ -361,7 +334,7 @@ def test_elapsed_aggregate_deadline_publishes_nothing_while_the_executor_continu
 def test_elapsed_cleanup_deadline_retains_uncertainty_while_an_owned_resource_closes(tmp_path: Path) -> None:
     """A resource still closing leaves the record unsettled, never falsely timed out."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state",
             profile_objects=profile.repository,
         )
@@ -416,3 +389,53 @@ def test_elapsed_cleanup_deadline_retains_uncertainty_while_an_owned_resource_cl
             assert resource.close_calls == 1
 
         asyncio.run(outrun_the_cleanup())
+
+
+class ScopeObservingExecutor(HeldExecutor):
+    """Record which governed-fact scope reaches the executor's worker thread."""
+
+    observed_scope: GovernedFactSource | None = None
+    pinned: GovernedFactSource | None = None
+
+    @override
+    async def execute(
+        self,
+        request: OperationRequest[BaseModel],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        self.pinned = context.authority_operation
+        self.observed_scope = await asyncio.to_thread(governed_facts_in_scope)
+        return await super().execute(request, context)
+
+
+def test_an_operation_reads_governed_facts_from_its_pinned_generation(tmp_path: Path) -> None:
+    """A stored form code decoded in the worker thread finds the operation's own generation."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        journal, leases, operands = operation_repositories(
+            storage_root=tmp_path / "durable-state",
+            profile_objects=profile.repository,
+        )
+        executor = ScopeObservingExecutor(resource_root=tmp_path / "owned-files", hold_before_acknowledge=False)
+        supervisor = _supervisor(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            executor=executor,
+            execution_timeout=_EXECUTION_WINDOW,
+            cleanup_timeout=_WIDE_CLEANUP_WINDOW,
+        )
+
+        async def run() -> None:
+            operation_id = "c" * 64
+            await supervisor.submit(_request(subject_ref="subject:scope"), operation_id=operation_id)
+            settling = asyncio.create_task(run_to_settlement(supervisor, operation_id))
+            await _reach(executor.started, described_as="executor entry")
+            assert executor.resource is not None
+            executor.resource.release()
+            await settling
+            assert governed_facts_in_scope() is None
+
+        asyncio.run(run())
+
+    assert executor.pinned is not None
+    assert executor.observed_scope is executor.pinned

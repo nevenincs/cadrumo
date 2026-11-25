@@ -87,10 +87,10 @@ def _hold_root_lock_in_sibling(root_text: str, release_event: Any, result_queue:
     from pathlib import Path as _Path
 
     from cadrumo.adapters.persistence.storage.custody.filesystem import profile_custody_root_lock
-    from cadrumo.core.paths import effective_storage_root as _effective_root
+    from cadrumo.core.paths import effective_storage_root
 
     result_queue.put("ready")
-    with profile_custody_root_lock(_effective_root(_Path(root_text))):
+    with profile_custody_root_lock(effective_storage_root(_Path(root_text))):
         result_queue.put("locked")
         release_event.wait(30)
 

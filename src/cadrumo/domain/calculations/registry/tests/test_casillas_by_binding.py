@@ -23,10 +23,12 @@ from ..binding_targets import bound_casilla_binding_ids, casillas_by_binding
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
+from .authored_editions import filing_year_envelope
 from .registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_FROM = filing_year_envelope().floor
 _LEGAL = ("ley-37-1992:art-91",)
 _SOURCE = ("aeat-dr-390-2025",)
 
@@ -54,10 +56,10 @@ def _casilla(
 
 def _revision(casillas: tuple[CasillaDefinition, ...]) -> ModeloRevision:
     return ModeloRevision(
-        id="2010-y-siguientes",
-        localization_key="test.schema.revision.2010-y-siguientes.label",
-        valid_from=date(2024, 1, 1),
-        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        id=f"{_FROM}-y-siguientes",
+        localization_key=f"test.schema.revision.{_FROM}-y-siguientes.label",
+        valid_from=date(_FROM, 1, 1),
+        period_selector=PeriodSelector(year_from=_FROM, periods=("0A",)),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,
         casillas=casillas,

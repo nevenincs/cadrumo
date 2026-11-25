@@ -11,9 +11,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final
 
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry.form_codes import form_for_role
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort
 from .attested_period_tokens import parse_attested_period_keys
 
@@ -65,7 +65,10 @@ def is_m111_no_retenciones_period(
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether a source requirement is an attested no-obligation Modelo 111 period."""
-    if source_modelo != Modelo("111").value or (filing_year, period_token) not in attested_periods:
+    if (
+        source_modelo != form_for_role("withholding.work_periodic")
+        or (filing_year, period_token) not in attested_periods
+    ):
         return False
     return _registry_declares_period(
         modelo=source_modelo,

@@ -52,9 +52,9 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..lane_recipe_commands import _recipes_invoked_by
+from ..lane_recipe_commands import recipes_invoked_by
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -137,7 +137,7 @@ def _meaning(body: str) -> dict[str, frozenset[str]]:
             match.group("status") for match in _EXIT_COMPARISON.finditer(body) if match.group("status") != "0"
         ),
         "pytest options": frozenset(match.group(1) for match in _PYTEST_OPTION.finditer(body)),
-        "invoked recipes": frozenset(_recipes_invoked_by(body)),
+        "invoked recipes": frozenset(recipes_invoked_by(body)),
     }
 
 
@@ -149,6 +149,12 @@ def _divergences(bodies: dict[tuple[str, str], str]) -> list[str]:
         unix = bodies.get((name, "unix"))
         windows = bodies.get((name, "windows"))
         if unix is None or windows is None:
+            continue
+        # WSL invokes the Linux body itself, so it has the same work and verdict.
+        if re.fullmatch(
+            rf"\s*wsl\.exe\s+--cd\s+\{{\{{quote\(justfile_directory\(\)\)\}}\}}\s+--exec\s+just\s+{re.escape(name)}\s*",
+            windows,
+        ):
             continue
         unix_meaning = _meaning(unix)
         windows_meaning = _meaning(windows)
@@ -186,6 +192,16 @@ def test_every_platform_pair_agrees_on_what_it_does(live_bodies: dict[tuple[str,
     assert divergences == [], (
         "these platform-variant recipes do different work depending on the operating system, "
         "so a gate is weaker on one of them than the other:\n  " + "\n  ".join(divergences)
+    )
+
+
+def test_wsl_delegation_must_invoke_the_same_linux_recipe() -> None:
+    """A WSL wrapper is equivalent only when it delegates to its own recipe."""
+    linux = "cargo test --locked --lib"
+    wrapper = "wsl.exe --cd {{quote(justfile_directory())}} --exec just test-linux"
+    assert _divergences({("test-linux", "unix"): linux, ("test-linux", "windows"): wrapper}) == []
+    assert _divergences(
+        {("test-linux", "unix"): linux, ("test-linux", "windows"): wrapper.replace("test-linux", "test-other")}
     )
 
 

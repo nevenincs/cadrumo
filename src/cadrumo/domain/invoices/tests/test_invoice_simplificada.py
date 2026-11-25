@@ -24,11 +24,14 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.authored_editions import filing_year_envelope
 from ...iva.schema import InvoiceKind, IvaCategory
 from ..enums import InvoiceClass, IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.fixture(autouse=True)
@@ -58,7 +61,7 @@ def _invoice(**overrides: Any) -> Invoice:
         "kind": InvoiceKind.ISSUED,
         "invoice_class": InvoiceClass.from_registry("SIMPLIFICADA"),
         "invoice_number": "T-2026-001",
-        "issued_at": date(2026, 5, 3),
+        "issued_at": date(_YEAR, 5, 3),
         "counterparty_name": "Cliente de mostrador",
         "counterparty_tax_id": None,
         "counterparty_country": "ES",
@@ -144,9 +147,9 @@ def test_a_present_tax_id_still_carries_full_checksum_validation() -> None:
 
 def test_a_valid_present_tax_id_on_a_simplificada_is_accepted_and_normalised() -> None:
     """A simplificada MAY still carry a tax id; when it does, it is validated like any other."""
-    invoice = _invoice(counterparty_tax_id="b12345674")
+    invoice = _invoice(counterparty_tax_id="b00015016")
 
-    assert invoice.counterparty_tax_id == "B12345674"
+    assert invoice.counterparty_tax_id == "B00015016"
 
 
 def test_two_untagged_simplificadas_do_not_collide_on_invoice_id() -> None:
@@ -179,7 +182,7 @@ def test_a_received_simplificada_with_no_supplier_tax_id_is_refused() -> None:
 
 def test_a_received_simplificada_with_a_supplier_tax_id_is_accepted() -> None:
     """The truthful RECEIVED case: a real ticket naming its issuing supplier."""
-    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674")
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B00015016")
 
     assert invoice.kind is InvoiceKind.RECEIVED
-    assert invoice.counterparty_tax_id == "B12345674"
+    assert invoice.counterparty_tax_id == "B00015016"

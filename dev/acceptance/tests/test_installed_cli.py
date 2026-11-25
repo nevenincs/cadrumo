@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..installed_cli import CommandEvidence, InstalledCli, InstalledCliError, typed_refusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -152,7 +154,7 @@ def test_interpreter_prefix_precedes_cli_options_and_secrets_stay_on_stdin(
         passphrase=secret,
         cli_argument_prefix=prefix,
     )
-    cli.create_profile(year=2025)
+    cli.create_profile(year=filing_year_envelope().horizon)
     cli.run_text(("app", "ledger", "list"))
 
     creation, completion, text = invocations

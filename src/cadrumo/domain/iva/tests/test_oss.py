@@ -7,8 +7,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, TransactionKind
@@ -22,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -40,7 +39,7 @@ def test_oss_ioss_regime_string_values_match_registry_selector_keys() -> None:
 
 
 def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -56,7 +55,7 @@ def test_classifier_routes_oss_union_goods_distance_sale_to_r17() -> None:
 
 
 def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -72,7 +71,7 @@ def test_classifier_routes_oss_union_goods_interface_facilitated_to_r18() -> Non
 
 
 def test_classifier_routes_oss_union_services_to_r19() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -88,7 +87,7 @@ def test_classifier_routes_oss_union_services_to_r19() -> None:
 
 
 def test_classifier_routes_external_scheme_services_to_r16() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("third_country"),
@@ -104,7 +103,7 @@ def test_classifier_routes_external_scheme_services_to_r16() -> None:
 
 
 def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -120,7 +119,7 @@ def test_classifier_routes_ioss_low_value_distance_sale_to_r23() -> None:
 
 
 def test_classifier_rejects_retired_digital_b2c_oss_alias() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria.model_validate(
             {
                 "transaction_date": date(2025, 6, 15),

@@ -63,11 +63,13 @@ can differ, and `--casilla` refuses a printed number that is not the
 `casilla_id`.
 
 `--casilla` works only on manual boxes. A `bound` box is filled automatically from its source, so `--casilla` refuses it with `cannot override bucket-derived
-source-bound casillas` (for example, Modelo 130 box `02` Gastos is `bound`). Fix
+source-bound casillas` (for example, Modelo 130 box `01` <span lang="es">Ingresos</span> is `bound`). A `computed`
+box, such as Modelo 130 box `02` <span lang="es">Gastos</span>, comes from a formula and cannot be supplied
+with `--casilla` either. Fix
 the source instead. See [Supply a missing field value](#supply-a-missing-field-value).
 
 A first-period filing also needs its prior-period values supplied (record them
-as `0` when you have no prior figure). Supply the manual box and the values in the same calculate call. This example sets box `06` (Retenciones e ingresos a
+as `0` when you have no prior figure). Supply the manual box and the values in the same `calculate` call. This example sets box `06` (Retenciones e ingresos a
 cuenta, a manual box) and seeds the three first-period values:
 
 ```{cli-sequence} review-values-manual-casilla
@@ -128,11 +130,11 @@ If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
 real prior figure only when you have one prepared outside Cadrumo.
 
-### Régimen de atribución de rentas (socios)
+### Régimen de atribución de rentas (members)
 
-If you are a socio, comunero, or partícipe of an entity in the régimen de
-atribución de rentas (a sociedad civil, comunidad de bienes, or herencia
-yacente), the entity files its own Modelo 184 in its own Cadrumo profile. Your personal Modelo 100 does not read across profiles, so enter the attributed base
+If you are a <span lang="es">socio</span>, <span lang="es">comunero</span>, or <span lang="es">partícipe</span> of an entity in the <span lang="es">régimen de
+atribución de rentas</span> (a <span lang="es">sociedad civil</span>, <span lang="es">comunidad de bienes</span>, or <span lang="es">herencia
+yacente</span>), the entity files its own Modelo 184 in its own Cadrumo profile. Your personal Modelo 100 does not read across profiles, so enter the attributed base
 by hand.
 
 Record the received share on your profile as `attribution_received` facts (entity
@@ -202,7 +204,7 @@ rather than the `--modelo / --year / --period` flags used elsewhere on this page
 Use one of these record types:
 
 - `miembro` - an attribution member (Modelo 184). Each row names the income
-  `clave` it attributes, such as `C` for rendimientos del capital inmobiliario.
+  `clave` it attributes, such as `C` for <span lang="es">rendimientos del capital inmobiliario</span>.
 - `vinculada` - a related-party operation (Modelo 232).
 - `operador` - an intra-community trader (Modelo 349).
 

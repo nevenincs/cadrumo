@@ -61,7 +61,7 @@ import ast
 import pathlib
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Final, override
+from typing import Final, TypeGuard, override
 
 from dev.quality.repository_sources import production_sources
 
@@ -252,6 +252,11 @@ def _enclosing_of(tree: ast.AST, line: int) -> str:
     return best
 
 
+def _is_tax_id_base(base: str | None) -> TypeGuard[str]:
+    """Recognize a nonempty tax-id-shaped normalization base."""
+    return base is not None and bool(base) and _looks_like_a_tax_id(base)
+
+
 def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
     tree = ast.parse(source)
     lines = source.splitlines()
@@ -277,7 +282,7 @@ def _scan_module(path: pathlib.Path, source: str) -> list[Finding]:
         if not _is_normalising_chain(node):
             continue
         base = _base_text(node)
-        if not (base is not None and base) or not _looks_like_a_tax_id(base):
+        if not _is_tax_id_base(base):
             continue
         line = getattr(node, "lineno", 0)
         if any(f.line == line for f in findings):

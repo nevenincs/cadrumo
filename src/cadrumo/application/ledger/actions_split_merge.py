@@ -11,6 +11,7 @@ verify the complete child cohort and return
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -20,6 +21,7 @@ from ...core.money.rounding import round_to_cents
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_effects import takes_changes
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -39,19 +41,17 @@ from .actions_common import (
     normalise_timestamp,
     raise_finalized_modelo_blocked,
     require_actor,
+    require_recordable_reason,
     require_source_command,
     require_transaction,
     resolve_bucket_event_repository,
     resolve_revision_guarded_transaction_repository,
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
+    withheld_figures_event_payload,
 )
-from .actions_manual import (
-    command_from_patch as _command_from_patch,
-)
-from .actions_manual import (
-    prepare_manual_transaction_update as _prepare_manual_transaction_update,
-)
+from .fx_value_consistency import require_consistent_fx_value
+from .manual_update import command_from_patch, prepare_manual_transaction_update
 from .models import (
     ManualLedgerTransactionPatch,
     MergeTransactionsResult,
@@ -59,6 +59,38 @@ from .models import (
     SplitTransactionResult,
 )
 from .persistence_ports import LedgerPersistenceConflictError
+
+SPLIT_CHILDREN_MIN = 2
+"""The fewest parts a split makes: one part only restates the movement under a new id."""
+
+
+@dataclass(frozen=True)
+class SplitAmountProblem:
+    """What is wrong with split amounts: their sum, or the part at ``index``."""
+
+    child_sum: Decimal
+    index: int | None = None
+    negative: bool = False
+
+
+def split_amount_problem(*, parent_amount: Decimal, amounts: tuple[Decimal, ...]) -> SplitAmountProblem | None:
+    """Return the first thing wrong with these magnitudes as parts of ``parent_amount``.
+
+    Two contracts in order (amounts are non-negative magnitudes; flow is carried by
+    ``direction``, which every child inherits from the parent, so there is no sign to
+    reconcile):
+
+    * ``sum(amounts) == parent_amount`` exactly - no rounding slack; bank ledgers carry
+      exact cents.
+    * Every amount is above zero; a zero-amount child is a modelling error.
+    """
+    child_sum = sum(amounts, start=Decimal("0"))
+    if child_sum != parent_amount:
+        return SplitAmountProblem(child_sum=child_sum)
+    for index, amount in enumerate(amounts):
+        if amount <= Decimal("0"):
+            return SplitAmountProblem(child_sum=child_sum, index=index, negative=amount < Decimal("0"))
+    return None
 
 
 def split_transaction(
@@ -103,6 +135,7 @@ def split_transaction(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger split")
+    require_recordable_reason(reason, operation="ledger split")
     trimmed_source_command = require_source_command(source_command, operation="ledger split")
     require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
     repository = resolve_revision_guarded_transaction_repository(
@@ -164,7 +197,7 @@ def _split_identity(
     return child_amounts, split_group_id
 
 
-def _build_initial_split_children(
+def build_initial_split_children(
     *,
     parent: Transaction,
     children: tuple[SplitChildCommand, ...],
@@ -186,7 +219,7 @@ def _build_initial_split_children(
     )
 
 
-def _require_unique_split_child_ids(children: tuple[Transaction, ...]) -> tuple[str, ...]:
+def require_unique_split_child_ids(children: tuple[Transaction, ...]) -> tuple[str, ...]:
     """Return child IDs, refusing a content-addressed collision in the cohort."""
     child_ids = tuple(transaction.transaction_id for transaction in children)
     if len(set(child_ids)) != len(child_ids):
@@ -318,24 +351,24 @@ def _build_split_state(
     atomic evidence-driven classified split reuse this builder so the split shape
     is defined once.
     """
-    parent = _resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
+    parent = resolve_active_split_parent(catalogue, bucket_id=bucket_id, transaction_id=transaction_id)
     _reject_split_with_finalized_modelo_blockers(
         parent=parent,
         bucket_id=bucket_id,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    _validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
+    validate_split_child_amounts(parent_amount=parent.raw.amount, children=children)
 
     child_amounts, split_group_id = _split_identity(parent, children)
-    child_transactions_initial = _build_initial_split_children(
+    child_transactions_initial = build_initial_split_children(
         parent=parent,
         children=children,
         occurred_at=now,
         actor=actor,
         source_command=source_command,
     )
-    child_ids = _require_unique_split_child_ids(child_transactions_initial)
+    child_ids = require_unique_split_child_ids(child_transactions_initial)
     parent_after = _build_split_parent_transition(
         parent=parent,
         split_group_id=split_group_id,
@@ -345,7 +378,7 @@ def _build_split_state(
         reason=reason,
         now=now,
     )
-    child_eur_values = _split_child_eur_values(parent=parent, child_amounts=child_amounts)
+    child_eur_values = split_child_eur_values(parent=parent, child_amounts=child_amounts)
     final_children = _build_final_split_children(
         parent=parent,
         initial_children=child_transactions_initial,
@@ -354,6 +387,7 @@ def _build_split_state(
         child_eur_values=child_eur_values,
     )
     _require_split_preserves_eur_total(parent=parent, children=final_children)
+    _require_split_children_valid(final_children)
     event = _build_split_event(
         bucket_id=bucket_id,
         parent=parent,
@@ -404,6 +438,7 @@ def split_transaction_with_classified_children(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger classified split")
+    require_recordable_reason(reason, operation="ledger classified split")
     trimmed_source_command = require_source_command(source_command, operation="ledger classified split")
     require_splittable_child_count(bucket_id=bucket_id, transaction_id=transaction_id, children=children)
     if len(children) != len(child_classifications):
@@ -440,7 +475,7 @@ def split_transaction_with_classified_children(
     classified_children: list[Transaction] = []
     child_events: list[BucketEvent] = []
     for bare_child, patch in zip(bare_children, child_classifications, strict=True):
-        command = _command_from_patch(
+        command = command_from_patch(
             bucket_id=bucket_id,
             current=bare_child,
             patch=patch,
@@ -448,7 +483,7 @@ def split_transaction_with_classified_children(
             source_command=trimmed_source_command,
             classified_by_override=classified_by,
         )
-        prepared = _prepare_manual_transaction_update(
+        prepared = prepare_manual_transaction_update(
             current=bare_child,
             command=command,
             previous_transaction_id=bare_child.transaction_id,
@@ -475,7 +510,7 @@ def split_transaction_with_classified_children(
                     "produced_transaction_id": replacement.transaction_id,
                 },
             )
-        # _prepare_manual_transaction_update rebuilds the row from the command and
+        # prepare_manual_transaction_update rebuilds the row from the command and
         # does not carry split_lineage; restore the child's lineage so the split
         # group linkage survives the classification in the same atomic write.
         classified_children.append(replacement.model_copy(update={"split_lineage": bare_child.split_lineage}))
@@ -506,7 +541,7 @@ def split_transaction_with_classified_children(
     )
 
 
-def _resolve_active_split_parent(
+def resolve_active_split_parent(
     catalogue: TransactionCatalogue,
     *,
     bucket_id: str,
@@ -518,9 +553,11 @@ def _resolve_active_split_parent(
     ARCHIVED row would corrupt the lifecycle chain. The state
     refusal carries the actual lifecycle state in its context so an
     operator can diagnose why the split is blocked.
+
+    ``catalogue`` is a :class:`TransactionCatalogue`.
     """
     parent = require_transaction(catalogue, transaction_id)
-    if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(parent.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be split",
             context={
@@ -583,14 +620,14 @@ def require_splittable_child_count(
     Raises:
         TransactionValidationError: When fewer than two children are supplied.
     """
-    if len(children) < 2:
+    if len(children) < SPLIT_CHILDREN_MIN:
         raise TransactionValidationError(
             "ledger split requires at least two children",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
         )
 
 
-def _split_child_eur_values(
+def split_child_eur_values(
     *,
     parent: Transaction,
     child_amounts: tuple[Decimal, ...],
@@ -651,43 +688,54 @@ def _require_split_preserves_eur_total(
         )
 
 
-def _validate_split_child_amounts(
+def _require_split_children_valid(children: tuple[Transaction, ...]) -> None:
+    """Refuse a split child whose inherited conversion fails the checks a new row meets.
+
+    Attaching lineage and the inherited rate through ``model_copy`` bypasses the
+    model's own validators and the write-boundary rate check, so a residual that
+    the last child absorbs could land negative or far from ``amount * fx_rate``
+    and be stored as a valid row. The total is preserved by construction, so the
+    refusal is the only honest outcome: the cent distribution cannot be repaired
+    here without changing the rounding every valid split relies on.
+    """
+    for index, child in enumerate(children):
+        if child.value_in_eur is not None and child.value_in_eur < Decimal("0"):
+            raise TransactionValidationError(
+                "ledger split would leave a child with a negative EUR value; "
+                "the parent's converted total cannot be distributed across these amounts",
+                context={"child_index": index, "child_value_in_eur": str(child.value_in_eur)},
+            )
+        require_consistent_fx_value(child)
+        Transaction.model_validate(child.model_dump())
+
+
+def validate_split_child_amounts(
     *,
     parent_amount: Decimal,
     children: tuple[SplitChildCommand, ...],
 ) -> None:
-    """Verify split-child magnitudes sum to the parent exactly.
-
-    Two contracts enforced in order (amounts are non-negative magnitudes;
-    flow is carried by ``direction``, which every child inherits from the
-    parent in the split builder, so there is no sign to reconcile):
-
-    * ``sum(child.amount) == parent_amount`` exactly - no rounding
-      slack; bank ledgers carry exact cents.
-    * Every child amount is non-zero; a zero-amount child is a
-      modelling error, not a legitimate split.
-    """
-    child_sum = sum((child.amount for child in children), start=Decimal("0"))
-    if child_sum != parent_amount:
+    """Refuse magnitudes :func:`split_amount_problem` finds wrong as parts of the parent."""
+    problem = split_amount_problem(parent_amount=parent_amount, amounts=tuple(child.amount for child in children))
+    if problem is None:
+        return
+    if problem.index is None:
         raise TransactionValidationError(
             "ledger split child amounts must sum to the parent amount exactly",
             context={
                 "parent_amount": str(parent_amount),
-                "child_sum": str(child_sum),
+                "child_sum": str(problem.child_sum),
                 "child_amounts": tuple(str(child.amount) for child in children),
             },
         )
-    for index, child in enumerate(children):
-        if child.amount < Decimal("0"):
-            raise TransactionValidationError(
-                "ledger split child amount must be a non-negative magnitude; children inherit the parent's direction",
-                context={"child_index": index, "child_amount": str(child.amount)},
-            )
-        if child.amount == Decimal("0"):
-            raise TransactionValidationError(
-                "ledger split child amount must not be zero",
-                context={"child_index": index},
-            )
+    if problem.negative:
+        raise TransactionValidationError(
+            "ledger split child amount must be a non-negative magnitude; children inherit the parent's direction",
+            context={"child_index": problem.index, "child_amount": str(children[problem.index].amount)},
+        )
+    raise TransactionValidationError(
+        "ledger split child amount must not be zero",
+        context={"child_index": problem.index},
+    )
 
 
 def _build_split_child_transaction(
@@ -723,11 +771,15 @@ def _build_split_child_transaction(
             provider_name="ledger-split",
         ),
         raw_fields={"parent_transaction_id": parent.transaction_id, "split_index": str(index)},
+        # A part is still the statement's movement, so it keeps the reference the statement printed.
+        statement_reference=parent_raw.statement_reference,
     )
     return Transaction.model_validate(
         {
             "raw": raw_child,
             "direction": parent.direction,
+            "operation_date": parent.operation_date,
+            "accrual_date": parent.accrual_date,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
@@ -787,6 +839,7 @@ def merge_transactions(
     """
     now = normalise_timestamp(occurred_at)
     trimmed_actor = require_actor(actor, operation="ledger merge")
+    require_recordable_reason(reason, operation="ledger merge")
     trimmed_source_command = require_source_command(source_command, operation="ledger merge")
     if len(child_transaction_ids) < 2:
         raise TransactionValidationError(
@@ -829,7 +882,7 @@ def merge_transactions(
     )
 
     sorted_child_ids = tuple(sorted(child_transaction_ids))
-    merged_transaction = _build_merged_transaction(
+    merged_transaction = build_merged_transaction(
         parent=parent,
         split_group_id=split_group_id,
         sorted_child_ids=sorted_child_ids,
@@ -919,7 +972,7 @@ def _reject_merge_with_finalized_modelo_blockers(
         )
 
 
-def _build_merged_transaction(
+def build_merged_transaction(
     *,
     parent: Transaction,
     split_group_id: str,
@@ -928,6 +981,7 @@ def _build_merged_transaction(
     actor: str,
     source_command: str,
 ) -> Transaction:
+    """Build the merged transaction that rejoins the children of a split group."""
     # Its content-addressed id varies from the parent's because the
     # synthesized provider_id is unique.
     parent_raw = parent.raw
@@ -953,11 +1007,14 @@ def _build_merged_transaction(
             "split_group_id": split_group_id,
             "merged_child_count": str(len(sorted_child_ids)),
         },
+        statement_reference=parent_raw.statement_reference,
     )
     return Transaction.model_validate(
         {
             "raw": merged_raw,
             "direction": parent.direction,
+            "operation_date": parent.operation_date,
+            "accrual_date": parent.accrual_date,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
@@ -1068,6 +1125,7 @@ def _build_merge_event(
             # children could not record its own event. The cohort stays
             # recoverable through the split_group_id carried here.
             "child_count": str(len(sorted_child_ids)),
+            **withheld_figures_event_payload(parent),
         },
     )
 
@@ -1104,7 +1162,7 @@ def _resolve_merge_split_group(
 
 
 def _require_child_active_and_role(child: Transaction) -> None:
-    if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(child.lifecycle_state):
         raise TransactionValidationError(
             "ledger merge children must all be active",
             context={

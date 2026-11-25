@@ -47,8 +47,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "login",
             "logout",
             "repair",
-            "check",
-            "provision",
             "storage",
             "google",
             "reset",
@@ -116,24 +114,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "export whose crash left an unencrypted staged file on disk"
         ),
         service_owner="cadrumo.application.diagnostics",
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.DIAGNOSTICS,
-        root=RootSurfaceName.CONFIG,
-        child="check",
-        operator_question="check local provisioning readiness and active-profile capability state",
-        service_owner="cadrumo.application.provisioning",
-        mutability=OperatorMutability.READ_ONLY,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.PROVISIONING,
-        root=RootSurfaceName.CONFIG,
-        child="provision",
-        operator_question=(
-            "report local model provisioning readiness and explicitly pull or verify a local inference model"
-        ),
-        service_owner="cadrumo.application.provisioning",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -266,11 +246,6 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
         capability="review_queue",
         owner="cadrumo.application.review",
         notes="owns operator review items and edits across source domains",
-    ),
-    ServiceOwner(
-        capability="provisioning_readiness",
-        owner="cadrumo.application.provisioning",
-        notes="owns local provisioning readiness checked by config check",
     ),
     ServiceOwner(
         capability="google_export_mirror",

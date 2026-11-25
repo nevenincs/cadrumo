@@ -23,21 +23,22 @@ from cadrumo.core import descriptor_write
 from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
 from cadrumo_client.transport.posix_channel import PosixChannel
 
-from .. import macos_login, macos_worker_process
+from .. import macos_login, macos_worker_host, macos_worker_process
 from ..containment_commands import ContainmentCommandResult
+from ..macos_job_print import MacosJobCoalition, parse_macos_job_print
 from ..macos_login import MacosPeerAuditToken
 from ..macos_process import MacosProcessIncarnation, MacosProcessObservation
-from ..macos_worker_process import (
-    MacosJobCoalition,
-    MacosProcessScope,
+from ..macos_worker_markers import (
     MacosWorkerMarker,
     decode_macos_worker_marker,
     encode_macos_worker_marker,
+    stale_macos_worker_markers,
+)
+from ..macos_worker_process import (
+    MacosProcessScope,
     macos_worker_job_definition,
     macos_worker_label,
     macos_worker_scope_key,
-    parse_macos_job_print,
-    stale_macos_worker_markers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -518,17 +519,23 @@ def test_admitted_guardian_runs_in_a_fresh_launchd_coalition(
     assert host.store == {} and not host.jobs
 
 
+@pytest.mark.parametrize("hosted", [False, True])
+@pytest.mark.parametrize("script_mode", [False, True])
 def test_selected_script_scope_keeps_guardian_isolation_and_retires_its_owned_coalition(
-    host: _Host, tmp_path: Path
+    host: _Host, tmp_path: Path, hosted: bool, script_mode: bool
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected = script.resolve(strict=True)
-    scope = MacosProcessScope(worker_id=uuid4(), storage_root=tmp_path, worker_script=script, host=host)
+    scope = MacosProcessScope(
+        worker_id=uuid4(), storage_root=tmp_path, worker_script=script if script_mode else None, host=host
+    )
+    role = ("--role", "python") if hosted else ()
+    command = (*role, *(("-I", "-B", str(selected)) if script_mode else _DEFAULT))
     try:
         guardian = scope.launch(
             executable=Path(sys.executable),
-            arguments=("-I", "-B", str(selected)),
+            arguments=command,
             directory=tmp_path,
             environment=_ENVIRONMENT,
         )
@@ -536,9 +543,12 @@ def test_selected_script_scope_keeps_guardian_isolation_and_retires_its_owned_co
         arguments = host.definition["ProgramArguments"]
         assert isinstance(arguments, list)
         guardian_index = arguments.index("cadrumo_runtime.host.macos_worker_guardian")
-        assert arguments[guardian_index - 2 : guardian_index] == ["-I", "-m"]
-        assert arguments[arguments.index("--worker-script") + 1] == str(selected)
-        assert arguments[arguments.index("--") + 1 :] == ["-I", "-B", str(selected)]
+        assert arguments[arguments.index(sys.executable) : guardian_index] == [sys.executable, *role, "-I", "-m"]
+        if script_mode:
+            assert arguments[arguments.index("--worker-script") + 1] == str(selected)
+        else:
+            assert "--worker-script" not in arguments
+        assert arguments[arguments.index("--") + 1 :] == list(command)
         marker = decode_macos_worker_marker(host.store[scope._label + ".json"], name=scope._label + ".json")
         assert marker.coalition == _JOB_COALITION
     finally:
@@ -633,10 +643,10 @@ def test_failed_termination_is_retained_until_a_retry_proves_the_coalition_empty
     guardian = _launch(scope, tmp_path)
     host.add_worker()
     scope.verify_worker(_channel(), owner_id=str(_UID))
-    host.termination_failures.append(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+    host.termination_failures.append(RefusalError(RefusalCode.TIMEOUT))
     with pytest.raises(RefusalError) as caught:
         scope.terminate(timeout=1)
-    assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert caught.value.reason is RefusalCode.TIMEOUT
     assert scope._started and scope._label + ".json" in host.store and not any(w.closed for w in host.watches[:1])
     assert not any(event[:2] == ("launchctl", "bootout") for event in host.events)
     scope.terminate(timeout=2)
@@ -707,10 +717,10 @@ def test_absent_stale_job_keeps_its_recorded_coalition_retirement_obligation(
     host.processes[950] = orphan
     scope = MacosProcessScope(worker_id=uuid4(), storage_root=tmp_path, host=host)
     if termination_fails:
-        host.termination_failures.append(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+        host.termination_failures.append(RefusalError(RefusalCode.TIMEOUT))
         with pytest.raises(RefusalError) as caught:
             _launch(scope, tmp_path)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         assert not orphan.exited.is_set() and stale.label + ".json" in host.store
         assert not any(event[0] == "bootstrap" for event in host.events)
         return
@@ -766,7 +776,7 @@ def test_scope_refuses_off_darwin(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
 def test_job_definition_keeps_explicit_storage_controls_and_refuses_ambient_inputs(tmp_path: Path) -> None:
     """Storage routing survives env -i without allowing loader or ambient credential inputs."""
     environment = _ENVIRONMENT | {
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path),
+        "CADRUMO_STORAGE_ROOT": str(tmp_path),
         "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "published-authority"),
         "TMPDIR": str(tmp_path / "scratch"),
     }
@@ -784,7 +794,7 @@ def test_job_definition_keeps_explicit_storage_controls_and_refuses_ambient_inpu
 
     definition = plistlib.loads(definition_for(environment))
     assert definition["EnvironmentVariables"] == environment
-    assert "CADRUMO_LOCAL_STORAGE_ROOT=" + str(tmp_path) in definition["ProgramArguments"]
+    assert "CADRUMO_STORAGE_ROOT=" + str(tmp_path) in definition["ProgramArguments"]
     assert "CADRUMO_AUTHORITY_ROOT=" + str(tmp_path / "published-authority") in definition["ProgramArguments"]
     assert "TMPDIR=" + str(tmp_path / "scratch") in definition["ProgramArguments"]
     for extra in ({"PYTHONPATH": "/untrusted"}, {"PRIVATE_CREDENTIAL": "secret"}, {"TMPDIR": "bad\0path"}):
@@ -802,7 +812,7 @@ def test_native_host_translates_nonpositive_writes_before_publication(
     write_result: int,
 ) -> None:
     """A stalled native file write refuses before launchd or marker publication."""
-    native = macos_worker_process._NativeMacosWorkerHost()
+    native = macos_worker_host.NativeMacosWorkerHost()
     directory_fd = 41
     file_fd = 42
     label = "com.cadrumo.worker.0123456789abcdef.0123456789abcdef0123456789abcdef"
@@ -855,12 +865,12 @@ def test_native_host_translates_nonpositive_writes_before_publication(
         replace=fake_replace,
     )
     monkeypatch.setattr(native, "_directory", lambda *, create: (tmp_path, directory_fd))
-    monkeypatch.setattr(macos_worker_process, "os", native_os)
+    monkeypatch.setattr(macos_worker_host, "os", native_os)
     monkeypatch.setattr(descriptor_write, "os", native_os)
-    monkeypatch.setattr(macos_worker_process, "_private_open_flags", lambda *, nonblocking=False: 0)
-    monkeypatch.setattr(macos_worker_process, "posix_owner_uid", lambda: _UID)
+    monkeypatch.setattr(macos_worker_host, "private_open_flags", lambda *, nonblocking=False: 0)
+    monkeypatch.setattr(macos_worker_host, "posix_owner_uid", lambda: _UID)
     monkeypatch.setattr(
-        macos_worker_process,
+        macos_worker_host,
         "run_containment_command_sync",
         lambda *args, **kwargs: pytest.fail("launchctl must not run after a failed definition write"),
     )

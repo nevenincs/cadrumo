@@ -9,7 +9,7 @@ const merge = extendTailwindMerge({
     theme: {
       text: ["2xs", "xs", "sm", "base", "md", "lg"],
       radius: ["xs", "sm", "md", "lg", "xl", "2xl"],
-      shadow: ["raised", "overlay"],
+      shadow: ["raised", "overlay", "docked"],
       spacing: [
         "control-xs",
         "control-sm",
@@ -23,6 +23,12 @@ const merge = extendTailwindMerge({
         "palette",
         "palette-max",
         "dialog",
+        "dialog-md",
+        "dialog-lg",
+        "dialog-xl",
+        "sheet",
+        "row-compact",
+        "row-comfortable",
         "settings",
         "menu",
         "field",

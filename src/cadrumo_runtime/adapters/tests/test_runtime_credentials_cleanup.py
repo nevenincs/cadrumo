@@ -13,9 +13,9 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello, ServerHello
@@ -106,7 +106,7 @@ def _admission_ports(
 
     monkeypatch.setattr(credentials, "effective_storage_root", lambda: tmp_path)
     monkeypatch.setattr(credentials, "open_installed_client", open_transport)
-    monkeypatch.setattr(credentials, "_authenticate_reference", authenticate_reference)
+    monkeypatch.setattr(credentials, "authenticate_reference", authenticate_reference)
     return reference
 
 

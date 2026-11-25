@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#runtime-authority-boundary'
 date: '2026-10-18'
-modified: '2026-10-21'
+modified: '2026-10-29'
 body_schema: 'body-v2'
 body_hash: 'sha256:d191e44f408ede73074773bb74356cc90d8dfcc97877ad664a0afd19bc9ea27b'
 related:

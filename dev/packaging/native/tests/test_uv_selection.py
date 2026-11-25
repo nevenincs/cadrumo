@@ -14,11 +14,11 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import normalised_content
 
 from ...command_execution import run_command
-from .. import cmake_build, product, provision
+from .. import cmake_build, product, product_snapshot, provision
 from ..build_toolchain import selected_uv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -98,10 +98,10 @@ def test_configured_actions_use_selected_uv_despite_path_reordering(
                 (destination / "pyproject.toml").write_bytes(normalised_content(root, "pyproject.toml"))
 
             monkeypatch.setattr(product, "run_command", observe)
-            monkeypatch.setattr(product, "repository_files", lambda root, *, under=(): ())
-            monkeypatch.setattr(product, "snapshot", snapshot)
+            monkeypatch.setattr(product_snapshot, "repository_files", lambda root, *, under=(): ())
+            monkeypatch.setattr(product_snapshot, "snapshot", snapshot)
             monkeypatch.setattr(product, "selected_published_authority", lambda *args: ())
-            monkeypatch.setattr(product, "_wheel_input_digest", lambda *args, **kwargs: "selected-inputs")
+            monkeypatch.setattr(product, "distribution_input_digest", lambda *args, **kwargs: "selected-inputs")
             dependencies = tmp_path / "dependencies"
             dependencies.mkdir()
             product.build_product(

@@ -1,4 +1,4 @@
-"""Installed Darwin transport selection without ambient root authority or Settings I/O."""
+"""Darwin transport selection without ambient root authority or Settings I/O."""
 
 from __future__ import annotations
 
@@ -11,25 +11,18 @@ import pytest
 from ...tests.env_scope import isolated_aeat_env
 from .. import connection_transport, darwin_transport
 from ..config import Settings, settings_override
-from ..storage_environment import StorageMode, StorageModeEvidence
 from ..storage_materialization import ensure_storage_tree
 from ..storage_taxonomy import StorageCategory
-from ..storage_taxonomy_locations import storage_path, storage_tree_targets
+from ..storage_taxonomy_locations import storage_location, storage_path, storage_tree_targets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize("mode", list(StorageMode))
-@pytest.mark.parametrize("explicit", [False, True])
-def test_native_default_selection_ignores_root_pin(
-    monkeypatch: pytest.MonkeyPatch, mode: StorageMode, explicit: bool
-) -> None:
-    monkeypatch.setattr(connection_transport.sys, "platform", "darwin")
-    monkeypatch.setattr(connection_transport, "storage_mode", lambda: StorageModeEvidence(mode, None))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "/synthetic-or-inherited-root")
-    assert connection_transport.uses_darwin_transport(explicit=explicit) is (
-        mode is StorageMode.INSTALLED and not explicit
-    )
+@pytest.mark.parametrize("platform", ["darwin", "linux", "win32"])
+def test_native_default_selection_ignores_root_pin(monkeypatch: pytest.MonkeyPatch, platform: str) -> None:
+    monkeypatch.setattr(connection_transport.sys, "platform", platform)
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", "/synthetic-or-inherited-root")
+    assert connection_transport.uses_darwin_transport() is (platform == "darwin")
 
 
 def test_settings_are_pure_and_accessor_owns_external_resolution(
@@ -37,31 +30,34 @@ def test_settings_are_pure_and_accessor_owns_external_resolution(
 ) -> None:
     calls: list[bool] = []
     external = tmp_path / "native-cache" / "cadrumo"
+    in_root = tmp_path / "data" / storage_location(StorageCategory.CONNECTION_SOCKETS).relative_path()
 
     def resolve(*, create: bool = False) -> Path:
         calls.append(create)
         return external
 
-    monkeypatch.setattr(connection_transport, "uses_darwin_transport", lambda *, explicit: not explicit)
+    monkeypatch.setattr(connection_transport, "uses_darwin_transport", lambda: True)
     monkeypatch.setattr(darwin_transport, "darwin_socket_directory", resolve)
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "data")):
+    with isolated_aeat_env(CADRUMO_STORAGE_ROOT=str(tmp_path / "data")):
         settings = Settings()
         assert not calls
-        assert "cadrumo_connection_socket_dir" not in settings.model_fields_set
         assert storage_path(StorageCategory.CONNECTION_SOCKETS, settings=settings) == external
         assert calls == [False]
         assert external not in storage_tree_targets(settings)
+        assert in_root not in storage_tree_targets(settings)
         calls.clear()
         ensure_storage_tree(settings)
         assert not calls
         assert not external.exists()
-        assert not settings.cadrumo_connection_socket_dir.exists()
+        assert not in_root.exists()
 
 
-def test_explicit_member_wins_for_accessor_and_endpoint(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    namespace = tmp_path / "fixture-sockets"
-    monkeypatch.setattr(connection_transport, "uses_darwin_transport", lambda *, explicit: not explicit)
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path), CADRUMO_RUNTIME_SOCKET_DIR=str(namespace)):
+def test_off_darwin_the_namespace_is_the_member_beneath_the_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    namespace = tmp_path / "runtime"
+    monkeypatch.setattr(connection_transport, "uses_darwin_transport", lambda: False)
+    with isolated_aeat_env(CADRUMO_STORAGE_ROOT=str(tmp_path)):
         settings = Settings()
         token = settings_override.set(settings)
         try:
@@ -75,7 +71,7 @@ def test_explicit_member_wins_for_accessor_and_endpoint(tmp_path: Path, monkeypa
 def test_native_namespace_refuses_permissions_replacement_and_recreation(tmp_path: Path) -> None:
     base = tmp_path.resolve() / "cache"
     base.mkdir(mode=0o700)
-    namespace = darwin_transport._Namespace(base)
+    namespace = darwin_transport.Namespace(base)
     try:
         path = namespace.verify(create=False)
         assert not path.exists()
@@ -105,9 +101,9 @@ def test_native_namespace_refuses_insecure_base_and_symlink(tmp_path: Path) -> N
     base = tmp_path.resolve() / "cache"
     base.mkdir(mode=0o755)
     with pytest.raises(PermissionError):
-        darwin_transport._Namespace(base)
+        darwin_transport.Namespace(base)
     base.chmod(0o700)
-    namespace = darwin_transport._Namespace(base)
+    namespace = darwin_transport.Namespace(base)
     try:
         target = base / "elsewhere"
         target.mkdir(mode=0o700)
@@ -134,8 +130,8 @@ def test_native_query_is_once_canonical_and_base_replacement_refuses(
         return str(alias)
 
     monkeypatch.setattr(darwin_transport.os, "confstr", query)
-    darwin_transport._namespace.cache_clear()
-    namespace = darwin_transport._namespace()
+    darwin_transport.namespace.cache_clear()
+    namespace = darwin_transport.namespace()
     try:
         path = darwin_transport.darwin_socket_directory(create=True)
         assert path == base / "cadrumo"
@@ -147,7 +143,7 @@ def test_native_query_is_once_canonical_and_base_replacement_refuses(
             darwin_transport.darwin_socket_directory(create=True)
         assert not (base / "cadrumo").exists()
     finally:
-        darwin_transport._namespace.cache_clear()
+        darwin_transport.namespace.cache_clear()
         os.close(namespace.base_fd)
         if namespace.directory_fd is not None:
             os.close(namespace.directory_fd)

@@ -9,8 +9,8 @@ import pytest
 from googleapiclient.errors import HttpError
 
 from ...google.api import RequestRetryPolicy, execute_request
-from .._google_drive import _translate_http_error
 from ..errors import OutboundStorageError, OutboundStoragePermissionError, OutboundStorageQuotaError
+from ..google_drive_requests import translate_http_error
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -50,7 +50,7 @@ def _sheets_stack_error(error: HttpError) -> OutboundStorageError:
 def test_both_adapters_classify_a_403_alike(body: bytes, expected: type[OutboundStorageError]) -> None:
     error = _http_error(403, body)
 
-    drive_error = _translate_http_error(error, action="files.get")
+    drive_error = translate_http_error(error, action="files.get")
     api_error = _sheets_stack_error(error)
 
     assert type(drive_error) is expected
@@ -60,5 +60,5 @@ def test_both_adapters_classify_a_403_alike(body: bytes, expected: type[Outbound
 def test_a_401_stays_a_permission_failure_in_both_adapters() -> None:
     error = _http_error(401, _QUOTA_REASON_BODY)
 
-    assert type(_translate_http_error(error, action="files.get")) is OutboundStoragePermissionError
+    assert type(translate_http_error(error, action="files.get")) is OutboundStoragePermissionError
     assert type(_sheets_stack_error(error)) is OutboundStoragePermissionError

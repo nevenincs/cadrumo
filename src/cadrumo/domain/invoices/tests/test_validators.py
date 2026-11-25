@@ -30,8 +30,8 @@ def test_validate_spanish_tax_id_accepts_known_valid_nif() -> None:
     values = (
         "12345678Z",
         "00000000T",
-        "00000001R",
-        "00000002W",
+        "00001005Q",
+        "00001000B",
     )
 
     for value in values:
@@ -41,9 +41,9 @@ def test_validate_spanish_tax_id_accepts_known_valid_nif() -> None:
 def test_validate_spanish_tax_id_accepts_known_valid_nie() -> None:
     """Valid NIE values for each of the X/Y/Z leaders must pass."""
     values = (
-        "X1234567L",
-        "Y1234567X",
-        "Z1234567R",
+        "X0001500M",
+        "Y0001500L",
+        "Z0001500X",
     )
 
     for value in values:
@@ -53,13 +53,13 @@ def test_validate_spanish_tax_id_accepts_known_valid_nie() -> None:
 def test_validate_spanish_tax_id_accepts_cif_digit_control() -> None:
     """CIF leaders that mandate a digit control must accept the right digit."""
     values = (
-        # body 5881850 → digit-control 1 (Luhn sum over doubled odd positions +
-        # even positions = 29).
-        "A58818501",
+        # body 0000028 → digit-control 1 (Luhn sum over doubled odd positions +
+        # even positions = 9).
+        "B00010157",
         # body 1234567 → digit-control 4.
-        "B12345674",
-        "E12345674",
-        "H12345674",
+        "B00015016",
+        "E00015008",
+        "H00015008",
     )
 
     for value in values:
@@ -74,12 +74,12 @@ def test_validate_spanish_tax_id_accepts_cif_letter_control() -> None:
     """
     values = (
         # body 1234567 → letter-control 'D' ("JABCDEFGHI"[4]).
-        "P1234567D",
-        "Q1234567D",
-        "R1234567D",
-        "S1234567D",
-        "N1234567D",
-        "W1234567D",
+        "P0001500H",
+        "Q0001500H",
+        "R0001500H",
+        "S0001500H",
+        "N0001500H",
+        "W0001500H",
     )
 
     for value in values:
@@ -98,7 +98,7 @@ def test_validate_spanish_tax_id_refuses_abeh_letter_form() -> None:
     merged: one of them carried its own leader policy that read ABEH as mixed,
     contradicting its own module docstring.
     """
-    assert validate_runtime_spanish_tax_id("B12345674") == "B12345674"
+    assert validate_runtime_spanish_tax_id("B00015016") == "B00015016"
 
     with pytest.raises(IdentityError) as excinfo:
         validate_runtime_spanish_tax_id("B1234567D")
@@ -118,7 +118,7 @@ def test_validate_spanish_tax_id_rejects_invalid_checksum() -> None:
         "12345678A",
         "X1234567A",
         "Z1234567A",
-        "A58818500",
+        "B00000280",
         "K1234567A",
     )
 
@@ -145,8 +145,8 @@ def test_validate_spanish_tax_id_strips_common_separators() -> None:
     cases = (
         ("12.345.678-Z", "12345678Z"),
         (" 12-345-678-Z ", "12345678Z"),
-        ("B-12345674", "B12345674"),
-        ("X.1234567.L", "X1234567L"),
+        ("B-00015016", "B00015016"),
+        ("X.0001500.M", "X0001500M"),
     )
 
     for value, expected in cases:
@@ -156,8 +156,8 @@ def test_validate_spanish_tax_id_strips_common_separators() -> None:
 def test_validate_spanish_tax_id_strips_es_iva_prefix() -> None:
     """Spanish IDs carrying the intra-EU ES prefix must validate equivalently."""
     cases = (
-        ("ESB12345674", "B12345674"),
-        ("es-b-12345674", "B12345674"),
+        ("ESB00015016", "B00015016"),
+        ("es-b-00015016", "B00015016"),
         ("ES 12345678Z", "12345678Z"),
     )
 

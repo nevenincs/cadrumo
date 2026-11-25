@@ -102,6 +102,48 @@ class FieldRole(StrEnum):
     IVA_CATEGORY = "iva_category"
     """The IVA treatment the row falls under."""
 
+    OPERATION_TYPE = "operation_type"
+    """The Modelo 349 clave of an intra-community operation, as the book states it."""
+
+    INVOICE_CLASS = "invoice_class"
+    """Which RD 1619/2012 class the document is: ordinaria, simplificada or rectificativa."""
+
+    SERIES = "series"
+    """The issuing series the document carries, obligatoria for a rectificativa."""
+
+    RECTIFIES_INVOICE_NUMBER = "rectifies_invoice_number"
+    """The number of the invoice a rectificativa corrects (LIVA art. 89)."""
+
+    RECTIFICATION_METHOD = "rectification_method"
+    """How a factura rectificativa states its figures (RD 1619/2012 art. 15.5)."""
+
+    RECTIFICATION_CAUSE = "rectification_cause"
+    """The ground on which a rectificativa modifies base and cuota."""
+
+    RECTIFICATION_DIRECTION = "rectification_direction"
+    """Whether a rectification reduces or increases the original base and cuota."""
+
+    DOCUMENT_RECEIVED_ON = "document_received_on"
+    """When the recipient received a factura rectificativa (LIVA art. 114.Dos)."""
+
+    ISSUER_INCREASE_ELECTION = "issuer_increase_election"
+    """Which route the issuer takes for an aumento (LIVA art. 89.Cinco)."""
+
+    ISSUER_MINORACION_ELECTION = "issuer_minoracion_election"
+    """Which route the issuer takes for a minoración (LIVA art. 89.Cinco)."""
+
+    ISSUER_MINORACION_REGULARISATION_PERIOD = "issuer_minoracion_regularisation_period"
+    """The declaración-liquidación an issued minoración is regularised in."""
+
+    RECIPIENT_INCREASE_PERIOD = "recipient_increase_period"
+    """The declaración-liquidación a recipient declares an aumento in (LIVA art. 114.Dos.1)."""
+
+    ART_80_TRES_OBLIGATIONS_ATTESTED = "art_80_tres_obligations_attested"
+    """Whether the RIVA art. 24 communication and remittance are attested."""
+
+    EXERCISED_DEDUCTION_PERIOD = "exercised_deduction_period"
+    """The declaración-liquidación the original deduction was exercised in (RIVA art. 24.2.b.3)."""
+
     IRPF_CATEGORY = "irpf_category"
     """The IRPF treatment the row falls under."""
 
@@ -123,6 +165,9 @@ class FieldRole(StrEnum):
     CURRENCY = "currency"
     """ISO-4217 currency of the row's amounts."""
 
+    FX_RATE = "fx_rate"
+    """The euro value of one unit of the row's currency, as the book states it."""
+
     COUNTRY_CODE = "country_code"
     """Counterparty country, which decides domestic versus not."""
 
@@ -140,3 +185,18 @@ class FieldRole(StrEnum):
 
     USAGE_RATIO_ID = "usage_ratio_id"
     """Named usage ratio supplying the business percentage."""
+
+    ARRENDAMIENTO_REF = "arrendamiento_ref"
+    """Key of the stored lease an income row of a let property belongs to."""
+
+    INMUEBLE_REF = "inmueble_ref"
+    """Key of the stored property an expense row belongs to."""
+
+    GASTO_CAPITAL_INMOBILIARIO = "gasto_capital_inmobiliario"
+    """Which kind of property expense the row is, as the registry names it."""
+
+    POSICION_REF = "posicion_ref"
+    """Key of the stored savings position an income or expense row belongs to."""
+
+    CONCEPTO_CAPITAL_MOBILIARIO = "concepto_capital_mobiliario"
+    """What the row is within its savings position, as the registry names it."""

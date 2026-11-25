@@ -46,7 +46,7 @@ from ....domain.modelos.repository import WorkUnitPersistenceError
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -65,7 +65,7 @@ class WorkUnitCatalogueRepository:
     return an empty catalogue when no object has been persisted yet (no
     separate "fresh install" path is needed). The write path
     (``to_secure_object_write`` / ``save`` / ``exists``) composes
-    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared one-record decode and Envelope-construction mechanics;
     :meth:`load_revisioned` translates a classification or schema-version
     mismatch into :class:`WorkUnitPersistenceError` via
@@ -206,7 +206,6 @@ class WorkUnitCatalogueRepository:
                 translated_message=_WORK_UNIT_PERSISTENCE_MESSAGE,
                 logger=_LOGGER,
             )
-        _LOGGER.debug("loaded work-unit catalogue with %d entr(y/ies)", len(catalogue))
         return catalogue, revision_id
 
     def save_with_secure_object_writes(

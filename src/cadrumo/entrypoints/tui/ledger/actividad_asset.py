@@ -3,25 +3,51 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
-from typing import Protocol, override
+from dataclasses import dataclass, replace
+from typing import override
 
+from pydantic import TypeAdapter, ValidationError
 from textual.app import ComposeResult
 from textual.widgets import Button, Input, Static
 
-from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
-from ....application.actividad_asset.operations import ActivityAssetFilingHandoff
-from ....application.operator_actions.models import PreconditionVerdict
+from ....application.actividad_asset.activity_asset_contracts import ActivityAssetSupersedingClaim
+from ....application.actividad_asset.activity_asset_projections import (
+    ActivityAssetPlanProjection,
+)
+from ....application.actividad_asset.operation_dtos import ActivityAssetDisposalSnapshot
+from ....application.operations.error_detail import build_operation_error_detail
+from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
-from ....core.parsing.dates import require_iso8601_date
-from ....core.period import Period
+from ....core.logging import get_logger
+from ....core.period import Period, PeriodError
+from ....domain.renta.actividad_asset.claims import ClaimProjection
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
-from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
 from ..account import AccountSessionExpiredError
-from ..components.language import localized
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
+from ..refusal.panel import RefusalSlot
+from ..refusal.served import served_refusal
+from .actividad_asset_inputs import (
+    InputRefusedError,
+    stated_choice,
+    stated_date,
+    stated_disposal,
+    stated_revision,
+)
+from .actividad_asset_view import DISPOSAL_INPUT_LOCALE_KEYS, FACT_INPUT_LOCALE_KEYS, compose_activity_asset
+from .actividad_asset_words import (
+    form_options_text,
+    limits_line,
+    list_row_line,
+    m100_gap_line,
+    plan_row_line,
+    timeline_line,
+)
+from .controller import LedgerWorkspaceController
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
     ActivityAssetCorrectionRequestV1,
@@ -30,6 +56,14 @@ from .models_actividad_asset import (
     ActivityAssetForecastRequestV1,
     ActivityAssetInspectionV1,
 )
+from .workspace_screen import LedgerWorkspaceScreen
+
+#: The actions that change records; an unknown outcome withholds them until the asset is read again.
+_WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim", "#asset-describe", "#asset-dispose")
+
+_SUPERSEDING_CLAIMS = TypeAdapter(tuple[ActivityAssetSupersedingClaim, ...])
+
+_FILING_YEAR = TypeAdapter(FilingYear)
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,34 +72,10 @@ class _ActivityAssetScreenResult:
 
     message: str
     current_revision_id: str | None = None
-
-
-class ActivityAssetTuiActionsV1(Protocol):
-    """Typed action door backed by the installed session's runtime operations."""
-
-    def create(self, request: ActivityAssetCreationRequestV1) -> ActivityAssetInspectionV1:
-        """Create an asset and return its persisted revision chain."""
-        ...
-
-    def inspect(self, asset_id: str) -> ActivityAssetInspectionV1:
-        """Inspect one asset's immutable revision chain."""
-        ...
-
-    def correct(self, request: ActivityAssetCorrectionRequestV1) -> ActivityAssetInspectionV1:
-        """Append a correction and return the resulting chain."""
-        ...
-
-    def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
-        """Preview a schedule through the application boundary."""
-        ...
-
-    def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
-        """Record an explicit claim through the application boundary."""
-        ...
-
-    def filing_handoff(self, request: ActivityAssetFilingRequestV1) -> ActivityAssetFilingHandoff:
-        """Build non-consuming filing projections."""
-        ...
+    inspected_asset_id: str | None = None
+    """The asset an inspection read, when the action was one."""
+    fills: tuple[tuple[str, str], ...] = ()
+    """The inputs a read's served defaults fill, as input id and text."""
 
 
 class ActivityAssetScreen(LedgerWorkspaceScreen):
@@ -79,85 +89,149 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self._actions = controller.activity_asset_actions
         self._last_forecast: ScheduledAmortizationCharge | None = None
         self._last_forecast_supersedes: str | None = None
+        self._busy = False
+        self.writes_held = False
+        """Whether a write ended with an unknown outcome, so no write is offered until the asset is read again."""
+        self.held_asset_id: str | None = None
+        """The asset the held action named; only an inspection of that asset releases the writes."""
+        self._named_asset_id: str | None = None
+        self._default_claim_years: dict[str, int] = {}
+        """The year each listed element opens a claim on, as the last register read served it."""
+        self._filled: dict[str, str] = {}
+        """What the screen put in an input from a served default, so a later read renews it and a typed value stays."""
+
+    def _fill(self, fills: tuple[tuple[str, str], ...]) -> None:
+        """Put served defaults in the inputs they are for, leaving anything the operator typed."""
+        for input_id, text in fills:
+            field = self.query_one(f"#{input_id}", Input)
+            if not field.value or field.value == self._filled.get(input_id):
+                field.value = text
+                self._filled[input_id] = text
+
+    @property
+    @override
+    def in_flight(self) -> bool:
+        """An asset action is out through the door."""
+        return self._busy
 
     @override
     def compose(self) -> ComposeResult:
-        """Render typed JSON boundaries while keeping all arithmetic in application code."""
-        yield localized(
-            Static(tr("tui.ledger.activity_asset.title"), classes="cadrumo-banner"), "tui.ledger.activity_asset.title"
-        )
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.asset_id"), id="asset-id"),
-            "tui.ledger.activity_asset.asset_id",
-        )
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.revision"), id="asset-revision-json"),
-            "tui.ledger.activity_asset.revision",
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.create"), id="asset-create"), "tui.ledger.activity_asset.create"
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.inspect"), id="asset-inspect"), "tui.ledger.activity_asset.inspect"
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.correct"), id="asset-correct"), "tui.ledger.activity_asset.correct"
-        )
-        yield Static("", id="asset-current-revision-id", markup=False)
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.free_amount"), id="asset-free-amount"),
-            "tui.ledger.activity_asset.free_amount",
-        )
-        yield Input(value="2025-01-01", id="asset-covered-from")
-        yield Input(value="2026-01-01", id="asset-covered-until")
-        yield localized(
-            Input(placeholder=tr("tui.ledger.activity_asset.supersedes"), id="asset-supersedes-claim-id"),
-            "tui.ledger.activity_asset.supersedes",
-        )
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.forecast"), id="asset-forecast"), "tui.ledger.activity_asset.forecast"
-        )
-        yield Input(value="actividad_asset.tui.claim", id="asset-creating-operation")
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.claim"), id="asset-claim"), "tui.ledger.activity_asset.claim"
-        )
-        yield Input(value="2025", id="asset-filing-tax-year")
-        yield Input(value="4T", id="asset-filing-m130-period")
-        yield localized(
-            Button(tr("tui.ledger.activity_asset.filing"), id="asset-filing-handoff"),
-            "tui.ledger.activity_asset.filing",
-        )
-        yield Static("", id="asset-result", markup=False)
-        yield Static("", id="asset-recovery", markup=False)
+        """Render the activity-asset controls."""
+        yield from compose_activity_asset()
 
-    async def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Dispatch every mutation through the injected shared operations."""
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Dispatch every mutation through the injected shared operations, one action at a time."""
+        if self._busy or (self.writes_held and f"#{event.button.id}" in _WRITE_BUTTONS):
+            return
         # A visible neutral state prevents a following public action from being
         # mistaken for the previous result while its shared operation is still
         # running on the worker thread.  It has no accounting meaning and is
         # always replaced by either the operation result or a refusal below.
         self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
-        self.query_one("#asset-recovery", Static).update("")
+        self.query_one("#asset-recovery", RefusalSlot).show(None)
+        self._busy = True
+        self._named_asset_id = None
+        # A worker rather than an await here: awaiting would hold this screen's
+        # message queue for the whole action, so Back and the account keys
+        # would wait behind it and act once it ended, instead of being refused.
+        self.run_worker(self._run(event.button.id), group="activity-asset-action")
+
+    async def _run(self, button_id: str | None) -> None:
         try:
-            result = await asyncio.to_thread(self._dispatch, event.button.id)
+            result = await asyncio.to_thread(self._dispatch, button_id)
         except AccountSessionExpiredError as exc:
-            self._clear_private_view()
+            self._show_expired_session(exc)
+            return
+        except OperationOutcomeUnknownError as exc:
+            # The change may be saved, so it is never reported as refused, and no write is offered over the
+            # asset as last read: the writes return once an inspection reads that asset again.
+            self._hold_writes(self._named_asset_id)
+            self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
+            return
+        except InputRefusedError as exc:
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
             return
-        except (CadrumoError, ValueError) as exc:
-            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+        except CadrumoError as exc:
+            self.query_one("#asset-result", Static).update(f"refused\t{resolve_error_message(exc)}")
             self._show_recovery(exc)
             return
+        except ValueError:
+            # A value no check above judged: its own text names internals, so only that it is unreadable is said.
+            self.query_one("#asset-result", Static).update(
+                f"refused\t{tr('tui.ledger.activity_asset.errors.entry_unreadable')}"
+            )
+            return
+        except Exception as exc:
+            # Only the type: the text of an unforeseen failure may hold what the operator typed.
+            get_logger(__name__).warning("activity asset action failed: %s", type(exc).__name__)
+            self._show_unexpected_outcome(button_id)
+            return
+        finally:
+            # Cleared with no await before the outcome is on screen, so leaving never hides it.
+            self._busy = False
+        if self._inspection_releases_writes(result.inspected_asset_id):
+            self._release_writes()
+        self._fill(result.fills)
         self.query_one("#asset-result", Static).update(result.message)
         if result.current_revision_id is not None:
             self.query_one("#asset-current-revision-id", Static).update(
                 f"current_revision_id\t{result.current_revision_id}"
             )
 
+    def _show_expired_session(self, exc: AccountSessionExpiredError) -> None:
+        """Discard private facts and distinguish a refused change from an unknown outcome."""
+        self._clear_private_view()
+        if unknown_outcome_of(exc) is None:
+            self.query_one("#asset-result", Static).update(f"refused\t{resolve_error_message(exc)}")
+        else:
+            self._hold_writes(self._named_asset_id)
+            self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")
+
+    def _show_unexpected_outcome(self, button_id: str | None) -> None:
+        """Keep uncertain writes held while reporting unexpected read failures as refusals."""
+        if f"#{button_id}" in _WRITE_BUTTONS:
+            self._hold_writes(self._named_asset_id)
+            unknown = OperationOutcomeUnknownError(operation_id=button_id or "", effect=None)
+            self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(unknown)}")
+        else:
+            self.query_one("#asset-result", Static).update(
+                f"refused\t{tr('tui.ledger.activity_asset.errors.unexpected')}"
+            )
+
+    def _hold_writes(self, asset_id: str | None) -> None:
+        """Withhold every write until an inspection reads ``asset_id`` again, or any asset when none was named."""
+        if not self.writes_held:
+            self.held_asset_id = asset_id
+        self.writes_held = True
+        for selector in _WRITE_BUTTONS:
+            self.query_one(selector, Button).disabled = True
+
+    def _inspection_releases_writes(self, inspected_asset_id: str | None) -> bool:
+        """Whether a successful inspection read the asset the held writes wait for.
+
+        A hold whose action named no asset waits for any inspection. A typed
+        refusal that the held asset does not exist would also prove a held
+        creation did not land, but the inspect operation reports a missing
+        asset only as a generic validation refusal, so a refusal never
+        releases the writes.
+        """
+        if not self.writes_held or inspected_asset_id is None:
+            return False
+        return self.held_asset_id is None or self.held_asset_id == inspected_asset_id
+
+    def _release_writes(self) -> None:
+        """Offer the writes again over the asset an inspection has just read."""
+        self.writes_held = False
+        self.held_asset_id = None
+        for selector in _WRITE_BUTTONS:
+            self.query_one(selector, Button).disabled = False
+
     def _clear_private_view(self) -> None:
         """Discard screen-local financial facts when the retained session is lost."""
         self._last_forecast = None
         self._last_forecast_supersedes = None
+        self._default_claim_years = {}
+        self._filled = {}
         for selector in (
             "#asset-id",
             "#asset-revision-json",
@@ -165,52 +239,72 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             "#asset-covered-from",
             "#asset-covered-until",
             "#asset-supersedes-claim-id",
-            "#asset-creating-operation",
+            "#asset-name",
+            "#asset-serial",
+            "#asset-superseding-claims",
+            "#asset-options-kind",
             "#asset-filing-tax-year",
             "#asset-filing-m130-period",
+            *(f"#{input_id}" for input_id in DISPOSAL_INPUT_LOCALE_KEYS),
+            *(f"#{input_id}" for input_id in FACT_INPUT_LOCALE_KEYS),
         ):
             self.query_one(selector, Input).value = ""
         self.query_one("#asset-current-revision-id", Static).update("")
-        self.query_one("#asset-recovery", Static).update("")
+        self.query_one("#asset-recovery", RefusalSlot).show(None)
 
-    def _show_recovery(self, exc: Exception) -> None:
-        """Name a refusal's recovery action and move focus to the correction it needs."""
-        if not isinstance(exc, ActividadAssetIncompleteError):
+    def _show_recovery(self, exc: CadrumoError) -> None:
+        """Show the refusal's served ways out; an incomplete asset also moves focus to its correction."""
+        refusal = served_refusal(build_operation_error_detail(exc))
+        if refusal is None or refusal.verdict is None:
             return
-        verdict: object = exc.terminal_precondition_verdict
-        if not isinstance(verdict, PreconditionVerdict) or verdict.action is None:
-            return
-        facts = verdict.evidence[0].values
-        self.query_one("#asset-recovery", Static).update(
-            f"recovery\t{verdict.action.action_id}\tasset\t{facts.get('asset_id', '')}"
-            f"\trevision\t{facts.get('revision_id', '')}",
-        )
-        self.query_one("#asset-correct", Button).focus()
+        self.query_one("#asset-recovery", RefusalSlot).show(refusal)
+        if isinstance(exc, ActividadAssetIncompleteError) and refusal.verdict.action_id is not None:
+            self.query_one("#asset-correct", Button).focus()
 
     def _dispatch(self, button_id: str | None) -> _ActivityAssetScreenResult:
         """Delegate one public action, retaining no screen-local tax arithmetic."""
         asset_id = self.query_one("#asset-id", Input).value
         revision_json = self.query_one("#asset-revision-json", Input).value
+        # Each action names its asset before it reaches the door, so an unknown outcome holds its writes.
+        if button_id in ("asset-create", "asset-inspect", "asset-correct", "asset-forecast", "asset-claim"):
+            return self._dispatch_record(button_id, asset_id, revision_json)
+        if button_id in ("asset-filing-handoff", "asset-describe", "asset-dispose", "asset-disposal-calculate"):
+            return self._dispatch_disposal(button_id, asset_id, revision_json)
+        if button_id in ("asset-list", "asset-plan", "asset-timeline"):
+            return self._dispatch_register(button_id, asset_id, revision_json)
+        if button_id in ("asset-form-options", "asset-acquisition-candidates"):
+            return self._dispatch_options(button_id, asset_id, revision_json)
+        raise ValueError("unknown activity-asset action")
+
+    def _dispatch_record(self, button_id: str | None, asset_id: str, revision_json: str) -> _ActivityAssetScreenResult:
         if button_id == "asset-create":
-            result = self._actions.create(
-                ActivityAssetCreationRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json)),
+            creation = ActivityAssetCreationRequestV1(
+                revision=self._stated_revision(revision_json),
+                descriptor=self._descriptor(),
             )
-            return self._inspection_result(prefix="created", result=result)
+            self._named_asset_id = creation.revision.asset_id
+            return self._inspection_result(prefix="created", result=self._actions.create(creation))
         if button_id == "asset-inspect":
+            self._named_asset_id = self._required_asset_id(asset_id)
             result = self._actions.inspect(asset_id)
-            return self._inspection_result(prefix="asset", result=result)
+            inspected = self._inspection_result(prefix="asset", result=result)
+            return replace(inspected, inspected_asset_id=result.asset_id)
         if button_id == "asset-correct":
-            result = self._actions.correct(
-                ActivityAssetCorrectionRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json)),
+            superseding = self.query_one("#asset-superseding-claims", Input).value.strip()
+            correction = ActivityAssetCorrectionRequestV1(
+                revision=self._stated_revision(revision_json),
+                superseding_claims=self._stated_superseding_claims(superseding),
             )
-            return self._inspection_result(prefix="corrected", result=result)
+            self._named_asset_id = correction.revision.asset_id
+            return self._inspection_result(prefix="corrected", result=self._actions.correct(correction))
         if button_id == "asset-forecast":
+            self._named_asset_id = self._required_asset_id(asset_id)
             supersedes_claim_id = self.query_one("#asset-supersedes-claim-id", Input).value.strip() or None
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
-                    covered_from=require_iso8601_date(self.query_one("#asset-covered-from", Input).value),
-                    covered_until=require_iso8601_date(self.query_one("#asset-covered-until", Input).value),
+                    covered_from=stated_date(self.query_one("#asset-covered-from", Input).value),
+                    covered_until=stated_date(self.query_one("#asset-covered-until", Input).value),
                     # An empty field elects no amount.
                     requested_free_amount=parse_requested_free_amount(
                         self.query_one("#asset-free-amount", Input).value.strip() or None
@@ -225,36 +319,199 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             )
         if button_id == "asset-claim":
             if self._last_forecast is None:
-                raise ValueError("calculate a forecast before recording a claim")
+                raise InputRefusedError(tr("tui.ledger.activity_asset.errors.forecast_first"))
+            self._named_asset_id = self._last_forecast.asset_id
             result = self._actions.record_claim(
                 ActivityAssetClaimRequestV1(
                     forecast=self._last_forecast,
-                    creating_operation=self.query_one("#asset-creating-operation", Input).value,
                     supersedes_claim_id=self._last_forecast_supersedes,
                 ),
             )
             return _ActivityAssetScreenResult(
                 message=f"claim\t{result.claim.claim_id}\treused={str(result.reused_existing_claim).lower()}"
             )
+        raise ValueError("unknown activity-asset action")
+
+    def _dispatch_disposal(
+        self, button_id: str | None, asset_id: str, _revision_json: str
+    ) -> _ActivityAssetScreenResult:
         if button_id == "asset-filing-handoff":
-            tax_year = int(self.query_one("#asset-filing-tax-year", Input).value)
-            m130_period = Period.from_year_and_code(
-                tax_year,
-                self.query_one("#asset-filing-m130-period", Input).value,
+            return self._filing_handoff_result()
+        if button_id == "asset-describe":
+            self._named_asset_id = self._required_asset_id(asset_id)
+            history = self._actions.describe(asset_id, self._descriptor())
+            return _ActivityAssetScreenResult(message=f"described\t{asset_id}\tdescriptors={len(history.descriptors)}")
+        if button_id == "asset-dispose":
+            self._named_asset_id = self._required_asset_id(asset_id)
+            history = self._actions.dispose(asset_id, self._stated_disposal())
+            return _ActivityAssetScreenResult(
+                message=f"disposed\t{asset_id}\trevisions={len(history.revisions)}\tclaims={len(history.claims)}"
             )
-            result = self._actions.filing_handoff(
-                ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
-            )
+        if button_id == "asset-disposal-calculate":
+            self._named_asset_id = self._required_asset_id(asset_id)
+            stated = self._stated_disposal() if self._disposal_text("asset-disposal-date") else None
+            calculation = self._actions.disposal_calculate(asset_id, stated)
             return _ActivityAssetScreenResult(
                 message=(
-                    "filing_handoff"
-                    f"\tm100_material={result.material_m100.amount}"
-                    f"\tm100_intangible={result.intangible_m100.amount}"
-                    f"\tm130_material={result.material_m130.amount}"
-                    f"\tm130_intangible={result.intangible_m130.amount}"
-                )
+                    f"disposal\tnet_value={calculation.net_value.decimal}\texcess={calculation.excess.decimal}"
+                    f"\tresult={calculation.result.decimal if calculation.result else ''}"
+                ),
             )
         raise ValueError("unknown activity-asset action")
+
+    def _filing_handoff_result(self) -> _ActivityAssetScreenResult:
+        """Describe filing accruals together with the intervals they omit."""
+        tax_year = self._stated_filing_year()
+        m130_period = self._stated_quarter(tax_year)
+        result = self._actions.filing_handoff(
+            ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
+        )
+        if m130_period is not None and (result.material_m130 is None or result.intangible_m130 is None):
+            raise InternalInvariantError("activity-asset handoff for a Modelo 130 period omitted its accruals")
+        amounts = [
+            f"m100_material={_box_amount(result.material_m100)}",
+            f"m100_intangible={_box_amount(result.intangible_m100)}",
+        ]
+        if result.material_m130 is not None and result.intangible_m130 is not None:
+            amounts += [
+                f"m130_material={result.material_m130.amount}",
+                f"m130_intangible={result.intangible_m130.amount}",
+            ]
+        return _ActivityAssetScreenResult(
+            message="\n".join(["filing_handoff\t" + "\t".join(amounts), *map(m100_gap_line, result.m100_gaps)])
+        )
+
+    def _dispatch_register(
+        self, button_id: str | None, asset_id: str, _revision_json: str
+    ) -> _ActivityAssetScreenResult:
+        if button_id == "asset-list":
+            return self._list_result()
+        if button_id == "asset-plan":
+            return self._plan_result(asset_id)
+        if button_id == "asset-timeline":
+            self._named_asset_id = self._required_asset_id(asset_id)
+            return _ActivityAssetScreenResult(
+                message="\n".join(timeline_line(event) for event in self._actions.timeline(asset_id))
+                or tr("desktop.ledger.assets.timeline.empty"),
+            )
+        raise ValueError("unknown activity-asset action")
+
+    def _list_result(self) -> _ActivityAssetScreenResult:
+        register = self._actions.list_elements()
+        rows = register.rows or ()
+        self._default_claim_years = {
+            row.asset_id: row.default_claim_year for row in rows if row.default_claim_year is not None
+        }
+        return _ActivityAssetScreenResult(
+            message="\n".join(list_row_line(row) for row in rows) or tr("desktop.ledger.assets.list.empty"),
+            fills=(() if register.default_year is None else (("asset-filing-tax-year", str(register.default_year)),)),
+        )
+
+    def _plan_result(self, asset_id: str) -> _ActivityAssetScreenResult:
+        self._named_asset_id = self._required_asset_id(asset_id)
+        plan = self._actions.plan(asset_id)
+        minimum_label = tr("tui.ledger.activity_asset.plan_minimum")
+        minimum_incomplete = tr("tui.ledger.activity_asset.plan_minimum_incomplete")
+        lines: list[str] = []
+        if plan.limits is not None and (limits := limits_line(plan.limits)) is not None:
+            lines.append(limits)
+        lines.extend(
+            plan_row_line(row, minimum_label=minimum_label, minimum_incomplete=minimum_incomplete)
+            for row in plan.rows or ()
+        )
+        lines.extend(item.words for item in plan.advisories if item.words is not None)
+        return _ActivityAssetScreenResult(
+            message="\n".join(lines) or tr("desktop.ledger.assets.plan.empty"),
+            fills=self._claim_period_fills(asset_id, plan),
+        )
+
+    def _claim_period_fills(self, asset_id: str, plan: ActivityAssetPlanProjection) -> tuple[tuple[str, str], ...]:
+        """The first span the year the register opens a claim on can still record, when the list served that year."""
+        year = self._default_claim_years.get(asset_id)
+        for row in plan.rows or ():
+            if row.tax_year == year and row.claimable_intervals:
+                span = row.claimable_intervals[0]
+                return (
+                    ("asset-covered-from", span.covered_from.isoformat()),
+                    ("asset-covered-until", span.covered_until.isoformat()),
+                )
+        return ()
+
+    def _dispatch_options(
+        self, button_id: str | None, _asset_id: str, _revision_json: str
+    ) -> _ActivityAssetScreenResult:
+        if button_id == "asset-form-options":
+            options = self._actions.form_options(
+                stated_choice(AssetKind, self.query_one("#asset-options-kind", Input).value.strip()),
+                self._stated_filing_year(),
+            )
+            # The quarter stays the operator's choice: the served ones are listed, none is preselected.
+            return _ActivityAssetScreenResult(message=form_options_text(options))
+        if button_id == "asset-acquisition-candidates":
+            return _ActivityAssetScreenResult(
+                message="\n".join(
+                    f"{item.transaction_id}\t{item.booked_date}\t{item.amount.decimal}"
+                    for item in self._actions.acquisition_candidates()
+                ),
+            )
+        raise ValueError("unknown activity-asset action")
+
+    def _stated_filing_year(self) -> int:
+        """Read the year the operator chose, or say that one is to be chosen."""
+        text = self.query_one("#asset-filing-tax-year", Input).value.strip()
+        if not text:
+            raise InputRefusedError(tr("desktop.ledger.assets.filing.choose_year"))
+        try:
+            return _FILING_YEAR.validate_python(int(text))
+        except (ValueError, ValidationError):
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.year_invalid")) from None
+
+    def _stated_quarter(self, tax_year: int) -> Period | None:
+        """Read the quarter the operator chose, or none when the annual figures alone are asked for.
+
+        Only the shape of a period is read here. Whether the Modelo 130 declares the quarter is the filing
+        handoff's admission, made under the authority the operation pins, so the screen and the terminal
+        refuse the same quarters with the same words.
+        """
+        text = self.query_one("#asset-filing-m130-period", Input).value.strip()
+        if not text:
+            return None
+        try:
+            return Period.from_year_and_code(tax_year, text)
+        except PeriodError:
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.quarter_invalid")) from None
+
+    @staticmethod
+    def _required_asset_id(asset_id: str) -> str:
+        """Return the asset the operator named, or say that one is to be named."""
+        if not asset_id.strip():
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.asset_id_required"))
+        return asset_id
+
+    @staticmethod
+    def _stated_superseding_claims(text: str) -> tuple[ActivityAssetSupersedingClaim, ...]:
+        if not text:
+            return ()
+        try:
+            return _SUPERSEDING_CLAIMS.validate_json(text)
+        except ValidationError:
+            field = tr("tui.ledger.activity_asset.superseding_claims")
+            raise InputRefusedError(tr("tui.ledger.activity_asset.errors.json_invalid", field=field)) from None
+
+    def _disposal_text(self, input_id: str) -> str:
+        return self.query_one(f"#{input_id}", Input).value.strip()
+
+    def _stated_disposal(self) -> ActivityAssetDisposalSnapshot:
+        return stated_disposal(self._disposal_text)
+
+    def _stated_revision(self, revision_json: str) -> ActivityAssetRevision:
+        return stated_revision(self._disposal_text, revision_json)
+
+    def _descriptor(self) -> ActivityAssetDescriptorFacts:
+        return ActivityAssetDescriptorFacts(
+            name=self.query_one("#asset-name", Input).value,
+            serial_number=self.query_one("#asset-serial", Input).value.strip() or None,
+        )
 
     @staticmethod
     def _inspection_result(*, prefix: str, result: ActivityAssetInspectionV1) -> _ActivityAssetScreenResult:
@@ -267,4 +524,9 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         )
 
 
-__all__ = ["ActivityAssetScreen", "ActivityAssetTuiActionsV1"]
+def _box_amount(projection: ClaimProjection | None) -> str:
+    """The amount a Modelo 100 box takes, or the token saying the edition has no box for the kind."""
+    return "box_unbound" if projection is None else str(projection.amount)
+
+
+__all__ = ["ActivityAssetScreen"]

@@ -13,12 +13,13 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.errors import StorageReclaimUnconfirmedError
 from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.entrypoints.cli.operation_installation import run_installation_act
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.commands.errors import (
     CliRecordedOperationError,
     CliRefusedBoundaryError,
@@ -57,6 +58,7 @@ _CLI = OperationFrontendProjection.CLI
 def _installed_runtime(tmp_path: Path, login: InstallationLogin) -> Generator[Path]:
     """Serve the effective storage root as the installed cohort, so the command line finds it."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        root.mkdir(mode=0o700, parents=True, exist_ok=True)
         endpoint = WindowsEndpoint(storage_root=root)
         with serving_installation_runtime(endpoint, root, login, product_version=version("cadrumo")):
             yield root
@@ -101,7 +103,9 @@ def test_a_failed_act_is_reported_as_unexpected_with_an_unknown_effect_and_witho
     assert failed.value.recorded_code == get_registered_error_code(CliUnexpectedBoundaryError).code
     assert failed.value.context == {"installation_act": "storage_init", "effect": "unknown"}
     assert FAULT_TEXT not in str(failed.value)
-    assert FAULT_TEXT not in caplog.text
+    logged = delivered_text(caplog)
+    assert "installation act failed" in logged
+    assert FAULT_TEXT not in logged
 
 
 @pytest.mark.parametrize("fault", ["another-account", "locked"])

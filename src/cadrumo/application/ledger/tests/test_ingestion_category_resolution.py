@@ -5,7 +5,7 @@ table through neither. The convergence keeps both evidences and moves only the
 deciding: the document's declared UNTDID 5305 code arrives as a supplied FACT on
 :class:`~application.ledger.classification_assembly.DeclaredFacts`, the charged rate arrives as the
 criteria's own ``rate_tier`` axis, and
-:func:`~application.ledger.classification_assembly.resolve_ingestion_iva_category` weighs them.
+:func:`~application.ledger.classification_category_resolution.resolve_ingestion_iva_category` weighs them.
 
 **What is asserted here is the adjudication contract, never a tax figure.** No
 test below claims a category is the legally correct treatment of a synthetic
@@ -29,7 +29,8 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.iva_category_resolution import IvaCategoryOutcome
@@ -38,15 +39,12 @@ from ....domain.iva.establishment import record_country_code_status, stated_coun
 from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
-from ..classification_assembly import (
-    DeclaredFact,
-    DeclaredFacts,
-    assemble_classification_criteria,
-    declared_category_from_document_record,
-    resolve_ingestion_iva_category,
-)
+from ..classification_assembly import DeclaredFact, DeclaredFacts, assemble_classification_criteria
+from ..classification_category_resolution import declared_category_from_document_record, resolve_ingestion_iva_category
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,6 +82,7 @@ def _resolve(
     established: bool,
     stated: IvaCategory | None = None,
     rate_tier: IvaRateKind | None = None,
+    transaction_date: date | None = _WHEN,
 ):
     """Assemble and resolve through the real production path, with no doubles.
 
@@ -92,9 +91,9 @@ def _resolve(
     exists to accept.
     """
     declared = _facts(established=established, stated=stated)
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
-            transaction_date=_WHEN,
+            transaction_date=transaction_date,
             direction=InvoiceKind.RECEIVED,
             inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
             declared=declared,
@@ -121,9 +120,11 @@ def test_a_declared_code_is_read_into_a_fact_carrying_its_attribution() -> None:
     classification resting on the document's own record must be distinguishable
     later from one resting on an operator's assertion.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         fact = declared_category_from_document_record(
-            IvaCategory("domestic_reverse_charge").value, operation=_authority_operation_for_test
+            IvaCategory("domestic_reverse_charge").value,
+            operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert fact is not None
@@ -141,8 +142,13 @@ def test_an_absent_blank_or_unrecognised_code_establishes_nothing(printed: str |
     label the operator can supply would block a filing the rest of the record
     fully supports.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        assert declared_category_from_document_record(printed, operation=_authority_operation_for_test) is None
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        assert (
+            declared_category_from_document_record(
+                printed, operation=_authority_operation_for_test, effective_date=_ON_DATE
+            )
+            is None
+        )
 
 
 # --------------------------------------------------------------------------
@@ -301,7 +307,7 @@ def test_a_domestic_case_derives_with_the_supply_nature_unknown_and_asks_nothing
     demanding the nature would still return a category here and would only be
     visible as an operator prompt nobody could answer from the page.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(issuer_scope=_fact(_ES), customer_scope=_fact(_ES))
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
@@ -361,7 +367,7 @@ def _relief(
 ):
     """Resolve a declared relief claim through the real assembly and resolver."""
     declared = _facts(established=False, stated=stated)
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=direction,
@@ -433,7 +439,7 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     an operator meeting false refusals stops reading them. Here both territories
     resolve, so no residency gap is recorded and the claim stands untouched.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(
             issuer_scope=_fact(_ES),
             customer_scope=_fact(IvaTerritorialScope.from_registry("third_country")),
@@ -559,7 +565,7 @@ def _record_relief(
     spared and every assertion below would hold for any status whatsoever.
     """
     declared = DeclaredFacts(issuer_scope=_fact(_ES), stated_category=_fact(stated))
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=direction,
@@ -638,7 +644,7 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
     would trade an under-declaration for an over-payment, which nothing in this
     apparatus watches.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         declared = DeclaredFacts(
             issuer_scope=_fact(_ES),
             customer_scope=_fact(IvaTerritorialScope.from_registry("third_country")),
@@ -693,7 +699,7 @@ def _counterparty_only_relief(
         supply_nature=_fact(SupplyNature.GOODS),
         stated_category=_fact(IvaCategory("export_third_country_zero_rated")),
     )
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = assemble_classification_criteria(
             transaction_date=_WHEN,
             direction=direction,
@@ -753,3 +759,22 @@ def test_the_catalogue_gap_is_forgiven_whichever_spelling_the_record_states() ->
         "the same catalogue gap reached a different outcome under a different spelling, "
         "so the carve-out depends on the code system rather than on our data"
     )
+
+
+def test_an_undated_document_infers_nothing_from_the_charged_rate() -> None:
+    """The rate-to-category mapping is dated, so with no date it is not read on today's."""
+    dated = _resolve(established=False, rate_tier=IvaRateKind("general"))
+    assert dated.outcome is IvaCategoryOutcome.RATE_INFERRED
+
+    undated = _resolve(established=False, rate_tier=IvaRateKind("general"), transaction_date=None)
+    assert undated.outcome is IvaCategoryOutcome.UNRESOLVED
+
+
+def test_an_undated_declared_category_is_not_contradicted_by_a_tier_read_on_another_date() -> None:
+    """With no date the tier check has no coordinate, so the declared category stands unjudged."""
+    tier = IvaRateKind("general")
+    declared = IvaCategory("domestic_super_reduced")
+    undated = _resolve(established=False, stated=declared, rate_tier=tier, transaction_date=None)
+    assert undated.outcome is IvaCategoryOutcome.DECLARED
+    dated = _resolve(established=False, stated=declared, rate_tier=tier)
+    assert dated.outcome is IvaCategoryOutcome.CONTRADICTED

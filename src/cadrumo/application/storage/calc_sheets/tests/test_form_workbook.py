@@ -28,7 +28,8 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ..engine import build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..export_tables import export_identity_stamps
-from ..form_workbook import _FormBuilder, add_form_workbook
+from ..form_builder import FormBuilder
+from ..form_workbook import add_form_workbook
 from ..human_workbook import human_workbook
 from ..records import (
     SheetCellAddress,
@@ -41,7 +42,7 @@ from ..records import (
 from ..theme import StyleRole
 from ..workbook_cells import plan_value_blocks
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture
@@ -107,7 +108,7 @@ def test_period_restricted_pages_follow_the_selected_frame(form_source, periods,
 )
 def test_form_and_support_inputs_share_declared_numeric_semantics(form_source, kind, expected):
     snapshot, _ = form_source
-    first = next(c for c in snapshot.revision.casillas if c.input_kind.value == "manual")
+    first = next(c for c in snapshot.revision.casillas if c.input_kind.value == "manual" and c.number.isdigit())
     revision = snapshot.revision.model_copy(
         update={
             "casillas": tuple(
@@ -478,11 +479,18 @@ def test_supporting_calculations_guard_missing_inputs_without_changing_arithmeti
     inputs = {
         cell.casilla_id: cell.address.qualified()
         for cell in plan.value_cells
-        if cell.role == "operator_input" and cell.casilla_id in ("01", "02")
+        if cell.role == "operator_input" and cell.casilla_id in ("01", "gastos-deducibles-previos")
     }
     assert len(inputs) == 2
-    for address in inputs.values():
-        assert f"ISBLANK({address})" in projected.formula
+    # Casilla 03 reads casilla 01 as an input and casilla 02 as a computed support cell: the input is
+    # guarded by ISBLANK, the computed cell by NOT(ISNUMBER(...)), and the previos input sits behind 02.
+    computed_02 = next(cell for cell in plan.formula_cells if cell.casilla_id == "02").address.qualified()
+    assert f"ISBLANK({inputs['01']})" in projected.formula
+    assert f"NOT(ISNUMBER({computed_02}))" in projected.formula
+    support_02 = next(
+        cell for cell in rendered.formula_cells if cell.address.tab is TabName.CALCULOS and cell.casilla_id == "02"
+    )
+    assert f"ISBLANK({inputs['gastos-deducibles-previos']})" in support_02.formula
     assert projected.formula.startswith("IF(")
     assert projected.formula.endswith(f',"Sin dato",{original.formula})')
 
@@ -672,7 +680,10 @@ def test_printed_box_numbers_preserve_leading_zero_as_text(form_source):
 @pytest.mark.parametrize("row_heading", [None, "Código país del Estado miembro de consumo"])
 def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source, width, row_heading):
     snapshot, plan = form_source
-    casillas = snapshot.revision.casillas[: width + 1]
+    # Computed casillas carry no operator input cell, so the saved-record columns come from input casillas.
+    input_ids = {cell.casilla_id for cell in plan.value_cells if cell.role == "operator_input"}
+    casillas = tuple(c for c in snapshot.revision.casillas if c.id in input_ids)[: width + 1]
+    assert len(casillas) == width + 1
     grid = FormGridBlock(
         id="calendar",
         official_row_heading=row_heading,
@@ -708,7 +719,7 @@ def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source
         ModeloFormRepeatingRow(index=1, values=("000123", Decimal(0), None, *([Decimal(12)] * (width - 2)))),
         ModeloFormRepeatingRow(index=2, values=("000456", Decimal("7.25"), Decimal(9), *([Decimal(34)] * (width - 2)))),
     )
-    builder = _FormBuilder(
+    builder = FormBuilder(
         plan, snapshot.revision, "130", plan.metadata.period, layout, lambda _: None, lambda _: (True, rows)
     )
     builder.repeating(block)

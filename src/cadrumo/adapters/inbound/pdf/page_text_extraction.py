@@ -9,7 +9,7 @@ error class plus the diagnostic phrasing that error messages must carry.
 Public surface
 ==============
 
-Three return-shape families are supported:
+Two return-shape families are supported:
 
 * :func:`extract_pages_text_from_path` /
   :func:`extract_pages_text_from_bytes` — tuple-of-stripped-strings,
@@ -18,10 +18,6 @@ Three return-shape families are supported:
 * :func:`extract_pages_text_concatenated` — single ``str`` joined from
   the non-empty pages, no empty-PDF guard. Used by justificante where
   layout-sensitive parsing happens downstream.
-* :func:`extract_pages_text_with_fast_path` — wraps the path-based
-  primitive with an optional caller-supplied fast-path extractor (e.g.
-  the pypdfium2 path used by declaracion). The fast-path runs first; if
-  it returns ``None`` the function falls back to pdfplumber.
 
 All path-based diagnostics use the redacted ``<input-pdf>`` label. The bytes
 entry point is for secure-storage flows that should never materialise source
@@ -33,11 +29,10 @@ The ``pdfminer`` logger level is governed centrally by
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 
-from .redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
+from .redaction import INPUT_PDF_SOURCE_LABEL
 
 
 def _pdfplumber_failure_label(exc: Exception) -> str:
@@ -77,7 +72,7 @@ def extract_pages_text_from_path(
             layer).
     """
     if not pdf_path.is_file():
-        raise error_class(f"{not_found_label}: {_INPUT_PDF_SOURCE_LABEL}")
+        raise error_class(f"{not_found_label}: {INPUT_PDF_SOURCE_LABEL}")
     import pdfplumber
 
     try:
@@ -85,10 +80,10 @@ def extract_pages_text_from_path(
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
     except Exception as exc:
         failure = _pdfplumber_failure_label(exc)
-        raise error_class(f"pdfplumber could not open {_INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
+        raise error_class(f"pdfplumber could not open {INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
 
     if not any(pages):
-        raise error_class(f"no text extracted from {_INPUT_PDF_SOURCE_LABEL}; {pdf_label} may be scan-only or XFA")
+        raise error_class(f"no text extracted from {INPUT_PDF_SOURCE_LABEL}; {pdf_label} may be scan-only or XFA")
     return pages
 
 
@@ -166,44 +161,11 @@ def extract_pages_text_concatenated(
         raise
     except Exception as exc:
         failure = _pdfplumber_failure_label(exc)
-        raise error_class(f"pdfplumber failed to open {_INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
-
-
-def extract_pages_text_with_fast_path(
-    pdf_path: Path,
-    *,
-    error_class: type[Exception],
-    not_found_label: str,
-    pdf_label: str,
-    fast_path_extractor: Callable[[Path], tuple[str, ...] | None] | None = None,
-) -> tuple[str, ...]:
-    """Try ``fast_path_extractor`` first, falling back to pdfplumber.
-
-    The fast-path callable receives the same ``pdf_path`` and must
-    return either a tuple of stripped per-page strings (consumed
-    verbatim) or ``None`` to signal "fall through to pdfplumber".
-    Format-specific extractors (e.g. the pypdfium2 path used by
-    declaracion with declaration-content canary regexes) live in the
-    calling module so the canonical primitive stays content-neutral.
-
-    When ``fast_path_extractor`` is ``None`` this function is equivalent
-    to :func:`extract_pages_text_from_path`.
-    """
-    if fast_path_extractor is not None and pdf_path.is_file():
-        fast_pages = fast_path_extractor(pdf_path)
-        if fast_pages is not None:
-            return fast_pages
-    return extract_pages_text_from_path(
-        pdf_path,
-        error_class=error_class,
-        not_found_label=not_found_label,
-        pdf_label=pdf_label,
-    )
+        raise error_class(f"pdfplumber failed to open {INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
 
 
 __all__ = [
     "extract_pages_text_concatenated",
     "extract_pages_text_from_bytes",
     "extract_pages_text_from_path",
-    "extract_pages_text_with_fast_path",
 ]

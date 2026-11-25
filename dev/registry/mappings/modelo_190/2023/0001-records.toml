@@ -22,7 +22,7 @@ binding_record = "perceptor"
 
 [records.row_field_casilla_ids]
 perceptor_tax_id = "perc.nif"
-perceptor_legal_name = "perc.nombre"
+party_filing_name = "perc.nombre"
 clave = "perc.clave"
 subclave = "perc.subclave"
 percibido_dinerario = "perc.percepcion-dineraria"
@@ -440,6 +440,15 @@ sheet = "Tipo 2 - Registro De Perceptor"
 source_row = 342
 record_identity = "Tipo 2 - Registro De Perceptor"
 ordinal = "7"
+
+[entries.party_name]
+natural_person_statement = "el primer apellido, un espacio, el segundo apellido, un espacio y el nombre completo, necesariamente en este mismo orden"
+entity_statement = "se consignará la denominación completa de la entidad, sin anagramas"
+
+[entries.party_name.composition]
+natural_person = ["primer_apellido", "segundo_apellido", "nombre"]
+separator = " "
+entity = ["razon_social"]
 
 [[entries]]
 export_field_id = "modelo-190-perc-codigo-provincia"

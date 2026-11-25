@@ -26,7 +26,7 @@ import pytest
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 
 from ...application.user_profile.censal_readback import read_latest_censal_observation
@@ -38,7 +38,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from . import registered_executor_case_support as conformance
 from .censal_review_test_support import review_censal_with_services
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
-from .test_censal_operation_operand import _operand
+from .test_censal_operation_operand import censal_operation_operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -60,7 +60,7 @@ def test_applied_censal_review_lands_adopted_values_with_censo_provenance(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     """Adopted values reach the durable record carrying the censo source tag."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     cleanup = OperationRuntimeCloseWitness()
     with conformance_operation_runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
@@ -122,7 +122,7 @@ def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     """A rejected review neither writes values nor stamps censo provenance."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     cleanup = OperationRuntimeCloseWitness()
     with conformance_operation_runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
         repository = ProfileRecordRepository.for_current_session(
@@ -155,7 +155,7 @@ def test_each_censal_acquisition_publishes_exactly_one_answerable_review(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     """Two runs each review once; neither reuses the other's interaction."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     first_cleanup = OperationRuntimeCloseWitness()
     second_cleanup = OperationRuntimeCloseWitness()
 
@@ -215,8 +215,8 @@ def test_complete_capture_is_readable_after_review_even_when_adoption_is_decline
     """Fresh journal/custody readers preserve all evidence independently of local adoption."""
     from datetime import timedelta
 
-    observation = _operand().observation
-    monkeypatch.setattr(conformance, "_observation", lambda: observation)
+    observation = censal_operation_operand().observation
+    monkeypatch.setattr(conformance, "observation", lambda: observation)
     with conformance_operation_runtime(tmp_path / "censal-readback", cleanup=OperationRuntimeCloseWitness()) as (
         driver,
         _registry,

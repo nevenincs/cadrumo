@@ -9,6 +9,8 @@ use cadrumo_application::{
 use serde_json::{Value, json};
 use std::fs;
 
+use cadrumo_application::diagnostics::delivery_wait::delivered;
+
 fn timing(outcome: HelperOutcome) -> HelperTiming {
     HelperTiming {
         helper_kind: HelperKind::Mutation,
@@ -36,6 +38,7 @@ fn helper_summary_persists_only_closed_timings_and_existing_process_attribution(
     diagnostics.finish(process, Some(7), ProcessPhase::Exited);
     let fact = timing(HelperOutcome::Completed);
     diagnostics.helper_timing(Some(process), fact);
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     let event = snapshot.events.last().unwrap();
     assert!(matches!(event.kind, EventKind::HelperTiming));
@@ -79,6 +82,7 @@ fn unavailable_sink_does_not_lose_timing_or_claim_a_spawn_for_admission_refusal(
         ..timing(HelperOutcome::AdmissionRefused)
     };
     diagnostics.helper_timing(None, fact);
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(
         snapshot.log_failure.as_ref().unwrap().code,
@@ -134,13 +138,10 @@ fn helper_projection_rejects_forged_sources_and_preserves_native_refusal_codes()
         assert_eq!(fact.envelope_decode, HelperDecode::NativeRefused);
         assert_eq!(fact.code.as_deref(), Some(code));
         assert!(!serde_json::to_string(&fact).unwrap().contains("CANARY"));
-        let native = json!({"native_refusal":code,"subject":"CADRUMO_LOCAL_STORAGE_ROOT"});
+        let native = json!({"native_refusal":code,"subject":"CADRUMO_STORAGE_ROOT"});
         let fact =
             HelperResult::inspect(identity, false, &[], &serde_json::to_vec(&native).unwrap());
-        assert_eq!(
-            fact.native_subject.as_deref(),
-            Some("CADRUMO_LOCAL_STORAGE_ROOT")
-        );
+        assert_eq!(fact.native_subject.as_deref(), Some("CADRUMO_STORAGE_ROOT"));
     }
     for bytes in [b"not an envelope PRIVATE-CANARY".as_slice(), br#"{"schema_version":"2","command":"config.logout","status":"error","error":{"code":"INTERNAL"}}"#.as_slice()] {
         let fact = HelperResult::inspect(identity, false, &[], bytes);

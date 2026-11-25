@@ -11,7 +11,7 @@ import json
 import pytest
 
 from ...errors import StorageValidationError
-from .._secure_object_schema import parse_revision_ancestor_ids
+from ..secure_object_schema import parse_revision_ancestor_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

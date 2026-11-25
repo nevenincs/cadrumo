@@ -22,7 +22,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TextIO
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 LEVEL_VARIABLE = "CADRUMO_BUILD_LOG_LEVEL"
 LEVELS = ("ERROR", "WARNING", "NOTICE", "STATUS", "VERBOSE", "DEBUG", "TRACE")

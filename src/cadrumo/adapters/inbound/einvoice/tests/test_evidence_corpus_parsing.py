@@ -256,7 +256,7 @@ def test_the_cii_specimen_reads_to_its_own_printed_values() -> None:
     assert parsed.grand_total == Decimal("7400.00")
 
     assert parsed.supplier_name == "Maquinaria Levantina SL"
-    assert parsed.supplier_tax_id == "ESB12345674"
+    assert parsed.supplier_tax_id == "ESB00015016"
     assert parsed.supplier_country_code == "ES"
     assert parsed.supplier_postal_code == "46015"
 
@@ -295,7 +295,7 @@ def test_the_ubl_fixture_parses_both_rates_and_selects_the_iva_identifier() -> N
 
     assert parsed.shape is DocumentShape.XML_UBL
     assert parsed.invoice_number == "UBL-2024-0042", "the document's own ID, not a guideline identifier"
-    assert parsed.supplier_tax_id == "ESB12345674", "the schemeID=VA id, not the 0088 party identifier"
+    assert parsed.supplier_tax_id == "ESB00015016", "the schemeID=VA id, not the 0088 party identifier"
     assert parsed.currency == "EUR"
 
     rates = sorted(rate for rate, _b, _c in parsed.iva_breakdown if rate is not None)
@@ -334,7 +334,7 @@ def test_the_facturae_fixture_reads_recargo_and_does_not_double_count_its_taxes(
 
     assert parsed.shape is DocumentShape.XML_FACTURAE
     assert parsed.invoice_number == "FAC-2024-0007"
-    assert parsed.supplier_tax_id == "ESB12345674"
+    assert parsed.supplier_tax_id == "ESB00015016"
     assert parsed.recargo_amount == Decimal("5.20")
 
     assert len(parsed.iva_breakdown) == 1, "invoice-level taxes only; the per-line block must not double-count"
@@ -415,6 +415,6 @@ def test_the_facturae_reader_carries_both_parties_tax_ids_not_only_the_supplier(
     """
     parsed = parse_einvoice_document(_read("facturae_32_series_and_parties_invoice.xml"))
 
-    assert parsed.supplier_tax_id == "45821337R"
-    assert parsed.customer_tax_id == "A82645177"
+    assert parsed.supplier_tax_id == "00001004S"
+    assert parsed.customer_tax_id == "A00010017"
     assert parsed.supplier_tax_id != parsed.customer_tax_id

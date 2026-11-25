@@ -1,85 +1,40 @@
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   ProviderOutcome,
   ProviderSecret,
   ProviderStatus,
 } from "@/components/settings/types";
 import { failureCode } from "../errors";
+import type { CallPlan } from "./hostCall";
+import type { AgentServiceStatus } from "./agentSession";
 import { useCachedRead, type AgentRead } from "./agentViews";
+import { CATALOG_BUSY_QUIET_MS } from "./catalogReadPolicy";
+import { useWindowReturn } from "./modelListState";
+import {
+  cliStateCause,
+  consoleCommandTemplate,
+  logRef,
+  nextStep,
+  signInCause,
+} from "./providerSignInWords";
+import type {
+  ProviderSettingsAnswer,
+  ProviderSettingsRecord,
+  ProviderSignInMethod,
+  ProviderSignInSnapshot,
+} from "./providerSettingsContract";
 
 // The model providers of the signed-in profile, as a host serves them: the
 // masked status of each lane (a provider's API, or its command-line app),
 // and the person's ways to set, disable or reset its key. A key goes to the host once, in the call that saves it, and comes
 // back from nowhere: no answer here carries a key, and nothing keeps one.
-
-export type ProviderSettingsRecord = {
-  /** The lane's id, `<provider>_<transport>`, which each change names. One
-   * provider has a lane for its API and one for its command-line app. */
-  id: string;
-  /** The provider the lane reaches, as cadrumo-agent names it: shared by
-   * every lane of that provider. */
-  provider: string;
-  /** The provider's product name, the same in every language and on each of
-   * its lanes. */
-  display_name: string;
-  /** Its web API, or its command-line app. */
-  transport: ProviderStatus["transport"];
-  auth_kind: ProviderStatus["authKind"];
-  mode: ProviderStatus["mode"];
-  available: boolean;
-  source: ProviderStatus["source"];
-  readiness: ProviderStatus["readiness"];
-  /** Null when ready, else a closed code: a refusal code, or
-   * `not_configured`, `turned_off`, `sign_in_with_provider_tool` or
-   * `record_unreadable`. */
-  reason?: string | null;
-  base_url?: string | null;
-  default_base_url?: string | null;
-  /** Sent back with a change, so a record changed elsewhere is not
-   * overwritten: 64 lowercase hex digits, all zeros for a lane that has no
-   * record. */
-  revision: string;
-  /** Where the lane's command-line app stands on this computer; only a
-   * command-line lane has one. */
-  cli_state?: ProviderStatus["cliState"] | null;
-  /** Whether a key is stored for the lane, whatever its mode: one that is
-   * turned off keeps it for when it is turned on again. */
-  credential_saved?: boolean;
-};
-
-export type ProviderSettingsAnswer = {
-  /** A development build, where a provider with no key uses the
-   * environment's. The host says which build it is. */
-  development: boolean;
-  providers: ProviderSettingsRecord[];
-  /** Canonical providers the agent declares usable from the GUI sign-in flow.
-   * Missing means no provider supports it. */
-  sign_in_providers?: string[];
-  /** GUI sign-in methods supported per canonical provider slug. */
-  sign_in_methods?: Record<string, ProviderSignInMethod[]>;
-};
-
-export type ProviderSignInMethod = "browser" | "device";
-export type ProviderSignInEvent =
-  | "starting"
-  | "started"
-  | "browser_action"
-  | "succeeded"
-  | "cancelled"
-  | "failed";
-
-/** Transient progress for a person-started provider sign-in attempt. */
-export type ProviderSignInSnapshot = {
-  attempt_id: string;
-  /** Lane id, such as `codex_cli`. */
-  provider: string;
-  event: ProviderSignInEvent;
-  reason?: string;
-  /** Present only while the person can open the provider's sign-in page. */
-  url?: string;
-  /** Device-flow code; shown only while this attempt is active. */
-  user_code?: string;
-};
 
 export interface ProviderSignIn {
   start(change: {
@@ -89,26 +44,20 @@ export interface ProviderSignIn {
   }): Promise<ProviderSignInSnapshot>;
   status(change: { attemptId: string }): Promise<ProviderSignInSnapshot>;
   cancel(change: { attemptId: string }): Promise<ProviderSignInSnapshot>;
+  submitCode(change: {
+    attemptId: string;
+    code: string;
+  }): Promise<ProviderSignInSnapshot>;
   /** Same user-gesture-only operation as Host.openExternal. */
   openExternal?(url: string): Promise<void>;
 }
 
 /** Why a change was refused, as a stable code. `committed_readback_failed`
  * means the change was saved but its status could not be read back. */
-export type ProviderSettingsRefusal =
-  | "not_signed_in"
-  | "profile_locked"
-  | "invalid_key_format"
-  | "base_url_rejected"
-  | "revision_conflict"
-  | "committed_readback_failed"
-  | "catalog_unavailable"
-  | "runtime_unavailable"
-  | "person_act_required"
-  | "unknown";
-
 export interface ProviderSettings {
-  status(): Promise<ProviderSettingsAnswer>;
+  status(plan?: CallPlan): Promise<ProviderSettingsAnswer>;
+  /** A console login completed. Its provider state must be read under the current profile. */
+  observeConsoleLogin?(changed: () => void): Promise<() => void>;
   /** Attended GUI sign-in is absent unless this host implements it. */
   readonly signIn?: ProviderSignIn;
   /** Saves a key or token. The secret is handed on once and never kept.
@@ -135,9 +84,24 @@ export interface ProviderSettings {
     provider: string;
     revision: string;
   }): Promise<ProviderSettingsRecord>;
+  /** Signs a command-line lane out of its provider; it answers with the lane
+   * signed out. Offered only where the lane serves `sign_out_available`. */
+  signOut(change: {
+    provider: string;
+    revision: string;
+  }): Promise<ProviderSettingsRecord>;
 }
 
-const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
+/** The console command the service serves, where it is a command template. */
+const servedCommand = (value: unknown): { consoleSignInCommand?: string } => {
+  const command = consoleCommandTemplate(value);
+  return command ? { consoleSignInCommand: command } : {};
+};
+
+/** A served lane record as the settings show it. */
+export const providerStatus = (
+  record: ProviderSettingsRecord,
+): ProviderStatus => ({
   id: record.id,
   provider: record.provider,
   name: record.display_name,
@@ -145,23 +109,57 @@ const providerStatus = (record: ProviderSettingsRecord): ProviderStatus => ({
   authKind: record.auth_kind,
   mode: record.mode,
   readiness: record.readiness,
+  available: record.available,
   source: record.source,
   ...(record.cli_state ? { cliState: record.cli_state } : {}),
+  // A cause is the service's closed word or nothing: another word is dropped.
+  ...(cliStateCause(record.cli_state_cause)
+    ? { cliStateCause: cliStateCause(record.cli_state_cause) }
+    : {}),
+  ...(nextStep(record.next_step)
+    ? { nextStep: nextStep(record.next_step) }
+    : {}),
   ...(record.credential_saved ? { credentialSaved: true } : {}),
   ...(record.reason ? { reason: record.reason } : {}),
   ...(record.base_url ? { baseUrl: record.base_url } : {}),
   ...(record.default_base_url
     ? { defaultBaseUrl: record.default_base_url }
     : {}),
+  // Only the served value says it; nothing about the lane stands in for it.
+  ...(typeof record.reads_off_host === "boolean"
+    ? { readsOffHost: record.reads_off_host }
+    : {}),
+  ...(record.sign_out_available === true ? { signOutAvailable: true } : {}),
 });
+
+/** A settings status refusal that says where the agent's start stands, not
+ * that the read failed: `busy` while the host has not yet admitted the
+ * service, and `not_signed_in` while the admitted service has not yet taken
+ * up the signed-in person's session (the window asks only while a person is
+ * signed in). The read waits on the service's next status for it. */
+export const settingsAwaitStart = (code: string): boolean =>
+  code === "busy" || code === "not_signed_in";
+
+/** A settings status refusal that reports where the person's setup or the
+ * agent's session stands, which the settings show with the step that moves it
+ * on: a state, noted at INFO, never a fault. */
+export const settingsSetupState = (code: string): boolean =>
+  settingsAwaitStart(code) ||
+  code === "profile_locked" ||
+  code === "runtime_unavailable";
 
 export type ProviderSettingsView = {
   read: AgentRead<{
-    development: boolean;
     providers: ProviderStatus[];
+    /** The same lanes as served, record by record. */
+    records: readonly ProviderSettingsRecord[];
     signInProviders: string[];
     signInMethods: Readonly<Record<string, readonly ProviderSignInMethod[]>>;
+    consoleSignInCommand?: string;
     revisions: Readonly<Record<string, string>>;
+    /** The service is still reading the sign-in routes and the apps' states
+     * behind this answer, as it serves `reads_pending`. */
+    readsPending: boolean;
   }>;
   busyId: string | null;
   outcomes: Readonly<Record<string, ProviderOutcome>>;
@@ -169,9 +167,13 @@ export type ProviderSettingsView = {
   turnOff: (providerId: string) => void;
   turnOn: (providerId: string) => void;
   reset: (providerId: string) => void;
+  signOut: (providerId: string) => void;
   refresh: () => void;
-  /** How many changes have been saved, so what depends on them (the agent's
-   * provider list) can be read again. */
+  /** Reads the settings again, as when the agent turns ready, without
+   * invalidating the agent's provider list. */
+  reread: () => void;
+  /** Invalidations of the agent's provider list, including authentication
+   * observed by a status refresh or a read made elsewhere. */
   changes: number;
   /** Shows a status read made elsewhere, in place of reading it again. */
   accept: (status: ProviderSettingsAnswer) => void;
@@ -180,26 +182,78 @@ export type ProviderSettingsView = {
 /**
  * The providers of `reader`'s profile while `open`: read each time they open
  * (`opened` counts the openings), after each change of the person's and when
- * asked to refresh; never on a timer. The last answer stays on screen while
- * it is read again, so the settings load only the first time.
+ * asked to refresh. The last answer stays on screen while it is read again,
+ * so the settings load only the first time. An answer that awaits the
+ * agent's start (`settingsAwaitStart`) and an answer the service says it is still
+ * completing (`reads_pending`: the sign-in routes and the apps' states are
+ * read behind it) wait on a cue, never on a timer: a status the service
+ * publishes after the read was asked (`published`, which the service also
+ * sends again once a read it answered busy or pending for has settled), the
+ * person coming back to the window, or the person's own action. A cue that
+ * comes while a read is out is taken as soon as that read ends.
  */
 export function useProviderSettings(
   host: ProviderSettings | undefined,
   reader: string | null,
   open: boolean,
   opened: number,
+  published: AgentServiceStatus | null,
 ): ProviderSettingsView {
+  const owner = useMemo(() => ({ host, reader }), [host, reader]);
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [owner],
+  );
   const [state, setState] = useState({
-    reader,
+    owner,
     again: 0,
     changes: 0,
     busyId: null as string | null,
     outcomes: {} as Record<string, ProviderOutcome>,
   });
-  if (state.reader !== reader)
-    setState({ reader, again: 0, changes: 0, busyId: null, outcomes: {} });
+  if (state.owner !== owner)
+    setState({ owner, again: 0, changes: 0, busyId: null, outcomes: {} });
+  // A busy answer is followed while the settings are open, and since when it
+  // has been, so its refusals are recorded as the wait they are while it is
+  // the one expected.
+  const asking = useRef(open);
+  useLayoutEffect(() => {
+    asking.current = open;
+  }, [open]);
+  const following = useRef<{ since: number } | null>(null);
+  // The status last published, the one the newest read was asked under, and
+  // whether that read is still out, so a publication causes one read, and
+  // one that came while a read was out causes it once that read ends.
+  const latest = useRef(published);
+  useLayoutEffect(() => {
+    latest.current = published;
+  }, [published]);
+  const askedUnder = useRef(published);
+  const out = useRef(false);
   const readStatus = useMemo(
-    () => (host && reader !== null ? () => host.status() : null),
+    () =>
+      host && reader !== null
+        ? () => {
+            askedUnder.current = latest.current;
+            out.current = true;
+            const promise = host.status({
+              retryable: (code) => code === "busy",
+              scheduled: () => asking.current,
+              expected: () =>
+                following.current === null ||
+                performance.now() - following.current.since <
+                  CATALOG_BUSY_QUIET_MS,
+            });
+            const settled = () => {
+              out.current = false;
+            };
+            promise.then(settled, settled);
+            return promise;
+          }
+        : null,
     [host, reader],
   );
   const { read: answer, put } = useCachedRead(
@@ -208,47 +262,115 @@ export function useProviderSettings(
     open,
     state.again + opened,
   );
-  const read = useMemo(
-    (): ProviderSettingsView["read"] =>
-      answer.kind === "ready"
-        ? {
-            kind: "ready",
-            value: {
-              development: answer.value.development,
-              providers: answer.value.providers.map(providerStatus),
-              signInProviders: Array.isArray(answer.value.sign_in_providers)
-                ? [...new Set(answer.value.sign_in_providers)]
-                : [],
-              signInMethods: Object.fromEntries(
-                Object.entries(answer.value.sign_in_methods ?? {}).flatMap(
-                  ([provider, methods]) =>
-                    Array.isArray(methods)
-                      ? [
-                          [
-                            provider,
-                            [
-                              ...new Set(
-                                methods.filter(
-                                  (method): method is ProviderSignInMethod =>
-                                    method === "browser" || method === "device",
-                                ),
-                              ),
-                            ],
-                          ],
-                        ]
-                      : [],
-                ),
-              ),
-              revisions: Object.fromEntries(
-                answer.value.providers.map(
-                  ({ id, revision }) => [id, revision] as const,
-                ),
-              ),
-            },
-          }
-        : answer,
-    [answer],
+  const busy =
+    open &&
+    readStatus !== null &&
+    answer.kind === "failed" &&
+    answer.code === "busy";
+  const starting =
+    open &&
+    readStatus !== null &&
+    answer.kind === "failed" &&
+    settingsAwaitStart(answer.code);
+  const pending =
+    open &&
+    readStatus !== null &&
+    answer.kind === "ready" &&
+    answer.value.reads_pending;
+  // The last complete answer, kept while the service says a later one is
+  // still being completed: such an answer carries only part of what the apps
+  // and sign-in routes behind it will say, so it does not unsay a lane's
+  // standing. A complete answer, or a change the person made to a lane,
+  // replaces it.
+  const [complete, setComplete] = useState<{
+    owner: typeof owner;
+    from: ProviderSettingsAnswer;
+    providers: ReadonlyMap<string, ProviderSettingsRecord>;
+  } | null>(null);
+  if (answer.kind === "ready" && !answer.value.reads_pending) {
+    if (complete?.from !== answer.value || complete.owner !== owner)
+      setComplete({
+        owner,
+        from: answer.value,
+        providers: new Map(
+          answer.value.providers.map((lane) => [lane.id, lane]),
+        ),
+      });
+  }
+  // Since when the settings have answered busy, so its refusals are recorded
+  // as the wait they are while it is the one expected.
+  useEffect(() => {
+    if (busy) following.current ??= { since: performance.now() };
+    else following.current = null;
+  }, [busy]);
+  const waits = starting || pending;
+  useEffect(() => {
+    if (waits && !out.current && askedUnder.current !== published)
+      setState((held) => ({ ...held, again: held.again + 1 }));
+  }, [answer, waits, published]);
+  useWindowReturn(
+    waits
+      ? () => setState((held) => ({ ...held, again: held.again + 1 }))
+      : null,
   );
+  const read = useMemo((): ProviderSettingsView["read"] => {
+    if (answer.kind !== "ready") return answer;
+    const earlier =
+      answer.value.reads_pending && complete?.owner === owner ? complete : null;
+    const served = earlier
+      ? {
+          ...answer.value,
+          providers: answer.value.providers.map((lane) => {
+            const before = earlier.providers.get(lane.id);
+            // Only a lane the store left as it was keeps its earlier standing.
+            return before &&
+              before.mode === lane.mode &&
+              before.credential_saved === lane.credential_saved
+              ? { ...before, revision: lane.revision }
+              : lane;
+          }),
+          sign_in_providers: earlier.from.sign_in_providers,
+          sign_in_methods: earlier.from.sign_in_methods,
+        }
+      : answer.value;
+    return {
+      kind: "ready",
+      value: {
+        providers: served.providers.map(providerStatus),
+        records: served.providers,
+        signInProviders: Array.isArray(served.sign_in_providers)
+          ? [...new Set<string>(served.sign_in_providers)]
+          : [],
+        signInMethods: Object.fromEntries(
+          Object.entries(served.sign_in_methods ?? {}).flatMap(
+            ([provider, methods]) =>
+              Array.isArray(methods)
+                ? [
+                    [
+                      provider,
+                      [
+                        ...new Set(
+                          methods.filter(
+                            (method): method is ProviderSignInMethod =>
+                              method === "browser" ||
+                              method === "device" ||
+                              method === "browser-code",
+                          ),
+                        ),
+                      ],
+                    ],
+                  ]
+                : [],
+          ),
+        ),
+        ...servedCommand(served.console_sign_in_command),
+        revisions: Object.fromEntries(
+          served.providers.map(({ id, revision }) => [id, revision] as const),
+        ),
+        readsPending: answer.value.reads_pending,
+      },
+    };
+  }, [answer, complete, owner]);
   const revisionOf = (providerId: string) =>
     answer.kind === "ready"
       ? answer.value.providers.find((record) => record.id === providerId)
@@ -263,7 +385,8 @@ export function useProviderSettings(
     ) => Promise<ProviderSettingsRecord>,
   ) => {
     const revision = revisionOf(providerId);
-    if (!host || revision === undefined) return;
+    if (!host || reader === null || revision === undefined) return;
+    const mine = generation.current;
     setState((held) => ({
       ...held,
       busyId: providerId,
@@ -272,38 +395,107 @@ export function useProviderSettings(
       ),
     }));
     act(host, revision).then(
-      () =>
-        setState((held) => ({
-          ...held,
-          busyId: null,
-          again: held.again + 1,
-          changes: held.changes + 1,
-        })),
+      () => {
+        // What the lane stands on is the change's to say, not the earlier answer's.
+        setComplete((held) =>
+          held
+            ? {
+                ...held,
+                providers: new Map(
+                  [...held.providers].filter(([id]) => id !== providerId),
+                ),
+              }
+            : held,
+        );
+        setState((held) =>
+          mine !== generation.current
+            ? held
+            : {
+                ...held,
+                busyId: null,
+                again: held.again + 1,
+                changes: held.changes + 1,
+              },
+        );
+      },
       (error: unknown) => {
         const code = failureCode(error);
+        const served =
+          typeof error === "object" && error !== null
+            ? (error as { cause?: unknown; log_ref?: unknown })
+            : {};
+        const cause = signInCause(served.cause);
+        const ref = logRef(served.log_ref);
         const outcome: ProviderOutcome =
           code === "committed_readback_failed"
             ? { kind: "saved_unread" }
-            : { kind: "refused", code };
-        setState((held) => ({
-          ...held,
-          busyId: null,
-          outcomes: { ...held.outcomes, [providerId]: outcome },
-          // Saved all the same, so what depends on it is read again.
-          changes:
-            outcome.kind === "saved_unread" ? held.changes + 1 : held.changes,
-          // A record changed elsewhere is shown as it is now.
-          again: code === "revision_conflict" ? held.again + 1 : held.again,
-        }));
+            : {
+                kind: "refused",
+                code,
+                ...(cause ? { cause } : {}),
+                ...(ref ? { logRef: ref } : {}),
+              };
+        setState((held) =>
+          mine !== generation.current
+            ? held
+            : {
+                ...held,
+                busyId: null,
+                outcomes: { ...held.outcomes, [providerId]: outcome },
+                // Saved all the same, so what depends on it is read again.
+                changes:
+                  outcome.kind === "saved_unread"
+                    ? held.changes + 1
+                    : held.changes,
+                // A record changed elsewhere is shown as it is now.
+                again:
+                  code === "revision_conflict" ? held.again + 1 : held.again,
+              },
+        );
       },
     );
   };
 
   const refresh = useCallback(
     () =>
-      setState((held) => ({ ...held, again: held.again + 1, outcomes: {} })),
+      setState((held) => ({
+        ...held,
+        again: held.again + 1,
+        changes: held.changes + 1,
+        outcomes: {},
+      })),
     [],
   );
+  const reread = useCallback(
+    () => setState((held) => ({ ...held, again: held.again + 1 })),
+    [],
+  );
+  useEffect(() => {
+    if (!host?.observeConsoleLogin || reader === null) return;
+    let current = true;
+    let stop: (() => void) | undefined;
+    void host
+      .observeConsoleLogin(() => {
+        if (current) refresh();
+      })
+      .then((release) => {
+        if (current) {
+          stop = release;
+          // Include a login completed between the initial read and registration.
+          reread();
+        } else release();
+      })
+      .catch(() => {
+        if (current) {
+          window.addEventListener("focus", refresh);
+          stop = () => window.removeEventListener("focus", refresh);
+        }
+      });
+    return () => {
+      current = false;
+      stop?.();
+    };
+  }, [host, reader, refresh, reread]);
   return {
     read,
     busyId: state.busyId,
@@ -329,8 +521,16 @@ export function useProviderSettings(
       change(providerId, (served, revision) =>
         served.reset({ provider: providerId, revision }),
       ),
+    signOut: (providerId) =>
+      change(providerId, (served, revision) =>
+        served.signOut({ provider: providerId, revision }),
+      ),
     refresh,
+    reread,
     changes: state.changes,
-    accept: put,
+    accept: (status) => {
+      put(status);
+      setState((held) => ({ ...held, changes: held.changes + 1 }));
+    },
   };
 }

@@ -75,6 +75,7 @@ def health_payload(
         "failed_reasons": failed_reasons,
         "graph_authority": {
             **graph,
+            "consumer_files_scanned_by_subordinate": checker.consumer_files_scanned,
             "files_scanned_by_subordinate": checker.files_scanned,
             "operational_reasons": operational_reasons,
             "supplemental_direct_occurrences_for_kept_contracts": supplemental_occurrences,

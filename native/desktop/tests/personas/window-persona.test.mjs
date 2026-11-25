@@ -1,0 +1,3463 @@
+// One persona through the packaged native window: sign in, open each prepared
+// declaration, calculate, verify and export it through the window's own
+// controls, and read every box the form shows. Results are appended to a JSONL
+// file in the acceptance column contract. No tax rule is encoded here: the
+// window decides each outcome and this spec only records what it showed.
+//
+// The statements the persona's operator states reach the window two ways. The
+// world records those the window has no door for. Those it has a door for are
+// the row's `window_statements`: the spec enters each through the form's own
+// offers (the statements offer for a statement of nothing pending and the
+// work-income statement, the prior-values offer for a figure of an earlier
+// return, which is also where a pending carry's amount is stated, and the
+// box's own value cell for a work input), applies them through the review,
+// and that apply is the window calculating. Which statements a row carries is the world's data; the spec
+// names none and chooses no value.
+//
+// Environment (all required unless noted):
+//   CADRUMO_PERSONA_WORLD    path of the world JSON the Python world builder wrote
+//   CADRUMO_PERSONA_RESULTS  path of the JSONL file to append
+//   CADRUMO_TREE             the commit the window was built from
+//   CADRUMO_CMAKE_BINARY_DIR, CADRUMO_BUILD_CONFIG   as the automation harness
+//   CADRUMO_PERSONA_HOST     (optional) the JSON `dev.desktop_automation_stage`
+//                            printed, when the caller staged the package once
+//                            for several windows; default: stage here
+//   CADRUMO_PERSONA_PROFILE  (optional) profile label, default "persona"
+//   CADRUMO_PERSONA_LOADS_ONLY (optional) 1: sign in and wait for the
+//                            declarations list, write only the persona line
+//                            and open no declaration
+//   CADRUMO_PERSONA_ONLY     (optional) comma-separated modelo/year/period:
+//                            open only these of the world's declarations
+//   CADRUMO_PERSONA_LANGUAGE (optional) chrome-string locale; default: the
+//                            window's own document language, else "en"
+import assert from "node:assert/strict";
+import { spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import {
+  appendFileSync,
+  closeSync,
+  cpSync,
+  existsSync,
+  readdirSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { createRequire } from "node:module";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { buildPath } from "../../scripts/build-paths.mjs";
+import {
+  focusLiveWindow,
+  hostEnvironment,
+  inspectionPlatform,
+  inspectProcess,
+  isHostCommand,
+  proveOwnership,
+  queuePickerSelection,
+  verifyListener,
+  waitForWebDriver,
+} from "../automation/session.mjs";
+import {
+  pageChooseSignOut,
+  pageOpenAccountMenu,
+  pageSignedOut,
+  removeLeftSessionKeys,
+  sessionKeyTargets,
+  storageProfileIds,
+} from "../automation/session-keys.mjs";
+
+const require = createRequire(
+  new URL("../../frontend/package.json", import.meta.url),
+);
+const { remote } = require("webdriverio");
+const repository = fileURLToPath(new URL("../../../../", import.meta.url));
+const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
+
+const PROFILE = process.env.CADRUMO_PERSONA_PROFILE || "persona";
+const CREDENTIAL_SOURCE = resolve(
+  repository,
+  "src/cadrumo/entrypoints/tests/persona_world.py",
+);
+const MARK = "data-persona-target";
+// The kinds of file an official filing is saved as (fixed-width BOE design,
+// XML dictionary), as the export offer names them.
+const FILING_FILE_KINDS = ["boe", "xml"];
+
+const TIMEOUT = {
+  signIn: 300_000,
+  list: 300_000,
+  calculate: 600_000,
+  verify: 400_000,
+  export: 400_000,
+};
+// The keys of `workspace.modelo.next_button.*`: the one next action the
+// workspace header offers, by what it does.
+const NEXT_ACTIONS = [
+  "apply",
+  "fill",
+  "confirm",
+  "calculate",
+  "recalculate",
+  "resolve",
+  "verify",
+  "export",
+  "export_again",
+  "record_after_file",
+  "recorded",
+];
+const CALCULATING = ["calculate", "recalculate"];
+const FILED = ["export", "export_again", "record_after_file", "recorded"];
+// The world's `driver_calculate` of a return it left for the window to calculate.
+const NOT_RUN = "not_run";
+// The offers on the form: one prior-values entry per binding and one
+// statements entry per family, or per family and row where the family is
+// stated row by row (a let property's carry), as the form serves them.
+const PRIOR_ENTRY = (binding) =>
+  `[data-prior-entry=${JSON.stringify(binding)}]`;
+const STATEMENT = (family, row) =>
+  `[data-statement=${JSON.stringify(family)}]` +
+  (row ? `[data-statement-row=${JSON.stringify(row)}]` : "");
+
+// ---------------------------------------------------------------------------
+// Page-side functions. Each is serialised into the window, so it may use only
+// its arguments and the document.
+// ---------------------------------------------------------------------------
+
+/** Mark the first shown `item` under `scope` whose text matches; return its text. */
+function pageMarkByText(scope, item, texts, mode, mark) {
+  for (const old of document.querySelectorAll(`[${mark}]`))
+    old.removeAttribute(mark);
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  for (const root of document.querySelectorAll(scope)) {
+    if (!root.getClientRects().length) continue;
+    for (const element of root.querySelectorAll(item)) {
+      if (!element.getClientRects().length) continue;
+      const text = norm(element.textContent);
+      const hit = texts.some((wanted) =>
+        mode === "startsWith" ? text.startsWith(wanted) : text === wanted,
+      );
+      if (hit) {
+        element.setAttribute(mark, "1");
+        return text;
+      }
+    }
+  }
+  return null;
+}
+
+/** Which of the evidence dialog's answers are taken: the joint-return choice and the 390 confirmation. */
+function pageEvidenceChosen(scope, answer, confirm) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const labels = [...document.querySelectorAll(`${scope} label`)];
+  const input = (text) =>
+    labels
+      .find((element) => norm(element.textContent) === text)
+      ?.querySelector("input");
+  return {
+    joint: input(answer)?.checked === true,
+    attested: input(confirm)?.checked === true,
+  };
+}
+
+/** Mark the nth shown `item` under `scope`. */
+function pageMarkNth(scope, item, index, mark) {
+  for (const old of document.querySelectorAll(`[${mark}]`))
+    old.removeAttribute(mark);
+  for (const root of document.querySelectorAll(scope)) {
+    const shown = [...root.querySelectorAll(item)].filter(
+      (element) => element.getClientRects().length > 0,
+    );
+    if (shown[index]) {
+      shown[index].setAttribute(mark, "1");
+      return true;
+    }
+  }
+  return false;
+}
+
+/** The text of every shown `item` under `scope`. */
+function pageTexts(scope, item) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const found = [];
+  for (const root of document.querySelectorAll(scope))
+    for (const element of root.querySelectorAll(item))
+      if (element.getClientRects().length > 0)
+        found.push(norm(element.textContent));
+  return found;
+}
+
+function pageVisible(selector) {
+  const node = document.querySelector(selector);
+  return (
+    !!node &&
+    node.getClientRects().length > 0 &&
+    getComputedStyle(node).visibility !== "hidden"
+  );
+}
+
+/** What the workspace and any open dialog show right now. */
+function pageState(actions, busyWords) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (element) => element.getClientRects().length > 0;
+  const header =
+    [...document.querySelectorAll("header")]
+      .filter((candidate) => candidate.querySelector("h1") && shown(candidate))
+      .at(-1) ?? null;
+  let action = null;
+  // While the window reads the form again after its own write, the header
+  // shows that it is busy in place of the next step; no step is served then.
+  let busy =
+    !!header &&
+    [...header.querySelectorAll('[role="status"]')].some(
+      (status) => shown(status) && norm(status.textContent) === busyWords,
+    );
+  if (header && !busy) {
+    for (const button of header.querySelectorAll("button")) {
+      if (!shown(button)) continue;
+      const text = norm(button.textContent);
+      const name = Object.keys(actions).find((key) => actions[key] === text);
+      if (!name) continue;
+      action = name;
+      busy = button.getAttribute("aria-busy") === "true";
+      break;
+    }
+  }
+  const alerts = [...document.querySelectorAll('[data-slot="alert"]')]
+    .filter(
+      (alert) =>
+        shown(alert) && ["warning", "danger"].includes(alert.dataset.tone),
+    )
+    .map((alert) => norm(alert.textContent).slice(0, 400));
+  const refusals = [
+    ...document.querySelectorAll('[data-slot="refusal-notice"]'),
+  ]
+    .filter(shown)
+    .map((notice) => {
+      const sentences = [...notice.querySelectorAll("p:not([id])")]
+        .map((paragraph) => norm(paragraph.textContent))
+        .filter(Boolean);
+      return (sentences.join(" ") || norm(notice.textContent)).slice(0, 400);
+    });
+  const dialog =
+    [...document.querySelectorAll('[role="dialog"]')]
+      .filter((candidate) => shown(candidate) && !candidate.matches(".sign-in"))
+      .at(-1) ?? null;
+  const banner = header?.parentElement
+    ? [...header.parentElement.children]
+        .filter((child) => child.getAttribute("role") === "status")
+        .map((child) => norm(child.textContent))
+        .join(" ")
+        .slice(0, 400)
+    : "";
+  return {
+    workspace: header !== null,
+    title: norm(header?.querySelector("h1")?.textContent),
+    headerText: norm(header?.textContent).slice(0, 300),
+    action,
+    busy,
+    alerts,
+    refusals,
+    unresolved: norm(
+      document.querySelector("[data-calculation-unresolved]")?.textContent,
+    ).slice(0, 400),
+    dialogTitle: dialog
+      ? norm(
+          dialog.querySelector("h1,h2,h3,[data-slot='dialog-title']")
+            ?.textContent,
+        )
+      : null,
+    banner,
+  };
+}
+
+function pageList(overview) {
+  const grid = [...document.querySelectorAll('[role="grid"]')].find(
+    (candidate) =>
+      candidate.getAttribute("aria-label") === overview &&
+      candidate.getClientRects().length > 0,
+  );
+  return {
+    grid: !!grid,
+    rows: grid
+      ? grid.querySelectorAll('[data-slot="data-grid-row"][data-kind="data"]')
+          .length
+      : 0,
+    failed: !!document.querySelector(".declarations-failed"),
+    loading: !!document.querySelector(".declarations-loading"),
+  };
+}
+
+/** The list row of a work unit: by its key, else the one row of that modelo and year. */
+function pageRowKey(workUnitId, modelo, year) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const rows = [
+    ...document.querySelectorAll(
+      '[role="row"][data-slot="data-grid-row"][data-kind="data"]',
+    ),
+  ];
+  const exact = rows.find((row) => row.getAttribute("data-key") === workUnitId);
+  if (exact) return { key: exact.getAttribute("data-key"), via: "key" };
+  const near = rows.filter(
+    (row) =>
+      norm(row.querySelector('[data-column="modelo"]')?.textContent) ===
+        modelo && norm(row.textContent).includes(year),
+  );
+  return near.length === 1
+    ? { key: near[0].getAttribute("data-key"), via: "modelo-year" }
+    : null;
+}
+
+/** Open a list row as a double click does; React listens for the native event. */
+function pageDouble(key, mark) {
+  for (const old of document.querySelectorAll(`[${mark}]`))
+    old.removeAttribute(mark);
+  const row = document.querySelector(
+    `[role="row"][data-slot="data-grid-row"][data-key="${CSS.escape(key)}"]`,
+  );
+  const cell = row?.querySelector('[data-column="declaration"]') ?? row;
+  if (!cell) return false;
+  cell.setAttribute(mark, "1");
+  cell.dispatchEvent(
+    new MouseEvent("dblclick", {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      detail: 2,
+    }),
+  );
+  return true;
+}
+
+/** Every box of the drawn part of the open form page, as displayed. */
+function pageBoxes() {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const root = document.querySelector("[data-modelo-form]");
+  if (!root) return null;
+  // The field's typed value, when the form serves it on the element
+  // (`data-value-kind` and `data-value` carry the application's own scalar
+  // kind and text); null when the form serves only its display words.
+  const typedOf = (element) =>
+    element?.hasAttribute("data-value-kind") &&
+    element.hasAttribute("data-value")
+      ? {
+          kind: element.getAttribute("data-value-kind"),
+          text: element.getAttribute("data-value"),
+        }
+      : null;
+  // A box is named by the casilla its served address names (`c:<casilla>`),
+  // as the table names its figures; the printed box number can differ from
+  // it (box 69 is casilla iva.resultado) or be absent. A binding address
+  // (`b:`) is not a casilla.
+  const casillaOf = (key, printed) =>
+    key?.startsWith("c:") ? key.slice(2) : key?.startsWith("b:") ? "" : printed;
+  const boxes = [];
+  for (const row of root.querySelectorAll('div[role="row"][data-key]')) {
+    const cells = [...row.children].filter(
+      (child) => child.getAttribute("role") === "gridcell",
+    );
+    const key = row.getAttribute("data-key");
+    const printed = norm(cells[0]?.textContent);
+    const box = casillaOf(key, printed);
+    boxes.push({
+      key,
+      box,
+      printed,
+      value: norm((cells[2]?.querySelector("button") ?? cells[2])?.textContent),
+      typed: typedOf(row),
+    });
+  }
+  for (const cell of root.querySelectorAll("td[data-key]")) {
+    const values = [...cell.querySelectorAll("button")]
+      .map((button) => norm(button.textContent))
+      .filter(Boolean);
+    const key = cell.getAttribute("data-key");
+    const printed = norm(
+      cell.querySelector('[class*="font-mono"]')?.textContent,
+    );
+    boxes.push({
+      key,
+      box: casillaOf(key, printed),
+      printed,
+      value: values.at(-1) ?? "",
+      typed: typedOf(cell),
+    });
+  }
+  // Repeating-record tables: a cell is a casilla only where the form names
+  // its column's casilla (`data-casilla`); unnamed cells are not boxes.
+  let table = 0;
+  for (const scroll of root.querySelectorAll("[data-records-scroll]")) {
+    table += 1;
+    let line = 0;
+    for (const tr of scroll.querySelectorAll("tbody tr")) {
+      line += 1;
+      for (const [index, cell] of [...tr.children].entries()) {
+        const casilla = cell.getAttribute("data-casilla");
+        if (!casilla) continue;
+        boxes.push({
+          key: `r:${table}:${line}:${index}:${casilla}`,
+          box: casilla,
+          value: norm(cell.textContent),
+          typed: typedOf(cell),
+        });
+      }
+    }
+  }
+  return boxes;
+}
+
+/** What the window's records tables name, for the run log only. */
+function pageRecordsProbe() {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  return [...document.querySelectorAll("[data-records-scroll]")].map(
+    (scroll) => ({
+      heads: [...scroll.querySelectorAll("thead th")].map((th) =>
+        norm(th.textContent).slice(0, 40),
+      ),
+      rows: scroll.querySelectorAll("tbody tr").length,
+      named: scroll.querySelectorAll("td[data-casilla]").length,
+    }),
+  );
+}
+
+/** What the page shows when an expected pane does not: for the run log only. */
+function pageDiagnosis() {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  return {
+    lang: document.documentElement.lang,
+    grids: [...document.querySelectorAll('[role="grid"]')].map((grid) => ({
+      label: grid.getAttribute("aria-label"),
+      shown: grid.getClientRects().length > 0,
+      rows: grid.querySelectorAll('[data-slot="data-grid-row"]').length,
+    })),
+    failed: norm(document.querySelector(".declarations-failed")?.textContent),
+    loading: norm(document.querySelector(".declarations-loading")?.textContent),
+    headings: [...document.querySelectorAll("h1,h2")].map((h) =>
+      norm(h.textContent).slice(0, 80),
+    ),
+    dialogs: [...document.querySelectorAll('[role="dialog"]')].map((d) =>
+      norm(d.textContent).slice(0, 200),
+    ),
+    body: norm(document.body.innerText).slice(0, 700),
+  };
+}
+
+/** Choose the nth shown tab of `scope` as a person's press does. */
+function pageChooseTab(scope, index) {
+  const list = document.querySelector(scope);
+  const tabs = [...(list?.querySelectorAll('[role="tab"]') ?? [])].filter(
+    (tab) => tab.getClientRects().length > 0,
+  );
+  const tab = tabs[index];
+  if (!tab) return null;
+  tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+  tab.dispatchEvent(
+    new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 }),
+  );
+  tab.focus();
+  return {
+    selected: tab.getAttribute("aria-selected"),
+    label: (tab.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 60),
+  };
+}
+
+/** The form's drawn structure, for the run log when its boxes are not found. */
+function pageFormProbe() {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const root = document.querySelector("[data-modelo-form]");
+  if (!root)
+    return { form: false, body: norm(document.body.innerText).slice(0, 400) };
+  const keyed = [...root.querySelectorAll("[data-key]")];
+  const rect = root.getBoundingClientRect();
+  return {
+    form: true,
+    viewport: [window.innerWidth, window.innerHeight],
+    rect: [Math.round(rect.top), Math.round(rect.height)],
+    scroll: [root.scrollHeight, root.clientHeight],
+    sections: root.querySelectorAll("section").length,
+    rows: root.querySelectorAll('[role="row"]').length,
+    keyed: keyed.length,
+    keyedKinds: [
+      ...new Set(
+        keyed.map((node) => node.tagName + "/" + node.getAttribute("role")),
+      ),
+    ],
+    sample: keyed.slice(0, 3).map((node) => ({
+      key: node.getAttribute("data-key"),
+      cells: [...node.children].map((child) =>
+        norm(child.textContent).slice(0, 60),
+      ),
+    })),
+    text: norm(root.innerText).slice(0, 300),
+  };
+}
+
+/** The ids of the open page's sections, in order; the form draws each only near the viewport. */
+function pageSections() {
+  const root = document.querySelector("[data-modelo-form]");
+  if (!root) return [];
+  return [...root.querySelectorAll('section[id^="section-"]')].map(
+    (section) => section.id,
+  );
+}
+
+/** Bring one section into the form's view; the caller waits a few frames for it to draw. */
+function pageShowSection(id) {
+  const section = document.getElementById(id);
+  if (!section) return false;
+  section.scrollIntoView({ block: "start" });
+  return true;
+}
+
+/** What the form shows for one keyed cell: its value button and the state it carries; null if not drawn. */
+function pageCell(selector, mark) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  for (const old of document.querySelectorAll(`[${mark}]`))
+    old.removeAttribute(mark);
+  const node = document.querySelector(selector);
+  if (!node) return null;
+  const cells = [...node.children].filter(
+    (child) => child.getAttribute("role") === "gridcell",
+  );
+  const button = (cells[2] ?? node).querySelector("button");
+  const editor = node.querySelector('[data-slot="modelo-value-editor"]');
+  const alert = node.querySelector('[role="alert"]');
+  if (button && !button.disabled && !editor) {
+    button.setAttribute(mark, "1");
+    button.scrollIntoView({ block: "center" });
+  }
+  return {
+    button: button !== null,
+    disabled: button ? button.disabled : null,
+    editor: editor !== null,
+    alert: alert ? norm(alert.textContent) : null,
+    state: {
+      kind: node.getAttribute("data-value-kind"),
+      value: node.getAttribute("data-value"),
+      selected: node.getAttribute("aria-selected"),
+    },
+    text: norm(node.textContent).slice(0, 200),
+  };
+}
+
+function pageScroll(to) {
+  const root = document.querySelector("[data-modelo-form]");
+  if (!root) return null;
+  const before = root.scrollTop;
+  root.scrollTop =
+    to === "top" ? 0 : before + Math.max(200, root.clientHeight * 0.75);
+  return {
+    top: root.scrollTop,
+    last: root.scrollHeight - root.clientHeight,
+    moved: root.scrollTop !== before,
+  };
+}
+
+function pageSignIn() {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (element) => element.getClientRects().length > 0;
+  const form = document.querySelector(".sign-in");
+  const password = document.querySelector("#profile-password");
+  const choice = document.querySelector("#profile-choice");
+  return {
+    form: !!form && shown(form),
+    password: !!password && shown(password),
+    busy: password?.getAttribute("aria-busy") === "true",
+    named:
+      document
+        .querySelector(".sign-in .profile-named span[title]")
+        ?.getAttribute("title") ?? null,
+    choice: choice
+      ? {
+          value: choice.value,
+          options: [...choice.options].map((option) => option.value),
+        }
+      : null,
+    words: [
+      ...document.querySelectorAll(
+        '.sign-in [role="alert"], .sign-in [data-slot="alert"], .sign-in [data-slot="field-error"]',
+      ),
+    ]
+      .map((element) => norm(element.textContent))
+      .filter(Boolean),
+    text: norm(form?.textContent).slice(0, 300),
+    rail: (() => {
+      const rail = document.querySelector('[data-rail="declarations"]');
+      return !!rail && shown(rail);
+    })(),
+  };
+}
+
+function pageChoose(value) {
+  const node = document.querySelector("#profile-choice");
+  const option = [...node.options].find((item) => item.value === value);
+  if (!option || option.disabled) return false;
+  Object.getOwnPropertyDescriptor(
+    HTMLSelectElement.prototype,
+    "value",
+  ).set.call(node, value);
+  node.dispatchEvent(new Event("input", { bubbles: true }));
+  node.dispatchEvent(new Event("change", { bubbles: true }));
+  return node.value === value;
+}
+
+/** Open the statements and prior-values offers the viewer left hidden. */
+function pageExpandOffers() {
+  let opened = 0;
+  for (const offer of document.querySelectorAll(
+    "[data-statements], [data-prior-values]",
+  )) {
+    const toggle = offer.querySelector('button[aria-expanded="false"]');
+    if (toggle) {
+      toggle.click();
+      opened += 1;
+    }
+  }
+  return opened;
+}
+
+/** What one offer entry (a prior-values entry or a statement) shows now; null if it is not drawn. */
+function pageOffer(selector) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const node = document.querySelector(selector);
+  if (!node || !node.getClientRects().length) return null;
+  const box = node.querySelector('input[type="checkbox"]');
+  return {
+    checked: box ? box.checked : null,
+    input: node.querySelector('input:not([type="checkbox"])') !== null,
+    text: norm(node.textContent).slice(0, 400),
+    status: [...node.querySelectorAll('[role="status"]')]
+      .filter((element) => element.getClientRects().length > 0)
+      .map((element) => norm(element.textContent)),
+  };
+}
+
+/** What the review dialog offers right now; null when no dialog is shown. */
+function pageReview(apply, acknowledge, again) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const shown = (element) => element.getClientRects().length > 0;
+  const dialog = [...document.querySelectorAll('[role="dialog"]')]
+    .filter((candidate) => shown(candidate) && !candidate.matches(".sign-in"))
+    .at(-1);
+  if (!dialog) return null;
+  const buttons = [...dialog.querySelectorAll("button")].filter(shown);
+  const named = (text) => buttons.find((b) => norm(b.textContent) === text);
+  const applyButton = named(apply);
+  const box = [...dialog.querySelectorAll('input[type="checkbox"]')].find(
+    (candidate) =>
+      norm(candidate.closest("label")?.textContent) === acknowledge,
+  );
+  return {
+    apply: applyButton ? !applyButton.disabled : null,
+    acknowledge: box ? box.checked : null,
+    again: named(again) !== undefined,
+    text: norm(dialog.textContent).slice(0, 600),
+  };
+}
+
+/** Tick the review's acknowledgement as a press does. */
+function pageAcknowledge(acknowledge) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const box = [
+    ...document.querySelectorAll('[role="dialog"] input[type="checkbox"]'),
+  ].find(
+    (candidate) =>
+      norm(candidate.closest("label")?.textContent) === acknowledge,
+  );
+  if (!box) return false;
+  if (!box.checked) box.click();
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// Driver
+// ---------------------------------------------------------------------------
+
+const window_ = { browser: null, child: null, closed: true, port: null };
+let logPath = null;
+let label = (key) => key;
+
+function log(event, data = {}) {
+  if (logPath === null) return;
+  appendFileSync(
+    logPath,
+    `${JSON.stringify({ at: new Date().toISOString(), event, ...data })}\n`,
+  );
+}
+
+// WebView2 refuses a script while the view changes state (0x8007139F, "not in
+// the correct state"); the same script a moment later runs. Retry only that.
+async function exec(fn, ...args) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await window_.browser.execute(fn, ...args);
+    } catch (error) {
+      if (attempt >= 4 || !String(error?.message).includes("0x8007139F"))
+        throw error;
+      await sleep(750 * attempt);
+    }
+  }
+}
+
+async function live() {
+  try {
+    await focusLiveWindow(window_.browser);
+  } catch {
+    // Reported by the command that follows.
+  }
+}
+
+async function waitFor(read, { timeout, what, interval = 500, soft = false }) {
+  const end = Date.now() + timeout;
+  let last;
+  for (;;) {
+    await live();
+    try {
+      const value = await read();
+      if (value) return value;
+    } catch (error) {
+      last = error;
+    }
+    if (Date.now() > end) {
+      if (soft) return null;
+      throw new Error(
+        `Timed out after ${timeout} ms waiting for ${what}${last ? `: ${last.message}` : ""}`,
+      );
+    }
+    await sleep(interval);
+  }
+}
+
+async function clickSelector(selector) {
+  const element = await window_.browser.$(selector);
+  await element.waitForExist({ timeout: 15_000 });
+  await element.click();
+}
+
+/** Click the first shown element under `scope` whose text matches; false if none. */
+async function clickText(scope, item, texts, mode = "equals") {
+  const text = await exec(pageMarkByText, scope, item, texts, mode, MARK);
+  if (text === null) return false;
+  await clickSelector(`[${MARK}]`);
+  return true;
+}
+
+const readState = () =>
+  exec(
+    pageState,
+    Object.fromEntries(
+      NEXT_ACTIONS.map((action) => [
+        action,
+        label(`workspace.modelo.next_button.${action}`),
+      ]),
+    ),
+    label("desktop.navigation.busy"),
+  );
+
+const tablist = (key) =>
+  `[role="tablist"][aria-label=${JSON.stringify(label(key))}]`;
+
+/** Whether the views tab starting with `wanted` is selected and its panel is the one drawn. */
+function viewShown(list, wanted, isForm) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const tab = [...document.querySelectorAll(`${list} [role="tab"]`)].find(
+    (element) => norm(element.textContent).startsWith(wanted),
+  );
+  return (
+    tab?.getAttribute("aria-selected") === "true" &&
+    (document.querySelector("[data-modelo-form]") !== null) === isForm
+  );
+}
+
+/**
+ * What a press on the marked tab meets: the element drawn at the tab's centre
+ * (another element there covers the tab), and every view tab's selection.
+ */
+function tabPressReport(list, mark) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  const tab = document.querySelector(`[${mark}]`);
+  let atCentre = "no tab";
+  if (tab) {
+    const rect = tab.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.x + rect.width / 2,
+      rect.y + rect.height / 2,
+    );
+    atCentre = !hit
+      ? `nothing at ${Math.round(rect.x)},${Math.round(rect.y)}`
+      : hit === tab || tab.contains(hit)
+        ? "the tab"
+        : `${hit.tagName.toLowerCase()}${hit.id ? `#${hit.id}` : ""}.${String(hit.className).slice(0, 80)} "${norm(hit.textContent).slice(0, 60)}"`;
+  }
+  const tabs = [...document.querySelectorAll(`${list} [role="tab"]`)]
+    .map(
+      (element) =>
+        `${norm(element.textContent)}=${element.getAttribute("aria-selected")}`,
+    )
+    .join("; ");
+  return `at the tab's centre: ${atCentre}; tabs: ${tabs}; form drawn: ${document.querySelector("[data-modelo-form]") !== null}`;
+}
+
+/** Activate the marked tab without a pointer click: focus it and press it. */
+function pressTabDirectly(mark) {
+  const tab = document.querySelector(`[${mark}]`);
+  if (!tab) return false;
+  tab.focus();
+  for (const type of ["pointerdown", "mousedown"])
+    tab.dispatchEvent(
+      new (type.startsWith("pointer") ? PointerEvent : MouseEvent)(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+      }),
+    );
+  return true;
+}
+
+/**
+ * Open a workspace view and wait until it stays open. The first press is a
+ * real pointer click; when that leaves the tab unselected the tab is pressed
+ * directly, and the log names what covered it, since an operator's click would
+ * miss it too. A view that never stays is named in the error.
+ */
+async function openView(key) {
+  const list = tablist("desktop.modelo.views.label");
+  const wanted = label(key);
+  const isForm = key === "desktop.modelo.view.form";
+  let report = "";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const marked = await exec(
+      pageMarkByText,
+      list,
+      '[role="tab"]',
+      [wanted],
+      "startsWith",
+      MARK,
+    );
+    if (marked === null) throw new Error(`the view ${wanted} is not offered`);
+    report = await exec(tabPressReport, list, MARK);
+    if (attempt === 1) await clickSelector(`[${MARK}]`);
+    else await exec(pressTabDirectly, MARK);
+    const started = Date.now();
+    let since = null;
+    while (Date.now() - started < 10_000) {
+      await sleep(250);
+      if (await exec(viewShown, list, wanted, isForm)) {
+        since ??= Date.now();
+        if (Date.now() - since >= 1500) {
+          if (attempt === 1) return null;
+          log("view-click-missed", { view: wanted, attempt, report });
+          return report;
+        }
+      } else if (since !== null) {
+        log("view-reverted", { view: wanted, attempt });
+        break;
+      }
+    }
+  }
+  throw new Error(
+    `window_view_switch_reverts: the view ${wanted} did not stay open after a click and two direct presses (${report})`,
+  );
+}
+
+/** Wait for a write the header started to answer; dialogs return at once. */
+// When the last settle first saw the window busy, last saw it busy, and first
+// saw it served (idle with a changed header or a fresh notice): the press
+// timings of the run log read the app's time from these, not the harness's.
+let settled = { busyFrom: null, busyTo: null, servedAt: null };
+
+async function settle(before, timeout) {
+  const started = Date.now();
+  let busySeen = false;
+  settled = { busyFrom: null, busyTo: null, servedAt: null };
+  for (;;) {
+    await sleep(400);
+    await live();
+    const state = await readState();
+    const now = Date.now();
+    if (state.busy) {
+      settled.busyFrom ??= now;
+      settled.busyTo = now;
+    }
+    if (state.dialogTitle) {
+      settled.servedAt ??= now;
+      return state;
+    }
+    busySeen ||= state.busy;
+    const fresh =
+      state.alerts.some((text) => !before.alerts.includes(text)) ||
+      state.refusals.some((text) => !before.refusals.includes(text));
+    const changed =
+      state.action !== before.action || fresh || state.unresolved !== "";
+    const waited = Date.now() - started;
+    if (!state.busy && changed) settled.servedAt ??= now;
+    if (!state.busy && changed && waited >= 1500) return state;
+    if (!state.busy && !changed && !busySeen && waited > 8000) return state;
+    if (waited > timeout) return { ...state, timedOut: true };
+  }
+}
+
+/**
+ * After a write the window reads its own settled result again; wait until the
+ * header, notices and write hold have held still and idle, so the stage is
+ * judged on the re-read declaration rather than on the read in progress.
+ */
+async function quietAfterWrite(timeout) {
+  const started = Date.now();
+  let last = null;
+  let since = started;
+  while (Date.now() - started < timeout) {
+    await sleep(400);
+    const state = await readState();
+    const hold = await exec(pageVisible, ".modelo-write-hold");
+    const key = JSON.stringify([
+      state.action,
+      state.busy,
+      state.alerts,
+      state.refusals,
+      state.unresolved,
+      hold,
+    ]);
+    if (key !== last) {
+      last = key;
+      since = Date.now();
+    } else if (!state.busy && Date.now() - since >= 2000) return state;
+  }
+  return null;
+}
+
+const freshOf = (before, after) => [
+  ...after.refusals.filter((text) => !before.refusals.includes(text)),
+  ...after.alerts.filter((text) => !before.alerts.includes(text)),
+];
+
+async function findings() {
+  await openView("workspace.modelo.step.review");
+  const shown = await exec(() => {
+    const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+    return [...document.querySelectorAll("[data-attention-level]")]
+      .filter((element) => element.getClientRects().length > 0)
+      .map((element) => ({
+        data: { ...element.dataset },
+        text: norm(element.textContent).slice(0, 600),
+      }));
+  });
+  // The row keeps a short reading; the log keeps every finding whole with the
+  // attributes the form serves on it, so a served step can be traced to its cause.
+  log("findings", { shown });
+  return shown.slice(0, 6).map((item) => item.text.slice(0, 200));
+}
+
+/** Answer a dialog the calculation opened; never choose a tax fact the world lacks. */
+async function answerDialog(title, row, notes) {
+  const dialog = '[role="dialog"]';
+  if (title === label("workspace.modelo.calculate.at_risk_title")) {
+    await clickText(dialog, "button", [
+      label("workspace.modelo.calculate.at_risk_proceed"),
+    ]);
+    notes.push("accepted the at-risk prompt");
+    return null;
+  }
+  if (title === label("workspace.modelo.calculate.evidence.title")) {
+    // The dialog asks whether a joint return was elected and, for the year's
+    // last period, to confirm the Modelo 390 attestation. Both answers are the
+    // table's own (`m303_evidence` from the world); without them no tax fact
+    // is chosen and the dialog is cancelled.
+    const evidence = row.m303_evidence;
+    if (typeof evidence?.joint_return_elected !== "boolean") {
+      await clickText(dialog, "button", [
+        label("workspace.modelo.calculate.evidence.cancel"),
+      ]);
+      return "m303 evidence dialog: the world states no joint-return answer";
+    }
+    const answer = label(
+      evidence.joint_return_elected
+        ? "workspace.modelo.calculate.evidence.yes"
+        : "workspace.modelo.calculate.evidence.no",
+    );
+    await clickText(dialog, "label", [answer]);
+    const confirm = label(
+      "workspace.modelo.calculate.evidence.modelo_390_confirm",
+    );
+    const asks390 = await exec(
+      pageMarkByText,
+      dialog,
+      "label",
+      [confirm],
+      "equals",
+      MARK,
+    );
+    if (asks390 !== null) {
+      if (!evidence.attachment_id) {
+        await clickText(dialog, "button", [
+          label("workspace.modelo.calculate.evidence.cancel"),
+        ]);
+        return "m303 evidence dialog asks the Modelo 390 attestation the world does not record";
+      }
+      await clickSelector(`[${MARK}]`);
+    }
+    const chosen = await exec(pageEvidenceChosen, dialog, answer, confirm);
+    if (!chosen.joint || (asks390 !== null && !chosen.attested)) {
+      await clickText(dialog, "button", [
+        label("workspace.modelo.calculate.evidence.cancel"),
+      ]);
+      return `m303 evidence dialog: answer not taken (${JSON.stringify(chosen)})`;
+    }
+    await clickText(dialog, "button", [
+      label("workspace.modelo.calculate.evidence.calculate"),
+    ]);
+    notes.push(
+      `answered the m303 evidence dialog (joint return ${evidence.joint_return_elected}${asks390 !== null ? ", 390 attested" : ""})`,
+    );
+    return null;
+  }
+  const reviewTitle = label("workspace.modelo.review.title")
+    .split("{")[0]
+    .trim();
+  if (reviewTitle && title.startsWith(reviewTitle)) return answerReview(notes);
+  await window_.browser.keys("Escape");
+  return `unexpected dialog: ${title}`;
+}
+
+/**
+ * The review of the statements the window staged: wait for its check, apply,
+ * and close it once it says it is done. The apply recalculates the
+ * declaration, which is the window's own calculation. Returns null when the
+ * statements were applied, else why they were not.
+ */
+async function answerReview(notes) {
+  const dialog = '[role="dialog"]';
+  const apply = label("workspace.modelo.review.apply");
+  const acknowledge = label("workspace.modelo.review.acknowledge");
+  const again = label("workspace.modelo.review.check_again");
+  const read = () => exec(pageReview, apply, acknowledge, again);
+  const ready = await waitFor(
+    async () => {
+      const now = await read();
+      if (!now) return { gone: true };
+      if (now.again) return { failed: now.text };
+      if (now.apply) return { ok: true };
+      if (now.acknowledge === false) {
+        await exec(pageAcknowledge, acknowledge);
+        notes.push("acknowledged the review notice before applying");
+      }
+      return null;
+    },
+    { timeout: 90_000, what: "the review to be ready", soft: true },
+  );
+  if (!ready?.ok) {
+    const now = await read();
+    await window_.browser.keys("Escape");
+    return `the review could not be applied: ${ready?.failed ?? now?.text ?? "it closed"}`;
+  }
+  await clickText(dialog, "button", [apply]);
+  const done = label("workspace.modelo.operation.done");
+  const end = await waitFor(
+    async () => {
+      const now = await read();
+      if (!now) return { gone: true };
+      if (now.text.includes(done)) return { done: true };
+      if (now.again) return { failed: now.text };
+      return null;
+    },
+    {
+      timeout: TIMEOUT.calculate,
+      what: "the review to apply",
+      soft: true,
+      interval: 700,
+    },
+  );
+  if (end?.done) {
+    await clickText(dialog, "button", [label("workspace.modelo.key.close")]);
+    notes.push("applied the staged statements through the review");
+    return null;
+  }
+  if (end?.gone) {
+    notes.push("applied the staged statements through the review");
+    return null;
+  }
+  await window_.browser.keys("Escape");
+  return `the review did not complete: ${end?.failed ?? "no answer within the wait"}`;
+}
+
+/** The runtime's own log of this run, as lines (empty while it is not written). */
+function runtimeLines() {
+  try {
+    return readFileSync(
+      join(window_.runDir ?? "", "storage", "logs", "cadrumo.log"),
+      "utf8",
+    ).split("\n");
+  } catch {
+    return [];
+  }
+}
+
+const SETTLED_WRITE =
+  /operation settled .* definition=modelo\.[a-z_.]+ condition=\w+ effect=updated/;
+// The window reads its own write back through the form, or, after a local
+// filing, through the filing state alone (it draws the header and journey from
+// it and reads the form only when asked); either read ends a write's wait.
+const SETTLED_FORM_READ =
+  /operation settled .* definition=modelo\.work\.(?:form|filing_state) /;
+
+/**
+ * Wait until the runtime settled a write after `mark` (a line count of its log)
+ * and then a read of the work form, which is the window reading its own
+ * settled write; the header drawn before that read is the step before it.
+ */
+function settledReadAfter(mark) {
+  const lines = runtimeLines().slice(mark);
+  const write = lines.findIndex((line) => SETTLED_WRITE.test(line));
+  return (
+    write >= 0 &&
+    lines.slice(write + 1).some((line) => SETTLED_FORM_READ.test(line))
+  );
+}
+
+async function formReadAfterWrite(mark, timeout) {
+  const seen = await waitFor(
+    async () => (settledReadAfter(mark) ? true : null),
+    {
+      timeout,
+      what: "the window's read of its own settled write",
+      soft: true,
+      interval: 500,
+    },
+  );
+  if (!seen) log("reread-not-seen", { mark });
+  return seen === true;
+}
+
+/**
+ * Press the header's `action` and log how long the app took to serve its
+ * result (press to the first served state) apart from the harness's own
+ * waits after it (re-read, quiet, dialogs), so a slow row names its owner.
+ */
+async function runAction(action, before, timeout, row) {
+  const pressed = Date.now();
+  let clickedAt = null;
+  const result = await pressAndSettle(action, before, timeout, row, (at) => {
+    clickedAt = at;
+  });
+  const ended = Date.now();
+  const served = settled.servedAt ?? ended;
+  log("press-timing", {
+    action,
+    clickMs: (clickedAt ?? pressed) - pressed,
+    servedMs: served - (clickedAt ?? pressed),
+    busyMs:
+      settled.busyFrom === null ? 0 : settled.busyTo - settled.busyFrom + 400,
+    afterServedMs: ended - served,
+    totalMs: ended - pressed,
+    timedOut: Boolean(result.state?.timedOut),
+  });
+  return result;
+}
+
+async function pressAndSettle(action, before, timeout, row, onClicked) {
+  const mark = runtimeLines().length;
+  const clicked = await clickText("header", "button", [
+    label(`workspace.modelo.next_button.${action}`),
+  ]);
+  if (!clicked) throw new Error(`the ${action} button is not shown`);
+  onClicked(Date.now());
+  const notes = [];
+  const started = Date.now();
+  for (;;) {
+    const state = await settle(
+      before,
+      Math.max(timeout - (Date.now() - started), 1000),
+    );
+    if (!state.dialogTitle) {
+      // A finished write that left the declaration unread holds the form until
+      // it is read again; the operator presses the notice's button, and so do we.
+      // The window first reads its own settled write; the notice that remains
+      // after that read is the one to press.
+      await formReadAfterWrite(
+        mark,
+        Math.min(30_000, Math.max(timeout - (Date.now() - started), 1000)),
+      );
+      const quiet = await quietAfterWrite(
+        Math.min(15_000, Math.max(timeout - (Date.now() - started), 1000)),
+      );
+      const reread = await clickText(".modelo-write-hold", "button", [
+        label("workspace.modelo.read_again"),
+      ]);
+      if (!reread) return { state: quiet ?? state, notes, declined: null };
+      notes.push("read the declaration again after the write");
+      log("read-again", { action });
+      // The notice stays while the read runs; the stage is read once it is gone.
+      const read = await waitFor(
+        async () => !(await exec(pageVisible, ".modelo-write-hold")),
+        {
+          timeout: Math.max(timeout - (Date.now() - started), 1000),
+          what: "the declaration to be read again",
+          soft: true,
+          interval: 400,
+        },
+      );
+      await sleep(800);
+      const after = await readState();
+      return {
+        state: read ? after : { ...after, timedOut: true },
+        notes,
+        declined: null,
+      };
+    }
+    const declined = await answerDialog(state.dialogTitle, row, notes);
+    // The dialog leaves with an animation; settle must not see it again.
+    await waitFor(async () => !(await readState()).dialogTitle, {
+      timeout: 10_000,
+      what: "the dialog to close",
+      soft: true,
+      interval: 300,
+    });
+    if (declined) return { state: await readState(), notes, declined };
+  }
+}
+
+function describeNotPass(state, listed) {
+  return [
+    state.banner,
+    state.unresolved,
+    ...listed,
+    state.action
+      ? `next: ${label(`workspace.modelo.next_button.${state.action}`)}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
+}
+
+/** A world figure as the filer types it: the decimal mark of the window's language. */
+const amountText = (value, language) =>
+  (language ?? "").toLowerCase().startsWith("en")
+    ? value
+    : value.replace(".", ",");
+
+/** What a calculating step settled: the stage and the words that explain it. */
+async function judge(before, run) {
+  const why = [...run.notes];
+  const words = freshOf(before, run.state);
+  if (run.declined) {
+    why.push(run.declined);
+    return { stage: "incomplete", why };
+  }
+  if (run.state.timedOut) {
+    why.push("no answer within the wait");
+    return { stage: "error", why };
+  }
+  if (words.length > 0) {
+    why.push(words.join(" | "));
+    return { stage: "refused", why };
+  }
+  if (
+    [...FILED, "verify"].includes(run.state.action) &&
+    run.state.unresolved === ""
+  )
+    return { stage: "pass", why };
+  if (CALCULATING.includes(run.state.action)) {
+    why.push("the calculate button is still offered and nothing was said");
+    return { stage: "error", why };
+  }
+  // The table grades a calculation that ran and settled as pass and names what
+  // it left open as a reason; its figures are compared on their own. A step
+  // that asks for more (complete the marked boxes, resolve) is that reason,
+  // not a different stage.
+  why.push(`open: ${describeNotPass(run.state, await findings())}`);
+  log("calculate-served-step", { action: run.state.action, graded: "pass" });
+  return { stage: "pass", why };
+}
+
+/** The figures a statement enters through the prior-values offer: a prior figure, or each amount of a carry. */
+function figuresOf(entry) {
+  if (entry.kind === "prior_value")
+    return [{ target: entry.target, value: entry.value }];
+  if (entry.kind === "prior_carries")
+    return (entry.figures ?? []).map((figure) => ({
+      target: figure.binding,
+      value: figure.value,
+    }));
+  return [];
+}
+
+/** Type one figure into its prior-values entry and stage it; the problem text, or null when it was staged. */
+async function enterPriorFigure(figure, language, stagedWord) {
+  const base = PRIOR_ENTRY(figure.target);
+  const shown = await waitFor(() => exec(pageOffer, base), {
+    timeout: 20_000,
+    what: `the prior-values entry ${figure.target}`,
+    soft: true,
+  });
+  if (!shown || !shown.input)
+    return `the prior-values offer takes no figure for ${figure.target}${shown ? `: ${shown.text}` : ""}`;
+  const field = await window_.browser.$(`${base} input:not([type="checkbox"])`);
+  await field.setValue(amountText(figure.value, language));
+  await clickSelector(`${base} button[type="submit"]`);
+  const answer = await waitFor(
+    async () => {
+      const now = await exec(pageOffer, base);
+      return now && (now.text.includes(stagedWord) || now.status.length > 0)
+        ? now
+        : null;
+    },
+    {
+      timeout: 30_000,
+      what: `the figure for ${figure.target} to be staged`,
+      soft: true,
+    },
+  );
+  if (answer?.text.includes(stagedWord) && answer.status.length === 0)
+    return null;
+  return `${figure.target}: ${answer?.status.join(" | ") || "the figure was not staged"}`;
+}
+
+/**
+ * Find the value cell of one box on any page of the form. Sections draw
+ * only near the viewport, so each is brought into view in turn. Returns the
+ * cell's selector and state, or the page names that were searched.
+ */
+async function findCell(box) {
+  const selector = `[data-key=${JSON.stringify(`c:${box}`)}]`;
+  const tabs = tablist("desktop.modelo.form.pages");
+  const pages = await exec(pageTexts, tabs, '[role="tab"]');
+  const names = pages.length > 0 ? pages : ["(single)"];
+  for (let index = 0; index < names.length; index += 1) {
+    if (pages.length > 0) {
+      await exec(pageChooseTab, tabs, index);
+      await sleep(700);
+    }
+    for (const id of [null, ...((await exec(pageSections)) ?? [])]) {
+      if (id) {
+        await exec(pageShowSection, id);
+        await sleep(150);
+      }
+      const cell = await exec(pageCell, selector, MARK);
+      if (cell) return { selector, cell, page: names[index] };
+    }
+  }
+  return { searched: names };
+}
+
+/**
+ * Type a work input into its box's own value cell, as the filer does: open
+ * the cell's editor, type the value in the document's decimal mark and keep
+ * it with Enter, which stages it for the review. Returns the problem text,
+ * or null when the entry was staged.
+ */
+async function enterWorkInput(entry, language) {
+  const found = await findCell(entry.target);
+  if (found.searched)
+    return `work_input_cell_absent: c:${entry.target} is drawn on none of the pages seen (${found.searched.join(", ")})`;
+  const { selector, cell, page } = found;
+  const facts = `${JSON.stringify(cell.state)}; ${cell.text}`;
+  if (!cell.button || cell.disabled)
+    return `work_input_cell_not_editable: c:${entry.target} on ${page} has ${cell.button ? "a disabled" : "no"} value button; ${facts}`;
+  await clickSelector(`[${MARK}]`);
+  const field = await window_.browser.$(
+    `${selector} [data-slot="modelo-value-editor"] input`,
+  );
+  await field.waitForExist({ timeout: 10_000 }).catch(() => {});
+  if (!(await field.isExisting()))
+    return `work_input_cell_not_editable: c:${entry.target} on ${page} opened no editor; ${facts}`;
+  await field.setValue(amountText(entry.value, language));
+  await window_.browser.keys("Enter");
+  const now = await waitFor(
+    async () => {
+      const read = await exec(pageCell, selector, MARK);
+      return read && (!read.editor || read.alert) ? read : null;
+    },
+    {
+      timeout: 30_000,
+      what: `the value for c:${entry.target} to be read`,
+      soft: true,
+    },
+  );
+  if (now && !now.editor && !now.alert) return null;
+  await window_.browser.keys("Escape");
+  return `work_input_entry_refused: c:${entry.target}: ${now?.alert ?? "the entry was not read within the wait"}`;
+}
+
+/**
+ * Enter statements the world left to the window, through the form's own
+ * doors: a prior-values entry is typed and stated, a statement is ticked and
+ * staged, and the staged changes are applied through the review. The apply
+ * calculates the declaration with them. Returns the calculating step it made
+ * (`judged`, null when nothing was applied) and what the window did not offer.
+ */
+async function enterStatements(list, row) {
+  const entryStarted = Date.now();
+  const problems = [];
+  const entered = [];
+  try {
+    const missed = await openView("desktop.modelo.view.form");
+    if (missed) log("view-click-missed", { view: "form", report: missed });
+  } catch (error) {
+    return {
+      judged: null,
+      problems: [`the form is not shown: ${error.message}`],
+    };
+  }
+  await exec(pageExpandOffers);
+  const language = await exec(() => document.documentElement.lang);
+  const stagedWord = label("workspace.modelo.attention.staged");
+  // One entry per family, and per family and row for a row-grain family.
+  const wanted = new Map();
+  for (const item of list.filter((entry) => entry.kind !== "prior_value"))
+    for (const family of item.families) {
+      const row = item.kind === "rental_carry" ? item.row : null;
+      wanted.set(row ? `${family} ${row}` : family, { family, row });
+    }
+  const ticked = [];
+  for (const [named, { family, row }] of wanted) {
+    const base = STATEMENT(family, row);
+    const shown = await waitFor(() => exec(pageOffer, base), {
+      timeout: 20_000,
+      what: `the statement ${named}`,
+      soft: true,
+    });
+    if (!shown) {
+      problems.push(`the statements offer does not serve ${named}`);
+      continue;
+    }
+    if (shown.checked === false)
+      await clickSelector(`${base} input[type="checkbox"]`);
+    ticked.push(named);
+  }
+  if (ticked.length > 0) {
+    await sleep(400);
+    const staged = await clickText("[data-statements]", "button", [
+      label("desktop.modelo.statements.stage"),
+    ]);
+    if (!staged) {
+      problems.push("the statements offer's stage button is not shown");
+    } else {
+      await sleep(800);
+      const said = await exec(
+        pageTexts,
+        "[data-statements]",
+        '[role="status"]',
+      );
+      if (
+        said.some((text) =>
+          text.includes(label("desktop.modelo.statements.not_placed")),
+        )
+      )
+        problems.push(
+          `the form does not show the boxes of ${ticked.join(", ")}`,
+        );
+      else entered.push(...ticked);
+    }
+  }
+  // The figures follow the ticks: a family's statement of nothing pending
+  // stages every carry it covers, and a figure typed after it replaces that
+  // carry's statement, as the table states an amount and leaves the rest.
+  for (const figure of list.flatMap(figuresOf)) {
+    const problem = await enterPriorFigure(figure, language, stagedWord);
+    if (problem) problems.push(problem);
+    else entered.push(`${figure.target} = ${figure.value}`);
+  }
+  for (const entry of list.filter((item) => item.kind === "work_input")) {
+    const problem = await enterWorkInput(entry, language);
+    if (problem) problems.push(problem);
+    else entered.push(`c:${entry.target} = ${entry.value}`);
+  }
+  log("statements-timing", { entryMs: Date.now() - entryStarted });
+  const before = await readState();
+  if (before.action !== "apply" || entered.length === 0)
+    return {
+      judged: null,
+      problems: [...problems, "nothing was staged, so nothing was applied"],
+    };
+  const run = await runAction("apply", before, TIMEOUT.calculate, row);
+  const judged = await judge(before, run);
+  judged.why.unshift(`entered in the window: ${entered.join("; ")}`);
+  log("statements-entered", { entered, problems, stage: judged.stage });
+  return { judged, problems };
+}
+
+/** Every box the form shows, page by page, scrolling to draw the lazy sections. */
+async function readFigures() {
+  const readStarted = Date.now();
+  let slept = 0;
+  const pause = (ms) => {
+    slept += ms;
+    return sleep(ms);
+  };
+  await openView("desktop.modelo.view.form");
+  const pages = await exec(
+    pageTexts,
+    tablist("desktop.modelo.form.pages"),
+    '[role="tab"]',
+  );
+  const seen = new Map();
+  const readPage = async (name) => {
+    log("form-page", {
+      name,
+      probe: await exec(pageFormProbe),
+      records: await exec(pageRecordsProbe),
+    });
+    const before = seen.size;
+    const collect = async () => {
+      for (const box of (await exec(pageBoxes)) ?? [])
+        if (!seen.has(box.key)) seen.set(box.key, box);
+    };
+    // Section by section: the form draws a section only once it nears the
+    // viewport, and pixel steps can pass a section before it draws.
+    for (const id of (await exec(pageSections)) ?? []) {
+      await exec(pageShowSection, id);
+      await pause(80);
+      await collect();
+    }
+    await exec(pageScroll, "top");
+    // The scroll pass is the backstop for boxes the section pass did not
+    // draw; three still steps in a row mean the page's end was reached.
+    let atEnd = 0;
+    for (let step = 0; step < 400 && atEnd < 3; step += 1) {
+      await pause(120);
+      for (const box of (await exec(pageBoxes)) ?? [])
+        if (!seen.has(box.key)) seen.set(box.key, box);
+      const where = await exec(pageScroll, "down");
+      if (!where || !where.moved || where.top >= where.last - 2) atEnd += 1;
+      else atEnd = 0;
+    }
+    log("form-page-read", { name, new: seen.size - before, total: seen.size });
+  };
+  if (pages.length === 0) await readPage("(single)");
+  for (let index = 0; index < pages.length; index += 1) {
+    // Radix tabs choose on mouse down or focus; a WebDriver click did not
+    // change the page, so the same events are sent from the page.
+    const chosen = await exec(
+      pageChooseTab,
+      tablist("desktop.modelo.form.pages"),
+      index,
+    );
+    log("form-tab", { index, chosen });
+    // The page is read once its tab is selected and the panel drew, not after
+    // a fixed wait.
+    const waitStarted = Date.now();
+    await waitFor(
+      async () =>
+        (await exec(
+          (scope, at) =>
+            [
+              ...(document
+                .querySelector(scope)
+                ?.querySelectorAll('[role="tab"]') ?? []),
+            ]
+              .filter((tab) => tab.getClientRects().length > 0)
+              [at]?.getAttribute("aria-selected") === "true",
+          tablist("desktop.modelo.form.pages"),
+          index,
+        ))
+          ? true
+          : null,
+      {
+        timeout: 5_000,
+        what: `form page ${index} to be selected`,
+        soft: true,
+        interval: 100,
+      },
+    );
+    slept += Date.now() - waitStarted;
+    await pause(150);
+    await readPage(pages[index]);
+  }
+  log("form-read-timing", {
+    pages: pages.length,
+    totalMs: Date.now() - readStarted,
+    sleptMs: slept,
+  });
+  const figures = {};
+  const conflicts = [];
+  const language = await exec(() => document.documentElement.lang);
+  let typedBoxes = 0;
+  // Boxes whose casilla is not the number the form prints, for the run log.
+  const renamed = [];
+  // Boxes whose value cell shows no figure: for the run log, to tell a box the
+  // window leaves blank from one the reader cannot read.
+  const blank = [];
+  for (const { key, box, printed, value, typed } of seen.values()) {
+    if (box && (!value || value === "—"))
+      blank.push({ key, box, value, typed: typed?.text ?? null });
+    if (!box || !value || value === "—" || isZeroText(value)) continue;
+    if (printed !== undefined && printed !== box) renamed.push([printed, box]);
+    // The typed scalar the form serves wins; without one, a number is
+    // written as a plain decimal and any other text stays as displayed.
+    const figure = typed ? typed.text : plainDecimal(value, language);
+    if (typed) typedBoxes += 1;
+    // A repeated row group's casilla is drawn as its column scalar and as the
+    // row; as the table's row figures do, a row figure fills a zero scalar,
+    // and any other disagreement stays a conflict with the first kept.
+    if (box in figures && figures[box] !== figure) {
+      const filled = isZeroText(figures[box]) && !isZeroText(figure);
+      conflicts.push({
+        box,
+        kept: filled ? figure : figures[box],
+        other: filled ? figures[box] : figure,
+        filled,
+      });
+      if (filled) figures[box] = figure;
+    } else figures[box] ??= figure;
+  }
+  log("figures", {
+    typedBoxes,
+    renamed: renamed.slice(0, 80),
+    blank: blank.length,
+    blankWithTyped: blank.filter((item) => item.typed !== null).slice(0, 60),
+    pages,
+    boxes: seen.size,
+    shown: Object.keys(figures).length,
+    conflicts,
+  });
+  return figures;
+}
+
+/**
+ * A fresh profile opens the "set up Cadrumo" dialog over the workspace. Local
+ * AI and the browser stay unconfigured: the dialog is dismissed with its own
+ * "not now" (or "close") button, and nothing in it is started.
+ */
+async function dismissSetup() {
+  const title = label("desktop.setup.title");
+  const open = await exec(
+    (wanted) =>
+      [...document.querySelectorAll('[role="dialog"]')].some(
+        (dialog) =>
+          dialog.getClientRects().length > 0 &&
+          (dialog.textContent ?? "").includes(wanted),
+      ),
+    title,
+  );
+  if (!open) return false;
+  const dismissed = await clickText('[role="dialog"]', "button", [
+    label("desktop.setup.not_now"),
+    label("desktop.setup.close"),
+  ]);
+  if (dismissed) log("setup-dismissed", { dialog: title });
+  await sleep(600);
+  return dismissed;
+}
+
+async function showList() {
+  const overview = label("workspace.declarations.destination.overview");
+  const ready = async () => {
+    await dismissSetup();
+    const list = await exec(pageList, overview);
+    if (list.failed) throw new Error("the declarations list could not be read");
+    return list.grid && !list.loading ? list : null;
+  };
+  let list = await ready();
+  if (list) return list;
+  if ((await readState()).workspace)
+    await clickText("header", "button", [overview]);
+  // The Debug build takes about a minute to draw the first list.
+  list = await waitFor(ready, {
+    timeout: 75_000,
+    what: "the list",
+    soft: true,
+  });
+  if (list) return list;
+  // The rail toggles its pane: press it only when the pane is not open.
+  const rail = await exec(() => {
+    const node = document.querySelector('[data-rail="declarations"]');
+    return node
+      ? {
+          pressed: node.getAttribute("aria-pressed"),
+          disabled: node.getAttribute("aria-disabled"),
+        }
+      : null;
+  });
+  log("rail", { rail });
+  if (rail?.pressed !== "true")
+    await clickSelector('[data-rail="declarations"]');
+  // The declarations page comes back on the declaration it last showed; its
+  // header's overview button leads to the list.
+  const listed = async () => {
+    const list = await ready();
+    if (list) return list;
+    if ((await readState()).workspace)
+      await clickText("header", "button", [overview]);
+    return null;
+  };
+  try {
+    return await waitFor(listed, {
+      timeout: TIMEOUT.list,
+      what: "the declarations list",
+      interval: 2000,
+    });
+  } catch (error) {
+    log("list-diagnosis", {
+      wanted: overview,
+      page: await exec(pageDiagnosis),
+    });
+    throw error;
+  }
+}
+
+async function openWork(row) {
+  await showList();
+  const search = await window_.browser.$("input.declarations-search");
+  await search.waitForExist({ timeout: 15_000 });
+  await search.setValue(row.modelo);
+  // Every group: the declaration may be listed under any of them.
+  await clickText(
+    ".declarations-view",
+    '[data-slot="segmented-control-item"]',
+    [label("workspace.declarations.list.filter.all")],
+    "startsWith",
+  );
+  const found = await waitFor(
+    () =>
+      exec(pageRowKey, String(row.work_unit_id), row.modelo, String(row.year)),
+    {
+      timeout: 30_000,
+      what: `the list row of ${row.modelo} ${row.year} ${row.period}`,
+    },
+  );
+  log("row", { work_unit_id: row.work_unit_id, via: found.via });
+  const views = () => exec(pageVisible, tablist("desktop.modelo.views.label"));
+  await exec(pageDouble, found.key, MARK);
+  const opened = await waitFor(views, {
+    timeout: 60_000,
+    what: "the declaration",
+    soft: true,
+  });
+  if (!opened) {
+    log("open-diagnosis", { page: await exec(pageDiagnosis) });
+    // The synthetic event did not open it: a real double click on the cell,
+    // when the list still draws it.
+    const cell = await window_.browser.$(`[${MARK}]`);
+    if (!(await cell.isExisting()))
+      throw new Error("the list row was not opened and is no longer drawn");
+    await cell.doubleClick();
+    await waitFor(views, { timeout: 60_000, what: "the declaration" });
+  }
+  // Stable once the next action stops changing.
+  let last = null;
+  await waitFor(
+    async () => {
+      const state = await readState();
+      const same = last !== null && last === `${state.action}|${state.busy}`;
+      last = `${state.action}|${state.busy}`;
+      return same && !state.busy;
+    },
+    { timeout: 120_000, what: "the declaration to be read", interval: 700 },
+  );
+  const now = await readState();
+  log("workspace", {
+    title: now.title,
+    header: now.headerText,
+    action: now.action,
+  });
+  if (!now.headerText.includes(String(row.year)))
+    throw new Error(
+      `the window opened a different declaration: "${now.headerText}"`,
+    );
+}
+
+/**
+ * How the calendar presents one obligation: scheduled (owed), set apart as
+ * not applicable (suppressed, with the words the product served), or neither.
+ * The calendar keys an obligation by modelo and period.
+ */
+function pageCalendar(modelo, period, year) {
+  const norm = (text) => (text ?? "").replace(/\s+/g, " ").trim();
+  // The window keys an entry by the served modelo and period; some modelos
+  // (Modelo 202) serve the period with its year ("<year> 2P"), others without.
+  const keys = [`${modelo}:${period}`, `${modelo}:${year} ${period}`];
+  const first = (attribute) =>
+    keys
+      .map((key) =>
+        document.querySelector(`[${attribute}="${CSS.escape(key)}"]`),
+      )
+      .find(Boolean) ?? null;
+  const owed = first("data-entry");
+  const apart = first("data-suppressed");
+  const key =
+    owed?.getAttribute("data-entry") ??
+    apart?.getAttribute("data-suppressed") ??
+    keys[0];
+  // The verdict code the newest answered calendar read served for this
+  // return, as a suppressed row; the page draws its words, never the code.
+  let served = null;
+  for (const read of [...(window.__personaCalendarReads ?? [])].reverse()) {
+    let answer = null;
+    try {
+      answer = JSON.parse(read.answer ?? "");
+    } catch {
+      continue;
+    }
+    const rows = answer?.suppressed ?? answer?.suppressed_entries ?? [];
+    const row = rows.find((each) =>
+      keys.includes(`${each?.modelo}:${each?.period}`),
+    );
+    if (row) {
+      served = { verdict: row.verdict ?? null, from: read.from ?? null };
+      break;
+    }
+  }
+  return {
+    key,
+    owed: !!owed,
+    suppressed: !!apart,
+    verdict: served?.verdict ?? null,
+    servedFrom: served?.from ?? null,
+    words: apart
+      ? norm(apart.querySelector("[lang]")?.textContent) ||
+        norm(apart.textContent)
+      : "",
+    entries: [...document.querySelectorAll("[data-entry]")]
+      .map((node) => node.getAttribute("data-entry"))
+      .filter((value) => value.startsWith(`${modelo}:`)),
+    drawn:
+      document.querySelectorAll("[data-entry],[data-suppressed]").length > 0,
+  };
+}
+
+/** The pane toggled by the rail's calendar item: its pressed state, null if absent. */
+function pageRailPressed(rail) {
+  const node = document.querySelector(`[data-rail="${rail}"]`);
+  return node ? node.getAttribute("aria-pressed") : null;
+}
+
+/**
+ * Record every calendar read the page makes from now on: the range it asked
+ * for and the host's answer, kept in the page until collected.
+ */
+function pageWatchCalendarReads() {
+  if (window.__personaCalendarReads) return true;
+  const reads = [];
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const answer = original.call(this, input, init);
+    if (!/profile_views_calendar(\?|$)/.test(url.split("/").pop() ?? ""))
+      return answer;
+    let asked = {};
+    try {
+      const body = JSON.parse(typeof init?.body === "string" ? init.body : "");
+      asked = { from: body.from ?? null, to: body.to ?? null };
+    } catch {
+      asked = { from: null, to: null };
+    }
+    const read = { at: Date.now(), ...asked, answer: null };
+    reads.push(read);
+    answer.then(
+      (response) =>
+        response
+          .clone()
+          .text()
+          .then((text) => {
+            read.answer = text;
+          }),
+      () => {},
+    );
+    return answer;
+  };
+  window.__personaCalendarReads = reads;
+  return true;
+}
+
+/**
+ * Record every read of a declaration's form the page makes from now on: the
+ * work unit it served and, of each issue on it, the served severity and
+ * message key. The check view draws neither, so the codes come from here.
+ */
+function pageWatchFormReads() {
+  if (window.__personaFormReads) return true;
+  const reads = [];
+  const original = window.fetch;
+  window.fetch = function (input, init) {
+    const url = typeof input === "string" ? input : (input?.url ?? "");
+    const answer = original.call(this, input, init);
+    if (!/^modelo_form(\?|$)/.test(url.split("/").pop() ?? "")) return answer;
+    const read = { at: Date.now(), answered: false, work: null, issues: null };
+    reads.push(read);
+    if (reads.length > 40) reads.splice(0, reads.length - 40);
+    answer.then(
+      (response) =>
+        response
+          .clone()
+          .text()
+          .then((text) => {
+            read.answered = true;
+            try {
+              const body = JSON.parse(text);
+              read.work = body?.work_unit_id ?? null;
+              const issues = body?.form?.form?.issues;
+              read.issues = Array.isArray(issues)
+                ? issues.map((issue) => ({
+                    severity: issue?.finding?.severity ?? null,
+                    key: issue?.finding?.message_locale_key ?? null,
+                  }))
+                : null;
+            } catch {
+              read.issues = null;
+            }
+          }),
+      () => {},
+    );
+    return answer;
+  };
+  window.__personaFormReads = reads;
+  return true;
+}
+
+/**
+ * The blocking findings of the newest answered form read of `work`, each id
+ * once in served order: the last segment of the served message key, as the
+ * TUI pilot names them. Only reads asked at or after `since` (page clock)
+ * count; null when no such read carried its issues.
+ */
+function pageFormBlocking(work, since) {
+  const read = [...(window.__personaFormReads ?? [])]
+    .reverse()
+    .find(
+      (each) =>
+        each.answered && each.at >= since && each.work === work && each.issues,
+    );
+  if (!read) return null;
+  const ids = read.issues
+    .filter((issue) => issue.severity === "blocking" && issue.key)
+    .map((issue) => issue.key.split(".").pop());
+  return { at: read.at, ids: [...new Set(ids)] };
+}
+
+/** The recorded calendar reads: their range and the rows naming `modelo`. */
+function pageCalendarReads(modelo) {
+  const naming = (value) => JSON.stringify(value).includes(`"${modelo}"`);
+  return (window.__personaCalendarReads ?? []).map((read) => {
+    let answer = null;
+    try {
+      answer = JSON.parse(read.answer ?? "");
+    } catch {
+      return { from: read.from, to: read.to, answered: read.answer !== null };
+    }
+    const apart = answer?.suppressed ?? answer?.suppressed_entries ?? [];
+    return {
+      from: read.from,
+      to: read.to,
+      range: answer?.range ?? null,
+      entries: (answer?.entries ?? []).filter(naming),
+      suppressed: apart.filter(naming),
+      entryCount: (answer?.entries ?? []).length,
+      suppressedCount: apart.length,
+      // The field the host served the held-off rows under: the window's
+      // calendar draws only `suppressed_entries`.
+      suppressedField:
+        "suppressed" in (answer ?? {})
+          ? "suppressed"
+          : "suppressed_entries" in (answer ?? {})
+            ? "suppressed_entries"
+            : null,
+    };
+  });
+}
+
+/**
+ * The calendar's filing-year control: whether it is drawn, the year on screen
+ * (null while the range around today is shown) and the current calendar year.
+ */
+function pageCalendarYear() {
+  const group = document.querySelector(".calendar-year");
+  if (!group) return { present: false };
+  const shown = group.querySelector("span")?.textContent?.trim() ?? "";
+  return {
+    present: true,
+    year: /^\d+$/.test(shown) ? Number(shown) : null,
+    today: new Date().getFullYear(),
+    failed: !!document.querySelector(".calendar-year ~ [role='status']"),
+  };
+}
+
+/** Press the control's previous (-1) or next (+1) year button. */
+function pageStepCalendarYear(by) {
+  const buttons = document.querySelectorAll(".calendar-year button");
+  const button = buttons[by < 0 ? 0 : 1];
+  if (!button) return false;
+  button.click();
+  return true;
+}
+
+/** Back to the range around today, when a year is on screen. */
+function pageCalendarYearCurrent() {
+  const buttons = document.querySelectorAll(".calendar-year button");
+  if (buttons.length < 3) return false;
+  buttons[2].click();
+  return true;
+}
+
+/**
+ * Step the calendar's year control to `target`, one press at a time, waiting
+ * for each year to be shown; false when the control is absent or stalls.
+ */
+async function showCalendarYear(target) {
+  for (let presses = 0; presses < 12; presses += 1) {
+    const at = await exec(pageCalendarYear);
+    if (!at.present || at.failed) return false;
+    const year = at.year ?? at.today;
+    if (at.year === target) return true;
+    if (!(await exec(pageStepCalendarYear, target < year ? -1 : 1)))
+      return false;
+    const moved = await waitFor(
+      async () => {
+        const now = await exec(pageCalendarYear);
+        return now.failed || now.year !== at.year ? now : null;
+      },
+      { timeout: 15_000, what: "the calendar year to change", soft: true },
+    );
+    if (!moved || moved.failed) return false;
+  }
+  return false;
+}
+
+/** A return the persona states not owed: what the overview calendar shows of it. */
+async function readCalendarApplicability(row) {
+  await exec(pageWatchCalendarReads);
+  if ((await exec(pageRailPressed, "calendar")) !== "true")
+    await clickSelector('[data-rail="calendar"]');
+  const presented = async () => {
+    const read = await exec(pageCalendar, row.modelo, row.period, row.year);
+    return read.owed || read.suppressed ? read : null;
+  };
+  // The pane draws its year control only once its first read is drawn; asked
+  // at once after the rail press, a calendar opened for the first time in the
+  // run has none yet, and the return's own year would never be looked at.
+  const control = Boolean(
+    await waitFor(
+      async () => ((await exec(pageCalendarYear)).present ? true : null),
+      { timeout: 30_000, what: "the calendar's year control", soft: true },
+    ),
+  );
+  let shown = await waitFor(presented, {
+    timeout: control ? 10_000 : 30_000,
+    what: "the calendar to show the return",
+    soft: true,
+  });
+  // A past period can fall outside the range around today: look at the
+  // return's own filing year, then the year after it, where its deadline can
+  // fall, with the calendar's year control when the window draws one.
+  const looked = [];
+  for (const year of control && !shown ? [row.year, row.year + 1] : []) {
+    const reached = await showCalendarYear(year);
+    looked.push({ year, reached });
+    if (!reached) continue;
+    shown = await waitFor(presented, {
+      timeout: 10_000,
+      what: `the calendar for ${year} to show the return`,
+      soft: true,
+    });
+    if (shown) break;
+  }
+  const read =
+    shown ?? (await exec(pageCalendar, row.modelo, row.period, row.year));
+  if (looked.length > 0) log("calendar-years", { looked });
+  await exec(pageCalendarYearCurrent);
+  log("calendar-reads", {
+    modelo: row.modelo,
+    period: row.period,
+    reads: await exec(pageCalendarReads, row.modelo),
+  });
+  // Go back through the declarations rail: pressing the shown calendar's own
+  // rail again switches the pane to the documentation, not to the declarations.
+  if ((await exec(pageRailPressed, "declarations")) !== "true")
+    await clickSelector('[data-rail="declarations"]');
+  return read;
+}
+
+async function driveRow(row, runDir, persona) {
+  const out = {
+    calculate: "not-reached",
+    verify: "not-reached",
+    export: "not-reached",
+    figures: {},
+    reasons: [],
+  };
+  const say = (stage, text) => text && out.reasons.push(`${stage}: ${text}`);
+  await installConsoleHook();
+  await exec(pageWatchFormReads);
+  await openWork(row);
+  let state = await readState();
+  log("opened", {
+    title: state.title,
+    action: state.action,
+    banner: state.banner,
+  });
+
+  // Calculate. The statements the world left to the window are entered
+  // through the form's own doors and applied; an apply calculates the
+  // declaration with them, and that is the window calculating. The first
+  // are those the table states before the first calculation, the others
+  // those it states on the calculated return.
+  const entries = row.window_statements ?? [];
+  const early = entries.filter((entry) => !entry.after_calculation);
+  const late = entries.filter((entry) => entry.after_calculation);
+  // A world that refused to record a statement holds no calculation of its own.
+  const inherited =
+    row.driver_calculate !== undefined &&
+    row.driver_calculate !== null &&
+    row.driver_calculate !== NOT_RUN &&
+    row.driver_calculate !== "refused";
+  let last = null;
+  const unoffered = [];
+  const take = (result) => {
+    unoffered.push(...result.problems);
+    if (result.judged) last = result.judged;
+  };
+  if (early.length > 0) {
+    take(await enterStatements(early, row));
+    state = await readState();
+  }
+  if (
+    CALCULATING.includes(state.action) &&
+    (last === null || last.stage === "error")
+  ) {
+    const before = state;
+    const run = await runAction(state.action, before, TIMEOUT.calculate, row);
+    last = await judge(before, run);
+    state = await readState();
+  }
+  // The table states these on the calculated return whatever that
+  // calculation left open: a rental carry or a work-income statement is what
+  // completes it. They are entered through the form whatever the header
+  // offers next, which after an incomplete calculation is the resolve step.
+  if (
+    late.length > 0 &&
+    last !== null &&
+    !["refused", "error"].includes(last.stage)
+  ) {
+    take(await enterStatements(late, row));
+    state = await readState();
+  } else if (late.length > 0)
+    log("late-statements-skipped", {
+      late: late.length,
+      action: state.action,
+      stage: last?.stage ?? null,
+    });
+  for (const text of unoffered) say("calculate", text);
+  const standing = ["verify", ...FILED].includes(state.action);
+  if (last === null || (inherited && last.stage === "pass")) {
+    if (standing) {
+      out.calculate = "calculate_inherited";
+      say(
+        "calculate",
+        row.calculate_inherited_reason ||
+          "a calculation was already present; none was run",
+      );
+      for (const text of last?.why ?? []) say("calculate", text);
+    } else {
+      out.calculate = "incomplete";
+      say("calculate", describeNotPass(state, await findings()));
+    }
+  } else {
+    out.calculate = last.stage;
+    for (const text of last.why) say("calculate", text);
+  }
+  log("calculate", { stage: out.calculate });
+
+  // The form, once calculated (also when it came out incomplete)
+  if (["pass", "incomplete", "calculate_inherited"].includes(out.calculate))
+    out.figures = await readFigures();
+
+  // A return the persona states not owed is neither verified, exported nor
+  // filed. As the table and the CLI read the calendar, it is confirmed not
+  // owed only when the window schedules no window for it and sets it apart
+  // with the served verdict `not_applicable`; a schedule, another verdict or
+  // no mention is the table's owed-shown, `incomplete`, naming what was shown.
+  if (row.owed === false) {
+    const seen = await readCalendarApplicability(row);
+    log("not-owed", { owed: row.owed, calendar: seen });
+    const served = seen.verdict
+      ? ` (the read from ${seen.servedFrom} served it as ${seen.verdict})`
+      : " (no calendar read served it)";
+    if (seen.suppressed && !seen.owed && seen.verdict === "not_applicable") {
+      out.verify = "not-owed";
+      say(
+        "verify",
+        `overview: stated not owed, the calendar sets it apart as not_applicable${seen.words ? `: ${seen.words}` : ""}`,
+      );
+    } else {
+      out.verify = "incomplete";
+      say(
+        "verify",
+        `overview: stated not owed, the window shows ${
+          seen.owed
+            ? `${seen.key} scheduled as owed`
+            : seen.suppressed
+              ? `${seen.key} set apart as ${seen.verdict ?? "an unserved verdict"}${seen.words ? `: ${seen.words}` : ""}`
+              : seen.drawn
+                ? `${seen.key} neither scheduled nor set apart`
+                : "no calendar entries"
+        }${served}`,
+      );
+    }
+    say("export", "a not-owed return is not exported");
+    log("verify", { stage: out.verify });
+    log("export", { stage: out.export });
+    return out;
+  }
+
+  // Verify
+  const chain =
+    ["pass", "calculate_inherited"].includes(out.calculate) ||
+    state.action === "verify";
+  // The form read the findings are taken from is one the check settled into.
+  let checkedFrom = 0;
+  if (chain && state.action === "verify") {
+    const before = await readState();
+    checkedFrom = await exec(() => Date.now());
+    const run = await runAction("verify", before, TIMEOUT.verify, row);
+    const words = freshOf(before, run.state);
+    if (run.state.timedOut) {
+      out.verify = "error";
+      say("verify", "no answer within the wait");
+    } else if (words.length > 0) {
+      const listed = await findings();
+      if (checkedWithFindings(before, run.state, listed)) {
+        // The check ran to its end and found what stops the filing: the
+        // table's "incomplete", not a refusal to check.
+        out.verify = "incomplete";
+        say("verify", describeNotPass(run.state, listed));
+      } else {
+        out.verify = "refused";
+        say("verify", words.join(" | "));
+      }
+    } else if (FILED.includes(run.state.action)) {
+      out.verify = "pass";
+    } else if (run.state.action === "verify") {
+      out.verify = "error";
+      say(
+        "verify",
+        `the verify button is still offered; ${(await findings()).join(" | ")}`,
+      );
+    } else {
+      out.verify = "incomplete";
+      say("verify", describeNotPass(run.state, await findings()));
+    }
+    state = await readState();
+  } else if (chain && FILED.includes(state.action)) {
+    out.verify = "pass";
+    say("verify", "already verified; none was run");
+  } else if (out.calculate === "pass") {
+    out.verify = "incomplete";
+    say("verify", describeNotPass(state, await findings()));
+  }
+  log("verify", { stage: out.verify });
+  // A check that did not pass carries the ids of the blocking findings the
+  // form served once it ran, as the TUI line does; never read from words.
+  if (!["pass", "not-reached"].includes(out.verify)) {
+    const blocking = await exec(
+      pageFormBlocking,
+      String(row.work_unit_id),
+      checkedFrom,
+    );
+    log("blocking-findings", { checkedFrom, blocking });
+    if (blocking === null)
+      say(
+        "verify",
+        "no form read of this return after its check carried its served issues",
+      );
+    else if (blocking.ids.length > 0) out.blocking_findings = blocking.ids;
+  }
+
+  // Export. A return that did not verify is not exported, but the table
+  // also states whether the form served an export door for it.
+  if (out.verify !== "pass") await probeExportDoor(out);
+  if (out.verify === "pass")
+    out.export = await exportFile(row, runDir, persona, out);
+  log("export", { stage: out.export });
+  // The table files every verified return locally, whatever its export
+  // settled, so the next period and the year's annual returns build on it.
+  if (out.verify === "pass") await recordFiling(out);
+  return out;
+}
+
+/**
+ * Record the verified return as filed through the export view's own door:
+ * a PRESENTADO revision whose AEAT status stays pending; nothing is sent.
+ * Sets `out.file` to the stage the table compares: `pass` only when the
+ * window shows the filed state by itself (the served journey's file step
+ * done, with no read-again press); `not-shown` when it does not; `refused`
+ * when the filing was refused; `not-reached` when the door was not usable.
+ * Anything short of `pass` is named in the row's reasons.
+ */
+async function recordFiling(out) {
+  const say = (text) => out.reasons.push(`file: ${text}`);
+  const panel = '[role="tabpanel"]';
+  const dialog = '[role="dialog"]';
+  out.file = "not-reached";
+  try {
+    await openView("workspace.modelo.filing.title");
+  } catch (error) {
+    out.file = "error";
+    say(String(error?.message ?? error));
+    return;
+  }
+  const record = label("workspace.modelo.filing.record_as_filed");
+  if (
+    (await exec(pageMarkByText, panel, "button", [record], "equals", MARK)) ===
+    null
+  ) {
+    say("the record-as-filed button is not shown");
+    return;
+  }
+  // The button is disabled while a write holds the declaration: after the
+  // export's write (Modelo 303 2T on build 12) the window asks to read it
+  // again, as the operator would, before the return can be recorded.
+  let rereads = 0;
+  const enabled = await waitFor(
+    async () => {
+      if ((await readState()).busy) return null;
+      if (await exec(pageVisible, ".modelo-write-hold")) {
+        if (
+          await clickText(".modelo-write-hold", "button", [
+            label("workspace.modelo.read_again"),
+          ])
+        ) {
+          rereads += 1;
+          // UX-23 workaround: comes out once FRONTEND's fix is confirmed.
+          log("ux23", { action: "record", rereads });
+        }
+        return null;
+      }
+      const mark = await exec(
+        pageMarkByText,
+        panel,
+        "button",
+        [record],
+        "equals",
+        MARK,
+      );
+      if (mark === null) return null;
+      return (await exec(
+        (mark) => !document.querySelector(`[${mark}]`).disabled,
+        MARK,
+      ))
+        ? true
+        : null;
+    },
+    { timeout: 30_000, what: "the record-as-filed button", soft: true },
+  );
+  if (!enabled) {
+    const hold = await exec(() =>
+      (document.querySelector(".modelo-write-hold")?.innerText ?? "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 200),
+    );
+    if (hold || rereads) say(`write hold: "${hold}" (read again ${rereads}x)`);
+    if (
+      (await exec(
+        pageMarkByText,
+        panel,
+        "button",
+        [record],
+        "equals",
+        MARK,
+      )) === null
+    ) {
+      say("the record-as-filed button is not shown");
+      return;
+    }
+    const why = await exec(
+      (mark) =>
+        (document.querySelector(`[${mark}]`).parentElement?.innerText ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 300),
+      MARK,
+    );
+    say(`the record-as-filed button is disabled: ${why}`);
+    return;
+  }
+  await clickSelector(`[${MARK}]`);
+  // The confirmation's words are the application's, not the chrome's, so its
+  // accept button is found by place: the last worded button of its footer,
+  // after the cancel.
+  const asked = await waitFor(
+    async () =>
+      exec(
+        (scope, mark) => {
+          for (const old of document.querySelectorAll(`[${mark}]`))
+            old.removeAttribute(mark);
+          const root = [...document.querySelectorAll(scope)].find(
+            (element) => element.getClientRects().length > 0,
+          );
+          const footer =
+            root?.querySelector('[data-slot="dialog-footer"]') ?? root;
+          const buttons = [
+            ...(footer?.querySelectorAll("button") ?? []),
+          ].filter(
+            (button) =>
+              button.getClientRects().length > 0 &&
+              (button.textContent ?? "").trim() !== "" &&
+              !button.disabled,
+          );
+          const accept = buttons.at(-1);
+          if (!accept || buttons.length < 2) return false;
+          accept.setAttribute(mark, "1");
+          return true;
+        },
+        dialog,
+        MARK,
+      ),
+    { timeout: 15_000, what: "the filing confirmation", soft: true },
+  );
+  if (!asked) {
+    say("the filing confirmation did not open");
+    return;
+  }
+  const before = await readState();
+  const mark = runtimeLines().length;
+  await clickSelector(`[${MARK}]`);
+  const settled = await waitFor(
+    async () => {
+      const state = await readState();
+      const words = freshOf(before, state);
+      if (words.length > 0) return { words };
+      // A filing can leave the header's step as it was; the runtime's settled
+      // filing and the window's read after it end the wait, which otherwise
+      // runs past the attended session's idle expiry and signs the window out.
+      // A finished filing that holds the declaration unread asks for a read
+      // the window does not start by itself, so the hold ends the wait too.
+      if (state.busy) return null;
+      if (state.action !== before.action || settledReadAfter(mark))
+        return { state };
+      return (await exec(pageVisible, ".modelo-write-hold")) ? { state } : null;
+    },
+    { timeout: TIMEOUT.verify, what: "the local filing", soft: true },
+  );
+  // A finished filing leaves the declaration unread behind the write hold;
+  // the operator reads it again, and so do we, before judging the filing.
+  let state = settled?.state ?? null;
+  let words = settled?.words ?? [];
+  if (!settled?.words) await formReadAfterWrite(mark, 30_000);
+  const quiet = await quietAfterWrite(15_000);
+  if (quiet) {
+    state = quiet;
+    words = freshOf(before, quiet);
+  }
+  // Judged before any read-again press: the filed state counts only when the
+  // window draws it from the served journey by itself.
+  const fileStep = () =>
+    exec(
+      () =>
+        document
+          .querySelector('[data-journey] [data-step="file"]')
+          ?.getAttribute("data-status") ?? null,
+    );
+  const byItself = await fileStep();
+  const refused = (state?.refusals ?? []).some(
+    (text) => !before.refusals.includes(text),
+  );
+  if (await exec(pageVisible, ".modelo-write-hold")) {
+    const reread = await clickText(".modelo-write-hold", "button", [
+      label("workspace.modelo.read_again"),
+    ]);
+    if (reread) {
+      await waitFor(
+        async () => !(await exec(pageVisible, ".modelo-write-hold")),
+        {
+          timeout: TIMEOUT.verify,
+          what: "the declaration to be read again",
+          soft: true,
+          interval: 400,
+        },
+      );
+      await sleep(800);
+      state = await readState();
+      words = freshOf(before, state);
+      log("read-again", { action: "file" });
+    }
+  }
+  if (words.length > 0) say(words.join(" | "));
+  else if (!state)
+    say("the window did not settle the local filing within the wait");
+  if (refused) out.file = "refused";
+  else if (byItself === "done") out.file = "pass";
+  else {
+    out.file = "not-shown";
+    say(
+      `the filed state is not shown by itself (file step ${byItself ?? "absent"}; after reading again ${(await fileStep()) ?? "absent"})`,
+    );
+  }
+  log("filed", {
+    action: state?.action ?? null,
+    words,
+    file: out.file,
+    byItself,
+  });
+}
+
+async function exportFile(row, runDir, persona, out) {
+  try {
+    const missed = await openView("workspace.modelo.filing.title");
+    if (missed)
+      sayExport(
+        out,
+        `window_view_tab_click_missed: a click on the view tab did not open it; a direct press did (${missed})`,
+      );
+  } catch (error) {
+    sayExport(out, String(error?.message ?? error));
+    return "error";
+  }
+  const names = [
+    label("workspace.modelo.filing.export_file"),
+    label("workspace.modelo.filing.export_again"),
+  ];
+  const panel = '[role="tabpanel"]';
+  const text = await exec(
+    pageMarkByText,
+    panel,
+    "button",
+    names,
+    "equals",
+    MARK,
+  );
+  if (text === null) {
+    const state = await readState();
+    const shown = await exec(
+      (selector) =>
+        [...document.querySelectorAll(selector)]
+          .map((root) => {
+            const box = (element) => {
+              const rect = element.getBoundingClientRect();
+              return `${Math.round(rect.x)},${Math.round(rect.y)},${Math.round(rect.width)}x${Math.round(rect.height)}`;
+            };
+            const buttons = [...root.querySelectorAll("button")].map(
+              (button) =>
+                `[${(button.textContent ?? "").replace(/\s+/g, " ").trim()}` +
+                ` @${box(button)}` +
+                `${button.getClientRects().length ? "" : " hidden"}` +
+                `${button.disabled ? " disabled" : ""}]`,
+            );
+            return (
+              `panel#${root.id || "?"} @${box(root)} scroll ${root.scrollHeight}/${root.clientHeight}: ` +
+              buttons.join(" ")
+            );
+          })
+          .join(" || ")
+          .slice(0, 1500),
+      panel,
+    );
+    sayExport(
+      out,
+      `the export button is not shown (next action ${state.action}): ${shown}`,
+    );
+    return "incomplete";
+  }
+  const enabled = await exec(
+    (mark) => !document.querySelector(`[${mark}]`).disabled,
+    MARK,
+  );
+  if (!enabled) {
+    const why = await exec(
+      (mark) =>
+        (document.querySelector(`[${mark}]`).parentElement?.innerText ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 400),
+      MARK,
+    );
+    sayExport(out, `the export button is disabled: ${why}`);
+    return "incomplete";
+  }
+  const stem = `${persona}-${row.modelo}-${row.year}-${row.period}`;
+  const queued = join(runDir, "temporary", "native-picker-selection.json");
+  // The window saves the filing file under the kind the export offer names,
+  // which the page does not draw, and refuses a name of any other kind
+  // without a word. So each official kind is tried in turn: a name the
+  // window takes but answers with silence is one of the wrong kind.
+  for (const kind of FILING_FILE_KINDS) {
+    let destination = join(runDir, "exports", `${stem}.${kind}`);
+    if (existsSync(destination))
+      destination = join(runDir, "exports", `${stem}-${Date.now()}.${kind}`);
+    const before = await readState();
+    log("export-press", { kind, alerts: before.alerts, action: before.action });
+    queuePickerSelection(runDir, "save", destination);
+    try {
+      await clickSelector(`[${MARK}]`);
+      const outcome = await exportOutcome(destination, queued, before);
+      log("export-outcome", {
+        kind,
+        outcome: outcome ? Object.keys(outcome)[0] : "silent",
+        pickerAsked: !existsSync(queued),
+      });
+      if (outcome?.pass) {
+        await sleep(1500);
+        log("exported", { bytes: statSync(destination).size, destination });
+        return "pass";
+      }
+      if (outcome?.words) {
+        sayExport(out, outcome.words.join(" | "));
+        return "refused";
+      }
+      if (outcome?.wrongKind) {
+        log("export-kind-refused", { kind });
+        continue;
+      }
+      const panelText = await exec(
+        (selector) =>
+          [...document.querySelectorAll(selector)]
+            .filter((root) => root.getClientRects().length > 0)
+            .map((root) => (root.innerText ?? "").replace(/\s+/g, " ").trim())
+            .join(" || ")
+            .slice(0, 700),
+        panel,
+      );
+      sayExport(
+        out,
+        `no file was written and the window said nothing within the wait (save picker ${existsSync(queued) ? "never asked" : "asked"}; panel: ${panelText})`,
+      );
+      return "error";
+    } finally {
+      if (existsSync(queued)) unlinkSync(queued);
+    }
+  }
+  sayExport(
+    out,
+    `the window took no filing file name of any official kind (${FILING_FILE_KINDS.join(", ")})`,
+  );
+  return "error";
+}
+
+/**
+ * What an export press came to: a written file, fresh words from the window,
+ * or `wrongKind` when the picker was asked and the window then stayed idle
+ * and silent, as it does for a name of a kind it does not save.
+ */
+const EXPORT_QUIET_MS = 30_000;
+
+async function exportOutcome(destination, queued, before) {
+  const notDone = label("workspace.modelo.outcome.not_done");
+  let quietSince = null;
+  let busySeen = false;
+  return waitFor(
+    async () => {
+      if (existsSync(destination) && statSync(destination).size > 0)
+        return { pass: true };
+      const state = await readState();
+      const words = freshOf(before, state);
+      // The window says only that nothing was done when the press reached no
+      // operation, as it does for a name of a kind it does not save.
+      if (
+        !busySeen &&
+        !existsSync(queued) &&
+        words.length > 0 &&
+        words.every((text) => text === notDone)
+      )
+        return { wrongKind: true };
+      if (words.length > 0) return { words };
+      busySeen ||= state.busy;
+      if (existsSync(queued) || state.busy || busySeen) {
+        quietSince = null;
+        return null;
+      }
+      quietSince ??= Date.now();
+      // An export the window took can run several seconds without drawing a
+      // busy state (Modelo 100 took 8 s on build 12), so silence counts as a
+      // refused kind only after EXPORT_QUIET_MS.
+      return Date.now() - quietSince > EXPORT_QUIET_MS
+        ? { wrongKind: true }
+        : null;
+    },
+    {
+      timeout: TIMEOUT.export,
+      what: "the export",
+      soft: true,
+      interval: 700,
+    },
+  );
+}
+
+function sayExport(out, text) {
+  out.reasons.push(`export: ${text}`);
+}
+
+/**
+ * Whether the words a verify left are the check's own completed-with-findings
+ * notice. The notice is the form's served `checked_words`: it is drawn as a
+ * warning alert (never a refusal notice) and leads to the findings. It is
+ * recognised by the catalogue text of its keys when the catalogue holds them,
+ * else by that structure: no fresh refusal notice, every fresh word an alert,
+ * the declaration no longer offering verify, and findings listed.
+ */
+function checkedWithFindings(before, after, listed) {
+  const fresh = (now, was) => now.filter((text) => !was.includes(text));
+  const alerts = fresh(after.alerts, before.alerts);
+  if (fresh(after.refusals, before.refusals).length > 0) return false;
+  if (alerts.length === 0 || listed.length === 0) return false;
+  const known = [
+    "workspace.modelo.operation.checked.blocked",
+    "workspace.modelo.operation.checked.incomplete",
+  ].map(label);
+  if (alerts.every((text) => known.includes(text))) return true;
+  return after.action !== "verify" && !after.timedOut;
+}
+
+/**
+ * Read, without pressing it, whether the export view serves a usable export
+ * button, then return to the form. Sets `export_served` only when measured.
+ */
+async function probeExportDoor(out) {
+  try {
+    await openView("workspace.modelo.filing.title");
+    const text = await exec(
+      pageMarkByText,
+      '[role="tabpanel"]',
+      "button",
+      [
+        label("workspace.modelo.filing.export_file"),
+        label("workspace.modelo.filing.export_again"),
+      ],
+      "equals",
+      MARK,
+    );
+    if (text === null) {
+      out.export_served = false;
+      sayExport(out, "not reached; the export view shows no export button");
+    } else {
+      const enabled = await exec(
+        (mark) => !document.querySelector(`[${mark}]`).disabled,
+        MARK,
+      );
+      out.export_served = enabled === true ? true : false;
+      sayExport(
+        out,
+        enabled === true
+          ? "not reached; the export door was served (button enabled, not pressed)"
+          : "not reached; the export button is shown disabled",
+      );
+    }
+  } catch (error) {
+    sayExport(
+      out,
+      `export door not measured: ${String(error?.message ?? error)}`,
+    );
+  }
+  try {
+    await openView("desktop.modelo.view.form");
+  } catch {
+    // The next row opens its own work.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Launch and teardown (session.mjs start() and stop() with the world's storage)
+// ---------------------------------------------------------------------------
+
+async function freePort() {
+  const server = createServer();
+  await new Promise((done, fail) => {
+    server.once("error", fail);
+    server.listen(0, "127.0.0.1", done);
+  });
+  const port = server.address().port;
+  await new Promise((done) => server.close(done));
+  return port;
+}
+
+const PORT_CLAIMS = join(tmpdir(), "cadrumo-e2e-ports");
+
+/** Release this process's claim on its host port; an absent claim is fine. */
+function releasePort() {
+  if (window_.port === null) return;
+  const claim = join(PORT_CLAIMS, String(window_.port));
+  window_.port = null;
+  try {
+    unlinkSync(claim);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
+function pidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code !== "ESRCH";
+  }
+}
+
+/**
+ * A free port no other spec process holds: the probe alone cannot tell two
+ * concurrent runs apart, so each claims its port with an exclusive file.
+ */
+async function claimPort() {
+  mkdirSync(PORT_CLAIMS, { mode: 0o700, recursive: true });
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const port = await freePort();
+    const claim = join(PORT_CLAIMS, String(port));
+    for (let pass = 0; pass < 2; pass += 1) {
+      try {
+        writeFileSync(claim, String(process.pid), { flag: "wx", mode: 0o600 });
+        return port;
+      } catch (error) {
+        if (error?.code !== "EEXIST") throw error;
+        const holder = Number.parseInt(readFileSync(claim, "utf8"), 10);
+        if (pass === 1 || (Number.isInteger(holder) && pidAlive(holder))) break;
+        try {
+          unlinkSync(claim);
+        } catch (unlinkError) {
+          if (unlinkError?.code !== "ENOENT") throw unlinkError;
+        }
+      }
+    }
+  }
+  throw new Error("No free WebDriver port could be claimed after 20 tries.");
+}
+
+/** Capture the page's console output and uncaught errors for dumpBrowserLog. */
+async function installConsoleHook() {
+  try {
+    await exec(() => {
+      if (window.__cadrumoConsoleHooked) return;
+      window.__cadrumoConsoleHooked = true;
+      window.__cadrumoConsole = window.__cadrumoConsole || [];
+      const push = (level, text) => {
+        const buffer = window.__cadrumoConsole;
+        buffer.push({
+          at: new Date().toISOString(),
+          level,
+          text: String(text).slice(0, 500),
+        });
+        if (buffer.length > 500) buffer.splice(0, buffer.length - 500);
+      };
+      for (const level of ["error", "warn", "log"]) {
+        const original = console[level].bind(console);
+        console[level] = (...args) => {
+          try {
+            push(
+              level,
+              args
+                .map((arg) => {
+                  try {
+                    return typeof arg === "string" ? arg : JSON.stringify(arg);
+                  } catch {
+                    return String(arg);
+                  }
+                })
+                .join(" "),
+            );
+          } catch {
+            // Capture must never break the page's own logging.
+          }
+          original(...args);
+        };
+      }
+      window.addEventListener("error", (event) =>
+        push("error", `${event.message} @ ${event.filename}:${event.lineno}`),
+      );
+      window.addEventListener("unhandledrejection", (event) =>
+        push("unhandledrejection", event.reason?.stack ?? event.reason),
+      );
+    });
+  } catch (error) {
+    log("console-hook", { message: error.message });
+  }
+}
+
+/** msedgewebview2.exe processes descending from the host, by --type= switch. */
+function webviewProcesses() {
+  if (!window_.pid || inspectionPlatform() !== "windows") return [];
+  const query = spawnSync(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json -Compress",
+    ],
+    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (query.status !== 0 || !query.stdout.trim()) return [];
+  const all = [].concat(JSON.parse(query.stdout));
+  const parents = new Map(all.map((p) => [p.ProcessId, p.ParentProcessId]));
+  const descends = (pid) => {
+    const seen = new Set();
+    for (
+      let current = parents.get(pid);
+      current !== undefined && !seen.has(current);
+      current = parents.get(current)
+    ) {
+      if (current === window_.pid) return true;
+      seen.add(current);
+    }
+    return false;
+  };
+  return all
+    .filter(
+      (p) =>
+        String(p.Name).toLowerCase() === "msedgewebview2.exe" &&
+        descends(p.ProcessId),
+    )
+    .map((p) => ({
+      pid: p.ProcessId,
+      type: /--type=([^\s"]+)/.exec(p.CommandLine ?? "")?.[1] ?? "browser",
+    }));
+}
+
+/** The last lines of the WebView2 debug logs directly inside its data directory. */
+function webviewDebugLogs() {
+  const found = [];
+  const root = resolve(window_.runDir ?? "", "storage", "webview");
+  for (const directory of [root, join(root, "EBWebView")]) {
+    let names = [];
+    try {
+      names = readdirSync(directory);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (name !== "chrome_debug.log" && !name.endsWith(".log")) continue;
+      const file = join(directory, name);
+      try {
+        if (!statSync(file).isFile()) continue;
+        found.push({
+          file,
+          lines: readFileSync(file, "utf8").split(/\r?\n/).slice(-40),
+        });
+      } catch (error) {
+        found.push({ file, error: error.message });
+      }
+    }
+  }
+  return found;
+}
+
+/** Log what the page and its WebView processes show; never throws. */
+async function dumpBrowserLog(reason) {
+  try {
+    let entries = null;
+    try {
+      entries = await window_.browser?.execute(() => {
+        const taken = window.__cadrumoConsole || [];
+        window.__cadrumoConsole = [];
+        return taken;
+      });
+    } catch (error) {
+      log("browser-console", { reason, unreadable: error.message });
+    }
+    if (entries) log("browser-console", { reason, entries });
+    log("webview-processes", { reason, processes: webviewProcesses() });
+    const logs = webviewDebugLogs();
+    if (logs.length === 0) log("webview-debug-log", { reason, found: false });
+    for (const entry of logs) log("webview-debug-log", { reason, ...entry });
+  } catch (error) {
+    try {
+      log("browser-console", { reason, failed: error.message });
+    } catch {
+      // Diagnostics must not mask the failure being diagnosed.
+    }
+  }
+}
+
+async function launch(world, runDir) {
+  const storage = resolve(runDir, "storage");
+  // The world builder's storage root is the directory the profile lives in;
+  // the window's picker answers only for <run>/storage, so the run holds a copy.
+  mkdirSync(runDir, { mode: 0o700, recursive: true });
+  const source = resolve(world.storage_root);
+  assert(
+    existsSync(source) && statSync(source).isDirectory(),
+    `the world's storage_root is not a directory: ${source}`,
+  );
+  assert(
+    !existsSync(storage) || readdirSync(storage).length === 0,
+    `the run's storage directory must be absent or empty: ${storage}`,
+  );
+  cpSync(source, storage, { recursive: true, errorOnExist: true });
+  const profileIds = storageProfileIds(storage);
+  window_.sessionKeys = { profileIds, before: sessionKeyTargets(profileIds) };
+  const same = (left, right) =>
+    inspectionPlatform() === "windows"
+      ? left.toLowerCase() === right.toLowerCase()
+      : left === right;
+  // The window's picker answers only for <run>/storage with sibling
+  // temporary/ fixtures/ exports/ directories, and hostEnvironment() derives
+  // the storage root from the run directory.
+  assert(
+    same(storage, resolve(runDir, "storage")),
+    `the run's storage directory must be named "storage": ${storage}`,
+  );
+  for (const member of ["temporary", "fixtures", "exports"])
+    mkdirSync(resolve(runDir, member), { mode: 0o700, recursive: true });
+  let hostJson = process.env.CADRUMO_PERSONA_HOST;
+  if (!hostJson) {
+    const staged = spawnSync(
+      resolve(
+        repository,
+        inspectionPlatform() === "windows"
+          ? ".venv/Scripts/python.exe"
+          : ".venv/bin/python",
+      ),
+      [
+        "-m",
+        "dev.desktop_automation_stage",
+        "--build",
+        process.env.CADRUMO_CMAKE_BINARY_DIR,
+        "--config",
+        process.env.CADRUMO_BUILD_CONFIG,
+      ],
+      { cwd: repository, encoding: "utf8" },
+    );
+    if (staged.status !== 0)
+      throw new Error(
+        staged.stdout || staged.stderr || "Native test package staging failed.",
+      );
+    hostJson = staged.stdout.trim();
+  }
+  const host = JSON.parse(hostJson);
+  const port = await claimPort();
+  const nonce = randomBytes(32).toString("hex");
+  const stdout = openSync(resolve(runDir, "host.stdout.log"), "a", 0o600);
+  const stderr = openSync(resolve(runDir, "host.stderr.log"), "a", 0o600);
+  const child = spawn(host.executable, ["--gui"], {
+    cwd: host.package,
+    env: hostEnvironment(process.env, runDir, host.package, port, nonce),
+    detached: true,
+    stdio: ["ignore", stdout, stderr],
+  });
+  closeSync(stdout);
+  closeSync(stderr);
+  child.unref();
+  Object.assign(window_, {
+    child,
+    pid: child.pid,
+    executable: host.executable,
+    closed: false,
+    port,
+    runDir,
+  });
+  // A crashed spec must not leave the host running.
+  process.once("exit", () => {
+    releasePort();
+    if (window_.closed || !window_.pid) return;
+    const check = inspectProcess(window_.pid);
+    if (check.status === 0 && isHostCommand(check.stdout, window_.executable))
+      process.kill(window_.pid, "SIGTERM");
+  });
+  log("launched", { pid: child.pid, port, runDir });
+  try {
+    await waitForWebDriver(child, port, runDir);
+    verifyListener({ pid: child.pid, executable: host.executable, port });
+    window_.browser = await remote({
+      hostname: "127.0.0.1",
+      port,
+      path: "/",
+      logLevel: "silent",
+      connectionRetryCount: 0,
+      capabilities: {},
+    });
+    await proveOwnership(window_.browser, nonce);
+  } catch (error) {
+    if (/nonce|listener|not this host/i.test(String(error?.message)))
+      log("launch-port-foreign", { port, message: error.message });
+    throw error;
+  }
+  await installConsoleHook();
+  return runDir;
+}
+
+/** Close the run's window; answer why the credential guard refuses it, or null. */
+async function teardown() {
+  if (window_.closed) return null;
+  window_.closed = true;
+  await dumpBrowserLog("teardown");
+  // Signing out deletes the run's profile-session key from the credential
+  // store; the guard after the process stops removes and reports any left.
+  try {
+    if (window_.browser && (await exec(pageOpenAccountMenu))) {
+      await sleep(500);
+      if (await exec(pageChooseSignOut, label("desktop.account.sign_out")))
+        await waitFor(() => exec(pageSignedOut), {
+          timeout: 15_000,
+          what: "the sign-in form after signing out",
+          soft: true,
+        });
+    }
+  } catch (error) {
+    log("teardown", { signOut: error.message });
+  }
+  try {
+    await window_.browser?.deleteSession();
+  } catch (error) {
+    log("teardown", { deleteSession: error.message });
+  }
+  releasePort();
+  if (!window_.pid) return sessionKeyGuard();
+  const check = inspectProcess(window_.pid);
+  if (check.status === 0 && isHostCommand(check.stdout, window_.executable)) {
+    process.kill(window_.pid, "SIGTERM");
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      await sleep(250);
+      if (inspectProcess(window_.pid).status !== 0) break;
+    }
+    log("teardown", { terminated: window_.pid });
+  } else {
+    log("teardown", {
+      status: check.status,
+      note: "host identity not confirmed; not terminated",
+    });
+  }
+  return sessionKeyGuard();
+}
+
+/** Remove the profile-session keys the run added; answer why that refuses the run, or null. */
+function sessionKeyGuard() {
+  if (!window_.sessionKeys) return null;
+  const { left, failed } = removeLeftSessionKeys(
+    window_.sessionKeys.profileIds,
+    window_.sessionKeys.before,
+  );
+  log("teardown", { sessionKeysLeft: left.length, notRemoved: failed.length });
+  return left.length > 0
+    ? `the run left ${left.length} profile-session key(s) in the credential store (removed ${left.length - failed.length}` +
+        `${failed.length ? `, could not remove ${failed.length}` : ""}): it did not sign out`
+    : null;
+}
+
+async function signIn(password) {
+  const info = await waitFor(
+    async () => {
+      const found = await exec(pageSignIn);
+      return found.password ? found : null;
+    },
+    { timeout: TIMEOUT.signIn, what: "the sign-in form" },
+  );
+  if (info.choice && info.choice.value !== PROFILE) {
+    if (!info.choice.options.includes(PROFILE))
+      throw new Error(
+        `profile "${PROFILE}" is not offered; offered: ${info.choice.options.join(", ")}`,
+      );
+    assert(await exec(pageChoose, PROFILE), "the profile choice did not take");
+  } else if (!info.choice && info.named !== PROFILE) {
+    throw new Error(`the sign-in form names profile "${info.named}"`);
+  }
+  const field = await window_.browser.$("#profile-password");
+  await field.setValue(password);
+  await clickSelector(".sign-in button[type=submit]");
+  const answer = await waitFor(
+    async () => {
+      const now = await exec(pageSignIn);
+      if (now.rail && !now.password) return { ok: true };
+      if (now.words.length > 0 && !now.busy) {
+        await sleep(1000);
+        return { ok: false, words: (await exec(pageSignIn)).words };
+      }
+      return null;
+    },
+    { timeout: TIMEOUT.signIn, what: "the sign-in answer", soft: true },
+  );
+  if (!answer)
+    throw new Error(`no sign-in answer: ${(await exec(pageSignIn)).text}`);
+  if (!answer.ok)
+    throw new Error(`sign-in refused: ${answer.words.join(" | ")}`);
+}
+
+// ---------------------------------------------------------------------------
+// The spec
+// ---------------------------------------------------------------------------
+
+function requiredEnv(name) {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} is required`);
+  return value;
+}
+
+function profileCredential() {
+  const match = /^PERSONA_PROFILE_CREDENTIAL\s*=\s*"([^"\n]+)"/m.exec(
+    readFileSync(CREDENTIAL_SOURCE, "utf8"),
+  );
+  if (!match)
+    throw new Error("no PERSONA_PROFILE_CREDENTIAL in persona_world.py");
+  return match[1];
+}
+
+// A value that reads as zero in the Spanish or the English number format
+// ("0", "0,00 €", "0.00 %"): it holds digits and every digit is 0.
+const isZeroText = (value) => {
+  const bare = value.replace(/[\s €%$]/g, "");
+  return /\d/.test(bare) && /^[-+]?[0.,]*$/.test(bare);
+};
+
+/**
+ * A displayed number as a plain decimal string ("−2.158,99 €" -> "-2158.99").
+ * Used only where the form serves no typed value. The grouping and decimal
+ * marks are read from the shape of the text under the window's language
+ * (Spanish, Catalan and Hungarian write a decimal comma; English a point);
+ * text that is not wholly a number is returned unchanged.
+ */
+const plainDecimal = (value, language) => {
+  const bare = value
+    .replace(/[\s  ]/g, "")
+    .replace(/[€%$]$/, "")
+    .replace(/^[−‒–]/, "-");
+  if (!/^[-+]?\d[\d.,]*$/.test(bare)) return value;
+  const comma = !(language ?? "").toLowerCase().startsWith("en");
+  const [group, decimal] = comma ? [".", ","] : [",", "."];
+  const pattern = new RegExp(
+    `^[-+]?(\\d+|\\d{1,3}(\\${group}\\d{3})+)(\\${decimal}\\d+)?$`,
+  );
+  if (!pattern.test(bare)) return value;
+  return bare.split(group).join("").replace(decimal, ".").replace(/^\+/, "");
+};
+
+const STAGES = [
+  "pass",
+  "calculate_inherited",
+  "incomplete",
+  "refused",
+  "not-owed",
+  "not-reached",
+  "error",
+];
+const KEYS = [
+  "surface",
+  "tree",
+  "persona",
+  "modelo",
+  "year",
+  "period",
+  "loads",
+  "calculate",
+  "verify",
+  "export",
+  "refusal_code",
+  "figures",
+  "reason",
+  "log",
+];
+/** Present only when measured: the export door, the filing, the served blocking findings. */
+const OPTIONAL_KEYS = ["export_served", "file", "blocking_findings"];
+
+/** The acceptance intake refuses unknown keys and unknown stages; so does this. */
+function assertContract(line) {
+  // The stage keys are required once a modelo is named; a persona line has none.
+  const expected =
+    line.modelo === null
+      ? KEYS.filter((key) => !["calculate", "verify", "export"].includes(key))
+      : KEYS;
+  const present = Object.keys(line).filter(
+    (key) => !OPTIONAL_KEYS.includes(key),
+  );
+  assert.deepEqual(present.sort(), [...expected].sort(), "line keys");
+  if ("export_served" in line)
+    assert.equal(typeof line.export_served, "boolean", "export_served");
+  if ("file" in line)
+    assert([...STAGES, "not-shown"].includes(line.file), `file: ${line.file}`);
+  if ("blocking_findings" in line)
+    assert(
+      Array.isArray(line.blocking_findings) &&
+        line.blocking_findings.every(
+          (id) => typeof id === "string" && id.trim() !== "",
+        ),
+      "blocking_findings is an array of non-empty finding ids",
+    );
+  assert.equal(line.surface, "window");
+  assert.equal(typeof line.loads, "boolean");
+  if (line.modelo === null) {
+    assert(line.year === null && line.period === null, "persona line");
+  } else {
+    assert.equal(typeof line.modelo, "string");
+    assert(Number.isInteger(line.year), "year is an integer");
+    assert.equal(typeof line.period, "string");
+    for (const stage of ["calculate", "verify", "export"])
+      assert(STAGES.includes(line[stage]), `${stage}: ${line[stage]}`);
+  }
+  assert(line.refusal_code === null || typeof line.refusal_code === "string");
+  assert(
+    Object.values(line.figures).every((value) => typeof value === "string"),
+  );
+  assert.equal(typeof line.reason, "string");
+  assert.equal(typeof line.log, "string");
+}
+
+const stageOfPre = (outcome) =>
+  String(outcome).replace(/_/g, "-") === "not-owed" ? "not-owed" : "refused";
+
+test(
+  "the persona's declarations through the native window",
+  { timeout: 6 * 3600 * 1000 },
+  async (t) => {
+    const worldPath = requiredEnv("CADRUMO_PERSONA_WORLD");
+    const resultsPath = requiredEnv("CADRUMO_PERSONA_RESULTS");
+    const tree = requiredEnv("CADRUMO_TREE");
+    requiredEnv("CADRUMO_CMAKE_BINARY_DIR");
+    requiredEnv("CADRUMO_BUILD_CONFIG");
+    const world = JSON.parse(readFileSync(worldPath, "utf8"));
+    assert(world.persona && world.storage_root && Array.isArray(world.rows));
+    mkdirSync(dirname(resolve(resultsPath)), { recursive: true });
+    logPath = join(
+      dirname(resolve(resultsPath)),
+      `window-${world.persona}.log`,
+    );
+    writeFileSync(logPath, "");
+    const password = profileCredential();
+    const emit = (line) => {
+      const full = {
+        surface: "window",
+        tree,
+        persona: world.persona,
+        ...line,
+        // The table's case id (persona@horizon) leads the free text, so a
+        // line says which world, replayed under which horizon, it ran in.
+        reason: `${world.persona}@${world.horizon}: ${line.reason}`,
+        log: logPath,
+      };
+      assertContract(full);
+      appendFileSync(resultsPath, `${JSON.stringify(full)}\n`);
+    };
+
+    let runDir = resolve(
+      process.env.CADRUMO_PERSONA_RUN || dirname(resolve(resultsPath)),
+    );
+    const loadsOnly = process.env.CADRUMO_PERSONA_LOADS_ONLY === "1";
+    let loadError = null;
+    let keyGuard = null;
+    let rowCount = 0;
+    try {
+      runDir = await launch(world, runDir);
+      await signIn(password);
+      await installConsoleHook();
+      const lang =
+        process.env.CADRUMO_PERSONA_LANGUAGE ||
+        (await exec(() => document.documentElement.lang)) ||
+        "en";
+      const catalogue = JSON.parse(
+        readFileSync(
+          resolve(
+            buildPath("desktop_frontend_generated"),
+            "chrome-strings.json",
+          ),
+          "utf8",
+        ),
+      );
+      const strings = catalogue[lang] ?? catalogue[lang.split("-")[0]] ?? {};
+      label = (key) => strings[key] ?? catalogue.en?.[key] ?? key;
+      const list = await showList();
+      rowCount = list.rows;
+      log("loaded", { lang, rows: list.rows });
+    } catch (error) {
+      loadError = error;
+      log("load-failed", { message: error.message });
+    }
+
+    try {
+      emit({
+        modelo: null,
+        year: null,
+        period: null,
+        loads: loadError === null,
+        refusal_code: null,
+        figures: {},
+        reason:
+          loadError === null
+            ? `signed in to profile ${PROFILE}; the declarations list shows ${rowCount} rows`
+            : `the window did not load the profile: ${loadError.message}`,
+      });
+      const only = process.env.CADRUMO_PERSONA_ONLY
+        ? new Set(process.env.CADRUMO_PERSONA_ONLY.split(","))
+        : null;
+      const listed = only
+        ? world.rows.filter((row) =>
+            only.has(`${row.modelo}/${row.year}/${row.period}`),
+          )
+        : world.rows;
+      if (only && listed.length !== only.size)
+        throw new Error(
+          `CADRUMO_PERSONA_ONLY lists ${only.size} declarations, the world prepares ${listed.length} of them`,
+        );
+      for (const row of loadsOnly ? [] : listed) {
+        await t.test(`${row.modelo} ${row.year} ${row.period}`, async () => {
+          const base = {
+            modelo: row.modelo,
+            year: Number(row.year),
+            period: row.period,
+            refusal_code: null,
+          };
+          if (!row.prepared) {
+            const stage = stageOfPre(row.pre_calculate_outcome);
+            emit({
+              ...base,
+              loads: loadError === null,
+              calculate: stage,
+              verify: stage === "refused" ? "not-reached" : stage,
+              export: stage === "refused" ? "not-reached" : stage,
+              figures: {},
+              reason: row.reason || String(row.pre_calculate_outcome),
+            });
+            return;
+          }
+          if (loadError !== null) {
+            emit({
+              ...base,
+              loads: false,
+              calculate: "not-reached",
+              verify: "not-reached",
+              export: "not-reached",
+              figures: {},
+              reason: `the window did not load the profile: ${loadError.message}`,
+            });
+            return;
+          }
+          let out;
+          try {
+            out = await driveRow(row, runDir, world.persona);
+          } catch (error) {
+            await dumpBrowserLog("row-error");
+            log("row-error", {
+              message: error.message,
+              // Which step's script the WebView refused, to tell its state apart.
+              stack: String(error.stack ?? "")
+                .split(String.fromCharCode(10))
+                .slice(1, 8)
+                .map((line) => line.trim()),
+            });
+            out = {
+              calculate: "error",
+              verify: "not-reached",
+              export: "not-reached",
+              figures: {},
+              reasons: [error.message],
+            };
+            await live();
+          }
+          emit({
+            ...base,
+            loads: true,
+            calculate: out.calculate,
+            verify: out.verify,
+            export: out.export,
+            ...(typeof out.export_served === "boolean"
+              ? { export_served: out.export_served }
+              : {}),
+            ...(typeof out.file === "string" ? { file: out.file } : {}),
+            ...(Array.isArray(out.blocking_findings) &&
+            out.blocking_findings.length > 0
+              ? { blocking_findings: out.blocking_findings }
+              : {}),
+            figures: out.figures,
+            reason:
+              out.reasons.join("; ").slice(0, 1200) ||
+              (out.export === "pass"
+                ? "calculated, verified and exported in the window"
+                : ""),
+          });
+        });
+      }
+    } finally {
+      keyGuard = await teardown();
+    }
+    if (loadError !== null) throw loadError;
+    if (keyGuard !== null) throw new Error(keyGuard);
+  },
+);

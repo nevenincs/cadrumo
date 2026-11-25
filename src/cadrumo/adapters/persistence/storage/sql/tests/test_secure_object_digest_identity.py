@@ -31,8 +31,8 @@ from ......core.classification.policies import SensitivityClass
 from ......core.identity.digest import ContentDigest
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectRawRow, SecureObjectRecord
-from ._secure_objects_support import (
-    _repo_at,
+from .secure_objects_support import (
+    repo_at,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -157,7 +157,7 @@ def test_valid_encrypted_round_trip_still_yields_a_canonical_revision_id(tmp_pat
     """
     db_path = tmp_path / "digest-identity.sqlite3"
     with EphemeralBucketSession():
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             repo.save(
                 namespace=_NAMESPACE,
                 object_key=_KEY,
@@ -166,7 +166,7 @@ def test_valid_encrypted_round_trip_still_yields_a_canonical_revision_id(tmp_pat
                 written_at=datetime.now(UTC),
                 payload=_PAYLOAD,
             )
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             loaded = repo.load(
                 _NAMESPACE,
                 _KEY,

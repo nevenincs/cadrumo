@@ -24,6 +24,18 @@ from ...persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..storage.errors import OutboundStorageConflictError
 
 
+def _require_publication_transition(receipt: PublicationReceipt, previous: PublicationReceipt | None) -> None:
+    """Hold every optimistic checkpoint transition to its retained publication identity."""
+    if previous is not None and (
+        previous.publication_id != receipt.publication_id
+        or previous.snapshot_digest != receipt.snapshot_digest
+        or previous.root != receipt.root
+        or previous.profile_id != receipt.profile_id
+        or previous.advance(receipt.state, artifacts=receipt.artifacts, failure=receipt.failure) != receipt
+    ):
+        raise OutboundStorageConflictError("publication transition contradicts its retained checkpoint")
+
+
 class RootCreationAttempt(BaseModel):
     """Durable root intent; a missing response is never treated as absence."""
 
@@ -179,14 +191,7 @@ class GoogleArtifactReceiptStore:
         prior = PublicationReceipt.model_validate_json(record.payload) if record is not None else None
         if prior != previous:
             raise OutboundStorageConflictError("publication checkpoint changed concurrently")
-        if previous is not None and (
-            previous.publication_id != receipt.publication_id
-            or previous.snapshot_digest != receipt.snapshot_digest
-            or previous.root != receipt.root
-            or previous.profile_id != receipt.profile_id
-            or previous.advance(receipt.state, artifacts=receipt.artifacts, failure=receipt.failure) != receipt
-        ):
-            raise OutboundStorageConflictError("publication transition contradicts its retained checkpoint")
+        _require_publication_transition(receipt, previous)
         self._save(
             namespace=definition.namespace,
             object_key=key,

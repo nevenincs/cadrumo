@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -24,10 +25,10 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
+from .calculation_catalogue_tamper_support import rewrite_stored_revision_catalogue
 from .ledger_action_persistence_support import (
     BUCKET_ID as SECURE_OBJECTS_BUCKET_ID,
 )
@@ -214,35 +215,18 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(
     tautological and every evidence roundtrip in the suite would be suspect.
     """
 
-    import json as _json
-
-    from .....core.classification.policies import SensitivityClass
-
     original = _revision(_evidence(), operation=operation)
     _seed_parent_work_unit(secure_objects)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
 
-    record = secure_objects.load(
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
-    )
-    assert record is not None
-    envelope = _json.loads(record.payload.decode("utf-8"))
-    revision_dict = envelope["payload"]["revisions"][original.calculation_revision_id]
-    row = revision_dict["ledger_filing_evidence"]["rows"][0]
-    assert row["amount"] == "121.00", "fixture must serialise the magnitude for this proof to be meaningful"
-    row["amount"] = "-121.00"
-    secure_objects.save(
-        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        classification=record.classification,
-        schema_version=record.schema_version,
-        written_at=record.written_at,
-        payload=_json.dumps(envelope).encode("utf-8"),
-    )
+    def tamper(envelope: dict[str, Any]) -> None:
+        revision_dict = envelope["payload"]["revisions"][original.calculation_revision_id]
+        row = revision_dict["ledger_filing_evidence"]["rows"][0]
+        assert row["amount"] == "121.00", "fixture must serialise the magnitude for this proof to be meaningful"
+        row["amount"] = "-121.00"
+
+    rewrite_stored_revision_catalogue(secure_objects, tamper)
 
     with pytest.raises(CalculationRevisionPersistenceError) as exc_info:
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()
@@ -253,32 +237,17 @@ def test_ledger_evidence_malformed_identity_payload_rejected_at_load(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Persisted evidence cannot rehydrate a non-canonical contributor identity."""
-    import json as _json
-
-    from .....core.classification.policies import SensitivityClass
 
     original = _revision(_evidence(), operation=operation)
     _seed_parent_work_unit(secure_objects)
     repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
     repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
-    record = secure_objects.load(
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
-    )
-    assert record is not None
-    envelope = _json.loads(record.payload.decode("utf-8"))
-    row = envelope["payload"]["revisions"][original.calculation_revision_id]["ledger_filing_evidence"]["rows"][0]
-    row["transaction_id"] = "not-a-content-address"
-    secure_objects.save(
-        namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
-        classification=record.classification,
-        schema_version=record.schema_version,
-        written_at=record.written_at,
-        payload=_json.dumps(envelope).encode("utf-8"),
-    )
+
+    def tamper(envelope: dict[str, Any]) -> None:
+        row = envelope["payload"]["revisions"][original.calculation_revision_id]["ledger_filing_evidence"]["rows"][0]
+        row["transaction_id"] = "not-a-content-address"
+
+    rewrite_stored_revision_catalogue(secure_objects, tamper)
 
     with pytest.raises(CalculationRevisionPersistenceError) as exc_info:
         CalculationRevisionCatalogueRepository(objects=secure_objects).load()

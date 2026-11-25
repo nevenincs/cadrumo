@@ -11,13 +11,14 @@ Core types:
 from __future__ import annotations
 
 import importlib
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from datetime import date
-from typing import Protocol
+from enum import Enum, auto
 
 from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from .casilla_structural_succession import CasillaStructuralSuccession, endpoint_source_context_failures
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .export import derive_export_layouts_from_bindings
 from .ids import RevisionId
@@ -26,95 +27,29 @@ from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orde
 from .period_selector_match import registry_period_for_request
 from .reference_checks import check_all_id_references
 from .revision_context import records_by_id
-from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from .schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from .schema_base import DateAxis, filing_period_from_scope
-from .schema_references import LegalReference, SourceReference, governed_period_span
-from .schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
+from .schema_catalogues import RegistryCatalogues
+from .schema_references import (
+    LegalReference,
+    TemporalProjectionDirection,
+    governed_period_span,
+    reachable_authority_grade,
+)
+from .snapshot_proof import SnapshotCrossCheckProof, snapshot_proof_key
+from .snapshot_references import collect_snapshot_ref_ids
+from .snapshot_source_windows import check_revision_scoped_source_windows
 from .temporal import (
     ModeloRevisionDirectory,
-    RevisionSelectionMetadata,
     revision_temporal_resolution,
     select_revision,
 )
 from .validate_revision_identity import revision_reference_identity_failures
 
 
-class _GroundedRecord(Protocol):
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-
-
 def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[str]) -> dict[str, RecordT]:
     """Project the selected catalogue records in deterministic id order."""
     return {record_id: catalogue[record_id] for record_id in sorted(record_ids)}
-
-
-def _collect_grounded_record_refs(
-    records: Iterable[_GroundedRecord],
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-) -> None:
-    for record in records:
-        legal_ids.update(record.legal_refs)
-        source_ids.update(record.source_refs)
-        if not isinstance(record, CasillaDefinition):
-            continue
-        if record.constraints is not None:
-            legal_ids.update(record.constraints.legal_refs)
-            source_ids.update(record.constraints.source_refs)
-        for alias in record.aliases:
-            legal_ids.update(alias.legal_refs)
-            source_ids.update(alias.source_refs)
-
-
-def _collect_cross_reference_predicate_refs(
-    revision: ModeloRevision,
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-) -> None:
-    for cross_reference in revision.live_cross_references:
-        for predicate in cross_reference.applicability_predicates:
-            legal_ids.update(predicate.legal_refs)
-            source_ids.update(predicate.source_refs)
-
-
-def _collect_export_layout_refs(
-    revision: ModeloRevision,
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-) -> None:
-    for layout in revision.export_layouts:
-        legal_ids.update(layout.legal_refs)
-        source_ids.update(layout.source_refs)
-        for export_record in layout.records:
-            for field in export_record.fields:
-                legal_ids.update(field.legal_refs)
-                source_ids.update(field.source_refs)
-
-
-def _collect_deadline_schedule_refs(
-    revision: ModeloRevision,
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-    include_deadline_windows: bool = True,
-) -> None:
-    if include_deadline_windows:
-        for window in revision.deadline_windows:
-            legal_ids.update(window.legal_refs)
-            source_ids.update(window.source_refs)
-            for condition in window.applicability_conditions:
-                legal_ids.update(condition.legal_refs)
-                source_ids.update(condition.source_refs)
-    for schedule in revision.filing_schedules:
-        legal_ids.update(schedule.legal_refs)
-        source_ids.update(schedule.source_refs)
-        for condition in schedule.profile_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
 
 
 # Peer-domain modules that register a ``CrossDomainSnapshotCheck`` with the
@@ -132,12 +67,17 @@ def _collect_deadline_schedule_refs(
 # Derived from the requirement declaration rather than restated beside it: the
 # modules installed here and the checks the validator demands are the same set
 # by construction, so neither can be moved without the other.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
+CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
     "...renta.first_slice_routing_integrity",
     "...renta.retenciones_routing_integrity",
     "...modelos.perceptor_clave_scope",
 )
 _cross_domain_checks_installed = False
+
+
+def cross_domain_check_modules() -> tuple[str, ...]:
+    """Name the modules whose import installs the cross-domain checks the validator demands."""
+    return CROSS_DOMAIN_CHECK_MODULES
 
 
 def _install_cross_domain_snapshot_checks() -> None:
@@ -156,7 +96,7 @@ def _install_cross_domain_snapshot_checks() -> None:
     global _cross_domain_checks_installed
     if _cross_domain_checks_installed:
         return
-    for module_name in _CROSS_DOMAIN_CHECK_MODULES:
+    for module_name in CROSS_DOMAIN_CHECK_MODULES:
         # Module names are controlled by the hard-coded tuple above.
         importlib.import_module(module_name, package=__package__)  # nosemgrep
     _cross_domain_checks_installed = True
@@ -188,7 +128,7 @@ def _validate_snapshot_authority_selection(
     *,
     grade: RegistryAuthorityGrade,
 ) -> None:
-    _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
+    check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
     if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_revision_review_status(modelo, revision)
     legal_applicability_failures = validate_orden_aplicabilidad(
@@ -242,6 +182,132 @@ def _require_snapshot_filing_review_tier(
         )
 
 
+class _SnapshotCheckStage(Enum):
+    """The point of snapshot assembly at which a cross-check runs, in assembly order."""
+
+    REQUEST = auto()
+    SELECTED = auto()
+    MATERIALIZED = auto()
+    REFERENCED = auto()
+    ASSEMBLED = auto()
+
+
+@dataclass(slots=True)
+class _SnapshotCheckContext:
+    """The request and the assembly state the cross-checks read, filled in as assembly proceeds."""
+
+    modelo: ModeloDefinition
+    catalogues: RegistryCatalogues
+    filing_year: int
+    on: date | None
+    grade: RegistryAuthorityGrade
+    revision_directory: ModeloRevisionDirectory | None
+    revision: ModeloRevision | None = None
+    legal_ids: set[str] | None = None
+    snapshot: RegistrySnapshot | None = None
+
+    def selected_revision(self) -> ModeloRevision:
+        if self.revision is None:
+            raise InternalInvariantError("snapshot cross-check ran before revision selection")
+        return self.revision
+
+    def referenced_legal_ids(self) -> set[str]:
+        if self.legal_ids is None:
+            raise InternalInvariantError("snapshot cross-check ran before the reference closure was collected")
+        return self.legal_ids
+
+    def assembled_snapshot(self) -> RegistrySnapshot:
+        if self.snapshot is None:
+            raise InternalInvariantError("snapshot cross-check ran before the snapshot was assembled")
+        return self.snapshot
+
+
+@dataclass(frozen=True, slots=True)
+class _SnapshotCrossCheck:
+    """One cross-check of snapshot assembly and the stage it runs at."""
+
+    stage: _SnapshotCheckStage
+    run: Callable[[_SnapshotCheckContext], None]
+
+
+def _install_cross_domain_checks_step(_context: _SnapshotCheckContext) -> None:
+    _install_cross_domain_snapshot_checks()
+
+
+def _authority_selection_step(context: _SnapshotCheckContext) -> None:
+    _validate_snapshot_authority_selection(
+        context.modelo, context.selected_revision(), context.catalogues, grade=context.grade
+    )
+
+
+def _export_record_families_step(context: _SnapshotCheckContext) -> None:
+    validate_materialized_export_record_families(context.selected_revision())
+
+
+def _filing_capability_step(context: _SnapshotCheckContext) -> None:
+    _require_filing_snapshot_capability(context.modelo, context.selected_revision(), context.grade)
+
+
+def _filing_review_tier_step(context: _SnapshotCheckContext) -> None:
+    _require_snapshot_filing_review_tier(
+        context.modelo,
+        context.selected_revision(),
+        context.catalogues,
+        context.referenced_legal_ids(),
+        grade=context.grade,
+        on=context.on,
+        filing_year=context.filing_year,
+    )
+
+
+def _legal_windows_step(context: _SnapshotCheckContext) -> None:
+    check_revision_scoped_legal_windows(context.modelo, context.selected_revision(), context.catalogues)
+
+
+def _source_windows_step(context: _SnapshotCheckContext) -> None:
+    check_revision_scoped_source_windows(
+        context.modelo,
+        context.selected_revision(),
+        context.catalogues,
+        context.revision_directory
+        or ModeloRevisionDirectory.from_modelo(context.modelo, support=context.catalogues.supported_filing_years),
+    )
+
+
+def _id_references_step(context: _SnapshotCheckContext) -> None:
+    check_all_id_references(context.assembled_snapshot())
+
+
+# Every check snapshot assembly runs, in the order it runs them. A publication
+# proof replaces exactly this registry and nothing else: data steps (selection,
+# temporal resolution, period normalisation, export-layout derivation, the
+# reference closure and the snapshot model's own validators) are not here and
+# always run. A check added to assembly belongs here, so the set a proof skips
+# can never drift from the set a proof was made by.
+SNAPSHOT_CROSS_CHECKS: tuple[_SnapshotCrossCheck, ...] = (
+    _SnapshotCrossCheck(_SnapshotCheckStage.REQUEST, _install_cross_domain_checks_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.SELECTED, _authority_selection_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.MATERIALIZED, _export_record_families_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.MATERIALIZED, _filing_capability_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.REFERENCED, _filing_review_tier_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.REFERENCED, _legal_windows_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.REFERENCED, _source_windows_step),
+    _SnapshotCrossCheck(_SnapshotCheckStage.ASSEMBLED, _id_references_step),
+)
+
+
+def _run_snapshot_cross_checks(
+    stage: _SnapshotCheckStage,
+    context: _SnapshotCheckContext,
+    proof: SnapshotCrossCheckProof | None,
+) -> None:
+    if proof is not None:
+        return
+    for check in SNAPSHOT_CROSS_CHECKS:
+        if check.stage is stage:
+            check.run(context)
+
+
 def build_validated_snapshot(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
@@ -252,6 +318,7 @@ def build_validated_snapshot(
     revision_id: RevisionId | None = None,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     revision_directory: ModeloRevisionDirectory | None = None,
+    proof: SnapshotCrossCheckProof | None = None,
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``.
 
@@ -266,10 +333,33 @@ def build_validated_snapshot(
     caller asking when a modelo is due is not making a filing assertion, and
     forcing it to would make a scheduling question unanswerable rather than safe.
 
+    A filing year the selected revision does not author is carried across from
+    the nearest authored edition. The two human gates were given to the edition,
+    not to that year, so such a year reaches calculation grade at most and a
+    filing request for it is refused, whatever a publication proof recorded.
+
+    ``proof`` is publication's record that this exact request already passed
+    every cross-check of this function under the same validator. It replaces
+    the cross-check registry and nothing else: selection, temporal resolution,
+    period normalisation, export-layout derivation, catalogue slicing and the
+    snapshot model's own validators still run. A proof is refused unless the
+    request names neither ``on`` nor ``revision_id`` and the proof's key and
+    revision equal this request's canonical key and selected revision.
+
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`.
     """
-    _install_cross_domain_snapshot_checks()
+    if proof is not None and (on is not None or revision_id is not None):
+        raise InternalInvariantError("a snapshot proof covers only requests without on or revision_id")
+    context = _SnapshotCheckContext(
+        modelo=modelo,
+        catalogues=catalogues,
+        filing_year=filing_year,
+        on=on,
+        grade=grade,
+        revision_directory=revision_directory,
+    )
+    _run_snapshot_cross_checks(_SnapshotCheckStage.REQUEST, context, proof)
     revision = select_revision(
         modelo,
         filing_year=filing_year,
@@ -284,11 +374,22 @@ def build_validated_snapshot(
         period=period,
         support=catalogues.supported_filing_years,
     )
-    endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
+    # Selection data, not a cross-check: a publication proof covers the checks of
+    # the request it recorded, and the year a revision authors is the one fact a
+    # proof recorded for an earlier selection cannot vouch for.
+    _require_authored_year_for_grade(
         modelo,
-        support=catalogues.supported_filing_years,
+        revision,
+        projection_direction=temporal_resolution.projection_direction,
+        authored_filing_year=temporal_resolution.authored_filing_year,
+        filing_year=filing_year,
+        period=period,
+        requested_grade=grade,
     )
-    _validate_snapshot_authority_selection(modelo, revision, catalogues, grade=grade)
+    if proof is not None:
+        _require_matching_proof(proof, modelo, revision, filing_year=filing_year, period=period, grade=grade)
+    context.revision = revision
+    _run_snapshot_cross_checks(_SnapshotCheckStage.SELECTED, context, proof)
     # select_revision matches period selectors case-insensitively but returns
     # the caller's token verbatim. Storing that raw token made the snapshot
     # disagree with itself -- filing_period normalises through Period while
@@ -301,20 +402,11 @@ def build_validated_snapshot(
     # rather than collapsing it to the symbolic EVENT-N selector.
     period = registry_period_for_request(revision.period_selector.declared_periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
-    validate_materialized_export_record_families(revision)
-    _require_filing_snapshot_capability(modelo, revision, grade)
+    context.revision = revision
+    _run_snapshot_cross_checks(_SnapshotCheckStage.MATERIALIZED, context, proof)
     legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
-    _require_snapshot_filing_review_tier(
-        modelo,
-        revision,
-        catalogues,
-        legal_ids,
-        grade=grade,
-        on=on,
-        filing_year=filing_year,
-    )
-    check_revision_scoped_legal_windows(modelo, revision, catalogues)
-    check_revision_scoped_source_windows(modelo, revision, catalogues, endpoint_directory)
+    context.legal_ids = legal_ids
+    _run_snapshot_cross_checks(_SnapshotCheckStage.REFERENCED, context, proof)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -338,11 +430,29 @@ def build_validated_snapshot(
         convenio=catalogues.convenio,
         supplementary_ordenes=catalogues.supplementary_ordenes,
     )
-    check_all_id_references(snapshot)
+    context.snapshot = snapshot
+    _run_snapshot_cross_checks(_SnapshotCheckStage.ASSEMBLED, context, proof)
     return snapshot
 
 
-def _check_snapshot_authority_grade(
+def _require_matching_proof(
+    proof: SnapshotCrossCheckProof,
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: str,
+    grade: RegistryAuthorityGrade,
+) -> None:
+    expected = snapshot_proof_key(revision, modelo_id=modelo.id, filing_year=filing_year, period=period, grade=grade)
+    if proof.key != expected or proof.revision_id != revision.id:
+        raise InternalInvariantError(
+            f"snapshot proof for {proof.key!r} revision {proof.revision_id!r} does not cover request "
+            f"{expected!r} selecting revision {revision.id!r}",
+        )
+
+
+def check_snapshot_authority_grade(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     *,
@@ -354,6 +464,8 @@ def _check_snapshot_authority_grade(
     includes the reach of every earlier member.  An absent declaration remains
     distinguishable from the applicability floor because absence is no claim at
     all and therefore cannot satisfy even an applicability-grade request.
+
+    ``modelo`` is a :class:`ModeloDefinition`; ``revision`` is a :class:`ModeloRevision`.
     """
     if not revision.is_graded:
         raise RegistryValidationError(
@@ -385,6 +497,59 @@ def _check_snapshot_authority_grade(
                 "requested_authority_grade": requested_grade.value,
                 "declared_authority_grade": declared_grade.value,
                 "authority_grade_declared": True,
+            },
+        ),
+    )
+
+
+def _require_authored_year_for_grade(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    projection_direction: TemporalProjectionDirection,
+    authored_filing_year: int,
+    filing_year: int,
+    period: str,
+    requested_grade: RegistryAuthorityGrade,
+) -> None:
+    """Refuse a claim above calculation for a filing year the selected revision does not author.
+
+    The registry carries the nearest authored edition across a year nobody
+    authored, so calculation and preview keep working there. That carried
+    design is not the reviewed design of the requested year, and the two human
+    gates of a filing snapshot were given to the edition, not to the year, so
+    the year reaches calculation grade at most. A revision whose own declaration
+    is already below the request is left to the declared-grade check, which
+    names the revision as the cause.
+    """
+    ladder = tuple(RegistryAuthorityGrade)
+    declared = revision.effective_authority_grade
+    reach = reachable_authority_grade(declared, projection_direction)
+    if ladder.index(reach) >= ladder.index(requested_grade) or ladder.index(declared) < ladder.index(requested_grade):
+        return
+    raise RegistryValidationError(
+        f"modelo {modelo.id} revision {revision.id} authors filing year {authored_filing_year}, not {filing_year}, "
+        f"so the year reaches {reach.value!r} authority at most and cannot satisfy the requested "
+        f"{requested_grade.value!r} snapshot authority.",
+        translated_message="errors.snapshot.filing_year_projected",
+        context={
+            "modelo_id": modelo.id,
+            "filing_year": filing_year,
+            "period": period,
+            "revision_id": revision.id,
+            "authored_filing_year": authored_filing_year,
+        },
+        registry_failure=RegistryFailureClassification(
+            condition=RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT,
+            facts={
+                "modelo": modelo.id,
+                "revision_id": revision.id,
+                "requested_authority_grade": requested_grade.value,
+                "declared_authority_grade": reach.value,
+                "authority_grade_declared": True,
+                "filing_year": filing_year,
+                "authored_filing_year": authored_filing_year,
+                "projection_direction": projection_direction.value,
             },
         ),
     )
@@ -545,12 +710,15 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
     already draws for the ``orden_aplicabilidad`` field:
 
     - A substantive-law reference (``kind`` in :data:`SUBSTANTIVE_LAW_KINDS` --
-      a rate scale, a deduction limit, a threshold) must be in force AT THE
-      REVISION'S OWN DEVENGO DATE (``revision.valid_to``, the 31 December the
-      tax period closes on -- IRPF art. 12). A redaction that only starts
-      partway through the following calendar year, while the return is still
-      being filed, did NOT govern the tax period and must not ground it, even
-      though it overlaps the presentation-extended window below.
+      a rate scale, a deduction limit, a threshold) must be in force at some
+      point of the revision's covered period (``revision.valid_from`` to
+      ``revision.valid_to``, the devengo date the period closes on). An
+      edition still partly inside the provision's window keeps it; the
+      provision is removed at the first edition whose period starts after its
+      ``effective_to``. A redaction that only starts after the period closes,
+      while the return is still being filed, did NOT govern the tax period and
+      must not ground it, even though it overlaps the presentation-extended
+      window below.
     - Every other kind (``orden``, ``manual``, ``resolucion``,
       ``acuerdo_parlamentario`` -- procedural, interpretive or parliamentary
       instruments) keeps the existing presentation-window-tolerant
@@ -577,9 +745,7 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
         # Open-ended (*-y-siguientes) revision: no fixed devengo date to
         # anchor to. Mirrors the orden gate's own open-ended carve-out.
         return True
-    if governs_from > revision.valid_to:
-        return False
-    return governs_to is None or governs_to >= revision.valid_to
+    return governs_from <= revision.valid_to
 
 
 def check_revision_scoped_legal_windows(
@@ -630,7 +796,7 @@ def check_revision_scoped_legal_windows(
         )
 
 
-def _historical_carrier_admits(
+def historical_carrier_admits(
     reference: LegalReference,
     carried_spans: tuple[tuple[date, date | None, str], ...],
 ) -> bool:
@@ -679,7 +845,7 @@ def _legal_window_failure(
     """Return the existing refusal detail for one out-of-window legal ref."""
     if legal_window_covers_devengo(revision, reference):
         return None
-    if reference.kind in SUBSTANTIVE_LAW_KINDS and _historical_carrier_admits(reference, carried_spans):
+    if reference.kind in SUBSTANTIVE_LAW_KINDS and historical_carrier_admits(reference, carried_spans):
         return None
     if reference.kind not in SUBSTANTIVE_LAW_KINDS:
         return _procedural_legal_window_failure(
@@ -726,7 +892,7 @@ def _substantive_legal_window_failure(
     return (
         f"legal reference {legal_id!r} (kind {reference.kind!r}, effective_from "
         f"{reference.effective_from.isoformat()}{effective_to_text}) does not cover revision "
-        f"{revision.id!r}'s devengo date {revision.valid_to.isoformat()}"
+        f"{revision.id!r}'s covered period ending {revision.valid_to.isoformat()}"
     )
 
 
@@ -777,408 +943,12 @@ def _parameter_value_governed_spans(
     return {legal_id: tuple(windows) for legal_id, windows in spans.items()}
 
 
-def _deadline_window_source_spans(
-    revision: ModeloRevision,
-) -> dict[str, tuple[tuple[date, date], ...]]:
-    """Map every deadline-window-cited source to the spans those windows cover.
-
-    A period's filing deadline lawfully falls after the period itself ends: a
-    fourth-quarter return is filed in the January of the following year, so the
-    calendario that states its deadline is the FOLLOWING year's. Intersecting
-    such a ref with the revision's own devengo window would reject the correct
-    citation and push an author toward a calendario that does not state the
-    deadline at all -- fabricated grounding in the name of a window check. The
-    window's own ``opens_on``/``closes_on`` span is the axis that citation has
-    to defend, so it is checked against that instead.
-
-    Only a window's own ``source_refs`` earn the window span. Its
-    ``applicability_conditions`` ground WHO must file rather than WHEN, so their
-    refs stay on the revision span.
-    """
-    spans: dict[str, list[tuple[date, date]]] = {}
-    for window in revision.deadline_windows:
-        for source_id in window.source_refs:
-            spans.setdefault(source_id, []).append((window.opens_on, window.closes_on))
-    return {source_id: tuple(windows) for source_id, windows in spans.items()}
-
-
-def _construct_source_ids_without_deadline_closure(revision: ModeloRevision) -> set[str]:
-    """Return construct sources that are not inherited only from deadline members."""
-    windows_by_id = {window.id: window for window in revision.deadline_windows}
-    source_ids: set[str] = set()
-    for construct in revision.constructs:
-        deadline_source_ids = {
-            source_id for window_id in construct.deadline_windows for source_id in windows_by_id[window_id].source_refs
-        }
-        source_ids.update(set(construct.source_refs) - deadline_source_ids)
-    return source_ids
-
-
-def check_revision_scoped_source_windows(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    catalogues: RegistryCatalogues,
-    revision_directory: ModeloRevisionDirectory | None = None,
-) -> None:
-    """Refuse a snapshot whose revision cites a source stale for that revision.
-
-    ``SourceReference.applies_from`` / ``applies_to`` previously validated only
-    that the two dates were internally ordered: nothing intersected the window
-    with the revision it was cited by, so a source that had expired before the
-    revision opened -- or that only began applying after it closed -- stayed
-    authoritative evidence inside a successful snapshot.
-
-    The check is deliberately scoped to the refs the *revision* owns, not the
-    union the snapshot carries. A ``ModeloDefinition``'s own ``source_refs`` are
-    the modelo's documentary corpus across every filing year (M100 lists each
-    year's XSD and manual), so intersecting those with one revision's window
-    would reject the shipped tree by design. A revision-scoped ref is the
-    revision's own claim that this source grounds it, which is the claim a
-    filing has to be able to defend.
-
-    Args:
-        modelo: The :class:`ModeloDefinition` owning the revision, named in the
-            failure message.
-        revision: The selected :class:`ModeloRevision` whose scoped source refs
-            are checked.
-        catalogues: Catalogues supplying the referenced source records.
-        revision_directory: Complete endpoint metadata from the pinned directory,
-            or ``None`` when the caller holds the complete in-memory modelo.
-
-    Raises:
-        RegistryValidationError: If any revision-scoped source window fails to
-            overlap the revision's own validity window.
-    """
-    failures = _revision_scoped_source_window_failures(modelo, revision, catalogues, revision_directory)
-    if failures:
-        raise RegistryValidationError(
-            f"modelo {modelo.id} revision {revision.id} cites sources outside their applicability window:\n"
-            + "\n".join(f" - {failure}" for failure in failures),
-        )
-
-
-def _revision_scoped_source_window_failures(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    catalogues: RegistryCatalogues,
-    revision_directory: ModeloRevisionDirectory | None = None,
-) -> list[str]:
-    _revision_legal_ids, revision_source_ids = _collect_snapshot_ref_ids(
-        modelo,
-        revision,
-        include_historical_continuity=False,
-    )
-    _elsewhere_legal_ids, elsewhere_source_ids = _collect_snapshot_ref_ids(
-        modelo,
-        revision,
-        include_deadline_windows=False,
-        include_constructs=False,
-        include_historical_continuity=False,
-    )
-    elsewhere_source_ids.update(_construct_source_ids_without_deadline_closure(revision))
-    scoped_source_ids = revision_source_ids - set(modelo.source_refs)
-    deadline_spans = _deadline_window_source_spans(revision)
-    endpoint_directory = revision_directory or ModeloRevisionDirectory.from_modelo(
-        modelo,
-        support=catalogues.supported_filing_years,
-    )
-    failures = _historical_continuity_source_window_failures(revision, catalogues, endpoint_directory)
-    for source_id in sorted(scoped_source_ids):
-        failure = _source_window_failure(
-            source_id,
-            catalogues.sources.get(source_id),
-            revision=revision,
-            elsewhere_source_ids=elsewhere_source_ids,
-            deadline_spans=deadline_spans,
-        )
-        if failure is not None:
-            failures.append(failure)
-    return failures
-
-
-def _historical_continuity_source_window_failures(
-    revision: ModeloRevision,
-    catalogues: RegistryCatalogues,
-    revision_directory: ModeloRevisionDirectory,
-) -> list[str]:
-    """Validate continuity evidence against its explicitly named endpoints."""
-    endpoints_by_id: dict[RevisionId, RevisionSelectionMetadata] = {
-        endpoint.id: endpoint for endpoint in revision_directory.revisions
-    }
-    failures: list[str] = []
-    for evolution in revision.casilla_continuidad_evolutions:
-        failures.extend(
-            _continuity_evolution_source_failures(
-                evolution,
-                endpoints_by_id=endpoints_by_id,
-                revision_directory=revision_directory,
-                sources=catalogues.sources,
-            ),
-        )
-    for relation in revision.casilla_structural_successions:
-        failures.extend(
-            _structural_succession_source_failures(
-                relation,
-                endpoints_by_id=endpoints_by_id,
-                revision_directory=revision_directory,
-                sources=catalogues.sources,
-            ),
-        )
-    return failures
-
-
-def _continuity_evolution_source_failures(
-    evolution: CasillaContinuidadEvolutionDefinition,
-    *,
-    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
-    revision_directory: ModeloRevisionDirectory,
-    sources: Mapping[str, SourceReference],
-) -> list[str]:
-    prefix = f"casilla continuidad evolution {evolution.id!r}"
-    endpoints = tuple(
-        endpoint_id
-        for endpoint_id in (evolution.from_revision, evolution.to_revision)
-        if endpoint_id in endpoints_by_id
-    )
-    if len(endpoints) != 2:
-        return [f"{prefix} names an endpoint revision the modelo does not declare"]
-    return [
-        failure
-        for source_id in evolution.source_refs
-        if (
-            failure := _continuity_evolution_source_failure(
-                evolution,
-                source_id,
-                prefix=prefix,
-                endpoint_ids=endpoints,
-                endpoints_by_id=endpoints_by_id,
-                revision_directory=revision_directory,
-                sources=sources,
-            )
-        )
-        is not None
-    ]
-
-
-def _continuity_evolution_source_failure(
-    evolution: CasillaContinuidadEvolutionDefinition,
-    source_id: str,
-    *,
-    prefix: str,
-    endpoint_ids: tuple[RevisionId, ...],
-    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
-    revision_directory: ModeloRevisionDirectory,
-    sources: Mapping[str, SourceReference],
-) -> str | None:
-    if source_id not in sources:
-        return f"{prefix} source {source_id!r} is not registered"
-    endpoint_failures = tuple(
-        endpoint_source_context_failures(
-            prefix,
-            endpoint=endpoints_by_id[endpoint_id],
-            enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
-            source_ids=(source_id,),
-            sources=sources,
-        )
-        for endpoint_id in endpoint_ids
-    )
-    if all(endpoint_failures):
-        return (
-            f"{prefix} source {source_id!r} does not match either declared endpoint "
-            f"{evolution.from_revision!r}->{evolution.to_revision!r}"
-        )
-    return None
-
-
-def _structural_succession_source_failures(
-    relation: CasillaStructuralSuccession,
-    *,
-    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
-    revision_directory: ModeloRevisionDirectory,
-    sources: Mapping[str, SourceReference],
-) -> list[str]:
-    prefix = f"casilla structural succession {relation.id!r}"
-    failures: list[str] = []
-    for endpoint_id, source_ids in (
-        (relation.from_revision, relation.from_source_refs),
-        (relation.to_revision, relation.to_source_refs),
-    ):
-        failures.extend(
-            _structural_endpoint_source_failures(
-                prefix,
-                endpoint_id=endpoint_id,
-                source_ids=source_ids,
-                endpoints_by_id=endpoints_by_id,
-                revision_directory=revision_directory,
-                sources=sources,
-            ),
-        )
-    return failures
-
-
-def _structural_endpoint_source_failures(
-    prefix: str,
-    *,
-    endpoint_id: RevisionId,
-    source_ids: tuple[str, ...],
-    endpoints_by_id: Mapping[RevisionId, RevisionSelectionMetadata],
-    revision_directory: ModeloRevisionDirectory,
-    sources: Mapping[str, SourceReference],
-) -> list[str]:
-    if endpoint_id not in endpoints_by_id:
-        return [f"{prefix} names unknown endpoint revision {endpoint_id!r}"]
-    failures = [
-        f"{prefix} endpoint {endpoint_id!r} source {source_id!r} is not registered"
-        for source_id in source_ids
-        if source_id not in sources
-    ]
-    failures.extend(
-        endpoint_source_context_failures(
-            prefix,
-            endpoint=endpoints_by_id[endpoint_id],
-            enrolled_source_ids=revision_directory.endpoint_source_ids(endpoint_id),
-            source_ids=source_ids,
-            sources=sources,
-        ),
-    )
-    return failures
-
-
-def _source_window_failure(
-    source_id: str,
-    source: SourceReference | None,
-    *,
-    revision: ModeloRevision,
-    elsewhere_source_ids: set[str],
-    deadline_spans: Mapping[str, tuple[tuple[date, date], ...]],
-) -> str | None:
-    if source is None:
-        return None
-    if source.applies_across(revision.valid_from, revision.valid_to):
-        return None
-    if source_id not in elsewhere_source_ids and any(
-        source.applies_across(opens_on, closes_on) for opens_on, closes_on in deadline_spans.get(source_id, ())
-    ):
-        return None
-    if source.applies_to is not None and source.applies_to < revision.valid_from:
-        return (
-            f"source {source_id!r} applies_to {source.applies_to.isoformat()} is before "
-            f"revision valid_from {revision.valid_from.isoformat()}"
-        )
-    return (
-        f"source {source_id!r} applies_from "
-        f"{source.applies_from.isoformat() if source.applies_from else '-'} is after "
-        f"revision valid_to "
-        f"{revision.valid_to.isoformat() if revision.valid_to else '-'}"
-    )
-
-
-def _collect_snapshot_ref_ids(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    *,
-    include_deadline_windows: bool = True,
-    include_constructs: bool = True,
-    include_parameters: bool = True,
-    include_historical_continuity: bool = True,
-) -> tuple[set[str], set[str]]:
-    """Walk every record kind and return its (legal_ids, source_ids) pair.
-
-    The snapshot's ``legal`` / ``sources`` mappings carry only the
-    refs actually exercised by the slice — this helper aggregates the
-    every-record-kind union the calculation-grounding rule mandates
-    (legal_refs + source_refs preserved through every domain
-    boundary). Flat records share one walk; nesting record
-    kinds carry
-    their own explicit blocks because they nest inner records that
-    also carry refs.
-    """
-    legal_ids = set(modelo.legal_refs).union(revision.legal_refs)
-    source_ids = set(modelo.source_refs).union(revision.source_refs)
-    if revision.completeness_manifest is not None:
-        legal_ids.update(revision.completeness_manifest.legal_refs)
-        source_ids.update(revision.completeness_manifest.source_refs)
-    if include_historical_continuity:
-        for evolution in revision.casilla_continuidad_evolutions:
-            legal_ids.update(evolution.legal_refs)
-            source_ids.update(evolution.source_refs)
-        for relation in revision.casilla_structural_successions:
-            legal_ids.update(relation.legal_refs)
-            source_ids.update(relation.from_source_refs)
-            source_ids.update(relation.to_source_refs)
-    for predicate in revision.verification_predicates:
-        legal_ids.update(predicate.legal_refs)
-    # Applicability rules ground WHO the modelo applies to, and they were the one
-    # grounded record kind this walk omitted. The snapshot still CARRIED the
-    # rules, so `snapshot.legal` could not resolve the article a rule cites:
-    # modelo 130's `m130-seed` names `trlirnr-rdleg-5-2004:art-2`, the provision
-    # deciding whether a non-resident files at all, and a consumer resolving that
-    # rule's grounding through the snapshot found a dangling id. Nineteen
-    # revisions across eight modelos were affected.
-    #
-    # Legal-only, beside the verification predicates: an applicability rule
-    # carries `legal_refs` and no `source_refs`, so it cannot join the flat
-    # grounded-record walk below.
-    for rule in revision.applicability:
-        legal_ids.update(rule.legal_refs)
-    flat_records = (
-        revision.casillas,
-        revision.formulas,
-        *((revision.parameters,) if include_parameters else ()),
-        revision.bindings,
-        revision.projection_endpoints,
-        revision.extraction_profiles,
-        revision.live_cross_references,
-        revision.workbook_parity_refs,
-        revision.verification_expectations,
-        revision.application_links,
-        *((revision.constructs,) if include_constructs else ()),
-        revision.dependency_classifications,
-    )
-    for kind_records in flat_records:
-        _collect_grounded_record_refs(kind_records, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_cross_reference_predicate_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_export_layout_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_deadline_schedule_refs(
-        revision,
-        legal_ids=legal_ids,
-        source_ids=source_ids,
-        include_deadline_windows=include_deadline_windows,
-    )
-    return legal_ids, source_ids
-
-
-def collect_snapshot_ref_ids(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    *,
-    include_deadline_windows: bool = True,
-    include_constructs: bool = True,
-    include_parameters: bool = True,
-) -> tuple[set[str], set[str]]:
-    """Return the complete reference closure carried by a registry snapshot.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
-    """
-    return _collect_snapshot_ref_ids(
-        modelo,
-        revision,
-        include_deadline_windows=include_deadline_windows,
-        include_constructs=include_constructs,
-        include_parameters=include_parameters,
-    )
-
-
 __all__ = [
     "SUBSTANTIVE_LAW_KINDS",
     "build_validated_snapshot",
     "check_revision_scoped_legal_windows",
-    "check_revision_scoped_source_windows",
     "check_snapshot_filing_capability",
     "check_snapshot_filing_review_tier",
-    "collect_snapshot_ref_ids",
     "legal_window_covers_devengo",
     "validate_materialized_export_record_families",
 ]

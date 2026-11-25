@@ -30,7 +30,7 @@ from ...storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
-from ..api import RequestRetryPolicy, _ExecutableRequest, execute_request
+from ..api import ExecutableRequest, RequestRetryPolicy, execute_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -121,13 +121,13 @@ def _postproc_raises(exc: BaseException) -> PostProcessor:
 
 
 def test_executable_request_protocol_accepts_concrete_impl() -> None:
-    """HttpRequest satisfies the _ExecutableRequest Protocol structurally."""
+    """HttpRequest satisfies the ExecutableRequest Protocol structurally."""
 
     # This is a runtime isinstance check using runtime_checkable would need
     # @runtime_checkable.  Instead assert that execute_request accepts it
     # without raising a TypeError — the call itself exercises the protocol.
     with _local_google_request((200, _json_body({"spreadsheetId": "x"}))) as (request, _paths):
-        req: _ExecutableRequest[dict[str, Any]] = request
+        req: ExecutableRequest[dict[str, Any]] = request
         result = execute_request(req, action="test.check", retry=RequestRetryPolicy.REPLAY_SAFE)
     assert result == {"spreadsheetId": "x"}
 

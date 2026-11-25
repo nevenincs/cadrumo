@@ -10,7 +10,7 @@ from contextvars import ContextVar
 from dataclasses import replace
 from datetime import UTC, datetime
 from threading import Thread, get_ident
-from typing import Any, Literal, cast, override
+from typing import Any, Literal, TypedDict, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -40,11 +40,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
@@ -61,7 +57,12 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.entrypoints.cli.errors import emit_error_and_exit
 from cadrumo_client.commands import profile_binding, registered_operation_deadlines, registered_operation_errors
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
@@ -104,6 +105,12 @@ _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
 _INTERACTION = "d" * 64
 _NOW = datetime(2026, 9, 29, tzinfo=UTC)
+
+
+class _ReplyIds(TypedDict):
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
 
 
 def _contract() -> OperationPublicDefinitionContractV1:
@@ -248,7 +255,7 @@ class ReviewWire:
             self.action = management.response_action
             self._cue()
             if self.fault == "lost-ack":
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             if self.fault == "mutation-id":
                 reply_id = uuid4()
             document = OperationResponseMutationSuccessV1(
@@ -418,6 +425,31 @@ def test_review_reference_validation_precedes_decision_and_response_control(refu
         assert wire.action == "apply" and wire.result_reads == 1
 
 
+def test_optional_review_hooks_present_then_decide_then_claim_before_response_control() -> None:
+    wire = ReviewWire()
+    calls: list[str] = []
+
+    def present(document: Any) -> None:
+        assert document["outcome"] == "success"
+        calls.append("present")
+
+    def decide(_: CensalReviewProjectionV1) -> Literal["apply"]:
+        calls.append("decide")
+        return "apply"
+
+    def claim(pending: Any, document: Any, profile: UUID, session: UUID, exchange: Any) -> Any:
+        assert document["outcome"] == "success"
+        assert profile == _PROFILE and session == _SESSION
+        assert not any(isinstance(item, OperationManage) for item in wire.requests)
+        calls.append("claim")
+        return pending
+
+    handler = replace(_handler("apply"), present_document=present, decide=decide, claim=claim)
+    completion = _run(wire, handler)
+    assert isinstance(completion, RegisteredOperationCompletion)
+    assert calls == ["present", "decide", "claim"]
+
+
 @pytest.mark.parametrize("fault", ["review-schema", "reply-id", "session", "control-revision", "no-authority"])
 def test_registered_review_rejects_stale_or_unadmitted_control_before_mutation(fault: str) -> None:
     wire = ReviewWire(fault=fault)
@@ -498,7 +530,7 @@ def test_review_callback_cancellation_is_exact_and_expired_deadline_prevents_con
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _run(timed, expired)
     assert refused.value.context is not None
-    assert refused.value.context["reason"] == RefusalCode.DEADLINE_EXCEEDED.value
+    assert refused.value.context["reason"] == RefusalCode.TIMEOUT.value
     assert not any(isinstance(item, OperationManage) for item in timed.requests)
 
 
@@ -514,7 +546,7 @@ class ReleaseFaultChannel:
         self.writes: list[bytes] = []
         self.close_calls = 0
         self.close_failures = close_failures
-        self.failure = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        self.failure = RefusalError(RefusalCode.TIMEOUT)
         self.close_contexts: list[str | None] = []
         self.close_threads: list[int] = []
 
@@ -603,7 +635,7 @@ def test_mapped_registered_exchange_and_invocation_keep_one_actual_native_retry_
     assert mapped.context is not None
     assert mapped.context["operation_id"] == _OPERATION
     assert mapped.context["effect"] == OperationEffect.UNKNOWN.value
-    assert mapped.context["reason"] == RefusalCode.DEADLINE_EXCEEDED.value
+    assert mapped.context["reason"] == RefusalCode.TIMEOUT.value
     assert mapped.__cause__ is None
     assert channel.close_calls == 2
     retained = _retained_cleanup(mapped)

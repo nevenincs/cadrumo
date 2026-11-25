@@ -8,7 +8,6 @@ can use the modelo fixture-value module directly.
 
 from __future__ import annotations
 
-import contextlib
 from base64 import b64encode
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
@@ -18,7 +17,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.profile_record_repository import (
@@ -30,14 +28,13 @@ from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
-from .....core.time.clock import now as _utc_now
+from .....core.time.clock import now
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.authority_artifact import ProfileSchemaComponentQuery
 from .....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from .....domain.calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from .....domain.calculations.registry.tests.published_authority import published_profile_schema
-from .....domain.user_profile.errors import ProfileSchemaValidationError
 from .....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -102,6 +99,30 @@ def new_test_profile_custody_envelope(profile_id: UUID) -> ProfileCustodyEnvelop
     )
 
 
+def identity_seeded_custody_envelope(identity: UUID) -> ProfileCustodyEnvelope:
+    """Build custody material fixed by the profile identity alone, so another process can rebuild it."""
+    seed = identity.bytes + identity.bytes
+    return ProfileCustodyEnvelope.create(
+        profile_id=identity,
+        password_generation=1,
+        dek_epoch=b64encode(seed[:16]).decode("ascii"),
+        kdf=ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=19,
+            iterations=2,
+            parallelism=1,
+            salt_b64=b64encode(seed[16:]).decode("ascii"),
+            output_bytes=32,
+        ),
+        wrapped_dek=ProfileCustodyWrappedDek(
+            nonce_b64=b64encode(seed[:12]).decode("ascii"),
+            ciphertext_b64=b64encode(seed).decode("ascii"),
+            tag_b64=b64encode(seed[:16]).decode("ascii"),
+        ),
+    )
+
+
 def publish_test_profile_capsule(
     profile_id: str | UUID,
     *,
@@ -137,6 +158,44 @@ def publish_test_profile_capsule(
     finally:
         session.close()
     return initial
+
+
+_CURRENT_PROFILE_DEK = bytes(range(32))
+
+
+def create_current_profile_session(
+    profile_id: str,
+    *,
+    root: Path,
+    label: str,
+    facts: tuple[UserProfileFact, ...] = (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+) -> ProfileRecordSession:
+    """Publish one complete committed capsule and return its live record session.
+
+    The custody material is fixed by the profile identity, so a separate process
+    that rebuilds the same envelope agrees with this one.
+    """
+    create_context, decode_context = profile_authority_contexts()
+    identity = UUID(profile_id)
+    envelope = identity_seeded_custody_envelope(identity)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_CURRENT_PROFILE_DEK, profile_decode_context=decode_context
+    )
+    ProfileCapsuleLifecycle(root=root).create(
+        label=label,
+        profile_id=identity,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_CURRENT_PROFILE_DEK),
+        data_files={},
+        initial_record=create_user_profile_record(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=str(identity),
+            facts=facts,
+            context=create_context,
+        ),
+        record_session=session,
+    )
+    return session
 
 
 def provision_test_profile_bucket_session(
@@ -278,7 +337,7 @@ def replace_test_profile_record(
             create_context=repository.session.create_context(),
             record_revision=current.record_revision + 1,
             previous_record_digest=current.content_digest,
-            updated_at=_utc_now(),
+            updated_at=now(),
         )
         repository.apply_fact_changes(
             identity,
@@ -292,13 +351,14 @@ def replace_test_profile_record(
         if record.setup_state is ProfileSetupState.COMPLETE:
             applied = repository.load(identity)
             if applied.setup_state is not ProfileSetupState.COMPLETE:
-                with contextlib.suppress(ProfileSchemaValidationError):
-                    repository.complete_setup(
-                        identity,
-                        expected_revision=applied.record_revision,
-                        expected_content_digest=applied.content_digest,
-                        now=replacement.updated_at,
-                    )
+                # A fixture asking for COMPLETE gets it only by passing the
+                # production completion door; one that cannot complete fails here.
+                repository.complete_setup(
+                    identity,
+                    expected_revision=applied.record_revision,
+                    expected_content_digest=applied.content_digest,
+                    now=replacement.updated_at,
+                )
         return repository.load(identity)
 
 
@@ -323,7 +383,7 @@ def upsert_test_profile_facts(
             expected_content_digest=current.content_digest,
             event_type=BucketEventType.PROFILE_VALUES_UPDATED,
             event_payload={},
-            now=_utc_now(),
+            now=now(),
         )
         return repository.load(identity)
 
@@ -338,31 +398,6 @@ def set_active_test_profile_facts(
     if active is None:
         raise RuntimeError("no active profile is selected; seed and select one before setting facts")
     return upsert_test_profile_facts(active, facts, root=root)
-
-
-def _facts_with_tax_id(tax_id: str) -> tuple[UserProfileFact, ...]:
-    """Return the modelo readiness baseline under a different taxpayer id."""
-    return tuple(
-        UserProfileFact(path="identity.tax_id", value=tax_id) if fact.path == "identity.tax_id" else fact
-        for fact in MODELO_READY_PROFILE_FACTS
-    )
-
-
-def seed_modelo_ready_profile_record(
-    profile_id: str, *, clock: datetime, tax_id: str | None = None
-) -> UserProfileRecord:
-    """Seed one profile carrying the modelo readiness baseline."""
-    create_context, _ = profile_authority_contexts()
-    return seed_test_profile_record(
-        create_user_profile_record(
-            context=create_context,
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=profile_id,
-            facts=_facts_with_tax_id(tax_id) if (tax_id is not None and tax_id) else MODELO_READY_PROFILE_FACTS,
-            created_at=clock,
-            updated_at=clock,
-        )
-    )
 
 
 def seed_test_profile_record(
@@ -412,13 +447,13 @@ def seed_test_profile_record(
 
 __all__ = [
     "bound_test_profile_record",
+    "create_current_profile_session",
     "derive_test_bucket_key",
     "load_test_profile_record",
     "new_test_profile_custody_envelope",
     "open_test_profile_session",
     "provision_test_profile_bucket_session",
     "publish_test_profile_capsule",
-    "seed_modelo_ready_profile_record",
     "seed_test_profile_record",
     "set_active_test_profile_facts",
     "upsert_test_profile_facts",

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, Literal, cast
 
-import click
 import typer
+from pydantic_core import PydanticCustomError
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.output import write_stderr
@@ -30,13 +32,19 @@ from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.auth.sync_requirement_text import sync_requirement_reason
 from ....application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
-from ....core.auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
+from ....core.auth_provider import (
+    DEFAULT_CLAVE_MOVIL_ROUTE,
+    PASSWORD_CREDENTIAL_PROVIDERS,
+    AuthProviderKind,
+    ClaveMovilRoute,
+)
+from ....core.cli_value_parsers import CliChoice
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.output_rendering import OutputFormat
 from ..common import format_of
-from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 
 def read_censo_auth(client: FrontendClient) -> AuthSyncReadiness:
@@ -62,19 +70,23 @@ def read_censo_auth(client: FrontendClient) -> AuthSyncReadiness:
     return projection.sync_readiness
 
 
+def _show_missing_requirements(readiness: AuthSyncReadiness, interactive: bool) -> None:
+    if not readiness.ready and interactive:
+        for item in readiness.requirements:
+            if not item.satisfied:
+                write_stderr(f"{item.field}: {sync_requirement_reason(item.reason)}")
+
+
 def require_censo_auth(ctx: typer.Context, *, configure: bool = False) -> None:
     """Offer setup at a console, and return actionable failures for scripts."""
     client = bound_profile_client(ctx)
     readiness = read_censo_auth(client)
     interactive = format_of(ctx) is not OutputFormat.JSON and terminal_can_prompt_for_secrets()
-    if not readiness.ready and interactive:
-        for item in readiness.requirements:
-            if not item.satisfied:
-                write_stderr(f"{item.field}: {sync_requirement_reason(item.reason)}")
+    _show_missing_requirements(readiness, interactive)
     if configure and not interactive:
         raise _readiness_error(readiness, console_required=True)
     if configure or (not readiness.ready and interactive and typer.confirm(tr("cli.censo_auth.offer"), default=True)):
-        _configure(client, readiness)
+        censo_authentication_configure(client, readiness)
         readiness = read_censo_auth(client)
     if not readiness.ready:
         raise _readiness_error(readiness)
@@ -129,21 +141,33 @@ def _prompt_field(client: FrontendClient, path: str) -> None:
         write_stderr(tr("cli.censo_auth.still_missing", field=path))
 
 
-def _configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
+def _prompt_choice(text: str, choices: Sequence[str], *, default: str | None) -> str:
+    """Prompt until the operator enters one of ``choices``, re-asking with the refusal."""
+    admit = CliChoice.of(choices)
+
+    def admitted(value: str) -> str:
+        try:
+            return admit(value)
+        except PydanticCustomError as refusal:
+            raise typer.BadParameter(refusal.message()) from refusal
+
+    # A Literal type lets the prompt show the accepted set beside the question.
+    shown = cast(Any, Literal).__getitem__(tuple(choices))
+    return cast(str, typer.prompt(text, type=shown, value_proc=admitted, default=default))
+
+
+def censo_authentication_configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
+    """Prompt for and save the census authentication provider configuration."""
     choices = known_auth_provider_ids()
-    provider = typer.prompt(
-        tr("cli.censo_auth.method"),
-        type=click.Choice(choices),
-        default=readiness.provider or None,
-    )
+    provider = _prompt_choice(tr("cli.censo_auth.method"), choices, default=readiness.provider or None)
     kind = AuthProviderKind(provider)
     route = None
     certificate = None
     if kind is AuthProviderKind.CLAVE_MOVIL:
         route = ClaveMovilRoute(
-            typer.prompt(
+            _prompt_choice(
                 tr("cli.censo_auth.route"),
-                type=click.Choice(tuple(item.value for item in ClaveMovilRoute)),
+                tuple(item.value for item in ClaveMovilRoute),
                 default=readiness.route or DEFAULT_CLAVE_MOVIL_ROUTE.value,
             )
         )
@@ -162,20 +186,25 @@ def _configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
     )
     if completed.projection.profile_id != client.profile_id or completed.projection.provider is not kind:
         raise invalid_completion_error(completed)
-    _prompt_field(client, "identity.tax_id")
-    if kind is not AuthProviderKind.CERTIFICATE:
-        _prompt_field(client, "auth.dni_nie")
-        if kind is AuthProviderKind.CLAVE_MOVIL and route is ClaveMovilRoute.APP_REQUEST:
-            pending = read_censo_auth(client)
-            for item in pending.requirements:
-                if item.field in {"auth.fecha_validez", "auth.numero_soporte"}:
-                    _prompt_field(client, item.field)
-    if kind in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
-        _save_password(client, kind)
+    _prompt_provider_fields(client, kind, route)
     write_stderr(tr("cli.censo_auth.saved"))
 
 
-def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
+def _prompt_provider_fields(client: FrontendClient, kind: AuthProviderKind, route: ClaveMovilRoute | None) -> None:
+    # Cl@ve signs in as the taxpayer the profile describes, so the profile's tax
+    # identifier is also the Cl@ve identity and is the only identity asked for.
+    _prompt_field(client, "identity.tax_id")
+    if kind is AuthProviderKind.CLAVE_MOVIL and route is ClaveMovilRoute.APP_REQUEST:
+        pending = read_censo_auth(client)
+        for item in pending.requirements:
+            if item.field in {"auth.fecha_validez", "auth.numero_soporte"}:
+                _prompt_field(client, item.field)
+    if kind in PASSWORD_CREDENTIAL_PROVIDERS:
+        save_password(client, kind)
+
+
+def save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
+    """Prompt for a password and save it as the provider credential through the operation."""
     import json
 
     from ....application.auth.credential_operations import (
@@ -184,7 +213,7 @@ def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
         AuthCredentialSaveResult,
     )
 
-    if provider not in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
+    if provider not in PASSWORD_CREDENTIAL_PROVIDERS:
         raise ValueError("This authentication method does not store a password")
     credential_provider = "certificate" if provider is AuthProviderKind.CERTIFICATE else "clave_permanente"
     password = prompt_secret_no_echo(tr("cli.censo_auth.password"))

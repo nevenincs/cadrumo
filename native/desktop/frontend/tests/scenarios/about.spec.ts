@@ -30,7 +30,7 @@ test("Settings states the version and opens the About dialog with the installati
   ).toBeVisible();
   for (const heading of [
     "Application",
-    "Runtime",
+    "Background service",
     "Managers",
     "Agent",
     "Tools",

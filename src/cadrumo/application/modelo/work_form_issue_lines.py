@@ -1,0 +1,677 @@
+"""What the check view lists: every finding and calculation note as one line in words, and the check's verdict.
+
+A line says where the finding sits, what is wrong, what to do about it, a
+detail for its kind and its technical codes, so every frontend lists the same
+sentences in the same order:
+
+* a finding about a value every record of a table carries is named by that
+  value's column heading and leads to the table; a missing value there says
+  whether the table holds records at all;
+* a finding about a box the form shows names the box by its number and label
+  and leads to it; one about a box the form does not show says so, by its
+  printed number when it has one;
+* a finding about the declaration as a whole, or about the filer's records
+  when the calculation is out of date, names that instead;
+* a missing value whose box the missing values already list is left out, since
+  that list names the box;
+* a result box the calculation could not work out, that no blocking finding or
+  note already names, blocks filing on its own line, so every block the header
+  counts is a line here;
+* what the latest calculation noticed follows in the same parts, the records
+  it could not place leading to the ledger.
+
+Lines are ordered on the attention scale, most urgent first, keeping the
+form's order within a level.
+
+The verdict says what the last check concluded. Changes a frontend holds
+unapplied are only known to that frontend, so a passed check carries a second
+sentence for it to say while it holds them.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Final
+
+from pydantic import BaseModel, Field
+
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
+from ...core.identifier_grammar import NamespacedId
+from ...core.identity.hex_ids import InvoiceId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.precondition_action_invariants import ServedActionWords
+from ...domain.modelos.calculation_revision_sources import CalculationNoteSentence
+from ...domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    VerificationCompletenessStatus,
+)
+from ..operator_actions.served_actions import served_action_fields
+from .calculation_notes import (
+    DERIVED_GATE_REASONS,
+    PROFILE_REASONS,
+    RECORDS_REASONS,
+    note_fact_text,
+    what_locale_key,
+    what_to_do_locale_key,
+)
+from .disagreement_words import credit_resolution_lead_words
+from .finding_message_text import finding_message_text
+from .source_policy import SourceSurface
+from .withholding_total_reconciliation import WITHHOLDING_TOTAL_MISMATCH_KEY
+from .work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormResolutionAnswer
+from .work_form_facts import ModeloFormFacts
+from .work_form_field_vocabulary import (
+    ModeloFormAddressV1,
+    ModeloFormBindingAddressV1,
+    ModeloFormCasillaAddressV1,
+    ModeloFormOrigin,
+    ModeloFormTextDisclosure,
+    address_key,
+)
+from .work_form_findings import ModeloFormAttention, ModeloFormIssue
+from .work_form_models import (
+    ModeloFormField,
+    ModeloFormRepeatingBlock,
+    ModeloWorkForm,
+)
+from .work_form_next_step import applicable_fields, failed_results
+
+_BOX_NUMBER: Final[re.Pattern[str]] = re.compile(r"\d{1,4}[A-Z]?")
+
+_RECORDS_NONE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records.none"
+_RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records.field_missing"
+_RECORDS_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.records_at_source"
+_RECORD_VALUE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.record_value"
+_RECORDS_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.records"
+_PROFILE_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.profile"
+_DECLARATION_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.declaration"
+_NOT_ON_FORM_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.not_on_form"
+_BOX_NOT_ON_FORM_LOCALE_KEY: Final[str] = "workspace.modelo.issues.box_not_on_form"
+_WHAT_TO_DO_LOCALE_KEY: Final[str] = "workspace.modelo.issues.what_to_do"
+_TECHNICAL_LOCALE_KEY: Final[str] = "workspace.modelo.issues.technical"
+_UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+_FAILED_RESULT_LOCALE_KEY: Final[str] = "workspace.modelo.issues.failed_result"
+_FAILED_RESULT_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.failed_result"
+_FAILED_RESULT_DETAIL_LOCALE_KEY: Final[str] = "workspace.modelo.issues.detail.calculation_failed"
+_FAILED_RESULT_CODE: Final[str] = "calculation_failed"
+_AT_SOURCE_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.at_source"
+_AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.at_source_if_applies"
+_FINDING_ACTION_ROOT: Final[str] = "application.modelo.work_form.finding_action"
+
+_SERVED_NOTE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "credit_source_disagreement": "application.modelo.work_form.served_action.credit_source_disagreement",
+        "precedence_tier_divergence": "application.modelo.work_form.served_action.precedence_tier_divergence",
+    }
+)
+"""What to do about a note, for the reasons whose catalogue action names a command line.
+
+A line is shown by every frontend, so it says what to do without naming a command, an option or a
+placeholder to fill; the command line words the same step with its command from the catalogue.
+"""
+
+_AT_SOURCE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        f"{_FINDING_ACTION_ROOT}.enter_box_value": _AT_SOURCE_ACTION_LOCALE_KEY,
+        f"{_FINDING_ACTION_ROOT}.enter_required_statement": _AT_SOURCE_ACTION_LOCALE_KEY,
+        f"{_FINDING_ACTION_ROOT}.check_possible_reduction": _AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY,
+        **{
+            what_to_do_locale_key(reason): _AT_SOURCE_ACTION_LOCALE_KEY
+            for reason in (
+                "unresolved_binding",
+                "unhandled_binding_source",
+                "official_box_unpopulated",
+                "prior_payment_minoracion_not_captured",
+                "prior_payment_not_deducted",
+                "settlement_not_computed",
+            )
+        },
+        **{
+            what_to_do_locale_key(reason): _AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY
+            for reason in ("deferred_binding_source", "oss_no_live_source", "autonomic_deducciones_not_enrolled")
+        },
+    }
+)
+"""The sentence a box that takes no typed value says instead, for each action that tells the filer to type one.
+
+A box whose value follows the filer's records, profile or a register is put right
+where it comes from; offering to type it would contradict its editability.
+"""
+
+DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
+    {
+        ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA: (
+            "workspace.modelo.issues.detail.missing_required_casilla"
+        ),
+        ModeloVerificationFindingKind.RECONCILIATION_MISMATCH: (
+            "workspace.modelo.issues.detail.reconciliation_mismatch"
+        ),
+        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: (
+            "workspace.modelo.issues.detail.cross_period_dependency_unclean"
+        ),
+        ModeloVerificationFindingKind.BLOCKING_RULE: "workspace.modelo.issues.detail.blocking_rule",
+        ModeloVerificationFindingKind.ADVISORY: "workspace.modelo.issues.detail.advisory",
+        ModeloVerificationFindingKind.STALE_CALCULATION: "workspace.modelo.issues.detail.stale_calculation",
+    }
+)
+"""The detail each finding kind carries; total over the kinds."""
+
+_VERDICT_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = MappingProxyType(
+    {
+        VerificationCompletenessStatus.COMPLETE: "workspace.modelo.issues.verdict.complete",
+        VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.issues.verdict.incomplete",
+        VerificationCompletenessStatus.BLOCKED: "workspace.modelo.issues.verdict.blocked",
+    }
+)
+_CHECKED_LOCALE_KEYS: Final[Mapping[VerificationCompletenessStatus, str]] = MappingProxyType(
+    {
+        VerificationCompletenessStatus.COMPLETE: "workspace.modelo.operation.checked.complete",
+        VerificationCompletenessStatus.INCOMPLETE: "workspace.modelo.operation.checked.incomplete",
+        VerificationCompletenessStatus.BLOCKED: "workspace.modelo.operation.checked.blocked",
+    }
+)
+_NOT_CHECKED_LOCALE_KEY: Final[str] = "workspace.modelo.issues.verdict.none"
+_SAVED_WITH_CHANGES_LOCALE_KEY: Final[str] = "workspace.modelo.issues.verdict.saved_with_changes"
+
+_ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAttention)
+
+
+class ModeloFormIssueDoorV1(ServedActionWords):
+    """The served operator action that resolves one listed finding, with the words and operations to offer it by."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action_id: NamespacedId
+
+
+def _issue_door(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueDoorV1 | None:
+    action_id = issue.door_action_id
+    if action_id is None:
+        return None
+    return ModeloFormIssueDoorV1.model_validate(
+        {"action_id": action_id, **served_action_fields(action_id, context.language)}
+    )
+
+
+class ModeloFormIssueLine(BaseModel):
+    """One finding or calculation note as the check view lists it, in the form's language.
+
+    ``box`` is the official box number, ``None`` when there is none to show.
+    ``address`` is where choosing the line leads: the box the form shows, or
+    with ``in_records`` the table whose records carry the value; ``None`` when
+    the line leads nowhere on the form. ``surface`` is the area of the
+    application that owns the value, when one does: for a line about a box it is
+    the area its primary source belongs to, so a credit the withholding register
+    supplies leads to that register and never to a place to type it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    level: ModeloFormAttention
+    box: str | None
+    #: The place in words, never the box number; ``None`` when the box alone says where.
+    where: str | None = Field(default=None, min_length=1)
+    message: str = Field(min_length=1)
+    #: What to do, as one sentence that says so.
+    action: str = Field(min_length=1)
+    #: What this kind of finding means; for a calculation note that states no facts of its own, the account
+    #: the calculation wrote, or ``None`` when it wrote none.
+    detail: str | None
+    #: The codes, facts and references, for the filer who asks for technical details.
+    technical: str = Field(min_length=1)
+    address: ModeloFormAddressV1 | None
+    #: ``address`` is a value of a table's records, so choosing the line opens the table rather than a box.
+    in_records: bool = False
+    surface: SourceSurface | None = None
+    #: The area holding the other declarations this line's figure was compared with, a second door beside
+    #: ``surface``; ``None`` when the line compares nothing held elsewhere.
+    compared_surface: SourceSurface | None = None
+    #: The latest calculation noticed this, rather than the check.
+    from_calculation: bool = False
+    #: Calculating again is what puts this right.
+    recalculates: bool = False
+    #: The source disagreement this line states, the id an operator answers with; ``None`` for every other line.
+    finding_id: str | None = Field(default=None, min_length=16, max_length=16)
+    #: The answer this line offers for that disagreement: accept the amount in use, or take the acceptance
+    #: back. ``None`` exactly when ``finding_id`` is.
+    resolution_answer: ModeloFormResolutionAnswer | None = None
+    #: What answering this way records, in the form's language; ``None`` exactly when ``resolution_answer`` is.
+    answer_lead_words: str | None = Field(default=None, min_length=1)
+    answer_lead_words_language: OutputLanguage | None = None
+    #: The invoice this line opens in the Libro de facturas: the one whose document it asks for, or one of
+    #: the counterparty whose fact it lacks.
+    invoice_id: InvoiceId | None = None
+    #: The operator action that resolves this line's finding, such as amending a filed declaration, served
+    #: with its words and the operations it submits; ``None`` when no action resolves it.
+    door: ModeloFormIssueDoorV1 | None = None
+
+
+class ModeloFormVerdict(BaseModel):
+    """What the last check concluded about the declaration, in the form's language.
+
+    ``status`` is ``None`` when the declaration has not been checked.
+    ``unapplied_words`` replaces ``words`` while a frontend holds changes not
+    yet applied, and exists only after a check that passed.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    status: VerificationCompletenessStatus | None
+    words: str = Field(min_length=1)
+    unapplied_words: str | None = None
+    #: What a check that has just finished says to the filer; ``None`` when the declaration has not been checked.
+    checked_words: str | None = None
+    #: Whether the findings list leads to what the finished check left to resolve.
+    checked_resolves: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class _RecordValue:
+    """One value every record of a table carries: its heading and whether the table holds any record."""
+
+    heading: str
+    has_records: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _Target:
+    box: str | None
+    where: str | None
+    detail: str
+    address: ModeloFormAddressV1 | None
+    field: ModeloFormField | None
+
+
+@dataclass(frozen=True, slots=True)
+class _Context:
+    language: OutputLanguage
+    shown: Mapping[tuple[str, str], ModeloFormField]
+    records: Mapping[str, _RecordValue]
+    box_words: Mapping[str, str]
+    listed: frozenset[tuple[str, str]]
+
+    def say(self, key: str, /, **values: object) -> str:
+        return tr(key, locale=self.language.value, **values)
+
+
+def _record_values(form: ModeloWorkForm, language: OutputLanguage) -> dict[str, _RecordValue]:
+    """Every value a table of records carries, by the casilla its column shows."""
+    values: dict[str, _RecordValue] = {}
+    for page in form.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                if isinstance(block, ModeloFormRepeatingBlock):
+                    _record_block_values(block, values, language)
+    return values
+
+
+def _record_block_values(
+    block: ModeloFormRepeatingBlock, values: dict[str, _RecordValue], language: OutputLanguage
+) -> None:
+    for column, casilla_id in zip(block.columns, block.column_casilla_ids, strict=True):
+        if casilla_id is not None:
+            heading = (
+                tr(_RECORD_VALUE_LOCALE_KEY, locale=language.value)
+                if column.heading.disclosure is ModeloFormTextDisclosure.TECHNICAL
+                else column.heading.text
+            )
+            values.setdefault(casilla_id, _RecordValue(heading=heading, has_records=bool(block.rows)))
+
+
+def _box_words(form: ModeloWorkForm, records: Mapping[str, _RecordValue]) -> dict[str, str]:
+    """How a finding's sentence names each box: its printed number, else the words the form shows it with."""
+    words = {casilla_id: value.heading for casilla_id, value in records.items()}
+    for field in form.fields():
+        if not isinstance(field.address, ModeloFormCasillaAddressV1):
+            continue
+        if field.box is not None and field.box:
+            words[str(field.address.casilla_id)] = field.box
+        elif field.label.disclosure is not ModeloFormTextDisclosure.TECHNICAL:
+            words.setdefault(str(field.address.casilla_id), field.label.text)
+    return words
+
+
+def _listed_missing(form: ModeloWorkForm) -> frozenset[tuple[str, str]]:
+    """The boxes the missing values list names, which no finding repeats."""
+    if form.filing is not None:
+        return frozenset[tuple[str, str]]()
+    return frozenset(
+        address_key(field.address) for field in applicable_fields(form) if field.origin is ModeloFormOrigin.NEEDS_INPUT
+    )
+
+
+def _field_words(field: ModeloFormField) -> str | None:
+    """The words the form shows a box with; ``None`` when it shows only a technical name."""
+    if field.label.disclosure is ModeloFormTextDisclosure.TECHNICAL:
+        return None
+    return field.label.text or None
+
+
+_FINDING_SURFACES: Final[Mapping[str, tuple[SourceSurface, SourceSurface]]] = MappingProxyType(
+    {
+        WITHHOLDING_TOTAL_MISMATCH_KEY: (SourceSurface.WITHHOLDING, SourceSurface.DECLARATIONS),
+    }
+)
+"""The two doors of a finding that compares the form's figure with other declarations, by message.
+
+The first is where the records behind the form's own figure are kept, the second
+where the declarations it was compared with are: the filer corrects whichever is
+wrong, so the line offers both.
+"""
+
+
+def _owning_surface(field: ModeloFormField | None) -> SourceSurface | None:
+    if field is None or not field.bindings:
+        return None
+    surface = field.bindings[0].policy.surface
+    return None if surface is SourceSurface.NONE else surface
+
+
+def _action_words(action_key: str, field: ModeloFormField | None, context: _Context, **values: object) -> str:
+    """What to do, as one sentence that never offers to type a value into a box that takes none."""
+    if field is not None and not field.takes_typed_value:
+        action_key = _AT_SOURCE_ACTION_LOCALE_KEYS.get(action_key, action_key)
+    return context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(action_key, **values))
+
+
+def _technical(finding: ModeloVerificationFinding, context: _Context) -> str:
+    codes = [
+        finding.kind.value,
+        finding.severity.value,
+        *([] if finding.casilla_id is None else [str(finding.casilla_id)]),
+        *([] if finding.expectation_id is None else [str(finding.expectation_id)]),
+        *(f"{name}={value}" for name, value in finding.message_facts.items()),
+        *(str(ref) for ref in finding.legal_refs),
+        *(str(ref) for ref in finding.source_refs),
+        finding.message_locale_key,
+    ]
+    return f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}"
+
+
+def _casilla_address(finding: ModeloVerificationFinding) -> ModeloFormCasillaAddressV1 | None:
+    return None if finding.casilla_id is None else ModeloFormCasillaAddressV1(casilla_id=finding.casilla_id)
+
+
+def _record_line(issue: ModeloFormIssue, value: _RecordValue, message: str, context: _Context) -> ModeloFormIssueLine:
+    """A finding about one value of a table's records, named by that value's heading, leading to the table."""
+    finding = issue.finding
+    action_key = issue.action_locale_key
+    if finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA:
+        message = context.say(_RECORDS_FIELD_MISSING_LOCALE_KEY if value.has_records else _RECORDS_NONE_LOCALE_KEY)
+        action_key = _RECORDS_ACTION_LOCALE_KEY
+    return ModeloFormIssueLine(
+        level=issue.attention,
+        box=None,
+        where=value.heading,
+        message=message,
+        action=context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(action_key)),
+        detail=context.say(DETAIL_LOCALE_KEYS[finding.kind]),
+        technical=_technical(finding, context),
+        address=_casilla_address(finding),
+        in_records=True,
+        door=_issue_door(issue, context),
+    )
+
+
+def _declaration_target(issue: ModeloFormIssue, context: _Context) -> _Target:
+    kind = issue.finding.kind
+    where_key = (
+        _RECORDS_WHERE_LOCALE_KEY
+        if kind is ModeloVerificationFindingKind.STALE_CALCULATION
+        else _DECLARATION_WHERE_LOCALE_KEY
+    )
+    return _Target(issue.box, context.say(where_key), context.say(DETAIL_LOCALE_KEYS[kind]), None, None)
+
+
+def _off_form_target(issue: ModeloFormIssue, context: _Context) -> _Target:
+    """A finding whose box the form does not show, named by its printed number when it has one."""
+    finding = issue.finding
+    casilla_id = str(finding.casilla_id)
+    number = issue.box or (casilla_id if _BOX_NUMBER.fullmatch(casilla_id) else None)
+    kind_detail = context.say(DETAIL_LOCALE_KEYS[finding.kind])
+    if number is None:
+        return _Target(None, context.say(_NOT_ON_FORM_WHERE_LOCALE_KEY), kind_detail, None, None)
+    not_shown = context.say(_BOX_NOT_ON_FORM_LOCALE_KEY, box=f"[{number}]")
+    return _Target(number, None, f"{not_shown} {kind_detail}".strip(), None, None)
+
+
+def _shown_target(issue: ModeloFormIssue, field: ModeloFormField, context: _Context) -> _Target:
+    box = field.box or issue.box
+    detail = context.say(DETAIL_LOCALE_KEYS[issue.finding.kind])
+    return _Target(box, _field_words(field), detail, field.address, field)
+
+
+def _target(issue: ModeloFormIssue, context: _Context) -> _Target | None:
+    finding = issue.finding
+    if finding.casilla_id is None:
+        return _declaration_target(issue, context)
+    candidate = address_key(ModeloFormCasillaAddressV1(casilla_id=finding.casilla_id))
+    if issue.attention is ModeloFormAttention.MISSING and candidate in context.listed:
+        return None
+    field = context.shown.get(candidate)
+    if field is None:
+        return _off_form_target(issue, context)
+    return _shown_target(issue, field, context)
+
+
+def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueLine | None:
+    finding = issue.finding
+    message = finding_message_text(finding, context.language, box_words=context.box_words)
+    if finding.casilla_id is not None:
+        record = context.records.get(str(finding.casilla_id))
+        if record is not None:
+            return _record_line(issue, record, message, context)
+    target = _target(issue, context)
+    if target is None:
+        return None
+    doors = _FINDING_SURFACES.get(finding.message_locale_key)
+    return ModeloFormIssueLine(
+        level=issue.attention,
+        box=target.box or None,
+        where=target.where,
+        message=message,
+        action=_action_words(issue.action_locale_key, target.field, context),
+        detail=target.detail,
+        technical=_technical(finding, context),
+        address=target.address,
+        surface=doors[0] if doors is not None else _owning_surface(target.field),
+        compared_surface=None if doors is None else doors[1],
+        recalculates=finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION,
+        invoice_id=issue.open_invoice_id,
+        door=_issue_door(issue, context),
+    )
+
+
+def _failed_result_line(field: ModeloFormField, context: _Context) -> ModeloFormIssueLine:
+    """A result box the calculation could not work out, which blocks filing until it can."""
+    box = field.box or None
+    codes = [
+        _FAILED_RESULT_CODE,
+        *(() if not isinstance(field.address, ModeloFormCasillaAddressV1) else (str(field.address.casilla_id),)),
+    ]
+    return ModeloFormIssueLine(
+        level=ModeloFormAttention.BLOCKS,
+        box=box,
+        where=_field_words(field),
+        message=context.say(_FAILED_RESULT_LOCALE_KEY),
+        action=context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(_FAILED_RESULT_ACTION_LOCALE_KEY)),
+        detail=context.say(_FAILED_RESULT_DETAIL_LOCALE_KEY),
+        technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
+        address=field.address,
+        surface=_owning_surface(field),
+    )
+
+
+def _note_identifiers(
+    note: ModeloFormCalculationNote, context: _Context
+) -> tuple[ModeloFormField | None, str, list[str]]:
+    casilla_id = None if note.casilla_id is None else str(note.casilla_id)
+    address = None if note.casilla_id is None else ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
+    field = None if address is None else context.shown.get(address_key(address))
+    named = None if casilla_id is None else (note.box or context.box_words.get(casilla_id))
+    box_text = named or context.say(_UNNUMBERED_BOX_LOCALE_KEY)
+    codes = [
+        note.reason,
+        *([] if casilla_id is None else [casilla_id]),
+        *([] if note.finding_id is None else [note.finding_id]),
+    ]
+    return field, box_text, codes
+
+
+def _note_message_and_detail(note: ModeloFormCalculationNote, what: str, context: _Context) -> tuple[str, str | None]:
+    """What the note is about comes first, so it is read without opening anything; the kind explains it.
+
+    A note without facts keeps its catalogue sentence first, and the calculation's own account follows it:
+    that account is the resolver's, worded when the calculation ran.
+    """
+    if note.fact is None:
+        return what, note.message
+    return note_fact_text(note.fact, element_names=note.element_names, locale=context.language), what
+
+
+def _note_address(
+    note: ModeloFormCalculationNote, field: ModeloFormField | None, record: _RecordValue | None
+) -> ModeloFormCasillaAddressV1 | ModeloFormBindingAddressV1 | None:
+    if field is not None:
+        return field.address
+    if record is None or note.casilla_id is None:
+        return None
+    return ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
+
+
+def _note_answer_lead(note: ModeloFormCalculationNote, context: _Context) -> str | None:
+    return None if note.resolution_answer is None else _answer_lead(note.resolution_answer, context)
+
+
+def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
+    """One thing the latest calculation noticed, in the same parts as a finding."""
+    field, box_text, codes = _note_identifiers(note, context)
+    # A note about a value every record of a table carries leads to that table, named by its heading.
+    record = None if field is not None or note.casilla_id is None else context.records.get(str(note.casilla_id))
+    what = context.say(what_locale_key(note.reason), box=box_text)
+    message, detail = _note_message_and_detail(note, what, context)
+    return ModeloFormIssueLine(
+        # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
+        level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,
+        box=note.box or None,
+        where=record.heading if record is not None else _note_where(note, field, context),
+        message=message,
+        action=_action_words(
+            _SERVED_NOTE_ACTION_LOCALE_KEYS.get(note.reason) or what_to_do_locale_key(note.reason),
+            field,
+            context,
+            box=box_text,
+        ),
+        detail=detail,
+        technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
+        address=_note_address(note, field, record),
+        in_records=record is not None,
+        surface=_note_surface(note, field),
+        from_calculation=True,
+        finding_id=note.finding_id,
+        resolution_answer=note.resolution_answer,
+        answer_lead_words=_note_answer_lead(note, context),
+        answer_lead_words_language=None if note.resolution_answer is None else context.language,
+        # A revision the gate refuses before reading its notes is put right by calculating again.
+        recalculates=note.reason in DERIVED_GATE_REASONS,
+        invoice_id=_note_invoice(note),
+    )
+
+
+_INVOICE_ROW_SENTENCES: Final = frozenset(
+    {CalculationNoteSentence.M347_PROVINCIA_UNSTATED, CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED}
+)
+"""The note sentences whose one row is an invoice of the counterparty the note is about."""
+
+
+def _note_invoice(note: ModeloFormCalculationNote) -> str | None:
+    """The invoice a note opens, where its fact names one."""
+    fact = note.fact
+    if fact is None or fact.sentence not in _INVOICE_ROW_SENTENCES or len(fact.row_refs) != 1:
+        return None
+    return fact.row_refs[0]
+
+
+def _answer_lead(answer: ModeloFormResolutionAnswer, context: _Context) -> str:
+    return credit_resolution_lead_words(
+        "revoke" if answer is ModeloFormResolutionAnswer.REVOKE else "accept", context.language
+    )
+
+
+def _note_surface(note: ModeloFormCalculationNote, field: ModeloFormField | None) -> SourceSurface | None:
+    if note.reason in RECORDS_REASONS:
+        return SourceSurface.LEDGER
+    if note.reason in PROFILE_REASONS:
+        return SourceSurface.PROFILE
+    return _owning_surface(field)
+
+
+def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, context: _Context) -> str | None:
+    if field is not None:
+        return _field_words(field)
+    if note.box is not None:
+        return None
+    if note.reason in RECORDS_REASONS:
+        return context.say(_RECORDS_WHERE_LOCALE_KEY)
+    if note.reason in PROFILE_REASONS:
+        return context.say(_PROFILE_WHERE_LOCALE_KEY)
+    return context.say(_DECLARATION_WHERE_LOCALE_KEY)
+
+
+def form_issue_lines(form: ModeloWorkForm, language: OutputLanguage) -> tuple[ModeloFormIssueLine, ...]:
+    """The form's findings, its failed result boxes, then its calculation notes, as lines, most urgent first."""
+    records = _record_values(form, language)
+    context = _Context(
+        language=language,
+        shown={address_key(field.address): field for field in form.fields()},
+        records=records,
+        box_words=_box_words(form, records),
+        listed=_listed_missing(form),
+    )
+    lines = [line for issue in form.issues if (line := _finding_line(issue, context)) is not None]
+    lines.extend(_failed_result_line(field, context) for field in failed_results(form))
+    lines.extend(_note_line(note, context) for note in form.calculation_notes)
+    return tuple(sorted(lines, key=lambda line: _ATTENTION_ORDER.index(line.level)))
+
+
+def form_verdict(form: ModeloFormFacts, language: OutputLanguage) -> ModeloFormVerdict:
+    """What the last check concluded, in ``language``, or that the declaration has not been checked."""
+    status = form.verification
+    if status is None:
+        return ModeloFormVerdict(status=None, words=tr(_NOT_CHECKED_LOCALE_KEY, locale=language.value))
+    return ModeloFormVerdict(
+        status=status,
+        words=tr(_VERDICT_LOCALE_KEYS[status], locale=language.value),
+        checked_words=tr(_CHECKED_LOCALE_KEYS[status], locale=language.value),
+        checked_resolves=status is not VerificationCompletenessStatus.COMPLETE,
+        unapplied_words=(
+            tr(_SAVED_WITH_CHANGES_LOCALE_KEY, locale=language.value)
+            if status is VerificationCompletenessStatus.COMPLETE
+            else None
+        ),
+    )
+
+
+def _require_total_tables() -> None:
+    if set(DETAIL_LOCALE_KEYS) != set(ModeloVerificationFindingKind):
+        raise ValueError("every finding kind needs a detail")
+    if set(_VERDICT_LOCALE_KEYS) != set(VerificationCompletenessStatus):
+        raise ValueError("every verification verdict needs its words")
+    if set(_CHECKED_LOCALE_KEYS) != set(VerificationCompletenessStatus):
+        raise ValueError("every verification verdict needs its finished-check words")
+
+
+_require_total_tables()
+
+__all__ = [
+    "DETAIL_LOCALE_KEYS",
+    "ModeloFormIssueLine",
+    "ModeloFormVerdict",
+    "form_issue_lines",
+    "form_verdict",
+]

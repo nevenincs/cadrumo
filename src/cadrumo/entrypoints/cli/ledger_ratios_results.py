@@ -7,7 +7,7 @@ production-authored CommandSpec as deferred public schema targets and emitted in
 
 The application layer remains authoritative for
 :class:`EligibleCategoryRow`, :class:`RatiosValidationReport`,
-:func:`set_usage_ratio`, and :func:`unset_usage_ratio`; the domain
+:func:`apply_usage_ratio_override`, and :func:`clear_usage_ratio_override`; the domain
 :class:`UsageRatioProfile` owns persisted per-category override validation. This
 module only pins the CLI transport shape for list, set, unset, eligible, and
 validate results.
@@ -27,8 +27,8 @@ from ...core.text_bounds import NonEmptyStr
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import validate_usage_ratio_bound
 
-_CategoryValue = Annotated[str, Field(min_length=1, max_length=96)]
-_ProportionalityKindValue = Annotated[str, Field(min_length=1, max_length=96)]
+_CategoryValue = Annotated[str, Field(min_length=1, max_length=128)]
+_ProportionalityKindValue = Annotated[str, Field(min_length=1, max_length=128)]
 
 
 def _validated_ratio_text(value: str, *, field: str) -> str:
@@ -72,21 +72,15 @@ class RatiosEligibleRowPayload(OutputSchema):
     """One ``ledger ratios eligible`` row (D2).
 
     ``category`` and ``proportionality_kind`` are bounded tokens projected
-    by the selected worker's pinned authority.
+    by the selected worker's pinned authority. ``label`` and ``notes`` are the
+    registry's wording for the category, said in the invocation's language.
     """
 
     category: _CategoryValue
+    label: NonEmptyStr
+    notes: NonEmptyStr
     proportionality_kind: _ProportionalityKindValue
-    default_ratio: str | None = None
     override_present: bool
-
-    @field_validator("default_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _check_default_ratio(cls, value: str | None) -> str | None:
-        if value is None or value == "":
-            return value
-        return _validated_ratio_text(value, field="default_ratio")
 
 
 class RatiosValidateFindingPayload(OutputSchema):

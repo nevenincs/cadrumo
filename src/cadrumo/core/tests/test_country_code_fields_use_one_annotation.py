@@ -70,15 +70,43 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "ACCUMULATES the failures, so a bad country must reach the wizard to "
         "be reported alongside a bad NIF rather than refused ahead of it"
     ),
-    "domain/calculations/registry/convenio.py::country_code": (
-        "a treaty file keyed by country and authored by hand, so the anchored "
-        "uppercase pattern fails the author on a sloppy code rather than "
-        "accepting it; the canonical is length-only and would not"
+    "application/invoices/figures_preview_contracts.py::counterparty_country": (
+        "an invoice draft preview answers a malformed country as a closed rule "
+        "finding (would_refuse, with the offending field named) beside the other "
+        "findings; a length bound at the request boundary would refuse the whole "
+        "preview ahead of them and the window could not show which rules fail"
     ),
 }
 
 
-def _country_fields() -> dict[str, set[str]]:
+_BOUND_WORDS = ("min_length", "max_length", "pattern")
+
+
+def _states_a_bound(text: str) -> bool:
+    return any(word in text for word in _BOUND_WORDS)
+
+
+def _effective_annotation(annotation: ast.expr) -> str:
+    """Return the annotation a field declares, read through an ``Annotated`` wrapper that adds no bound.
+
+    ``Annotated[CountryCodeAlpha2 | None, Field(json_schema_extra=...)]`` attaches
+    form metadata to the canonical annotation; it states no shape of its own. A
+    wrapper whose metadata does state a bound stays whole, so it is still caught.
+    """
+    if (
+        isinstance(annotation, ast.Subscript)
+        and isinstance(annotation.value, ast.Name)
+        and annotation.value.id == "Annotated"
+        and isinstance(annotation.slice, ast.Tuple)
+        and annotation.slice.elts
+    ):
+        inner, *metadata = annotation.slice.elts
+        if not any(_states_a_bound(ast.unparse(item)) for item in metadata):
+            return ast.unparse(inner)
+    return ast.unparse(annotation)
+
+
+def _country_fields(src: Path = _SRC) -> dict[str, set[str]]:
     """Map ``path::field`` -> the set of annotations declared under that name.
 
     A SET, not a single annotation, because one module can declare the same
@@ -93,21 +121,21 @@ def _country_fields() -> dict[str, set[str]]:
     exception keyed by line goes stale on the next edit above it.
     """
     found: dict[str, set[str]] = {}
-    for path in sorted(_SRC.rglob("*.py")):
-        parts = path.relative_to(_SRC).parts
+    for path in sorted(src.rglob("*.py")):
+        parts = path.relative_to(src).parts
         if "tests" in parts or path.name.startswith("test_"):
             continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:  # a peer's mid-edit file is not this gate's finding
             continue
-        relative = path.relative_to(_SRC).as_posix()
+        relative = path.relative_to(src).as_posix()
         for node in ast.walk(tree):
             if not isinstance(node, ast.AnnAssign) or not isinstance(node.target, ast.Name):
                 continue
             if node.target.id not in _COUNTRY_FIELD_NAMES:
                 continue
-            annotation = ast.unparse(node.annotation)
+            annotation = _effective_annotation(node.annotation)
             if annotation.startswith("Final["):
                 continue
             # A bound can live in the ANNOTATION or in an assigned Field(), and
@@ -116,7 +144,7 @@ def _country_fields() -> dict[str, set[str]]:
             # a bare str to an annotation-only scan while making exactly the
             # competing claim the gate exists to catch.
             assigned = ast.unparse(node.value) if node.value is not None else ""
-            declares_a_bound = "min_length" in assigned or "max_length" in assigned or "pattern" in assigned
+            declares_a_bound = _states_a_bound(assigned)
             # A bare `str` with no bound is a pass-through parameter or an
             # internal accumulator fed from an already-validated field, not a
             # boundary declaring its own shape.
@@ -179,3 +207,21 @@ def test_the_gate_finds_country_fields_at_all() -> None:
     assert any(annotations & _CANONICAL for annotations in sites.values()), (
         "no field uses the canonical annotation, so the gate is measuring the wrong thing"
     )
+
+
+def test_a_form_metadata_wrapper_reads_as_the_canonical_annotation_and_a_bound_inside_it_does_not(
+    tmp_path: Path,
+) -> None:
+    """Planted: ``Annotated`` around the canonical with form metadata passes; a bound in the wrapper is caught."""
+    (tmp_path / "contracts.py").write_text(
+        "class Wrapped:\n"
+        "    counterparty_country: Annotated[CountryCodeAlpha2 | None, Field(json_schema_extra={})] = None\n"
+        "class Bounded:\n"
+        "    country_code: Annotated[CountryCodeAlpha2, Field(max_length=3)]\n",
+        encoding="utf-8",
+    )
+
+    found = _country_fields(tmp_path)
+
+    assert found["contracts.py::counterparty_country"] == {"CountryCodeAlpha2 | None"}
+    assert found["contracts.py::country_code"] == {"Annotated[CountryCodeAlpha2, Field(max_length=3)]"}

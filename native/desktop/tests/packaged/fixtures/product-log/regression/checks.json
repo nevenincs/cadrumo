@@ -1,0 +1,319 @@
+[
+  {
+    "id": "preflight",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "sign-in-fixture",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "override-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "launch",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "webview-profile-owned",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "docs-origin",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "canonical-sign-in",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000,
+    "phases": [
+      {
+        "phase": "ui-wrong-password",
+        "startedAt": "2026-11-04T18:00:00.000Z",
+        "elapsedMs": 10800000
+      }
+    ]
+  },
+  {
+    "id": "provisioning-6-settings",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "profile-list",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "python-prompt",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "python-unicode",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "console-runtime",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "tui-alternate-screen",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "token",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "logs-flyout",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "csp-zero",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "pagefind-search",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "docs-invoke-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "docs-fetch-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "docs-ipc-postmessage-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "docs-webview-postmessage-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "credit-backpressure",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "docs-channel-fetch-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "flood-every-byte",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "ctrl-c",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "restart-on-enter",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "resize-propagates",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "paste-200k",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "top-navigation-refused",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "external-link",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "logs-no-pty",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "second-instance",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "canonical-sign-out",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "sign-in-secret-isolation",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "close-settles",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "close-flushes-diagnostics",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "window-state",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "sign-in-fixture-cleanup",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "clipboard-restored",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-free-space",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-host",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-isolation",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-workspace-ready",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-1-startup",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-1-null-first",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-1-elements",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-rows-before",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-10-sede",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-9-failure",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-3-model-list",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-3-shared-component",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-4-5-concurrency-spinner",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-2-part-sizes",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-3-program-model-steps",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-2-before-bytes",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-3-model-download",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-7-remove-reinstall",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "provisioning-3-model-remove",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-children-closed",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-keychain-clean",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-scratch-removed",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  },
+  {
+    "id": "setup-real-storage-unchanged",
+    "startedAt": "2026-11-04T18:00:00.000Z",
+    "elapsedMs": 10800000
+  }
+]

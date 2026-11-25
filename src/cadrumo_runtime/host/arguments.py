@@ -30,7 +30,7 @@ def parse_runtime_arguments(arguments: list[str] | None = None) -> argparse.Name
         "--configured-root",
         action="store_true",
         help=(
-            "Serve the explicit root CADRUMO_LOCAL_STORAGE_ROOT selects, for as long as standard input stays open. "
+            "Serve the explicit root CADRUMO_STORAGE_ROOT selects, for as long as standard input stays open. "
             "Prints one JSON line on standard output once clients can connect."
         ),
     )

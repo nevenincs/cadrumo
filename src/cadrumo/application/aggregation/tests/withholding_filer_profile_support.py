@@ -16,9 +16,12 @@ from cadrumo.application.aggregation.withholding_filing_cadence import (
     resolve_withholding_filer_cadence,
 )
 from cadrumo.application.aggregation.withholding_producer import WithholdingEvidenceCaptureCommand
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.user_profile.projections import projection_for_taxpayer
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -29,7 +32,7 @@ WITHHOLDING_FILER_PROFILE_ID: Final[str] = "7c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5
 _CLOCK: Final[datetime] = datetime(2025, 1, 2, 9, tzinfo=UTC)
 
 LARGE_COMPANY_FACTS: Final[tuple[UserProfileFact, ...]] = (UserProfileFact(path="censo.large_company", value=True),)
-"""A large company: the Modelo 111 schedule makes it monthly and no Modelo 123 or 115 schedule covers it."""
+"""A large company: the Modelo 111, 115 and 123 schedules all make it monthly (RIRPF art. 108.1)."""
 
 PUBLIC_ADMINISTRATION_FACTS: Final[tuple[UserProfileFact, ...]] = (
     UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=True),
@@ -41,9 +44,7 @@ REDEME_FACTS: Final[tuple[UserProfileFact, ...]] = (UserProfileFact(path="iva.re
 
 
 def _facts(overrides: tuple[UserProfileFact, ...]) -> tuple[UserProfileFact, ...]:
-    replaced = {fact.path: fact for fact in overrides}
-    merged = [replaced.pop(fact.path, fact) for fact in MODELO_READY_PROFILE_FACTS]
-    return (*merged, *replaced.values())
+    return persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION, *overrides))
 
 
 def withholding_work_profile(
@@ -91,6 +92,36 @@ def quarterly_filer_cadence(filing_year: int) -> WithholdingFilerCadence:
     return published_filer_cadence(filing_year)
 
 
+def published_work_profile_declaring_activities(
+    activities: int,
+    *,
+    facts: tuple[UserProfileFact, ...] = (),
+) -> ModeloWorkProfile:
+    """Return the ready work profile with ``activities`` economic activities declared, undated.
+
+    The ready baseline declares one activity as the setup wizard writes it, unindexed; each
+    further activity takes the next indexed row. ``facts`` replace the baseline at their paths
+    and are all kept, so one path may hold several dated windows; a dated fact alone therefore
+    leaves the path undeclared outside its window.
+    """
+    if activities < 1:
+        raise ValueError("a work profile declares at least the activity its readiness baseline holds")
+    rows = tuple(
+        UserProfileFact(path=f"activities.{row}.description", value=f"Synthetic activity {row}")
+        for row in range(1, activities)
+    )
+    with bundled_indexed_authority().operation() as operation:
+        record = create_user_profile_record(
+            context=operation.profile_create_context(),
+            profile_id=WITHHOLDING_FILER_PROFILE_ID,
+            facts=(*persona_facts_beneath(facts), *rows),
+            setup_state=ProfileSetupState.COMPLETE,
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        )
+        return ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context())
+
+
 def published_pending_disclosure_years() -> frozenset[int]:
     """Return the accrual years whose published Modelo 193 edition grounds the pending disclosure."""
     with bundled_indexed_authority().operation() as operation:
@@ -111,6 +142,7 @@ __all__ = [
     "WITHHOLDING_FILER_PROFILE_ID",
     "published_filer_cadence",
     "published_pending_disclosure_years",
+    "published_work_profile_declaring_activities",
     "quarterly_filer_cadence",
     "quarterly_filer_cadence_for",
     "withholding_filer_cadence",

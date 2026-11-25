@@ -1,7 +1,7 @@
-"""The persistence port the provider-settings service and resolver read and write through.
+"""The persistence ports the provider-settings and local model list services read and write through.
 
-The application owns this contract; the encrypted secure-object adapter
-implements it for one exact admitted profile. The port speaks in typed values
+The application owns these contracts; the encrypted secure-object adapters
+implement them for one exact admitted profile. Each port speaks in typed values
 rather than storage exceptions, so a locked profile, a revision conflict and an
 unreadable record each reach the service as a value it must handle, and none of
 them can read as an absent record.
@@ -15,17 +15,18 @@ from typing import Protocol
 from pydantic import BaseModel
 
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo.core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
+from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
-from ..domain.catalog import ProviderCatalog, ProviderId
-from ..domain.record import ProviderSettingsRecord
+from ..domain.catalog import BackgroundOption, EffortLevel, LaneId, LiveCatalogModel, ProviderCatalog
+from ..domain.record import LocalModelListRecord, ProviderSettingsRecord
 
 
 class StoredProviderRecord(BaseModel):
     """A present record that decrypted and validated, with its row revision."""
 
-    model_config = _STRICT_FROZEN_HIDDEN_INPUT
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     record: ProviderSettingsRecord
     revision: Hex64Str
@@ -34,9 +35,9 @@ class StoredProviderRecord(BaseModel):
 class AbsentProviderRecord(BaseModel):
     """No record is stored for the provider: both axes are unset."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    provider: ProviderId
+    provider: LaneId
 
 
 class UnreadableProviderRecord(BaseModel):
@@ -46,13 +47,45 @@ class UnreadableProviderRecord(BaseModel):
     may remove it.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    provider: ProviderId
+    provider: LaneId
     revision: Hex64Str | None
 
 
 type ProviderRecordRead = StoredProviderRecord | AbsentProviderRecord | UnreadableProviderRecord
+
+
+class StoredLocalModelList(BaseModel):
+    """The local model list record decrypted and validated, with its row revision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    record: LocalModelListRecord
+    revision: Hex64Str
+
+
+class AbsentLocalModelList(BaseModel):
+    """No model list record is stored: the person added no model by name."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+
+class UnreadableLocalModelList(BaseModel):
+    """A model list record is stored but cannot be decrypted or validated.
+
+    It fails closed: no model reads as listed or as unlisted, and only a
+    guarded reset may remove it. It always carries the revision that reset is
+    guarded by: every record in the list's capability was written through the
+    secure-object funnel, which stamps a revision on each write.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    revision: Hex64Str
+
+
+type LocalModelListRead = StoredLocalModelList | AbsentLocalModelList | UnreadableLocalModelList
 
 
 class StoreRefusalCode(StrEnum):
@@ -67,7 +100,7 @@ class StoreRefusalCode(StrEnum):
 class StoreRefusal(BaseModel):
     """A typed store refusal carrying no storage detail."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: StoreRefusalCode
 
@@ -79,7 +112,7 @@ class StoreGenerations(BaseModel):
     changes with every committed provider-settings write or deletion.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sign_in: Hex64Str
     provider_settings: Hex64Str
@@ -90,7 +123,6 @@ class ProviderCatalogUnavailableReason(StrEnum):
 
     AGENT_NOT_FOUND = "agent_not_found"
     AGENT_FAILED = "agent_failed"
-    AGENT_TIMED_OUT = "agent_timed_out"
     CATALOG_MALFORMED = "catalog_malformed"
 
 
@@ -110,7 +142,7 @@ class ProviderCatalogSource(Protocol):
     providers makes provider settings unavailable.
     """
 
-    def catalog(self) -> ProviderCatalog:
+    def catalog(self, *, deadline: TimeoutDeadline | None = None) -> ProviderCatalog:
         """Return the catalog the agent reports.
 
         Raises:
@@ -120,10 +152,54 @@ class ProviderCatalogSource(Protocol):
         ...
 
 
+class LiveLaneBackground(BaseModel):
+    """What the running agent's live catalogue says a background run on one lane takes."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    accepted_media: tuple[ModelRunMediaKind, ...] | None
+    """The attachment families the lane takes; ``None`` when the catalogue does not say."""
+    options: tuple[BackgroundOption, ...]
+    """The run options the lane honours; empty when it honours none or does not say."""
+    model_efforts: dict[str, tuple[EffortLevel, ...]]
+    """The effort levels each of the lane's live models offers, by model value; a model that states none is absent."""
+
+
+class LiveCatalogModels(Protocol):
+    """The models the running agent's live catalogue lists for one lane, and what its background runs take.
+
+    The live catalogue adds what the declared one cannot know, such as the
+    models installed on a local server. It exists only while an agent runs.
+    """
+
+    def snapshot(self) -> LiveCatalogModels:
+        """Return a view that answers every question from one read of the live catalogue, made when first asked.
+
+        A lookup or a run takes one snapshot, so its entries, media and
+        options come from the same document. A snapshot is never kept past the
+        lookup or run that took it.
+        """
+        ...
+
+    def lane_background(self, provider: str, transport: str) -> LiveLaneBackground | None:
+        """Return what a background run on the lane takes; ``None`` when no live catalogue says."""
+        ...
+
+    def lane_models(self, provider: str, transport: str) -> tuple[LiveCatalogModel, ...] | None:
+        """Return the lane's live entries, empty when the lane lists none.
+
+        ``None`` means there is no live catalogue to read: no agent is running,
+        or the one running did not answer with a document that validates.
+        """
+        ...
+
+
 class ProviderSettingsStore(Protocol):
     """Encrypted per-profile provider-settings records for one admitted profile."""
 
-    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+    def read(
+        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
+    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         """Return one read per requested provider, in request order, or a refusal."""
         ...
 
@@ -135,7 +211,7 @@ class ProviderSettingsStore(Protocol):
         """Remove the provider's record only if its revision still equals ``expected_revision``."""
         ...
 
-    def observe_generations(self) -> StoreGenerations | None:
+    def observe_generations(self, *, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
         """Return the current generations, or ``None`` when the profile is not usable.
 
         Never extends the session's idle time, so a background observer cannot
@@ -144,8 +220,34 @@ class ProviderSettingsStore(Protocol):
         ...
 
 
+class LocalModelListStore(Protocol):
+    """The encrypted local model list record of one admitted profile.
+
+    It is a record capability of its own, apart from the provider records, so a
+    list change never moves the provider-settings generation a running agent
+    tree was started under.
+    """
+
+    def read(self) -> LocalModelListRead | StoreRefusal:
+        """Return the profile's model list record, absent, or unreadable, or a refusal."""
+        ...
+
+    def write(self, record: LocalModelListRecord, *, expected_revision: str) -> StoreRefusal | None:
+        """Commit ``record`` only if the stored revision still equals ``expected_revision``."""
+        ...
+
+    def delete(self, *, expected_revision: str) -> StoreRefusal | None:
+        """Remove the record, readable or not, only if its revision still equals ``expected_revision``."""
+        ...
+
+
 __all__ = [
+    "AbsentLocalModelList",
     "AbsentProviderRecord",
+    "LiveCatalogModels",
+    "LiveLaneBackground",
+    "LocalModelListRead",
+    "LocalModelListStore",
     "ProviderCatalogSource",
     "ProviderCatalogUnavailableError",
     "ProviderCatalogUnavailableReason",
@@ -154,6 +256,8 @@ __all__ = [
     "StoreGenerations",
     "StoreRefusal",
     "StoreRefusalCode",
+    "StoredLocalModelList",
     "StoredProviderRecord",
+    "UnreadableLocalModelList",
     "UnreadableProviderRecord",
 ]

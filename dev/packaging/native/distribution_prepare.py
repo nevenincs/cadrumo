@@ -12,16 +12,37 @@ from .build_paths import build_paths
 from .hashing import digest
 from .installation import member, prepare, verify_inventory
 from .installation_currency import existing
+from .installation_plan import BundleInputs
 from .installation_reuse import InstallationReuse, public_directory, publish
+from .macos_bundle import CodesignSeal
 
 
-def refresh(payload: Path, identity: Path, build: Path, desktop: str | None = None) -> None:
+def refresh(
+    payload: Path, identity: Path, build: Path, desktop: str | None = None, bundle: BundleInputs | None = None
+) -> None:
     """Serialize candidate staging and publication across CLI and CMake callers."""
     with action_lock(build, "installation-staging"):
-        _refresh(payload, identity, build, desktop)
+        _refresh(payload, identity, build, desktop, bundle)
 
 
-def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = None) -> None:
+def _retain_receipts(stage: Path, receipt: Path, candidate: Path, receipt_root: Path) -> None:
+    # Receipts outlive generated staging, including an explicit target clean.
+    receipts = receipt_root
+    receipts.mkdir(parents=True, exist_ok=True)
+    retained_sources = [candidate / "metadata/installation.json"]
+    if stage.exists():
+        retained_sources.append(receipt)
+    for owned in retained_sources:
+        retained = member(receipts, f"{digest(owned)}.json")
+        if retained.exists() and retained.read_bytes() != owned.read_bytes():
+            raise ValueError("Retained installation receipt differs from its content identity")
+        if not retained.exists():
+            retained.write_bytes(owned.read_bytes())
+
+
+def _refresh(
+    payload: Path, identity: Path, build: Path, desktop: str | None = None, bundle: BundleInputs | None = None
+) -> None:
     """Construct the next stage before replacing a verified, generated previous stage."""
     paths = build_paths(build)
     stage = paths["installation_stage"]
@@ -30,7 +51,9 @@ def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = N
     if stage.exists():
         from . import installation
 
-        if existing(payload, identity, stage, metadata, desktop, installation.REPO_ROOT, allow_change=True):
+        if existing(
+            payload, identity, stage, metadata, desktop, installation.REPO_ROOT, allow_change=True, bundle=bundle
+        ):
             return
     work = paths["installation_work"]
     work.mkdir(parents=True, exist_ok=True)
@@ -54,19 +77,8 @@ def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = N
             # their retained Windows DACL into a new public output via hardlinks.
             if previous.get("staging_generation") == 1:
                 reuse = InstallationReuse(stage, candidate / "stage", previous["files"])
-        prepare(payload, identity, candidate, desktop, copy_file=reuse.copy if reuse else None)
-        # Receipts outlive generated staging, including an explicit target clean.
-        receipts = paths["installation_receipts"]
-        receipts.mkdir(parents=True, exist_ok=True)
-        retained_sources = [candidate / "metadata/installation.json"]
-        if stage.exists():
-            retained_sources.append(receipt)
-        for owned in retained_sources:
-            retained = member(receipts, f"{digest(owned)}.json")
-            if retained.exists() and retained.read_bytes() != owned.read_bytes():
-                raise ValueError("Retained installation receipt differs from its content identity")
-            if not retained.exists():
-                retained.write_bytes(owned.read_bytes())
+        prepare(payload, identity, candidate, desktop, copy_file=reuse.copy if reuse else None, bundle=bundle)
+        _retain_receipts(stage, receipt, candidate, paths["installation_receipts"])
         if stage.exists():
             verify_inventory(stage, receipt)
         publish(stage, metadata, candidate)
@@ -78,5 +90,21 @@ if __name__ == "__main__":
     parser.add_argument("--identity", type=Path, required=True)
     parser.add_argument("--build", type=require_enrolled_build, required=True)
     parser.add_argument("--desktop")
+    parser.add_argument("--bundle-launcher", type=Path, help="Application bundle main executable")
+    parser.add_argument("--bundle-icon", type=Path, help="Application bundle icon")
+    parser.add_argument("--codesign", type=Path, help="Configured absolute codesign tool that seals the bundle")
+    parser.add_argument("--signing-identity", help="Explicit bundle signing identity; - is an ad-hoc local seal")
     arguments = parser.parse_args()
-    refresh(arguments.payload, arguments.identity, arguments.build, arguments.desktop)
+    wrapper = (arguments.bundle_launcher, arguments.bundle_icon, arguments.codesign, arguments.signing_identity)
+    if any(value is None for value in wrapper) and any(value is not None for value in wrapper):
+        parser.error("--bundle-launcher, --bundle-icon, --codesign and --signing-identity are supplied together")
+    bundle = (
+        BundleInputs(
+            arguments.bundle_launcher,
+            arguments.bundle_icon,
+            CodesignSeal(arguments.codesign, arguments.signing_identity),
+        )
+        if arguments.bundle_launcher
+        else None
+    )
+    refresh(arguments.payload, arguments.identity, arguments.build, arguments.desktop, bundle)

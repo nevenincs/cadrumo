@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import pytest
 
-from ._registry_schema_support import _committed_registry_tree
+from .registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,7 +62,7 @@ _REPORTS_OWN_FACTS: dict[str, str] = {
 
 def _dispositions_claiming_third_party() -> dict[str, list[str]]:
     """Return ``modelo id -> revision ids`` whose disposition reasons make the claim."""
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     found: dict[str, list[str]] = {}
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
@@ -107,7 +107,7 @@ def test_every_allowlisted_modelo_still_carries_the_official_name_that_justifies
     renamed or re-scoped modelo would keep its exemption on the strength of a
     reading nobody re-checked.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
 
     for modelo_id, expected_name in _REPORTS_OTHERS.items():
@@ -127,7 +127,7 @@ def test_the_corrected_modelos_say_what_they_do_report() -> None:
     operator reading it learns why the family is empty rather than merely that
     it is.
     """
-    modelos, _catalogues = _committed_registry_tree()
+    modelos, _catalogues = committed_registry_tree()
     by_id = {modelo.id: modelo for modelo in modelos}
 
     for modelo_id in _REPORTS_OWN_FACTS:

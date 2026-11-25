@@ -20,7 +20,6 @@ See Also:
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Final
 
 from pydantic import Field, field_validator
@@ -58,22 +57,6 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
     financial_default_csv_encoding: str = Field(
         default="utf-8",
         description="Preferred encoding attempted first when decoding financial CSV sources",
-    )
-    cadrumo_financial_txs_dir: Path = Field(
-        default=Path("financial") / "transactions",
-        description="Directory where the transaction catalogue JSON file is stored",
-    )
-    cadrumo_invoices_dir: Path = Field(
-        default=Path("financial") / "invoices",
-        description="Directory where the invoice catalogue JSON file is stored",
-    )
-    cadrumo_attachments_dir: Path = Field(
-        default=Path("financial") / "attachments",
-        description="Root directory for the attachment byte and manifest store",
-    )
-    cadrumo_usage_ratios_path: Path = Field(
-        default=Path("financial") / "usage-ratios.json",
-        description="User-configured per-category usage ratio overrides",
     )
 
 

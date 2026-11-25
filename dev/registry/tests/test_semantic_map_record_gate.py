@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition, revision_covering
 
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
@@ -27,12 +28,12 @@ def source_join_inputs():
         root,
         catalogues.sources,
         source_ref=semantic.source_ref,
-        filing_year=2025,
-        design_epoch="2025",
+        filing_year=newest_authored_edition("347"),
+        design_epoch=semantic.design_epoch,
     )
     inspection = RegistryRevisionInspection.from_revision(
         modelo=definition,
-        revision=definition.revisions["2025-y-siguientes"],
+        revision=definition.revisions[str(revision_covering("347", newest_authored_edition("347")).id)],
         source_root=root,
         sources=catalogues.sources,
         legal_ref_ids=frozenset(catalogues.legal),

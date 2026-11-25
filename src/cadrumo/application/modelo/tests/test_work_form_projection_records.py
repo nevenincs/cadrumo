@@ -147,7 +147,7 @@ def test_annual_context_rejects_incomplete_projection_population(annual_saved):
     broken = snapshot.model_copy(
         update={"revision": snapshot.revision.model_copy(update={"export_layouts": (export,)})}
     )
-    with pytest.raises(RegistryValidationError, match="six activity-code/IAE pairs"):
+    with pytest.raises(RegistryValidationError, match="every declared activity-code/IAE pair"):
         form_context_value(broken, _annual_block(broken, 6), revision=revision)
 
 
@@ -278,35 +278,87 @@ def test_saved_modules_preserve_page_occurrence_and_zero(snapshot, saved):
     assert rows[1].values[1] == evidence.calculation_result.activities[2].module_results[0].cuota_devengada
 
 
-def test_single_historical_record_reads_one_occurrence_and_refuses_overflow(operation):
-    snapshot = operation.snapshot("303", filing_year=2022, period="2T")
-    block = _block(24, 25)
-    columns = []
-    for column in block.columns:
-        assert column.export_field_id is not None
-        columns.append(column.model_copy(update={"export_field_id": column.export_field_id.replace("2026", "2022")}))
-    block = block.model_copy(
-        update={
-            "max_rows": 1,
-            "columns": tuple(columns),
-        }
+def _oldest_edition_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
+    """Snapshot the oldest filing year the support envelope admits, so the edition is never named here."""
+    return operation.snapshot("303", filing_year=operation.supported_filing_years().floor, period="2T")
+
+
+def _declared_activity_block(
+    operation: PinnedAuthorityOperation, snapshot: RegistrySnapshot
+) -> FormRepeatingGroupBlock:
+    """Return the edition's authored non-agricultural block, limited to two module columns."""
+    layout = operation.form_layout("303", snapshot.revision.id)
+    assert layout is not None
+    block = next(
+        block
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormRepeatingGroupBlock)
+        and block.export_record_id == "m303-regimen-simplificado"
+        and {"modulo-1-unidades", "modulo-1-importe"} <= {column.key for column in block.columns}
     )
+    columns = tuple(column for column in block.columns if column.key in {"modulo-1-unidades", "modulo-1-importe"})
+    return block.model_copy(update={"columns": columns})
+
+
+def test_repeating_record_reads_occurrences_up_to_the_declared_bound_and_refuses_overflow(operation):
+    snapshot = _oldest_edition_snapshot(operation)
+    block = _declared_activity_block(operation, snapshot)
+    bound = block.max_rows
+    assert bound is not None and bound > 1, "the edition's design must grant more than one occurrence"
     assert len(resolve_form_projection_fields(snapshot.revision, block)) == 2
+
+    # One activity fills only the first occurrence.
     known, rows = saved_form_records(
         snapshot=snapshot,
         revision=_saved(snapshot, operation, activity_count=1),
         block=block,
         column_casillas=(None,) * 2,
     )
-    assert known and len(rows) == 1 and rows[0].index == 1
+    assert known and [row.index for row in rows] == [1]
     assert rows[0].values[0] == Decimal("0")
-    for capacity in (None, 2):
-        with pytest.raises(RegistryValidationError, match="bounded to one row"):
-            resolve_form_projection_fields(snapshot.revision, block.model_copy(update={"max_rows": capacity}))
+
+    # Each occurrence holds two non-agricultural activities: the bound is reachable, and the
+    # filing rows refuse one activity more before any projection can overflow it.
+    known, rows = saved_form_records(
+        snapshot=snapshot,
+        revision=_saved(snapshot, operation, activity_count=2 * bound),
+        block=block,
+        column_casillas=(None,) * 2,
+    )
+    assert known and [row.index for row in rows] == list(range(1, bound + 1))
+    with pytest.raises(ValidationError, match="permits fewer activities of each kind"):
+        _saved(snapshot, operation, activity_count=2 * bound + 1)
+    # A smaller declared capacity than the edition's own is refused for the same saved evidence.
     with pytest.raises(RegistryValidationError, match="record capacity"):
         saved_form_records(
-            snapshot=snapshot, revision=_saved(snapshot, operation), block=block, column_casillas=(None,) * 2
+            snapshot=snapshot,
+            revision=_saved(snapshot, operation, activity_count=2 * bound),
+            block=block.model_copy(update={"max_rows": bound - 1}),
+            column_casillas=(None,) * 2,
         )
+
+
+@pytest.mark.parametrize("capacity", [None, 2])
+def test_single_export_record_refuses_a_block_not_bounded_to_one_row(snapshot, capacity):
+    """The annual record is declared once per return, so a multi-row or unbounded block over it is refused."""
+    block = FormRepeatingGroupBlock(
+        id="annual",
+        row_source="export_record",
+        export_record_id="m303-exonerado-390",
+        max_rows=capacity,
+        columns=(
+            FormRepeatingColumn(
+                key="field-1",
+                heading_key="test.form.field-1",
+                official_heading="Dato 1",
+                export_field_id=f"m303-{snapshot.filing_year}.dp30304.f001",
+            ),
+        ),
+    )
+    with pytest.raises(RegistryValidationError, match="bounded to one row"):
+        resolve_form_projection_fields(snapshot.revision, block)
 
 
 def test_missing_evidence_is_unknown_but_not_claimed_scope_is_known_empty(snapshot, operation):
@@ -368,3 +420,56 @@ def test_one_column_cannot_have_two_value_owners():
 @pytest.fixture
 def projection_block() -> FormRepeatingGroupBlock:
     return _block(24, 25, 52, 53)
+
+
+def _disposal_rows_block(operation: PinnedAuthorityOperation) -> FormRepeatingGroupBlock:
+    layout = operation.form_layout("100", "2025")
+    assert layout is not None
+    return next(
+        block
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormRepeatingGroupBlock) and block.id == "elemento-patrimonial-rows"
+    )
+
+
+def test_each_sale_shows_as_its_own_row_beside_the_boxes_that_hold_the_totals(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    block = _disposal_rows_block(operation)
+    by_box = {column.casilla_id: column.binding_id for column in block.columns}
+    columns = tuple(column.casilla_id for column in block.columns)
+    revision = _revision(snapshot, None).model_copy(
+        update={
+            "row_binding_values": {
+                by_box["1633"]: {"1": "12000.00", "2": "10000.00"},
+                by_box["1654"]: {"1": "297.53"},
+                by_box["1639"]: {"2": "1702.47"},
+            }
+        }
+    )
+
+    known, rows = saved_form_records(snapshot=snapshot, revision=revision, block=block, column_casillas=columns)
+
+    assert known is True
+    assert [row.index for row in rows] == [1, 2]
+    first = dict(zip(columns, rows[0].values, strict=True))
+    second = dict(zip(columns, rows[1].values, strict=True))
+    assert (first["1633"], first["1654"], first["1639"]) == (Decimal("12000.00"), Decimal("297.53"), None)
+    assert (second["1633"], second["1654"], second["1639"]) == (Decimal("10000.00"), None, Decimal("1702.47"))
+
+
+def test_a_revision_without_rows_or_a_source_trace_leaves_the_sales_unknown(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Neither a box total nor an empty revision proves there were no sales; only a source trace can."""
+    snapshot = operation.snapshot("100", filing_year=2025, period="0A")
+    block = _disposal_rows_block(operation)
+    columns = tuple(column.casilla_id for column in block.columns)
+    empty = _revision(snapshot, None)
+    older = empty.model_copy(update={"casilla_values": {"1654": Decimal("297.53")}})
+
+    assert saved_form_records(snapshot=snapshot, revision=older, block=block, column_casillas=columns) == (False, ())
+    assert saved_form_records(snapshot=snapshot, revision=empty, block=block, column_casillas=columns) == (False, ())

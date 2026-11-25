@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-08'
-body_hash: 'sha256:646bd3d9e2c70c29dc572755d848c02c0cd651bf1ff91fcb72744e2670759452'
+modified: '2026-11-04'
+body_hash: 'sha256:9e748b71587bb299a31886958dd77756413bd3f61286dd0d54028cb4d8afb6f6'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
@@ -32,10 +32,11 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 ## Considerations
 
 - The installed-run state-root seam already exists and is accepted: the
-  claude-ecosystem-packaging decision moved `cadrumo_local_storage_root` (and
+  claude-ecosystem-packaging decision moved `cadrumo_storage_root` (and
   tokens/logs/secrets/blobs/audit/db) to a platform user-data dir on
-  installed runs, keeping `PROJECT_ROOT/var/storage` for the dev loop. This
-  ADR extends that derivation; it does not replace it.
+  installed runs; a repository run supplies its root through
+  `CADRUMO_STORAGE_ROOT`. This ADR extends that derivation; it does not
+  replace it.
 - The product-identity doctrine (cadrumo-product-authority-names) classifies
   by ownership/referent: app-owned artifact names are `cadrumo`/`CADRUMO`;
   `aeat` names only the tax authority, its evidence, and its protocol.
@@ -70,9 +71,9 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 
 - Pre-release, zero-legacy regime: no migration of existing on-disk artifacts;
   old locations/names are abandoned or refused, never read.
-- The dev checkout loop must keep working with repo-relative defaults
-  (`PROJECT_ROOT/var/storage` root) so gitignore and developer muscle memory
-  survive.
+- The dev checkout loop keeps working through the task runner, which exports
+  `CADRUMO_STORAGE_ROOT` as an absolute path into the ignored `var/storage`
+  tree; the product holds no repository-relative default.
 - Two-root env-var reality during the transition: renames of `AEAT_*`-prefixed
   app-owned SETTINGS fields ride the per-field adjudication table (R6) and
   must sweep docs, locales, error suggestions, and the agent harness per the
@@ -85,14 +86,14 @@ temp dir, and the repo root with unmanaged, inconsistently-named artifacts.
 
 ## Implementation
 
-**R1 — One root, five categories.** `cadrumo_local_storage_root` remains the
-single operator-facing root (platform user-data installed, `var/storage`
-checkout). A category taxonomy lives under it: `state` (existing secrets,
+**R1 — One root, five categories.** `cadrumo_storage_root` is the
+single operator-facing root (the absolute `CADRUMO_STORAGE_ROOT`, else the
+per-user data directory). A category taxonomy lives under it: `state` (existing secrets,
 blobs, audit, tokens, buckets), `cache/<name>`, `logs`, `exports`, and
 runtime `staging` (OS temp, always context-managed). Every settings dir field
 whose default is currently `PROJECT_ROOT/var/...` moves into the state-root
-derivation table (`_STATE_ROOT_DERIVED_DIRS` generalised): explicit env
-overrides keep working, but default output directories derive from the
+derivation table (`_STATE_ROOT_DERIVED_DIRS` generalised): no member has an
+env override, and output directories derive from the
 root except the default transient transport anchor for installed Darwin mode,
 accepted in the 2026-10-08 exception below. `PROJECT_ROOT`-anchored output defaults are eliminated. The dormant
 `cadrumo_submission_browser_trace_dir` / `cadrumo_status_browser_trace_dir`
@@ -129,20 +130,20 @@ rename to `cadrumo-ledger-*`/`cadrumo-manual-ledger` marker forms. Directory
 stems under the root stay English generic for framework concepts and Spanish
 for AEAT-domain nouns per the existing stem rule; the export-filename schema
 is fixed as `modelo-<id>-<year>-<period>` with canonical AEAT period tokens
-(e.g. `modelo-303-2026-1T`), used by tests and any future default composer.
+(e.g. `modelo-303-<year>-1T`), used by tests and any future default composer.
 No aliases, no read-tolerance of old names.
 
-**R5 — One scratch convention.** Repo-root `scratch/` is the sole mandated
+**R5 — One scratch convention (amended 2026-10-29).** Repo-root `.tmp/` is the sole mandated
 dev/agent scratch location, with schema
-`scratch/<yyyy-mm-dd>-<owner-or-session>-<label>/` for directories and the
-same stem for loose files; `.gitignore` keeps ignoring all of it, gains a
+`.tmp/<yyyy-mm-dd>-<owner-or-session>-<label>/` for directories and the
+same stem for loose files; programmatic runs may instead use collision-resistant PID-owned children. Native build scratch is excluded from this root and stays under its enrolled CMake `build/<preset>/` tree. `.gitignore` keeps ignoring general scratch, gains a
 `.runtime-*/` pattern (the ad-hoc `.runtime-sNN-*` convention is retired and
 its existing dirs cleaned up), repairs the dead `src/cadrumo/...` corpus-manual
 rules to `src/cadrumo/...`, and broadens root-level scratch patterns so
 one-off scripts/dumps cannot land tracked. The currently tracked repo-root
 run artifacts (`revert.patch`, `rail-snap.md`, `add_frontmatter.py`,
 `test_docs_output.txt`, `scratch_pathspec.txt`) are deleted from tracking.
-Naked `test_*.py` under `scratch/` are deleted (stale imports) — the
+Naked `test_*.py` under `.tmp/` are deleted (stale imports) — the
 tests-topology rule already forbids their shape.
 
 **R6 — Env-var prefix adjudication.** The settings-field rename wave migrates
@@ -183,9 +184,7 @@ with eviction (R2) close both. Lifecycle-by-declaration (R3) generalises the
 three managed exemplars the codebase already ships instead of importing a new
 mechanism. The naming rulings (R4, R6) apply the accepted cadrumo ownership
 doctrine to the artifact surface the rename campaign did not sweep, using
-the hard-cut precedent already in-tree. R5 formalises what `scratch/` already
-is de facto — the swarm's working area — and kills the parallel undocumented
-`.runtime-s*` convention. R7 and R8 are consolidation of proven in-tree
+the hard-cut precedent already in-tree. R5 establishes `.tmp/` as the general working area under the explicit 2026-10-29 amendment, replacing the earlier scratch root, and kills the parallel undocumented `.runtime-s*` convention. R7 and R8 are consolidation of proven in-tree
 patterns onto single authorities, the same shape as prior single-contract
 campaigns (binding validation, period filter).
 
@@ -194,7 +193,7 @@ campaigns (binding validation, period filter).
 - Persistent application data stays under the categorised storage root;
   default transport sockets and namespace locks in installed Darwin mode use
   the narrowly declared external anchor below. Nothing durable enters the OS temp
-  dir; scratch stays under `scratch/`. Backup/GDPR-export data locations remain
+  dir; scratch stays under `.tmp/`. Backup/GDPR-export data locations remain
   unchanged by the transport exception.
 - The settings surface changes shape (defaults move; two dormant fields
   deleted; several fields renamed) — pre-release zero-legacy makes this
@@ -219,3 +218,19 @@ campaigns (binding validation, period filter).
 Persistent data, encrypted custody, logs, preferences, boot/installation records and start claims remain at existing locations. R8 isolation remains binding: development roots stay root-relative and explicit synthetic/operator socket namespaces do not resolve into the installed transport namespace. Custom installed data roots remain separated by root-derived endpoint identities. Namespace locks remain stable while contenders may exist and ordinary reclaim/uninstall never deletes their directory or inodes. There is no old-path reader, data movement or migration. The successor governs exact selection, naming, native validation and refusal.
 
 Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. This remedies the measured Darwin socket-path launch blocker without claiming implementation or native lifecycle acceptance.
+
+## 2026-10-29 accepted workspace temporary-output amendment
+
+The operator explicitly directed removal of all scattered scratch/temp output and mandated repository-root .tmp for general programmatic and agent temporary work, then separately required that native build artifacts never be written to native or outside the CMake-owned build outline. This authorizes the amendment and implementation without another approval.
+
+R5 formerly named scratch as the general workspace; that spelling has no continuing placement authority. General developer/agent scratch, captures, disposable reports and temporary files use .tmp/<date>-<owner>-<purpose> or collision-resistant process-owned children and are vacated after the task. Do not create alternative artifact roots, provider-local scratch or home/other-drive evidence directories.
+
+Native compilation, generated assets, test results and native verification scratch remain under the enrolled CMake build/<preset> tree. Native build producers must reject arbitrary output destinations and source-local output defaults. This qualifies the general .tmp rule for native build ownership; it does not authorize moving native outputs into root .tmp.
+
+Installed runtime state, machine-managed dependency/tool caches and destination-adjacent atomic-publication transactions retain their separate contracts. The amendment changes development workspace placement and cleanup, not taxpayer custody or installed storage. Historical ledgers/research record prior paths and must not be rewritten as though past runs used the new convention.
+
+## Amendment 2026-10-31 - Darwin transport selection without a mode
+
+Basis: the user's ruling of 2026-10-30 that Cadrumo has no development-versus-installed (dev/prod) mode and that the storage location is selected only by the environment: an absolute `CADRUMO_STORAGE_ROOT`, otherwise the per-user default for the channel. The user pre-approved ADR changes for the macOS platform bring-up, recorded in the Description of `2026-10-30-macos-platform-plan`. Implemented in commits 212247032d (Python `StorageMode` removal), 0a27935448 (native storage resolves from the environment alone) and 947fa42364 (runtime containment on macOS and Linux).
+
+R1, the Consequences and the 2026-10-08 exception name "installed Darwin mode". No such mode exists. Those passages now read "on Darwin": the runtime, worker and manager socket leaves and their namespace-ownership locks, plus the desktop single-instance lock and activation sockets, use the declared external anchor for every storage root. In the 2026-10-08 exception, "development roots stay root-relative and explicit synthetic/operator socket namespaces do not resolve into the installed transport namespace. Custom installed data roots remain separated by root-derived endpoint identities." now reads: "A namespace passed explicitly by a caller does not resolve into the shared transport directory; every other root remains separated there by its root-derived endpoint identity." R8 isolation of test roots still holds through `CADRUMO_STORAGE_ROOT` and endpoint identity. Persistent data locations are unchanged.

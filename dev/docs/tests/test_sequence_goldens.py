@@ -45,9 +45,11 @@ from sphinx.application import Sphinx
 from sphinx.errors import SphinxError
 
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
-from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
-from dev._paths import REPO_ROOT
+from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, GOLDEN_MASK_PATHS, differing_paths
+from dev.paths import REPO_ROOT
 
 from ..sequences.checks import (
     check_sequences,
@@ -61,48 +63,13 @@ from ..sequences.compare import compare_transcript_to_golden
 from ..sequences.golden_store import SequenceGolden, build_golden, normalise_document_paths
 from ..sequences.parser import parse_sequence
 from ..sequences.runner import SequenceTranscript, execute_sequence
-from ..sequences.schema import ParsedSequence
+from ..sequences.schema import FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _PAGE = "tutorials/anti-tautology-gate"
 _PROFILE_DELETE_SEQUENCE_ID = "profile-setup-delete"
 _PROFILE_DELETE_DIGEST_PATH = "result.fingerprint.digest"
-
-#: The workstation gate's own sequence, parsed here rather than taken from the
-#: enrolled docs tree. ``install-confirm`` -- the page that shows these very
-#: commands -- is deliberately display-only: every command that confirms an
-#: installation reports host facts, so no golden of it is reproducible on a
-#: second machine and all its frames carry a nondeterministic-output reason. A
-#: display-only sequence has no executed frames at all, so it cannot carry this
-#: gate. The gate does not need a committed golden: it compares two transcripts
-#: captured on the SAME host minutes apart, which is exactly the comparison the
-#: free-memory mask exists for.
-_WORKSTATION_SEQUENCE_ID = "workstation-mask-honesty"
-_WORKSTATION_BODY = "\n".join(
-    [
-        "@step Turn off a capability whose dependency this sandbox does not provision.",
-        "@setup aeat config profile capabilities set llm_vision off",
-        "@step Ask what is installed and what is missing.",
-        "@result aeat --format json config check",
-        "@expect exit_code == 0",
-    ],
-)
-
-#: A dependency row whose facts carry the live free-RAM reading the mask hides,
-#: alongside the total-RAM reading it must NOT hide.
-_WORKSTATION_HARDWARE_SERVICE = "local-inference-hardware"
-
-#: A preflight row `config check` really emits whose health is a deterministic
-#: product fact, not a host reading: it reports whether the bundled legal
-#: normatives corpus resolved. Inverting it must red, proving the host mask
-#: did not swallow the product evidence beside it.
-_WORKSTATION_DETERMINISTIC_CHECK = "corpus:normatives"
-
-#: The docs page these commands document. Used only as the comparison's page
-#: coordinate in diagnostics; this gate compares two live transcripts and
-#: consults no committed golden.
-_WORKSTATION_PAGE = "workstation-setup"
 
 #: The representative sequence: a real capture-threaded JSON read chain. The
 #: ``app diagnostics runs`` frame is deliberate: its payload is the one
@@ -187,18 +154,18 @@ _TRANSCRIPT_CHILD_PROGRAM = textwrap.dedent(
     """
     import json
     import sys
-    import tempfile
     from pathlib import Path
 
     from dev.docs.sequences.checks import discover_sequences
     from dev.docs.sequences.runner import execute_sequence
+    from dev.docs.sequences.sandbox import owned_scratch_directory
 
     discovered, problems = discover_sequences(sequence_id=sys.argv[1])
     if problems or len(discovered) != 1:
         raise SystemExit(f"discovery of {sys.argv[1]!r} failed: {problems} ({len(discovered)} found)")
     enrolled = discovered[0]
-    with tempfile.TemporaryDirectory(prefix="cli-sequence-gate-", ignore_cleanup_errors=True) as sandbox:
-        transcript = execute_sequence(enrolled.sequence, sandbox_root=Path(sandbox))
+    with owned_scratch_directory("cli-sequence-gate-") as sandbox:
+        transcript = execute_sequence(enrolled.sequence, sandbox_root=sandbox)
     payload = json.dumps({"page": enrolled.page, "transcript": transcript.model_dump_json()})
     Path(sys.argv[2]).write_text(payload, encoding="utf-8")
     """,
@@ -235,7 +202,7 @@ def _execute_in_child_interpreter(sequence_id: str, payload_path: Path) -> tuple
 def profile_delete_double_run(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, SequenceTranscript, SequenceTranscript]:
-    """Execute the real logout/delete contract twice in independent interpreters."""
+    """Execute the real preflight/delete contract twice in independent interpreters."""
     payloads = tmp_path_factory.mktemp("delete-transcripts")
     page, first = _execute_in_child_interpreter(_PROFILE_DELETE_SEQUENCE_ID, payloads / "first.json")
     _page, second = _execute_in_child_interpreter(_PROFILE_DELETE_SEQUENCE_ID, payloads / "second.json")
@@ -246,107 +213,22 @@ def _set_delete_fingerprint_leaf(
     value: SequenceGolden | SequenceTranscript,
     leaf: str,
     replacement: object,
+    *,
+    deleted: bool,
 ) -> SequenceGolden | SequenceTranscript:
-    """Return ``value`` with one real profile-delete fingerprint leaf changed."""
+    """Change one fingerprint leaf in the selected preflight or confirmed-delete frame."""
     document = value.model_dump(mode="json")
-    delete_frames = [frame for frame in document["frames"] if frame["envelope"]["command"] == "config.profile.delete"]
+    delete_frames = [
+        frame
+        for frame in document["frames"]
+        if frame["envelope"] is not None
+        and frame["envelope"]["command"] == "config.profile.delete"
+        and frame["envelope"]["result"]["deleted"] is deleted
+    ]
     assert len(delete_frames) == 1
     fingerprint = delete_frames[0]["envelope"]["result"]["fingerprint"]
     fingerprint[leaf] = replacement
     return type(value).model_validate_json(json.dumps(document))
-
-
-def _workstation_sequence() -> ParsedSequence:
-    return parse_sequence(
-        sequence_id=_WORKSTATION_SEQUENCE_ID,
-        options={"verify": "Verify the workstation check reports its dependency and preflight rows."},
-        body=_WORKSTATION_BODY,
-    )
-
-
-@pytest.fixture(scope="module")
-def workstation_double_run(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> tuple[str, SequenceTranscript, SequenceTranscript]:
-    """Execute the real workstation diagnostic contract twice in fresh sandboxes."""
-    sequence = _workstation_sequence()
-    first = execute_sequence(sequence, sandbox_root=tmp_path_factory.mktemp("workstation-a"))
-    second = execute_sequence(sequence, sandbox_root=tmp_path_factory.mktemp("workstation-b"))
-    return _WORKSTATION_PAGE, first, second
-
-
-def _set_workstation_fact(
-    transcript: SequenceTranscript,
-    *,
-    service: str,
-    fact: str,
-    replacement: object,
-) -> SequenceTranscript:
-    """Return a real workstation transcript with one dependency fact changed."""
-    document = transcript.model_dump(mode="json")
-    dependencies = document["frames"][-1]["envelope"]["result"]["dependencies"]
-    row = next((item for item in dependencies if item["service"] == service), None)
-    assert row is not None, (
-        f"the workstation check no longer reports a {service!r} dependency row, so this gate has no "
-        f"host-volatile fact to tamper with; it reports {sorted(item['service'] for item in dependencies)}"
-    )
-    assert fact in row["facts"], (
-        f"the {service!r} row no longer carries the {fact!r} fact this gate tampers with; "
-        f"it carries {sorted(row['facts'])}"
-    )
-    row["facts"][fact] = replacement
-    return SequenceTranscript.model_validate_json(json.dumps(document))
-
-
-def _invert_deterministic_health(transcript: SequenceTranscript) -> SequenceTranscript:
-    """Return a real workstation transcript with one deterministic preflight row flipped."""
-    document = transcript.model_dump(mode="json")
-    checks = document["frames"][-1]["envelope"]["result"]["preflight"]
-    row = next((item for item in checks if item["check"] == _WORKSTATION_DETERMINISTIC_CHECK), None)
-    assert row is not None, (
-        f"the workstation check no longer emits the {_WORKSTATION_DETERMINISTIC_CHECK!r} preflight row, so "
-        "this gate cannot prove the host mask leaves deterministic product evidence biting; it emits "
-        f"{sorted(item['check'] for item in checks)}"
-    )
-    row["healthy"] = not bool(row["healthy"])
-    return SequenceTranscript.model_validate_json(json.dumps(document))
-
-
-class TestWorkstationFreeMemoryMaskHonesty:
-    def test_two_real_runs_compare_clean_through_the_central_policy(
-        self,
-        workstation_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
-    ) -> None:
-        """Fresh diagnostics remain comparable without pinning the free-RAM reading."""
-        page, first, second = workstation_double_run
-        assert compare_transcript_to_golden(second, build_golden(first), page=page) == ()
-
-    def test_only_free_memory_tampering_is_ignored_and_deterministic_facts_bite(
-        self,
-        workstation_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
-    ) -> None:
-        """The real compare path masks free RAM but retains host and product evidence."""
-        page, first, second = workstation_double_run
-        golden = build_golden(first)
-
-        volatile = _set_workstation_fact(
-            second,
-            service=_WORKSTATION_HARDWARE_SERVICE,
-            fact="free_memory_bytes",
-            replacement=1,
-        )
-        assert compare_transcript_to_golden(volatile, golden, page=page) == ()
-
-        total_memory = _set_workstation_fact(
-            second,
-            service=_WORKSTATION_HARDWARE_SERVICE,
-            fact="total_memory_bytes",
-            replacement=1,
-        )
-        assert compare_transcript_to_golden(total_memory, golden, page=page)
-
-        corpus_changed = _invert_deterministic_health(second)
-        assert compare_transcript_to_golden(corpus_changed, golden, page=page)
 
 
 class TestProfileDeletePathMaskHonesty:
@@ -369,9 +251,11 @@ class TestProfileDeletePathMaskHonesty:
             residual |= differing_paths(left.envelope, right.envelope)
         assert residual == {_PROFILE_DELETE_DIGEST_PATH}
 
+    @pytest.mark.parametrize("deleted", [False, True], ids=["preflight", "confirmed-delete"])
     def test_only_digest_flap_compares_clean_and_sibling_tampering_bites(
         self,
         profile_delete_double_run: tuple[str, SequenceTranscript, SequenceTranscript],
+        deleted: bool,
     ) -> None:
         """The path mask hides the real flap but preserves fingerprint evidence."""
         page, first, second = profile_delete_double_run
@@ -379,7 +263,7 @@ class TestProfileDeletePathMaskHonesty:
         assert compare_transcript_to_golden(second, golden, page=page) == ()
 
         for leaf, tampered in (("file_count", 999), ("total_bytes", 999999)):
-            changed = _set_delete_fingerprint_leaf(second, leaf, tampered)
+            changed = _set_delete_fingerprint_leaf(second, leaf, tampered, deleted=deleted)
             assert isinstance(changed, SequenceTranscript)
             problems = compare_transcript_to_golden(changed, golden, page=page)
             assert len(problems) == 1
@@ -422,6 +306,7 @@ def _export_result(transcript: SequenceTranscript, index: int) -> Mapping[str, o
 @pytest.fixture(scope="module")
 def export_release_double_run(
     tmp_path_factory: pytest.TempPathFactory,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]]:
     """Run the real Modelo 100 export sequence at this release and at another one.
 
@@ -445,7 +330,8 @@ def export_release_double_run(
             root = tmp_path_factory.mktemp(f"export-{label}")
             with pytest.MonkeyPatch.context() as patch:
                 patch.setattr(software_identity, "PACKAGE_VERSION", version)
-                aux = software_identity.aeat_aux_version()
+                with validating_governed_facts(operation):
+                    aux = software_identity.aeat_aux_version()
                 transcript = execute_sequence(item.sequence, sandbox_root=root)
             runs.append((aux, transcript, (root / "workdir" / _EXPORT_FILE).read_bytes()))
     return runs[0], runs[1]
@@ -456,23 +342,33 @@ class TestModeloExportReleaseMaskHonesty:
         self,
         export_release_double_run: tuple[tuple[str, SequenceTranscript, bytes], tuple[str, SequenceTranscript, bytes]],
     ) -> None:
-        """The mask covers exactly what a release changes, so it cannot widen unnoticed."""
+        """The mask covers exactly what a release changes in compared frames, so it cannot widen unnoticed.
+
+        Setup envelopes never reach a golden, so per-write identities such as a
+        stored row's revision id are outside what the mask has to cover. A shown
+        frame's per-invocation identity that the central policy masks (the edit
+        receipt id of the work-income statement) differs between any two runs,
+        release or not, so it is left out of what a release changed.
+        """
         (first_aux, first, _), (second_aux, second, _) = export_release_double_run
         assert first_aux != second_aux
         residual: dict[int, frozenset[str]] = {}
         for index, (left, right) in enumerate(zip(first.frames, second.frames, strict=True)):
-            if (
-                left.envelope is not None
-                and right.envelope is not None
-                and (
-                    paths := differing_paths(
-                        normalise_document_paths(left.envelope, storage_root=first.storage_root, workdir=first.workdir),
-                        normalise_document_paths(
-                            right.envelope, storage_root=second.storage_root, workdir=second.workdir
-                        ),
-                    )
+            if left.kind is FrameKind.SETUP or left.envelope is None or right.envelope is None:
+                continue
+            per_invocation = frozenset(
+                path
+                for command, path in GOLDEN_MASK_PATHS
+                if command == left.envelope.get("command") and command != _EXPORT_COMMAND
+            )
+            paths = (
+                differing_paths(
+                    normalise_document_paths(left.envelope, storage_root=first.storage_root, workdir=first.workdir),
+                    normalise_document_paths(right.envelope, storage_root=second.storage_root, workdir=second.workdir),
                 )
-            ):
+                - per_invocation
+            )
+            if paths:
                 residual[index] = paths
         export = _export_frame(first)
         assert residual == {export: _RELEASE_BOUND_EXPORT_PATHS}
@@ -652,7 +548,7 @@ def _hermetic_env(tmp_path: pytest.TempPathFactory) -> Iterator[None]:
     root = Path(str(tmp_path)) / "cadrumo-store"
     root.mkdir()
     with (
-        scoped_env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(root)),
+        scoped_env_var("CADRUMO_STORAGE_ROOT", str(root)),
         scoped_env_var("CADRUMO_OUTPUT_LANGUAGE", "en"),
     ):
         yield
@@ -846,7 +742,9 @@ class TestBothSurfacesRedOnDivergence:
         assert discovery_problems == ()
 
         started = time.monotonic()
-        clean = check_sequences_in_subprocess(page=page)
+        # Both runs execute every sequence: a verdict the clean run records would
+        # otherwise let the bounded run finish from the cache before its deadline.
+        clean = check_sequences_in_subprocess(page=page, reuse_verdicts=False)
         clean_duration = time.monotonic() - started
         capsys.readouterr()
         assert clean == (), f"the bound is measured against a CLEAN run of this page: {clean}"
@@ -857,6 +755,7 @@ class TestBothSurfacesRedOnDivergence:
                 "check",
                 "--page",
                 page,
+                "--execute-all",
                 "--timeout",
                 str(timeout),
             ],

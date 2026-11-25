@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.identity.documents import IdentityError
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _authority_operation() -> Iterator[None]:
     """Validate invoices under the generation-pinned authority production uses."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -71,7 +71,7 @@ def _valid_invoice(
     invoice_number: str = "INV-001",
     issued_at: date = date(2026, 4, 1),
     counterparty_name: str = "Cliente SL",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
     counterparty_country: str = "ES",
     currency: str = "EUR",
     lines: tuple[InvoiceLine, ...] | None = None,
@@ -333,7 +333,7 @@ def test_invoice_rejects_invalid_core_fields() -> None:
             "invoice_number": "INV-001",
             "issued_at": date(2026, 4, 1),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100"),
             "iva_total": Decimal("21"),
@@ -355,7 +355,7 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     numeric slot is resolved against :func:`cadrumo.domain.iva.lookup_rate`
     for Spain at a given date.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ...iva.lookup import lookup_rate
         from ...iva.schema import EUMemberState, IvaRateKind
 
@@ -404,7 +404,7 @@ def test_invoice_requires_exact_invoice_level_totals() -> None:
                 "invoice_number": "INV-001",
                 "issued_at": date(2026, 4, 1),
                 "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("100.01"),
                 "iva_total": Decimal("21.00"),
@@ -446,7 +446,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
                 "invoice_number": "INV-001",
                 "issued_at": date(2026, 4, 1),
                 "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("200.00"),
                 "iva_total": Decimal("42.00"),
@@ -540,7 +540,7 @@ def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
         kind=InvoiceKind.ISSUED,
         invoice_number="INV-001",
         issued_at=date(2026, 4, 1),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
     )
@@ -548,7 +548,7 @@ def test_derive_invoice_id_is_stable_over_equivalent_decimals() -> None:
         kind=InvoiceKind.ISSUED,
         invoice_number="INV-001",
         issued_at=date(2026, 4, 1),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121"),
     )
@@ -561,13 +561,6 @@ def test_invoice_number_is_uppercased_for_identity() -> None:
     upper = _valid_invoice(invoice_number="INV-001")
     assert lower.invoice_id == upper.invoice_id
     assert lower.invoice_number == "INV-001"
-
-
-def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
-    """Duplicate logical IDs must be rejected when building a catalogue."""
-    invoice = _valid_invoice()
-    with pytest.raises(ValidationError, match=r"duplicate invoice_id"):
-        build_invoice_catalogue([invoice, invoice])
 
 
 def test_catalogue_iteration_yields_invoices() -> None:

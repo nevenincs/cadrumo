@@ -46,10 +46,16 @@ from ..ledger_iva_bindings import (
 )
 from ..rate_box_partition import derive_rate_box_partitions
 from ..schema import BindingDefinition, ModeloRevision
-from .m390_formula_support import assert_partition_is_not_double_counted
+from .m390_formula_support import (
+    assert_partition_is_not_double_counted,
+    spanish_temporary_rate_window,
+    temporary_rate_year,
+)
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = temporary_rate_year()
 
 
 def _axis_sequence(axes: Mapping[str, object], key: str) -> tuple[object, ...]:
@@ -71,7 +77,7 @@ _TIERS = (
         "21",
         IvaCategory("domestic_general"),
         IvaRateKind("general"),
-        date(2024, 3, 10),
+        date(_YEAR, 3, 10),
         "4000.00",
         "840.00",
     ),
@@ -79,7 +85,7 @@ _TIERS = (
         "10",
         IvaCategory("domestic_reduced"),
         IvaRateKind("reduced"),
-        date(2024, 3, 11),
+        date(_YEAR, 3, 11),
         "2500.00",
         "250.00",
     ),
@@ -87,7 +93,7 @@ _TIERS = (
         "7-5",
         IvaCategory("domestic_reduced"),
         IvaRateKind("reduced"),
-        date(2024, 11, 12),
+        spanish_temporary_rate_window("7.5")[0],
         "1600.00",
         "120.00",
     ),
@@ -95,7 +101,7 @@ _TIERS = (
         "5",
         IvaCategory("domestic_reduced"),
         IvaRateKind("reduced"),
-        date(2024, 8, 13),
+        spanish_temporary_rate_window("5")[0],
         "1400.00",
         "70.00",
     ),
@@ -103,7 +109,7 @@ _TIERS = (
         "4",
         IvaCategory("domestic_super_reduced"),
         IvaRateKind("super_reduced"),
-        date(2024, 3, 14),
+        date(_YEAR, 3, 14),
         "1200.00",
         "48.00",
     ),
@@ -111,11 +117,11 @@ _TIERS = (
         "2",
         IvaCategory("domestic_super_reduced"),
         IvaRateKind("super_reduced"),
-        date(2024, 11, 15),
+        spanish_temporary_rate_window("2")[0],
         "900.00",
         "18.00",
     ),
-    ("0", IvaCategory("domestic_zero"), IvaRateKind("zero"), date(2024, 3, 16), "700.00", "0.00"),
+    ("0", IvaCategory("domestic_zero"), IvaRateKind("zero"), date(_YEAR, 3, 16), "700.00", "0.00"),
 )
 
 _APPLIED_RATE = {"21": "0.21", "10": "0.10", "7-5": "0.075", "5": "0.05", "4": "0.04", "2": "0.02", "0": "0.00"}
@@ -125,7 +131,7 @@ _UNRATED_BASE = Decimal("330.00")
 
 
 def _m390_revision() -> ModeloRevision:
-    return published_snapshot("390", filing_year=2024, period="0A").revision
+    return published_snapshot("390", filing_year=_YEAR, period="0A").revision
 
 
 def _observation(
@@ -171,7 +177,7 @@ def _unrated_row() -> IvaLedgerObservation:
     return _observation(
         category=IvaCategory("domestic_reduced"),
         rate_kind=IvaRateKind("reduced"),
-        on=date(2024, 6, 1),
+        on=date(_YEAR, 6, 1),
         base=_UNRATED_BASE,
         cuota=_UNRATED_CUOTA,
         applied_rate=None,
@@ -236,7 +242,7 @@ def _unrated_zero_row() -> IvaLedgerObservation:
     return _observation(
         category=IvaCategory("domestic_zero"),
         rate_kind=IvaRateKind("zero"),
-        on=date(2024, 6, 2),
+        on=date(_YEAR, 6, 2),
         base=_UNRATED_BASE,
         cuota=Decimal("0.00"),
         applied_rate=None,

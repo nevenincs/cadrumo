@@ -13,22 +13,22 @@ from cadrumo.application.ledger.actions_split_merge import split_transaction
 from cadrumo.application.ledger.models import SplitChildCommand
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
-from ._split_test_support import _BUCKET_ID, _create_parent, _repositories
+from .split_test_support import BUCKET_ID, create_parent, repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    parent_result = create_parent(secure_objects, transaction_repository, event_repository)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         archive_manual_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=parent_result.ref.transaction_id,
             actor="operator-A",
             source_command="aeat app ledger archive",
@@ -37,14 +37,14 @@ def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository)
     with (
         pytest.raises(TransactionValidationError, match="only active"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
         ) as ports,
     ):
         split_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=parent_result.ref.transaction_id,
             children=(
                 SplitChildCommand(amount=Decimal("60.00"), description="a"),
@@ -56,19 +56,19 @@ def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository)
 
 
 def test_split_refuses_sum_mismatch(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    parent_result = create_parent(secure_objects, transaction_repository, event_repository)
     with (
         pytest.raises(TransactionValidationError, match="sum to the parent amount exactly"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
         ) as ports,
     ):
         split_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=parent_result.ref.transaction_id,
             children=(
                 SplitChildCommand(amount=Decimal("60.00"), description="a"),
@@ -80,19 +80,19 @@ def test_split_refuses_sum_mismatch(secure_objects: SecureObjectRepository) -> N
 
 
 def test_split_refuses_single_child(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    parent_result = create_parent(secure_objects, transaction_repository, event_repository)
     with (
         pytest.raises(TransactionValidationError, match="at least two children"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
         ) as ports,
     ):
         split_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=parent_result.ref.transaction_id,
             children=(SplitChildCommand(amount=Decimal("100.00"), description="only one"),),
             actor="operator-A",
@@ -101,19 +101,19 @@ def test_split_refuses_single_child(secure_objects: SecureObjectRepository) -> N
 
 
 def test_split_refuses_negative_magnitude_child(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    parent_result = create_parent(secure_objects, transaction_repository, event_repository)
     with (
         pytest.raises(TransactionValidationError, match="non-negative magnitude"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
         ) as ports,
     ):
         split_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=parent_result.ref.transaction_id,
             children=(
                 SplitChildCommand(amount=Decimal("-30.00"), description="a"),
@@ -125,19 +125,19 @@ def test_split_refuses_negative_magnitude_child(secure_objects: SecureObjectRepo
 
 
 def test_split_refuses_zero_child_amount(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    parent_result = _create_parent(secure_objects, transaction_repository, event_repository)
+    transaction_repository, event_repository = repositories(secure_objects)
+    parent_result = create_parent(secure_objects, transaction_repository, event_repository)
     with (
         pytest.raises(TransactionValidationError, match="must not be zero"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
         ) as ports,
     ):
         split_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=parent_result.ref.transaction_id,
             children=(
                 SplitChildCommand(amount=Decimal("100.00"), description="a"),

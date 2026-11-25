@@ -19,7 +19,7 @@ from ..catalogue_intake_refusal import (
     InvoiceWizardValidationRefusalProjection,
 )
 from ..creation_wizard import InvoiceWizardFieldError, create_invoice_via_wizard
-from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from .catalogue_creation_fakes import in_memory_catalogue_creation_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("29292929-2929-4292-8292-292929292929")
@@ -111,7 +111,7 @@ def test_canonical_wizard_raises_typed_ordered_field_carrier_before_any_write(
         create_invoice_via_wizard(
             bucket_id=str(_PROFILE),
             kind=InvoiceKind.RECEIVED,
-            counterparty_nif="A58818501",
+            counterparty_nif="B00010157",
             counterparty_name="",
             invoice_number="SYNTHETIC-WIZARD",
             invoice_date="2026-05-01",

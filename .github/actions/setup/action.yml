@@ -1,5 +1,5 @@
 name: Setup
-description: Provision uv, just, and the repository worktree; optionally provision the registry authority and the browser toolchain.
+description: Provision uv, just, and the repository worktree; optionally provision the registry authority, the browser toolchain and worker containment.
 
 inputs:
   python-version:
@@ -25,16 +25,63 @@ inputs:
     description: When true, also provision the Playwright browser channels.
     required: false
     default: "false"
+  cache:
+    description: >-
+      When true, restore and save the uv download cache between runs. For
+      hosted runners, which start empty; a self-hosted runner keeps its own.
+    required: false
+    default: "false"
+  worker-containment:
+    description: >-
+      When true, start the job user's systemd user manager and prove that a
+      transient user unit runs, which the runtime needs before it will launch
+      a profile worker. For hosted Linux runners, whose job runs outside a
+      login session; a self-hosted runner's own session holds its manager, and
+      lingering would change that machine for good.
+    required: false
+    default: "false"
 
 runs:
   using: composite
   steps:
-    # Restored before `just setup`: the editable build compiles the authority
-    # as a side effect unless a current one is already published, so a restore
-    # after it would arrive too late to save that compilation.
+    # The runtime launches every profile worker as a transient systemd user
+    # service and refuses with `runtime_containment_unavailable` when it
+    # cannot drive the user manager. A hosted job runs as `runner` outside a
+    # login session, so no `user@<uid>.service` and no bus at
+    # `/run/user/<uid>/bus` exist until lingering starts them. The probe is
+    # the runtime's own launch reduced to a unit that does nothing: the fixed
+    # tool path, a cleared environment and no DBUS_SESSION_BUS_ADDRESS, which
+    # the runtime ignores by design. First, because a job that cannot contain
+    # a worker should say so in a second rather than after the toolchain.
+    - name: Prove worker containment
+      if: inputs.worker-containment == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        refuse() {
+          echo "::error title=Worker containment unavailable::$1; the runtime would refuse every profile worker with runtime_containment_unavailable"
+          exit 1
+        }
+        [ "$RUNNER_OS" = "Linux" ] || refuse "worker-containment starts a systemd user manager and $RUNNER_OS has none"
+        user="$(id -un)"
+        uid="$(id -u)"
+        bus="/run/user/${uid}/bus"
+        sudo loginctl enable-linger "$user" || refuse "loginctl enable-linger ${user} failed"
+        sudo systemctl start "user@${uid}.service" || refuse "user@${uid}.service did not start"
+        for _ in $(seq 1 300); do
+          [ -S "$bus" ] && break
+          sleep 0.1
+        done
+        [ -S "$bus" ] || refuse "no systemd user bus at ${bus} thirty seconds after user@${uid}.service started"
+        env -i PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/${uid}" /usr/bin/systemd-run --user --collect --wait --property=KillMode=control-group /bin/true || refuse "a transient user unit did not run to exit 0 under user@${uid}.service"
+        echo "worker containment: a transient user unit ran to exit 0 under user@${uid}.service"
+
+    # Restored before `just setup-checkout`: the editable build compiles the
+    # authority as a side effect unless a current one is already published, so
+    # a restore after it would arrive too late to save that compilation.
     - name: Restore the published registry authority
       if: inputs.authority == 'true' && inputs.authority-artifact != ''
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: ${{ inputs.authority-artifact }}
         path: .authority
@@ -45,11 +92,12 @@ runs:
         tool: just@1.38.0
 
     - name: Install uv
-      uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
       with:
-        prune-cache: false
+        prune-cache: ${{ inputs.cache == 'true' }}
         version: "0.11.29"
-        enable-cache: false
+        enable-cache: ${{ inputs.cache == 'true' }}
+        cache-dependency-glob: uv.lock
         python-version: ${{ inputs.python-version }}
 
     - name: Initialize the worktree
@@ -57,7 +105,7 @@ runs:
       # Self-hosted runner services can carry a workstation authority override,
       # and the editable build inside `uv sync` honours a foreign
       # `CADRUMO_AUTHORITY_ROOT` as named. The unset keeps setup on this
-      # checkout's own `.authority`. `dev/_paths.py` re-seeds the variable to
+      # checkout's own `.authority`. `dev/paths.py` re-seeds the variable to
       # that directory for every later `python -m dev.*` tool, so CI exercises
       # the CHECKOUT posture, never the packaged default.
       #
@@ -68,7 +116,7 @@ runs:
         CADRUMO_EDITABLE_AUTHORITY: ${{ inputs.authority == 'true' && 'resolve' || 'skip' }}
       run: |
         unset CADRUMO_AUTHORITY_ROOT
-        just setup
+        just setup-checkout
 
     # A first `uv sync` publishes the authority only as a side effect of the
     # editable build, and a runner whose uv cache is shared across checkouts

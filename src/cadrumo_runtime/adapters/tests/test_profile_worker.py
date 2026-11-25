@@ -7,13 +7,13 @@ import sys
 import time
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import AbstractContextManager, ExitStack, contextmanager, suppress
+from contextlib import ExitStack, contextmanager, suppress
 from datetime import timedelta
 from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from pydantic import BaseModel, ConfigDict, SecretBytes, TypeAdapter
+from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
@@ -23,10 +23,8 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId, OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind, SessionState
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
@@ -34,25 +32,31 @@ from cadrumo.application.user_profile.profile_record_repository import ProfileRe
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.bucket_pointer import read_pointer
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.process_support import fixture_arguments, fixture_environment
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
-    WorkerAutomationInventoryAllowed,
-    WorkerAutomationInventoryRequest,
     WorkerModelRun,
     WorkerResponseScopeRequest,
 )
-from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..profile_worker import ProfileWorkerProcess
-from .process_support import fixture_arguments, fixture_environment
-from .profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
+from .profile_worker_support import (
+    PROFILE_INPUT,
+    changed,
+    install_lease,
+    lease,
+    release_worker,
+    worker_profiles,
+)
+from .worker_authority_support import UnavailableApprovalAuthority
 
 pytestmark = [
     pytest.mark.integration,
@@ -69,7 +73,7 @@ def profiles(tmp_path: Path):
         yield subjects
 
 
-class _AllowWorkerOperations:
+class AllowWorkerOperations(UnavailableApprovalAuthority):
     """Permit only the operation checks exercised by this installed-worker case."""
 
     @contextmanager
@@ -82,25 +86,15 @@ class _AllowWorkerOperations:
             expires_at=now() + timedelta(seconds=20),
         )
 
-    def automation_inventory(
-        self, request: WorkerAutomationInventoryRequest
-    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def operations_advanced(self, operation_ids: tuple[OperationId, ...], *, records_changed: bool = False) -> None:
+    def operations_advanced(
+        self,
+        operation_ids: tuple[OperationId, ...],
+        *,
+        records_changed: bool = False,
+        settled: tuple[OperationId, ...] = (),
+    ) -> None:
         # No observer is connected in these cases, so a progress cue has nobody to wake.
         return
-
-    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_publication(
-        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
-    ) -> EnrollmentTransition | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def model_run(
         self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray
@@ -145,7 +139,7 @@ def _record_snapshot(profile_id: UUID) -> tuple[int, str, dict[str, str]]:
 
 def _wait_for_terminal(worker: ProfileWorkerProcess, session_id: UUID, operation_id: OperationId):
     request = OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32)
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     while True:
         observation = worker.observe(session_id, request).observation
         assert isinstance(observation, OperationObservationSuccessV1), observation
@@ -154,7 +148,7 @@ def _wait_for_terminal(worker: ProfileWorkerProcess, session_id: UUID, operation
             return projection
         if time.monotonic() >= deadline:
             raise AssertionError(
-                f"operation {operation_id} did not settle within the original 10s deadline; "
+                f"operation {operation_id} did not settle within the {HANG_GUARD_SECONDS:g}s hang guard; "
                 + _settlement_diagnostic(projection)
             )
         time.sleep(0.02)
@@ -193,13 +187,13 @@ def test_concurrent_profiles_never_retarget_and_disconnect_is_isolated(profiles)
     root, ((first, first_key), (second, second_key)) = profiles
     with ExitStack() as cleanup:
         a = ProfileWorkerProcess(first, storage_root=root)
-        cleanup.callback(a.close)
+        cleanup.callback(release_worker, a)
         b = ProfileWorkerProcess(second, storage_root=root)
-        cleanup.callback(b.close)
+        cleanup.callback(release_worker, b)
         a_lease, b_lease = lease(first), lease(second)
         a_buffer, b_buffer = bytearray(first_key), bytearray(second_key)
-        a.install(a_lease, a_buffer)
-        b.install(b_lease, b_buffer)
+        install_lease(a, a_lease, a_buffer)
+        install_lease(b, b_lease, b_buffer)
         assert not any(a_buffer) and not any(b_buffer)
         a_status, b_status = a.status(), b.status()
         assert a_status.sessions == (a_lease.session_id,)
@@ -207,13 +201,13 @@ def test_concurrent_profiles_never_retarget_and_disconnect_is_isolated(profiles)
         assert a_status.in_flight_operations == b_status.in_flight_operations == 0
         # A foreign profile's valid DEK cannot switch this process to B.
         with pytest.raises(AutomationCustodyError):
-            a.install(b_lease, bytearray(second_key))
+            install_lease(a, b_lease, bytearray(second_key))
         assert a.status().sessions == (a_lease.session_id,)
         assert b.status().sessions == (b_lease.session_id,)
         b.retire(b_lease.session_id)
         assert not b.status().sessions
         fresh = lease(second)
-        b.install(fresh, bytearray(second_key))
+        install_lease(b, fresh, bytearray(second_key))
         assert b.status().sessions == (fresh.session_id,)
 
 
@@ -223,13 +217,13 @@ def test_worker_rejects_wrong_dek_before_acknowledging_custody(profiles) -> None
     try:
         secret = bytearray(wrong_key)
         with pytest.raises(AutomationCustodyError):
-            worker.install(lease(identity), secret)
+            install_lease(worker, lease(identity), secret)
         assert not any(secret)
         admitted = lease(identity)
-        worker.install(admitted, bytearray(key))
+        install_lease(worker, admitted, bytearray(key))
         assert worker.status().sessions == (admitted.session_id,)
     finally:
-        worker.close()
+        release_worker(worker)
 
 
 def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> None:
@@ -237,17 +231,19 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
     worker = ProfileWorkerProcess(identity, storage_root=root)
     try:
         # Prepare the cold application graph before starting the expiry clock.
-        worker.prepare_api_admission(deadline=time.monotonic() + 30)
+        worker.prepare_api_admission(deadline=time.monotonic() + HANG_GUARD_SECONDS)
         short, independent = lease(identity, seconds=2), lease(identity)
-        worker.install(short, bytearray(key))
-        worker.install(independent, bytearray(key))
+        install_lease(worker, short, bytearray(key))
+        install_lease(worker, independent, bytearray(key))
         refreshed = changed(
             short, issued_at=now(), issued_monotonic=time.monotonic(), expires_at=now() + timedelta(seconds=4)
         )
         worker.refresh(refreshed)
         worker.retire(independent.session_id)
         assert worker.status().sessions == (short.session_id,)
-        deadline = time.monotonic() + 6
+        # The lease ends at its own expiry; how soon the worker is seen to have ended it depends
+        # on the machine, so this waits for the session to go and bounds only a hang.
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while worker.status().sessions and time.monotonic() < deadline:
             time.sleep(0.1)
         assert not worker.status().sessions
@@ -263,7 +259,7 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
             )
         assert expired.value.reason is AccessDenialCode.SESSION_EXPIRED
     finally:
-        worker.close()
+        release_worker(worker)
 
 
 def test_password_candidate_does_not_replace_agents_or_select_another_profile(profiles) -> None:
@@ -272,7 +268,7 @@ def test_password_candidate_does_not_replace_agents_or_select_another_profile(pr
     worker = ProfileWorkerProcess(identity, storage_root=root)
     try:
         api = lease(identity)
-        worker.install(api, bytearray(key))
+        install_lease(worker, api, bytearray(key))
         password = bytearray(PROFILE_INPUT.encode())
         with worker.authenticate_human(password) as outcome:
             assert outcome.bucket_id == str(identity.binding.profile_id) and not outcome.session_persisted
@@ -306,7 +302,7 @@ def test_password_candidate_does_not_replace_agents_or_select_another_profile(pr
         assert worker.status().sessions == (api.session_id,)
         assert read_pointer(root) == selected
     finally:
-        worker.close()
+        release_worker(worker)
 
 
 def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision_conflict(profiles) -> None:
@@ -316,15 +312,15 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
     _select_profile(root, identity_a.binding.profile_id)
     assert read_pointer(root).bucket_id == str(identity_a.binding.profile_id)
 
-    authority = _AllowWorkerOperations()
+    authority = AllowWorkerOperations()
     with ExitStack() as cleanup:
         worker_a = ProfileWorkerProcess(identity_a, storage_root=root, authorization=authority)
-        cleanup.callback(worker_a.close)
+        cleanup.callback(release_worker, worker_a)
         worker_b = ProfileWorkerProcess(identity_b, storage_root=root, authorization=authority)
-        cleanup.callback(worker_b.close)
+        cleanup.callback(release_worker, worker_b)
         lease_a, lease_b = lease(identity_a), lease(identity_b)
-        worker_a.install(lease_a, bytearray(key_a))
-        worker_b.install(lease_b, bytearray(key_b))
+        install_lease(worker_a, lease_a, bytearray(key_a))
+        install_lease(worker_b, lease_b, bytearray(key_b))
 
         # A human switch changes the shared default pointer while both workers retain
         # their immutable bindings and installed custody.
@@ -357,7 +353,7 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
                 pool.submit(worker_b.start, lease_b.session_id, submitted_b.receipt.operation_id),
             )
             for future in started:
-                future.result(timeout=10)
+                future.result(timeout=HANG_GUARD_SECONDS)
 
         result_a = _wait_for_terminal(worker_a, lease_a.session_id, submitted_a.receipt.operation_id)
         result_b = _wait_for_terminal(worker_b, lease_b.session_id, submitted_b.receipt.operation_id)
@@ -435,14 +431,14 @@ class _WindowsBrowserFixture:
                     win32api.TerminateProcess(handle, 124)
             if self.process.returncode is None:
                 self.process.kill()
-            _, self.stderr = await asyncio.wait_for(self.process.communicate(), timeout=10)
+            _, self.stderr = await asyncio.wait_for(self.process.communicate(), timeout=HANG_GUARD_SECONDS)
         for pid, handle in tuple(self.handles.items()):
             win32api.CloseHandle(handle)
             del self.handles[pid]
 
 
 async def _windows_fixture_record[T: BaseModel](path: Path, model: type[T], owner: _WindowsBrowserFixture) -> T:
-    deadline = time.monotonic() + 35
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     failure = path.parent / "windows-worker-browser-failure.json"
     while not path.exists():
         assert not failure.exists(), "post-admission browser fixture reported failure"
@@ -458,7 +454,7 @@ async def _windows_job_members(owner: _WindowsBrowserFixture) -> dict[int, str]:
     assert owner.process.stdin is not None and owner.process.stdout is not None
     owner.process.stdin.write(b"members\n")
     await owner.process.stdin.drain()
-    encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=5)
+    encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=HANG_GUARD_SECONDS)
     assert 0 < len(encoded) <= 65536
     members = TypeAdapter(list[_WindowsJobMember]).validate_json(encoded)
     assert 4 <= len(members) <= 4096
@@ -467,101 +463,145 @@ async def _windows_job_members(owner: _WindowsBrowserFixture) -> dict[int, str]:
     return {member.pid: member.created for member in members}
 
 
-@pytest.mark.asyncio
-async def test_admitted_worker_browser_descendants_end_on_owner_death(tmp_path: Path) -> None:
-    """Real private admission precedes Chromium; native object identities prove the observed cut."""
-    import psutil
-    import win32api
-    import win32con
-    import win32event
-    import win32process
-
-    owner = _WindowsBrowserFixture(
+async def _launch_browser_owner(tmp_path: Path, mode: str) -> _WindowsBrowserFixture:
+    return _WindowsBrowserFixture(
         await asyncio.create_subprocess_exec(
             sys.executable,
-            *fixture_arguments(
-                "cadrumo_runtime.host.tests.windows_worker_parent_fixture",
-                "admitted-browser-owner",
-                str(tmp_path),
-            ),
+            *fixture_arguments("cadrumo_runtime.host.tests.windows_worker_parent_fixture", mode, str(tmp_path)),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=fixture_environment(),
         )
     )
-    try:
-        assert owner.process.stdout is not None
-        encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=40)
-        assert 0 < len(encoded) <= 4096
-        parent = _WindowsBrowserParent.model_validate_json(encoded)
-        assert parent.runtime_pid > 0
-        assert parent.runtime_pid == owner.process.pid or psutil.Process(parent.runtime_pid).ppid() == owner.process.pid
-        rights = win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ
-        owner.handles[parent.runtime_pid] = win32api.OpenProcess(
-            rights | win32con.PROCESS_TERMINATE, False, parent.runtime_pid
+
+
+async def _hold_runtime_parent(owner: _WindowsBrowserFixture) -> tuple[_WindowsBrowserParent, int, int]:
+    """Open the runtime parent and return it, the shared access rights and its held handle."""
+    import psutil
+    import win32api
+    import win32con
+    import win32event
+    import win32process
+
+    assert owner.process.stdout is not None
+    encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=40)
+    assert 0 < len(encoded) <= 4096
+    parent = _WindowsBrowserParent.model_validate_json(encoded)
+    assert parent.runtime_pid > 0
+    assert parent.runtime_pid == owner.process.pid or psutil.Process(parent.runtime_pid).ppid() == owner.process.pid
+    rights = win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ
+    owner.handles[parent.runtime_pid] = win32api.OpenProcess(
+        rights | win32con.PROCESS_TERMINATE, False, parent.runtime_pid
+    )
+    owner.runtime_pid = parent.runtime_pid
+    parent_handle = owner.handles[parent.runtime_pid]
+    assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
+    assert win32process.GetProcessTimes(parent_handle)["CreationTime"].isoformat() == parent.created
+    return parent, rights, parent_handle
+
+
+async def _await_lease_acknowledgement(owner: _WindowsBrowserFixture) -> None:
+    assert owner.process.stdout is not None
+    ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=100)
+    if ready not in (b"ready\n", b"ready\r\n"):
+        with suppress(TimeoutError):
+            await asyncio.wait_for(owner.process.wait(), timeout=5)
+        if owner.process.returncode is not None and owner.process.stderr is not None:
+            owner.stderr = await owner.process.stderr.read()
+        assert ready in (b"ready\n", b"ready\r\n"), (
+            f"real profile lease was not acknowledged: {ready!r}; "
+            f"child returncode={owner.process.returncode}; stderr={owner.stderr!r}"
         )
-        owner.runtime_pid = parent.runtime_pid
-        parent_handle = owner.handles[parent.runtime_pid]
-        assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
-        assert win32process.GetProcessTimes(parent_handle)["CreationTime"].isoformat() == parent.created
-        ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=100)
-        if ready not in (b"ready\n", b"ready\r\n"):
-            with suppress(TimeoutError):
-                await asyncio.wait_for(owner.process.wait(), timeout=5)
-            if owner.process.returncode is not None and owner.process.stderr is not None:
-                owner.stderr = await owner.process.stderr.read()
-            assert ready in (b"ready\n", b"ready\r\n"), (
-                f"real profile lease was not acknowledged: {ready!r}; "
-                f"child returncode={owner.process.returncode}; stderr={owner.stderr!r}"
+
+
+async def _hold_admitted_worker(
+    owner: _WindowsBrowserFixture, tmp_path: Path, parent: _WindowsBrowserParent, rights: int, worker_extra_rights: int
+) -> _WindowsBrowserAdmission:
+    import win32api
+    import win32event
+
+    admission = await _windows_fixture_record(
+        tmp_path / "windows-worker-admitted.json", _WindowsBrowserAdmission, owner
+    )
+    # Keep the selected installed interpreter even when its Windows venv
+    # launcher retains an intermediate parent. Base Python would discard
+    # the isolated private worker's installed environment.
+    assert admission.runtime_pid == parent.runtime_pid
+    assert admission.worker_pid > 0 and admission.worker_pid != admission.runtime_pid
+    assert admission.buffer_wiped is True
+    for pid in (admission.runtime_pid, admission.worker_pid):
+        if pid not in owner.handles:
+            owner.handles[pid] = win32api.OpenProcess(
+                rights | (worker_extra_rights if pid == admission.worker_pid else 0), False, pid
             )
-        admission = await _windows_fixture_record(
-            tmp_path / "windows-worker-admitted.json", _WindowsBrowserAdmission, owner
-        )
-        # Keep the selected installed interpreter even when its Windows venv
-        # launcher retains an intermediate parent. Base Python would discard
-        # the isolated private worker's installed environment.
-        assert admission.runtime_pid == parent.runtime_pid
-        assert admission.worker_pid > 0 and admission.worker_pid != admission.runtime_pid
-        assert admission.buffer_wiped is True
-        for pid in (admission.runtime_pid, admission.worker_pid):
-            if pid not in owner.handles:
-                owner.handles[pid] = win32api.OpenProcess(rights, False, pid)
-            assert win32event.WaitForSingleObject(owner.handles[pid], 0) == win32event.WAIT_TIMEOUT
-        # The owner acknowledges custody first; this explicit test barrier then
-        # allows its already-contained worker to create real browser descendants.
-        (tmp_path / "windows-start-browser").write_text("start", encoding="ascii")
-        browser = await _windows_fixture_record(tmp_path / "windows-worker-browser.json", _WindowsBrowserReady, owner)
-        assert browser.worker_pid == admission.worker_pid and browser.title == "synthetic containment"
-        selected_executable = browser.executable.resolve(strict=True)
-        assert selected_executable.is_file()
-        members = await _windows_job_members(owner)
-        assert admission.worker_pid in members and admission.runtime_pid not in members
-        browser_roles: set[str] = set()
-        for pid, created in members.items():
-            if pid not in owner.handles:
-                owner.handles[pid] = win32api.OpenProcess(rights, False, pid)
-            handle = owner.handles[pid]
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-            assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == created
-            executable = Path(win32process.GetModuleFileNameEx(handle, 0)).resolve(strict=True)
-            if executable == selected_executable:
-                arguments = psutil.Process(pid).cmdline()
-                if "--type=renderer" in arguments:
-                    browser_roles.add("renderer")
-                elif "--remote-debugging-pipe" in arguments and not any(
-                    argument.startswith("--type=") for argument in arguments
-                ):
-                    browser_roles.add("browser")
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-        assert browser_roles == {"browser", "renderer"}
-        # A second exact-Job observation ties the held, live objects and their
-        # native creation times to the owner rather than trusting reused PIDs.
-        assert await _windows_job_members(owner) == members
-        for handle in owner.handles.values():
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32event.WaitForSingleObject(owner.handles[pid], 0) == win32event.WAIT_TIMEOUT
+    return admission
+
+
+def _browser_role(pid: int, executable: Path, selected_executable: Path) -> str | None:
+    import psutil
+
+    if executable != selected_executable:
+        return None
+    arguments = psutil.Process(pid).cmdline()
+    if "--type=renderer" in arguments:
+        return "renderer"
+    if "--remote-debugging-pipe" in arguments and not any(argument.startswith("--type=") for argument in arguments):
+        return "browser"
+    return None
+
+
+async def _hold_browser_job(
+    owner: _WindowsBrowserFixture, tmp_path: Path, admission: _WindowsBrowserAdmission, rights: int
+) -> None:
+    import win32api
+    import win32event
+    import win32process
+
+    # The owner acknowledges custody first; this explicit test barrier then
+    # allows its already-contained worker to create real browser descendants.
+    (tmp_path / "windows-start-browser").write_text("start", encoding="ascii")
+    browser = await _windows_fixture_record(tmp_path / "windows-worker-browser.json", _WindowsBrowserReady, owner)
+    assert browser.worker_pid == admission.worker_pid and browser.title == "synthetic containment"
+    selected_executable = browser.executable.resolve(strict=True)
+    assert selected_executable.is_file()
+    members = await _windows_job_members(owner)
+    assert admission.worker_pid in members and admission.runtime_pid not in members
+    browser_roles: set[str] = set()
+    for pid, created in members.items():
+        if pid not in owner.handles:
+            owner.handles[pid] = win32api.OpenProcess(rights, False, pid)
+        handle = owner.handles[pid]
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == created
+        executable = Path(win32process.GetModuleFileNameEx(handle, 0)).resolve(strict=True)
+        role = _browser_role(pid, executable, selected_executable)
+        if role is not None:
+            browser_roles.add(role)
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+    assert browser_roles == {"browser", "renderer"}
+    # A second exact-Job observation ties the held, live objects and their
+    # native creation times to the owner rather than trusting reused PIDs.
+    assert await _windows_job_members(owner) == members
+    for handle in owner.handles.values():
+        assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+
+
+@pytest.mark.asyncio
+async def test_admitted_worker_browser_descendants_end_on_owner_death(tmp_path: Path) -> None:
+    """Real private admission precedes Chromium; native object identities prove the observed cut."""
+    import win32api
+    import win32event
+
+    owner = await _launch_browser_owner(tmp_path, "admitted-browser-owner")
+    try:
+        parent, rights, _ = await _hold_runtime_parent(owner)
+        await _await_lease_acknowledgement(owner)
+        admission = await _hold_admitted_worker(owner, tmp_path, parent, rights, 0)
+        await _hold_browser_job(owner, tmp_path, admission, rights)
         win32api.TerminateProcess(owner.handles[admission.runtime_pid], 23)
-        await asyncio.wait_for(owner.process.wait(), timeout=5)
+        await asyncio.wait_for(owner.process.wait(), timeout=HANG_GUARD_SECONDS)
         # These are the same held native objects, observed dead before the
         # cleanup owner can issue a graceful worker close or release a handle.
         for handle in owner.handles.values():
@@ -579,121 +619,50 @@ class _WindowsHostRetirement(BaseModel):
     runtime_pid: int
     worker_pid: int
     owner_lost: bool
-    profile_removed: bool
+    replacement_started: bool
+    lease_suspended: bool
+    profile_retained: bool
     server_running: bool
     stop_requested: bool
+
+
+async def _await_descendant_retirement(
+    owner: _WindowsBrowserFixture, admission: _WindowsBrowserAdmission, parent_handle: int
+) -> list[int]:
+    import win32event
+
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
+    descendant_handles = [handle for pid, handle in owner.handles.items() if pid != admission.runtime_pid]
+    while any(win32event.WaitForSingleObject(handle, 0) != win32event.WAIT_OBJECT_0 for handle in descendant_handles):
+        assert time.monotonic() < deadline, "idle worker death did not retire its observed descendants"
+        assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
+        await asyncio.sleep(0.02)
+    return descendant_handles
 
 
 @pytest.mark.asyncio
 async def test_idle_admitted_worker_death_retires_browser_without_frontend_request(tmp_path: Path) -> None:
     """The real host poll retires an idle lost worker; native objects die before cleanup."""
-    import psutil
     import win32api
     import win32con
     import win32event
-    import win32process
 
-    owner = _WindowsBrowserFixture(
-        await asyncio.create_subprocess_exec(
-            sys.executable,
-            *fixture_arguments(
-                "cadrumo_runtime.host.tests.windows_worker_parent_fixture",
-                "host-browser-owner",
-                str(tmp_path),
-            ),
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-            env=fixture_environment(),
-        )
-    )
+    owner = await _launch_browser_owner(tmp_path, "host-browser-owner")
     primary: BaseException | None = None
     try:
-        assert owner.process.stdout is not None
-        encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=40)
-        assert 0 < len(encoded) <= 4096
-        parent = _WindowsBrowserParent.model_validate_json(encoded)
-        assert parent.runtime_pid > 0
-        assert parent.runtime_pid == owner.process.pid or psutil.Process(parent.runtime_pid).ppid() == owner.process.pid
-        rights = win32con.SYNCHRONIZE | win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ
-        owner.handles[parent.runtime_pid] = win32api.OpenProcess(
-            rights | win32con.PROCESS_TERMINATE, False, parent.runtime_pid
-        )
-        owner.runtime_pid = parent.runtime_pid
-        parent_handle = owner.handles[parent.runtime_pid]
-        assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
-        assert win32process.GetProcessTimes(parent_handle)["CreationTime"].isoformat() == parent.created
-        ready = await asyncio.wait_for(owner.process.stdout.readline(), timeout=100)
-        if ready not in (b"ready\n", b"ready\r\n"):
-            with suppress(TimeoutError):
-                await asyncio.wait_for(owner.process.wait(), timeout=5)
-            if owner.process.returncode is not None and owner.process.stderr is not None:
-                owner.stderr = await owner.process.stderr.read()
-            assert ready in (b"ready\n", b"ready\r\n"), (
-                f"real profile lease was not acknowledged: {ready!r}; "
-                f"child returncode={owner.process.returncode}; stderr={owner.stderr!r}"
-            )
-        admission = await _windows_fixture_record(
-            tmp_path / "windows-worker-admitted.json", _WindowsBrowserAdmission, owner
-        )
-        # Keep the selected installed interpreter even when its Windows venv
-        # launcher retains an intermediate parent. Base Python would discard
-        # the isolated private worker's installed environment.
-        assert admission.runtime_pid == parent.runtime_pid
-        assert admission.worker_pid > 0 and admission.worker_pid != admission.runtime_pid
-        assert admission.buffer_wiped is True
-        for pid in (admission.runtime_pid, admission.worker_pid):
-            if pid not in owner.handles:
-                owner.handles[pid] = win32api.OpenProcess(
-                    rights | (win32con.PROCESS_TERMINATE if pid == admission.worker_pid else 0), False, pid
-                )
-            assert win32event.WaitForSingleObject(owner.handles[pid], 0) == win32event.WAIT_TIMEOUT
-        # The owner acknowledges custody first; this explicit test barrier then
-        # allows its already-contained worker to create real browser descendants.
-        (tmp_path / "windows-start-browser").write_text("start", encoding="ascii")
-        browser = await _windows_fixture_record(tmp_path / "windows-worker-browser.json", _WindowsBrowserReady, owner)
-        assert browser.worker_pid == admission.worker_pid and browser.title == "synthetic containment"
-        selected_executable = browser.executable.resolve(strict=True)
-        assert selected_executable.is_file()
-        members = await _windows_job_members(owner)
-        assert admission.worker_pid in members and admission.runtime_pid not in members
-        browser_roles: set[str] = set()
-        for pid, created in members.items():
-            if pid not in owner.handles:
-                owner.handles[pid] = win32api.OpenProcess(rights, False, pid)
-            handle = owner.handles[pid]
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-            assert win32process.GetProcessTimes(handle)["CreationTime"].isoformat() == created
-            executable = Path(win32process.GetModuleFileNameEx(handle, 0)).resolve(strict=True)
-            if executable == selected_executable:
-                arguments = psutil.Process(pid).cmdline()
-                if "--type=renderer" in arguments:
-                    browser_roles.add("renderer")
-                elif "--remote-debugging-pipe" in arguments and not any(
-                    argument.startswith("--type=") for argument in arguments
-                ):
-                    browser_roles.add("browser")
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-        assert browser_roles == {"browser", "renderer"}
-        # A second exact-Job observation ties the held, live objects and their
-        # native creation times to the owner rather than trusting reused PIDs.
-        assert await _windows_job_members(owner) == members
-        for handle in owner.handles.values():
-            assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
+        parent, rights, parent_handle = await _hold_runtime_parent(owner)
+        await _await_lease_acknowledgement(owner)
+        admission = await _hold_admitted_worker(owner, tmp_path, parent, rights, win32con.PROCESS_TERMINATE)
+        await _hold_browser_job(owner, tmp_path, admission, rights)
         win32api.TerminateProcess(owner.handles[admission.worker_pid], 23)
         # No command or frontend request follows the kill. The original host's
         # independent poll must contain the scope while its native parent lives.
-        deadline = time.monotonic() + 15
-        descendant_handles = [handle for pid, handle in owner.handles.items() if pid != admission.runtime_pid]
-        while any(
-            win32event.WaitForSingleObject(handle, 0) != win32event.WAIT_OBJECT_0 for handle in descendant_handles
-        ):
-            assert time.monotonic() < deadline, "idle worker death did not retire its observed descendants"
-            assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
-            await asyncio.sleep(0.02)
+        descendant_handles = await _await_descendant_retirement(owner, admission, parent_handle)
         retired = await _windows_fixture_record(tmp_path / "windows-host-retired.json", _WindowsHostRetirement, owner)
         assert retired.runtime_pid == admission.runtime_pid and retired.worker_pid == admission.worker_pid
-        assert retired.owner_lost and retired.profile_removed and retired.server_running and not retired.stop_requested
+        # A lost worker suspends its profile's leases under a keyless replacement; the profile stays hosted.
+        assert retired.owner_lost and retired.replacement_started and retired.lease_suspended
+        assert retired.profile_retained and retired.server_running and not retired.stop_requested
         assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
         assert owner.process.returncode is None
         assert all(

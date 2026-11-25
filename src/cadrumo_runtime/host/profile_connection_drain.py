@@ -3,23 +3,29 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from dataclasses import dataclass, field
 from threading import RLock, Thread
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import ExitReason, ShutdownIncompleteError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerDrained
 
 from ..adapters.profile_worker import ProfileWorkerProcess
 from .profile_host import RuntimeProfileHost
 from .shutdown import RuntimeStop
-from .terminated_operations import settle_terminated_worker_operations
+from .terminated_operations import settle_drained_worker_operations, settle_terminated_worker_operations
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
+
+_LOGGER = get_logger(__name__)
 
 
 @dataclass
@@ -35,7 +41,22 @@ class ProfileDrainRecord:
     contained: bool = False
     settlement: Thread | None = None
     parent_settled: bool = False
+    drained_settlement: Thread | None = None
     guard: RLock = field(default_factory=RLock, repr=False)
+
+
+def containment_retry_needed(record: ProfileDrainRecord) -> bool:
+    """Retry only a completed containment attempt that did not contain its worker."""
+    thread = record.containment
+    if thread is None or thread.ident is None or thread.is_alive():
+        return False
+    with record.guard:
+        return not record.contained
+
+
+def drain_record_can_settle(record: ProfileDrainRecord, contained: bool, running: bool) -> bool:
+    """Settle only after every drain thread and worker containment is complete."""
+    return not running and (record.worker is None or contained)
 
 
 class ProfileConnectionDrainMixin:
@@ -58,6 +79,8 @@ class ProfileConnectionDrainMixin:
         with self._guard:
             self._closed = True
             hosts = tuple(self._profiles.items())
+        self._cancel_service_admissions()
+        self._views.close()
         self._enrollments.close()
         failures: list[Exception] = []
         for profile_id, host in hosts:
@@ -69,6 +92,8 @@ class ProfileConnectionDrainMixin:
                 with self._guard:
                     if self._profiles.get(profile_id) is host:
                         self._profiles.pop(profile_id)
+        if self._settle_pending_logins(deadline=DEFAULT_TIMEOUT_POLICY.deadline().instant):
+            failures.append(ShutdownIncompleteError())
         with self._guard:
             self._connections.clear()
             self._logins.clear()
@@ -99,6 +124,8 @@ class ProfileConnectionDrainMixin:
         self._join_drain_containment(records, deadline=deadline)
         if session_end:
             self._settle_terminated_operations(records, deadline=deadline)
+        else:
+            self._settle_drained_operations(records, deadline=deadline)
         result = self._collect_drain_result(records, approval_failures, deadline=deadline)
         if not result.uncontained and not result.unsettled:
             self._commit_drain_result(result, deadline=deadline)
@@ -111,6 +138,7 @@ class ProfileConnectionDrainMixin:
             raise ShutdownIncompleteError()
         try:
             self._closed = True
+            self._views.close()
             if self._drain_records is None:
                 self._drain_records = {
                     profile_id: ProfileDrainRecord(host) for profile_id, host in self._profiles.items()
@@ -142,15 +170,8 @@ class ProfileConnectionDrainMixin:
                 self._start_drain_request(record, deadline=deadline)
             # A prior terminal failed containment may have left its request
             # blocked. Retry containment before joining that original request.
-            if (
-                record.containment is not None
-                and record.containment.ident is not None
-                and not record.containment.is_alive()
-            ):
-                with record.guard:
-                    contained = record.contained
-                if not contained:
-                    self._start_drain_containment(record, deadline=deadline)
+            if containment_retry_needed(record):
+                self._start_drain_containment(record, deadline=deadline)
         return approval_failures
 
     def _settle_terminated_operations(
@@ -167,6 +188,71 @@ class ProfileConnectionDrainMixin:
         for _, record in records:
             if record.settlement is not None and record.settlement.ident is not None:
                 record.settlement.join(timeout=max(0.0, deadline - time.monotonic()))
+
+    def _settle_drained_operations(
+        self: RuntimeProfileConnections,
+        records: tuple[tuple[UUID, ProfileDrainRecord], ...],
+        *,
+        deadline: float,
+    ) -> None:
+        """Record what each contained worker left unfinished as interrupted, keeping its effect.
+
+        Without this, work cut by a stop stayed running in the journal under
+        the dead worker's lease until the lease lapsed. A settlement that cannot
+        finish leaves that record to the same lapse reconciliation as before.
+        """
+        for _, record in records:
+            with record.guard:
+                contained, receipt = record.contained, record.receipt
+            if (
+                not contained
+                or record.worker is None
+                or receipt is None
+                or not receipt.recovery_required
+                or record.drained_settlement is not None
+            ):
+                continue
+            self._start_drained_settlement(record, receipt, deadline=deadline)
+        for _, record in records:
+            thread = record.drained_settlement
+            if thread is not None and thread.ident is not None:
+                thread.join(timeout=max(0.0, deadline - time.monotonic()))
+
+    def _start_drained_settlement(
+        self: RuntimeProfileConnections,
+        record: ProfileDrainRecord,
+        receipt: ProfileWorkerDrained,
+        *,
+        deadline: float,
+    ) -> None:
+        worker, registry = record.worker, self._registry
+        if worker is None:
+            return
+
+        def settle() -> None:
+            try:
+                if registry is None:
+                    raise ShutdownIncompleteError()
+                asyncio.run(
+                    settle_drained_worker_operations(
+                        root=self.root,
+                        identity=worker.identity,
+                        registry=registry,
+                        operation_ids=receipt.recovery_required,
+                        deadline=deadline,
+                    )
+                )
+            except BaseException as error:
+                # The record stays running for lease-lapse reconciliation; only its type is logged.
+                diagnostic_event(
+                    _LOGGER,
+                    "drained worker operations left for lapse reconciliation",
+                    level=logging.WARNING,
+                    fields={"operation_count": len(receipt.recovery_required), **diagnostic_error_fields(error)},
+                )
+
+        record.drained_settlement = Thread(target=settle, name="profile-worker-drained-settlement", daemon=True)
+        record.drained_settlement.start()
 
     def _start_parent_settlement(
         self: RuntimeProfileConnections, record: ProfileDrainRecord, *, deadline: float
@@ -255,16 +341,17 @@ class ProfileConnectionDrainMixin:
             if not record.host.owner.wait_construction(deadline=deadline):
                 uncontained.append(profile_id)
                 continue
-            if running or (record.worker is not None and not contained):
+            if not drain_record_can_settle(record, contained, running):
                 continue
             self._settle_drained_record(profile_id, record, unsettled, deadline=deadline)
+        unsettled.extend(self._settle_pending_logins(deadline=deadline))
         return self._build_drain_result(records, received, uncontained, unsettled)
 
     @staticmethod
     def _drain_threads_running(record: ProfileDrainRecord) -> bool:
         return any(
             thread is not None and (thread.ident is None or thread.is_alive())
-            for thread in (record.request, record.containment, record.settlement)
+            for thread in (record.request, record.containment, record.settlement, record.drained_settlement)
         )
 
     @staticmethod

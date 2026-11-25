@@ -31,7 +31,7 @@ from .....domain.transactions.own_accounts import (
 )
 from ...storage.secure_object_namespaces import LEDGER_OWN_ACCOUNTS_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..own_accounts import OwnAccountRepository
 
@@ -84,9 +84,9 @@ def _populate(repository: OwnAccountRepository) -> OwnAccountRegister:
 
 
 def _register_row():
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == LEDGER_OWN_ACCOUNTS_NAMESPACE.namespace,
-        SecureObjectRow.object_key == LEDGER_OWN_ACCOUNTS_NAMESPACE.require_default_object_key(),
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == LEDGER_OWN_ACCOUNTS_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == LEDGER_OWN_ACCOUNTS_NAMESPACE.require_default_object_key(),
     )
 
 
@@ -116,8 +116,8 @@ def test_no_account_material_reaches_disk_or_the_object_key(tmp_path: Path) -> N
 
         with get_engine(profile.settings).connect() as connection:
             rows = connection.execute(
-                select(SecureObjectRow.object_key).where(
-                    SecureObjectRow.namespace == LEDGER_OWN_ACCOUNTS_NAMESPACE.namespace,
+                select(secure_objects_table.c.object_key).where(
+                    secure_objects_table.c.namespace == LEDGER_OWN_ACCOUNTS_NAMESPACE.namespace,
                 ),
             ).all()
         # One singleton row whose stored key is the keyed digest of "default".

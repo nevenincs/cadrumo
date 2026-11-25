@@ -20,16 +20,12 @@ from cadrumo.application.ledger.attachment_mutation_operation import (
     build_ledger_detach_definition,
     build_ledger_detach_registration,
 )
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_mcp.mcp.access_scope import surface_scope
@@ -41,7 +37,7 @@ from ..operation_contract_cache import OperationContractCache
 from ..protocol_contract import SIGN_IN_REMEDY
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
-from .admitted_lease import public_descriptions
+from .admitted_lease import admitted_access_status, public_descriptions
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -53,7 +49,7 @@ def _unused_ports(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("contract description must not construct executor ports")
 
 
-def _registry() -> OperationRegistry:
+def operation_search_tool_registry() -> OperationRegistry:
     """Compose real public contracts whose request schemas carry distinct vocabulary."""
     auth = build_auth_read_definition(_unused_ports)
     attach = build_ledger_attach_definition(_unused_ports)
@@ -68,7 +64,7 @@ def _registry() -> OperationRegistry:
     )
 
 
-class _AdmittedClient:
+class AdmittedClient:
     """One exact MCP lease whose runtime admits every description but one."""
 
     def __init__(
@@ -88,31 +84,8 @@ class _AdmittedClient:
         self.described: list[str] = []
         self.closed = False
         operations = {definition.definition_id for definition in registry.definitions} | {_DENIED_DEFINITION_ID}
-        self._status = ProfileAccessStatus(
-            connected=True,
-            credential_authenticated=True,
-            profile_id=profile_id,
-            session_id=self.session_id,
-            session_expires_at=now() + timedelta(minutes=5),
-            grant_state=AuthorityState.ACTIVE,
-            grant_expires_at=now() + timedelta(minutes=5),
-            grant_valid=True,
-            profile_bound=True,
-            storage=Availability.AVAILABLE,
-            automation_custody=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            effective_scope=EffectiveScopeSummary.summarize(
-                AccessScope(
-                    operations=frozenset(operations),
-                    actions=frozenset(),
-                    disclosures=frozenset(),
-                    periods=None,
-                    allow_period_independent=True,
-                    allow_delegation=False,
-                )
-            ),
-            denial=None,
+        self._status = admitted_access_status(
+            profile_id, self.session_id, expires_at=now() + timedelta(minutes=5), operations=frozenset(operations)
         )
 
     def status(self) -> SimpleNamespace:
@@ -155,7 +128,7 @@ def _definition_ids(result: dict[str, object]) -> list[str]:
 )
 async def test_name_search_describes_only_the_selected_page(query: str, mode: str) -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry())
+    client = AdmittedClient(profile_id, operation_search_tool_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -183,8 +156,8 @@ async def test_name_search_describes_only_the_selected_page(query: str, mode: st
 )
 async def test_search_ranks_admitted_contracts_with_the_command_ranker(query: str, expected: list[str]) -> None:
     profile_id = uuid4()
-    registry = _registry()
-    client = _AdmittedClient(profile_id, registry)
+    registry = operation_search_tool_registry()
+    client = AdmittedClient(profile_id, registry)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         async with connected_server_and_client_session(build_server(adapter)) as sdk:
@@ -216,8 +189,8 @@ async def test_search_ranks_admitted_contracts_with_the_command_ranker(query: st
 @pytest.mark.parametrize("args", ({}, {"query": "  "}))
 async def test_search_without_query_lists_every_describable_admitted_contract(args: dict[str, object]) -> None:
     profile_id = uuid4()
-    registry = _registry()
-    client = _AdmittedClient(profile_id, registry)
+    registry = operation_search_tool_registry()
+    client = AdmittedClient(profile_id, registry)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", args)
@@ -230,7 +203,7 @@ async def test_search_without_query_lists_every_describable_admitted_contract(ar
 @pytest.mark.anyio
 async def test_search_refuses_when_a_description_fails_for_a_reason_other_than_scope() -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry(), failure="session_expired")
+    client = AdmittedClient(profile_id, operation_search_tool_registry(), failure="session_expired")
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {"query": "ledger"})
@@ -240,7 +213,7 @@ async def test_search_refuses_when_a_description_fails_for_a_reason_other_than_s
     assert result == {"outcome": "refused", "code": "session_expired", "remedy": SIGN_IN_REMEDY}
 
 
-class _SlowConnectionClient(_AdmittedClient):
+class _SlowConnectionClient(AdmittedClient):
     """A runtime connection whose contract reads take time and close it when cut short.
 
     The transport closes a connection whose exchange outlives its deadline, and
@@ -267,7 +240,7 @@ class _SlowConnectionClient(_AdmittedClient):
         time.sleep(self.read_seconds)
         if time.monotonic() > deadline:
             self.cut.append(definition_id)
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return super().describe(definition_id, deadline=deadline)
 
 
@@ -277,15 +250,15 @@ async def test_a_search_out_of_time_keeps_the_session_and_resumes_from_what_it_r
 ) -> None:
     """A search longer than its budget refuses between reads, and a retry finishes from the cache."""
     profile_id = uuid4()
-    client = _SlowConnectionClient(profile_id, _registry(), read_seconds=0.06)
+    client = _SlowConnectionClient(profile_id, operation_search_tool_registry(), read_seconds=0.06)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         with monkeypatch.context() as budget:
             # Four contract reads cannot fit; the first read already reaches past the budget.
-            budget.setattr(admitted_operations, "_TIMEOUT", 0.05)
+            budget.setattr(admitted_operations, "TIMEOUT", 0.05)
             late = await adapter.call("search", {"query": "ledger"})
         assert client.cut == []
-        assert late == {"outcome": "refused", "code": RefusalCode.DEADLINE_EXCEEDED.value}
+        assert late == {"outcome": "refused", "code": RefusalCode.TIMEOUT.value}
         found = await adapter.call("search", {"query": "ledger"})
     finally:
         await adapter.close()
@@ -328,7 +301,7 @@ async def _all_pages(adapter: RuntimeMcpAdapter, args: dict[str, object]) -> lis
 )
 async def test_search_pages_are_disjoint_and_cover_the_scope_in_stable_order(query: str, expected: list[str]) -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry())
+    client = AdmittedClient(profile_id, operation_search_tool_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         whole = await adapter.call("search", {"query": query})
@@ -361,7 +334,7 @@ async def test_search_pages_are_disjoint_and_cover_the_scope_in_stable_order(que
 )
 async def test_search_family_narrows_the_scope_before_any_contract_is_read(family: str, expected: list[str]) -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry())
+    client = AdmittedClient(profile_id, operation_search_tool_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {"family": family})
@@ -387,7 +360,7 @@ async def test_search_family_narrows_the_scope_before_any_contract_is_read(famil
 )
 async def test_search_refuses_malformed_paging_before_reading_any_contract(args: dict[str, object]) -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry())
+    client = AdmittedClient(profile_id, operation_search_tool_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", args)
@@ -408,7 +381,7 @@ async def test_search_refuses_malformed_paging_before_reading_any_contract(args:
 async def test_search_reports_one_unavailable_operation_and_lists_the_rest(query: str, expected: list[str]) -> None:
     profile_id = uuid4()
     refusals = {LEDGER_ATTACH_OPERATION_DEFINITION_ID: "backend_unavailable"}
-    client = _AdmittedClient(profile_id, _registry(), refusals=refusals)
+    client = AdmittedClient(profile_id, operation_search_tool_registry(), refusals=refusals)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {"query": query})
@@ -424,7 +397,7 @@ async def test_search_reports_one_unavailable_operation_and_lists_the_rest(query
 async def test_search_still_fails_whole_when_the_session_is_refused_for_one_operation() -> None:
     profile_id = uuid4()
     refusals = {LEDGER_DETACH_OPERATION_DEFINITION_ID: "session_inactive"}
-    client = _AdmittedClient(profile_id, _registry(), refusals=refusals)
+    client = AdmittedClient(profile_id, operation_search_tool_registry(), refusals=refusals)
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {})
@@ -437,7 +410,7 @@ async def test_search_still_fails_whole_when_the_session_is_refused_for_one_oper
 @pytest.mark.anyio
 async def test_search_rows_carry_what_selects_an_operation_without_the_request_schema() -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry())
+    client = AdmittedClient(profile_id, operation_search_tool_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         result = await adapter.call("search", {})
@@ -457,11 +430,11 @@ async def test_search_rows_carry_what_selects_an_operation_without_the_request_s
     assert read["ephemeral_secret_required"] is False
 
 
-class _WideScopeClient(_AdmittedClient):
+class _WideScopeClient(AdmittedClient):
     """An admitted lease whose scope is many registered operations, each described from the shipped contracts."""
 
     def __init__(self, profile_id: UUID, scope: list[str]) -> None:
-        super().__init__(profile_id, _registry())
+        super().__init__(profile_id, operation_search_tool_registry())
         wide = self._status.effective_scope.model_copy(update={"operations": frozenset(scope)})
         self._status = self._status.model_copy(update={"effective_scope": wide})
 
@@ -502,7 +475,7 @@ async def test_a_search_that_names_no_limit_returns_a_page_of_ten_and_the_rest_b
 @pytest.mark.anyio
 async def test_search_and_execute_read_each_contract_once_per_session_while_describe_reads_afresh() -> None:
     profile_id = uuid4()
-    client = _AdmittedClient(profile_id, _registry())
+    client = AdmittedClient(profile_id, operation_search_tool_registry())
     adapter = RuntimeMcpAdapter(profile_id=profile_id, client=cast(FrontendClient, client))
     try:
         await adapter.call("search", {})
@@ -529,9 +502,9 @@ async def test_search_and_execute_read_each_contract_once_per_session_while_desc
 @pytest.mark.anyio
 async def test_reauthentication_starts_a_fresh_description_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id = uuid4()
-    registry = _registry()
-    original = _AdmittedClient(profile_id, registry)
-    replacement = _AdmittedClient(profile_id, registry)
+    registry = operation_search_tool_registry()
+    original = AdmittedClient(profile_id, registry)
+    replacement = AdmittedClient(profile_id, registry)
 
     async def admit(
         *,
@@ -541,7 +514,7 @@ async def test_reauthentication_starts_a_fresh_description_cache(monkeypatch: py
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         return cast(FrontendClient, replacement)
 
@@ -559,11 +532,11 @@ async def test_reauthentication_starts_a_fresh_description_cache(monkeypatch: py
 
 
 def test_contract_cache_is_not_shared_across_sessions_or_profiles() -> None:
-    registry = _registry()
+    registry = operation_search_tool_registry()
     profile_id = uuid4()
-    first = _AdmittedClient(profile_id, registry)
-    other_session = _AdmittedClient(profile_id, registry)
-    other_profile = _AdmittedClient(uuid4(), registry)
+    first = AdmittedClient(profile_id, registry)
+    other_session = AdmittedClient(profile_id, registry)
+    other_profile = AdmittedClient(uuid4(), registry)
     cache = OperationContractCache()
     for client in (first, first, other_session, other_session, other_profile, other_profile, first):
         cache.description(cast(FrontendClient, client), AUTH_READ_OPERATION_DEFINITION_ID, deadline=1.0)
@@ -573,8 +546,8 @@ def test_contract_cache_is_not_shared_across_sessions_or_profiles() -> None:
 
 
 def test_contract_cache_reads_again_when_the_runtime_reports_another_digest() -> None:
-    registry = _registry()
-    client = _AdmittedClient(uuid4(), registry)
+    registry = operation_search_tool_registry()
+    client = AdmittedClient(uuid4(), registry)
     cache = OperationContractCache()
     reader = cast(FrontendClient, client)
     definition_id = AUTH_READ_OPERATION_DEFINITION_ID
@@ -587,8 +560,8 @@ def test_contract_cache_reads_again_when_the_runtime_reports_another_digest() ->
 
 
 def test_contract_cache_forgets_an_operation_the_runtime_now_refuses() -> None:
-    registry = _registry()
-    client = _AdmittedClient(uuid4(), registry)
+    registry = operation_search_tool_registry()
+    client = AdmittedClient(uuid4(), registry)
     cache = OperationContractCache()
     reader = cast(FrontendClient, client)
     definition_id = LEDGER_ATTACH_OPERATION_DEFINITION_ID

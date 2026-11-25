@@ -2,27 +2,49 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections.abc import Callable
 from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo.application.operations.error_detail import OperationErrorDetailKind
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.core.errors.hierarchy import RecordedRegisteredError
-from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.errors.hierarchy import CadrumoError, RecordedRegisteredError
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
+from cadrumo.entrypoints.tui.operations.outcome import OperationOutcomeUnknownError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController, await_terminal_projection
 
-from ..runtime_account_session import read_runtime_account_session, session_expired_with_receipt
+from ..runtime_account_session import read_runtime_account_session, session_lost_with_receipt
 
-_OPERATION_TIMEOUT_SECONDS = 120
+OPERATION_TIMEOUT_SECONDS = 120
+
+
+def _unknown_submission_outcome(
+    error: Exception,
+    operation_id: str,
+    contract: OperationPublicDefinitionContractV1 | None,
+    terminal: OperationPublicProjectionV1 | None,
+) -> OperationOutcomeUnknownError | None:
+    """Retain uncertainty when a submitted change may have taken effect."""
+    if (terminal is None or terminal.effect is not OperationEffect.NONE) and _may_change_records(contract):
+        return OperationOutcomeUnknownError(
+            operation_id=operation_id,
+            effect=None if terminal is None else terminal.effect,
+            reason=error if isinstance(error, CadrumoError) else None,
+        )
+    return None
 
 
 class RuntimeProfileSession:
@@ -96,12 +118,18 @@ class RuntimeProfileSession:
         ``settle`` receives the read result, the terminal condition, the receipt
         and the operation identifier once the session is confirmed live; it
         raises when the result disagrees with the receipt, or to surface a
-        declared refusal. A denial is ordinary only while the originating
-        session remains live, so a lost session reports the receipt it had.
+        declared refusal. A door correlates its result there, never after this
+        returns, so that every failure after submission is judged here.
         With ``explain_failure``, a refused or failed operation that recorded a
         registered error raises that error, so the screen can say why.
+
+        A failure before the runtime accepted the submission is a refusal: an
+        operation runs only once it is started, so one whose submission reply
+        was lost stays created and unstarted. Every failure after acceptance is
+        judged by :meth:`failure_after_submission`.
         """
-        self.require_binding()
+        # The binding check reads the session over IPC; on the loop it froze every key for the round trip.
+        await asyncio.to_thread(self.require_binding)
         if getattr(request, "profile_id", None) != self._profile_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         subject_ref = profile_operation_subject(str(self._profile_id))
@@ -110,9 +138,7 @@ class RuntimeProfileSession:
             schema_version=1,
             model_type=type(request),
         )
-        deadline = time.monotonic() + _OPERATION_TIMEOUT_SECONDS
-        controller: OperationController | None = None
-        terminal_projection: OperationPublicProjectionV1 | None = None
+        deadline = time.monotonic() + OPERATION_TIMEOUT_SECONDS
         try:
             controller = await OperationController.submit(
                 self._client,
@@ -122,8 +148,14 @@ class RuntimeProfileSession:
                 expected_session_id=self._session_id,
                 deadline=deadline,
             )
+        except (FrontendRefusedError, RefusalError):
+            # A denial is ordinary only while the originating session remains live.
+            await asyncio.to_thread(self.require_binding)
+            raise
+        terminal: OperationPublicProjectionV1 | None = None
+        try:
             await controller.start()
-            terminal_projection = await await_terminal_projection(
+            terminal = await await_terminal_projection(
                 controller,
                 definition_id=definition_id,
                 subject_ref=subject_ref,
@@ -132,7 +164,7 @@ class RuntimeProfileSession:
             )
             return await self._read_settled_result(
                 controller,
-                terminal_projection,
+                terminal,
                 result_type=result_type,
                 result_version=result_version,
                 allow_refusal_detail=allow_refusal_detail,
@@ -140,14 +172,51 @@ class RuntimeProfileSession:
                 admit=admit,
                 settle=settle,
             )
-        except AccountSessionExpiredError as error:
-            raise session_expired_with_receipt(controller, terminal_projection) from error
-        except (FrontendRefusedError, RefusalError):
+        except Exception as error:
+            failure = await self.failure_after_submission(
+                error,
+                operation_id=str(controller.operation_id),
+                # An observed receipt carries the operation's own contract; until then, the admitted one.
+                contract=controller.definition_contract if terminal is None else terminal.definition_contract,
+                terminal=terminal,
+            )
+            if failure is error:
+                raise
+            raise failure from error
+
+    async def failure_after_submission(
+        self,
+        error: Exception,
+        *,
+        operation_id: str,
+        contract: OperationPublicDefinitionContractV1 | None,
+        terminal: OperationPublicProjectionV1 | None,
+    ) -> Exception:
+        """Judge a failure after the runtime accepted a submission, and return the error to raise.
+
+        The outcome is known only when a terminal receipt that committed
+        nothing was observed, or when the operation's definition permits no
+        effect that changes records. Otherwise the change may be saved, so the
+        failure, whatever its type, becomes :class:`OperationOutcomeUnknownError`
+        carrying the operation ID: a retry is not known to be safe. ``terminal``
+        is the terminal receipt observed, if any, and ``contract`` the
+        operation's definition contract, ``None`` when it is not known.
+
+        A failure is ordinary only while the originating session remains live,
+        so the session is checked again. A lost session raises its own error,
+        expired or unavailable as observed, carrying the receipt and any
+        unknown outcome so that neither is hidden behind the sign-in.
+        """
+        unknown = _unknown_submission_outcome(error, operation_id, contract, terminal)
+        lost = error if isinstance(error, AccountSessionExpiredError) else None
+        if lost is None:
             try:
-                self.require_binding()
-            except AccountSessionExpiredError as error:
-                raise session_expired_with_receipt(controller, terminal_projection) from error
-            raise
+                await asyncio.to_thread(self.require_binding)
+            except AccountSessionExpiredError as observed:
+                lost = observed
+        if lost is not None:
+            return session_lost_with_receipt(lost, operation_id, terminal, unknown_outcome=unknown)
+        return error if unknown is None else unknown
 
     async def _read_settled_result[ResultT: BaseModel](
         self,
@@ -167,8 +236,9 @@ class RuntimeProfileSession:
         if condition is not OperationTerminalCondition.SUCCEEDED and not _refusal_detail_is_allowed(
             condition, terminal, allow_refusal_detail
         ):
-            if explain_failure:
-                await self._raise_recorded_error(controller, terminal)
+            recorded = await self._recorded_error(controller, terminal) if explain_failure else None
+            if recorded is not None:
+                raise recorded
             raise FrontendRefusedError(
                 terminal.refusal_ref or terminal.failure_error_code or "operation_not_successful"
             )
@@ -179,25 +249,26 @@ class RuntimeProfileSession:
             result_version=result_version,
             allow_refusal_detail=allow_refusal_detail,
         )
-        self.require_binding()
+        await asyncio.to_thread(self.require_binding)
         settle(result, condition, terminal, str(controller.operation_id))
         return result
 
-    async def _raise_recorded_error(
+    async def _recorded_error(
         self,
         controller: OperationController,
         terminal: OperationPublicProjectionV1,
-    ) -> None:
-        """Raise the executor's recorded registered error, if it recorded one, while the session is live."""
+    ) -> RecordedRegisteredError | None:
+        """The executor's recorded registered error and its verdict, if it recorded one."""
         detail = await controller.settled_error_detail(terminal)
-        if detail is None or detail.kind is not OperationErrorDetailKind.REGISTERED_ERROR or detail.error_code is None:
-            return
-        self.require_binding()
-        raise RecordedRegisteredError(
-            detail.error_code,
-            context=detail.context_mapping(),
-            translated_message=detail.message_key,
-        )
+        return None if detail is None else detail.recorded_error()
+
+
+def _may_change_records(contract: OperationPublicDefinitionContractV1 | None) -> bool:
+    """Whether an operation registered under ``contract`` may leave records changed.
+
+    Without a contract nothing says the operation cannot change records.
+    """
+    return contract is None or contract.may_change_records()
 
 
 def _refusal_detail_is_allowed(

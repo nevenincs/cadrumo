@@ -9,7 +9,7 @@ through ``tr()`` so the operator-facing surface is localised.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -17,9 +17,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ....core.aggregation import BindingSourceKind
@@ -34,9 +32,15 @@ from ....domain.calculations.registry.iva_compensation_annual_partition_bindings
 from ....domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token, require_iva_regime
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
+from ....domain.calculations.registry.tests.modelo_100_registry_support import M100_NO_LET_PROPERTY_BINDINGS
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
@@ -46,24 +50,25 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from ...workflow.errors import WorkflowInputMismatchError
 from ..action_errors import ModeloAggregationBindingError
-from ..art20_advisory import art20_reduccion_advisory_finding
-from ..art52_advisory import art52_reduccion_advisory_finding
-from ..calculation_actions import _reject_caller_overrides_of_source_bindings
-from ..dt12_advisory import dt12_reduccion_advisory_finding
-from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
-from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
-from ..revision_replay_inputs import _informational_casilla_replay_inputs
+from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
+from ..iva_wallet_binding import apply_iva_compensation_decision_binding
+from ..iva_wallet_refusal import ModeloIvaWalletReconciliationBlocked
+from ..revision_replay_inputs import informational_casilla_replay_inputs
 from ..verification_gate_findings import iva_wallet_error_verification_finding
 from ..verification_predicates import evaluate_verification_predicates
 from ..verification_required_fields import missing_required_casilla_finding
 from ..verification_revision_findings import collect_revision_verification_findings
-from ..workflow_gate import _RevisionInputsProvider, workflow_period_for_work_unit
+from ..workflow_gate import RevisionInputsProvider, workflow_period_for_work_unit
+from .action_test_revisions import (
+    SYNTHETIC_LEGAL_REF,
+    SYNTHETIC_SOURCE_REF,
+    synthetic_casilla_definition,
+    synthetic_revision,
+)
+from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -73,9 +78,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 # Helpers
 # ---------------------------------------------------------------------------
 
-_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_TEST_LEGAL_REF = "test-actions:legal"
-_TEST_SOURCE_REF = "test-actions-source"
+_FILING_YEAR = filing_year_envelope().horizon
+_M100_YEAR = newest_authored_edition("100")
+_T0 = datetime(_FILING_YEAR, 1, 10, 10, 0, tzinfo=UTC)
 _BUCKET_ID = "ac42089b-a822-458e-99e6-333861181de7"
 
 
@@ -84,15 +89,6 @@ _PREDICATE_REQUIRED_LEFT_CASILLA: CasillaId = validated_casilla_id("0001")
 _PREDICATE_REQUIRED_RIGHT_CASILLA: CasillaId = validated_casilla_id("0002")
 _PREDICATE_OPTIONAL_LEFT_CASILLA: CasillaId = validated_casilla_id("0003")
 _PREDICATE_OPTIONAL_RIGHT_CASILLA: CasillaId = validated_casilla_id("0004")
-_DT12_INGRESO_CASILLA: CasillaId = validated_casilla_id("0003")
-_DT12_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
-_ART20_RNT_CASILLA: CasillaId = validated_casilla_id("0022")
-_ART20_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0023")
-_ART52_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0468")
-_ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: CasillaId = validated_casilla_id("0426")
-_ART52_EMPRESARIAL_CASILLA: CasillaId = validated_casilla_id("0427")
-_ART52_AUTONOMOS_EMPRESARIOS_CASILLA: CasillaId = validated_casilla_id("0499")
-_DT12_ANTIQUITY_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0011")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
@@ -100,159 +96,15 @@ _M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = validated_casilla_id("0171
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
 
 
-def _modelo_fact_context(authority: PinnedAuthorityOperation) -> ModeloFactResolutionContext:
-    return ModeloFactResolutionContext(
-        authority=authority,
-        filing_period=date(2025, 12, 31),
-        devengo_date=date(2025, 12, 31),
-    )
-
-
 @pytest.fixture
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease one authority generation for the advisory resolvers under test."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         yield operation
 
 
-class _EmptyTransactionRepository:
-    """Deterministic empty transaction port for the unresolved-snapshot test."""
-
-    @property
-    def bucket_id(self) -> str:
-        return _BUCKET_ID
-
-    @staticmethod
-    def exists() -> bool:
-        return False
-
-    @staticmethod
-    def load() -> TransactionCatalogue:
-        return TransactionCatalogue()
-
-    @staticmethod
-    def load_for_date_range(start: date, end: date) -> TransactionCatalogue:
-        del start, end
-        return TransactionCatalogue()
-
-    @staticmethod
-    def load_by_ids(transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        del transaction_ids
-        return TransactionCatalogue()
-
-    @staticmethod
-    def partition_by_date_range(start: date, end: date) -> LedgerDatePartition:
-        del start, end
-        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
-
-    @staticmethod
-    def save(catalogue: TransactionCatalogue) -> None:
-        del catalogue
-
-
-def _test_casilla_definition(
-    casilla_id: CasillaId,
-    *,
-    semantic_role: str | None = None,
-    input_kind: InputKind = InputKind.MANUAL,
-    binding: BindingId | None = None,
-) -> CasillaDefinition:
-    return CasillaDefinition(
-        id=casilla_id,
-        number=casilla_id,
-        localization_keys=(f"test.schema.casilla.{casilla_id}.label",),
-        section=("test",),
-        input_kind=input_kind,
-        binding=binding,
-        semantic_role=semantic_role,
-        legal_refs=(_TEST_LEGAL_REF,),
-        source_refs=(_TEST_SOURCE_REF,),
-    )
-
-
-def _test_revision(
-    *,
-    casillas: tuple[CasillaDefinition, ...] = (),
-    bindings: tuple[BindingDefinition, ...] = (),
-) -> ModeloRevision:
-    return ModeloRevision(
-        id="test-actions-revision",
-        localization_key="test.schema.revision.test-actions-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("0A", "1T")),
-        legal_refs=(_TEST_LEGAL_REF,),
-        source_refs=(_TEST_SOURCE_REF,),
-        casillas=casillas,
-        bindings=bindings,
-    )
-
-
-def _dt12_revision() -> ModeloRevision:
-    return _test_revision(
-        casillas=(
-            _test_casilla_definition(
-                _DT12_INGRESO_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario",
-            ),
-            _test_casilla_definition(
-                _DT12_REDUCCION_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_reduccion",
-            ),
-        ),
-    )
-
-
-def _art20_revision() -> ModeloRevision:
-    return _test_revision(
-        casillas=(
-            _test_casilla_definition(
-                _ART20_RNT_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_rendimiento_neto",
-            ),
-            _test_casilla_definition(
-                _ART20_REDUCCION_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales",
-            ),
-        ),
-    )
-
-
-def _art52_revision() -> ModeloRevision:
-    return _test_revision(
-        casillas=(
-            _test_casilla_definition(
-                _ART52_REDUCCION_CASILLA,
-                semantic_role="irpf_reduccion_prevision_social_total",
-            ),
-            _test_casilla_definition(
-                _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA,
-                semantic_role="irpf_red_prevision_social_aportaciones_trabajador_con_contribucion_empresarial",
-            ),
-            _test_casilla_definition(
-                _ART52_EMPRESARIAL_CASILLA,
-                semantic_role="irpf_red_prevision_social_contribuciones_empresariales_excepto_scd",
-            ),
-            _test_casilla_definition(
-                _ART52_AUTONOMOS_EMPRESARIOS_CASILLA,
-                semantic_role="irpf_red_prevision_social_aportaciones_autonomos_empresarios",
-            ),
-        ),
-    )
-
-
-def _dt12_antiquity_revision() -> ModeloRevision:
-    return _test_revision(
-        casillas=(
-            _test_casilla_definition(
-                _DT12_ANTIQUITY_REDUCCION_CASILLA,
-                semantic_role="irpf_rendimiento_trabajo_reduccion",
-            ),
-        ),
-    )
-
-
 def _source_bound_revision() -> ModeloRevision:
-    return _test_revision(
+    return synthetic_revision(
         bindings=(
             # A well-shaped ``ledger_iva_aggregation`` selector so the binding
             # clears the F8 construction-time selector gate; the test exercises
@@ -272,12 +124,12 @@ def _source_bound_revision() -> ModeloRevision:
                     },
                 },
                 value={"data_type": "money", "channel": "decimal"},
-                legal_refs=(_TEST_LEGAL_REF,),
-                source_refs=(_TEST_SOURCE_REF,),
+                legal_refs=(SYNTHETIC_LEGAL_REF,),
+                source_refs=(SYNTHETIC_SOURCE_REF,),
             ),
         ),
         casillas=(
-            _test_casilla_definition(
+            synthetic_casilla_definition(
                 _SOURCE_BOUND_CASILLA,
                 input_kind=InputKind.BOUND,
                 binding=_SOURCE_BOUND_BINDING,
@@ -312,9 +164,9 @@ def _blocked_wallet_decision(
 ) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        target_year=_FILING_YEAR,
+        target_period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        target_registry_snapshot_ref=published_snapshot("303", filing_year=_FILING_YEAR, period="1T").snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="missing",
         selected_amount=None,
@@ -327,7 +179,7 @@ def _blocked_wallet_decision(
 
 
 def _m130_casilla_definition(casilla_id: CasillaId) -> CasillaDefinition:
-    snapshot = published_snapshot("130", filing_year=2026, period="1T")
+    snapshot = published_snapshot("130", filing_year=_FILING_YEAR, period="1T")
     return next(item for item in snapshot.revision.casillas if item.id == casilla_id)
 
 
@@ -339,13 +191,13 @@ def _resident_profile() -> TaxpayerProfile:
     cap_le_when_positive, implies_nonzero) without exercising the
     profile_field_required branch.
     """
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def _minimal_work_unit(
     modelo: str = "999",
     period: str = "0A",
-    filing_year: int = 2026,
+    filing_year: int = _FILING_YEAR,
     revision_id: str = "r" + "0" * 63,
 ) -> WorkUnit:
     bucket_id = "test-bucket"
@@ -423,9 +275,9 @@ def test_iva_ledger_exempt_regime_membership_matches_contract(regime_token: str,
     ),
 )
 def test_workflow_period_resolves_quarterfrom_registry_deadline_shape(modelo: str) -> None:
-    work_unit = _minimal_work_unit(modelo=modelo, period="1T", filing_year=2026)
+    work_unit = _minimal_work_unit(modelo=modelo, period="1T", filing_year=_FILING_YEAR)
 
-    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
+    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(_FILING_YEAR, "1T")
 
 
 @pytest.mark.parametrize(
@@ -433,12 +285,11 @@ def test_workflow_period_resolves_quarterfrom_registry_deadline_shape(modelo: st
     (
         pytest.param("1P", id="instalment"),
         pytest.param("EXT-1T", id="extended-oss-quarter-shaped-token"),
-        pytest.param("AD-HOC", id="ad-hoc"),
         pytest.param("EVENT-1", id="event"),
     ),
 )
 def test_workflow_period_does_not_reinterpret_nonquarter_periods(period: str) -> None:
-    work_unit = _minimal_work_unit(modelo="369", period=period, filing_year=2026)
+    work_unit = _minimal_work_unit(modelo="369", period=period, filing_year=_FILING_YEAR)
 
     assert workflow_period_for_work_unit(work_unit) == work_unit.period
 
@@ -490,23 +341,24 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
     deliberately not asserted verbatim so a translation edit cannot red this
     contract.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=_FILING_YEAR)
         target = _minimal_calculation_revision(work_unit)
 
         findings, _resolved, _missing, failures_by_finding_id = collect_revision_verification_findings(
             work_unit=work_unit,
             target=target,
             profile=_resident_profile(),
-            transaction_repository=_EmptyTransactionRepository(),
+            transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=_BUCKET_ID),
             invoice_repository=InvoiceCatalogueFake(),
+            rectification_evidence_recordable=False,
             operation=_authority_operation_for_test,
             work_profile=None,
         )
         assert len(findings) == 1
         finding = findings[0]
         assert finding.message_locale_key == "application.modelo.findings.registry_snapshot_unresolved"
-        assert dict(finding.message_facts) == {"modelo": "999", "filing_year": 2026, "period": "0A"}
+        assert dict(finding.message_facts) == {"modelo": "999", "filing_year": _FILING_YEAR, "period": "0A"}
         failure = failures_by_finding_id[id(finding)]
         assert failure.identity == (
             "modelo.work.verify",
@@ -514,344 +366,6 @@ def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
             "modelo.work.verify.registry_snapshot.unavailable",
         )
         assert failure.verdict.action is None
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — DT12 reducción advisory message is localised
-# ---------------------------------------------------------------------------
-
-
-def test_dt12_reduccion_advisory_message_is_localised(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """dt12_reduccion_advisory_finding emits a tr()-rendered message.
-
-    A real revision object carrying two casillas with the correct semantic
-    roles triggers the advisory. The finding message must contain ingreso_id,
-    ingreso_value, and reduccion_id tokens from the locale template.
-    """
-    revision = _dt12_revision()
-    casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
-
-    finding = dt12_reduccion_advisory_finding(revision, casilla_values, operation=authority_operation)
-
-    assert finding is not None
-    assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_possible"
-    assert dict(finding.message_facts) == {
-        "ingreso_id": str(_DT12_INGRESO_CASILLA),
-        "ingreso_value": Decimal("25000"),
-        "reduccion_id": str(_DT12_REDUCCION_CASILLA),
-    }
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — art. 20 LIRPF reducción advisory
-# ---------------------------------------------------------------------------
-
-
-def test_art20_reduccion_advisory_fires_within_band_and_is_localised(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
-
-    A real revision carrying the rendimiento-neto-del-trabajo role and the
-    art. 20 general-reducción role triggers the ADVISORY finding when RNT is strictly
-    positive and below the art. 20 ceiling while the reducción casilla is zero. The
-    finding is non-blocking (ADVISORY / WARNING) and its tr()-rendered message carries
-    the rnt_id, rnt_value, and reduccion_id tokens.
-    """
-    revision = _art20_revision()
-    casilla_values = {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("0")}
-
-    finding = art20_reduccion_advisory_finding(
-        revision, casilla_values, context=_modelo_fact_context(authority_operation)
-    )
-
-    assert finding is not None
-    # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
-    assert finding.kind == "advisory"
-    assert finding.severity == "warning"
-    assert finding.casilla_id == _ART20_REDUCCION_CASILLA
-    assert finding.legal_refs == ("ley-35-2006:art-20",)
-    assert finding.message_locale_key == "application.modelo.findings.art20_reduccion_possible"
-    assert dict(finding.message_facts) == {
-        "rnt_id": str(_ART20_RNT_CASILLA),
-        "rnt_value": Decimal("12000"),
-        "reduccion_id": str(_ART20_REDUCCION_CASILLA),
-    }
-    assert "next_action" not in finding.model_dump(mode="json")
-
-
-@pytest.mark.parametrize(
-    "casilla_values",
-    (
-        pytest.param(
-            {_ART20_RNT_CASILLA: Decimal("25000"), _ART20_REDUCCION_CASILLA: Decimal("0")},
-            id="above-ceiling",
-        ),
-        pytest.param(
-            {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("3500")},
-            id="reduction-already-declared",
-        ),
-        pytest.param({_ART20_RNT_CASILLA: Decimal("0"), _ART20_REDUCCION_CASILLA: Decimal("0")}, id="zero-rnt"),
-    ),
-)
-def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
-    casilla_values: dict[CasillaId, Decimal],
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """The art. 20 advisory must NOT fire when there is nothing to surface.
-
-    No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
-    the reducción is already declared, or RNT is zero.
-    """
-    assert (
-        art20_reduccion_advisory_finding(
-            _art20_revision(), casilla_values, context=_modelo_fact_context(authority_operation)
-        )
-        is None
-    )
-
-
-def test_art20_reduccion_advisory_silent_when_roles_absent(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    assert (
-        art20_reduccion_advisory_finding(_test_revision(), {}, context=_modelo_fact_context(authority_operation))
-        is None
-    )
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — art. 52 LIRPF previsión-social individual sub-limit advisory
-# ---------------------------------------------------------------------------
-
-
-def test_art52_reduccion_advisory_fires_for_purely_individual_over_sublimit(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """art52_reduccion_advisory_finding warns on a purely-individual over-reduction.
-
-    A purely-individual filer (no plan-de-empleo worker contribution, no
-    contribución empresarial) whose granted reducción (0468) exceeds the EUR 1.500
-    art. 52 individual sub-limit — e.g. a EUR 3.000 aportación fully reducible under
-    the combined EUR 10.000/30% cap the engine already enforces — should be flagged:
-    the combined ceiling requires employer-linked backing this filer does not have.
-    """
-    revision = _art52_revision()
-    casilla_values = {
-        _ART52_REDUCCION_CASILLA: Decimal("3000"),
-        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
-        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
-        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
-    }
-
-    finding = art52_reduccion_advisory_finding(
-        revision,
-        casilla_values,
-        operation=authority_operation,
-        modelo="100",
-    )
-
-    assert finding is not None
-    assert finding.kind == "advisory"
-    assert finding.severity == "warning"
-    assert finding.casilla_id == _ART52_REDUCCION_CASILLA
-    assert finding.legal_refs == ("ley-35-2006:art-52-2021",)
-    assert finding.message_locale_key == "application.modelo.findings.art52_reduccion_individual_sublimit_possible"
-    assert dict(finding.message_facts) == {
-        "reduccion_id": str(_ART52_REDUCCION_CASILLA),
-        "reduccion_value": Decimal("3000"),
-        "sublimit": Decimal("1500"),
-    }
-    assert "next_action" not in finding.model_dump(mode="json")
-
-
-def test_art52_reduccion_advisory_silent_when_employer_backed(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """No false positive when a contribución empresarial (0427) backs the reducción.
-
-    The same over-1.500 reducción as the firing case, but with a positive
-    contribución empresarial declared: the combined EUR 10.000 ceiling legitimately
-    applies, so the advisory must stay silent.
-    """
-    revision = _art52_revision()
-    casilla_values = {
-        _ART52_REDUCCION_CASILLA: Decimal("3000"),
-        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
-        _ART52_EMPRESARIAL_CASILLA: Decimal("2500"),
-        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
-    }
-
-    assert (
-        art52_reduccion_advisory_finding(
-            revision,
-            casilla_values,
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
-
-
-def test_art52_reduccion_advisory_silent_when_plan_de_empleo_backed(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """No false positive when a plan-de-empleo worker contribution (0426) backs it."""
-    revision = _art52_revision()
-    casilla_values = {
-        _ART52_REDUCCION_CASILLA: Decimal("3000"),
-        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("2500"),
-        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
-        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
-    }
-
-    assert (
-        art52_reduccion_advisory_finding(
-            revision,
-            casilla_values,
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
-
-
-def test_art52_reduccion_advisory_silent_when_autonomo_backed(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """No false positive when an autónomo/empresario-individual aportación (0499) backs it.
-
-    Casilla 0499 legitimately unlocks the art. 52.1.2º EUR 4.250 increment (not the
-    full art. 52.1.1º EUR 8.500 increment 0426/0427 unlock), so a reducción above
-    EUR 1.500 backed solely by 0499 must not be flagged — the advisory only detects
-    the no-backing-at-all case and leaves the exact 1º/2º split to the COMPUTED
-    formula on revisions where 0468 is not a bare MANUAL input.
-    """
-    revision = _art52_revision()
-    casilla_values = {
-        _ART52_REDUCCION_CASILLA: Decimal("3000"),
-        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
-        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
-        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("2500"),
-    }
-
-    assert (
-        art52_reduccion_advisory_finding(
-            revision,
-            casilla_values,
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
-
-
-def test_art52_reduccion_advisory_silent_when_under_sublimit(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """No false positive when the purely-individual reducción is at or below EUR 1.500."""
-    revision = _art52_revision()
-    casilla_values = {
-        _ART52_REDUCCION_CASILLA: Decimal("1500"),
-        _ART52_TRABAJADOR_CON_CONTRIBUCION_CASILLA: Decimal("0"),
-        _ART52_EMPRESARIAL_CASILLA: Decimal("0"),
-        _ART52_AUTONOMOS_EMPRESARIOS_CASILLA: Decimal("0"),
-    }
-
-    assert (
-        art52_reduccion_advisory_finding(
-            revision,
-            casilla_values,
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
-
-
-def test_art52_reduccion_advisory_silent_when_roles_absent(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    assert (
-        art52_reduccion_advisory_finding(
-            _test_revision(),
-            {},
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
-
-
-# ---------------------------------------------------------------------------
-# contract/contract — DT 12ª LIRPF antiquity-condition advisory
-# ---------------------------------------------------------------------------
-
-
-def test_dt12_antiquity_advisory_fires_when_reduccion_applied(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """dt12_antiquity_advisory_finding warns to confirm antiquity when 40% applies.
-
-    A strictly positive trabajo reducción prompts the operator to confirm the
-    pre-2007 TRLIRPF art. 17.2.a) two-year antiquity condition (waived for
-    invalidez) DT 12ª LIRPF imports for the transitional régimen.
-    """
-    revision = _dt12_antiquity_revision()
-    casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("4000")}
-
-    finding = dt12_antiquity_advisory_finding(
-        revision,
-        casilla_values,
-        operation=authority_operation,
-        modelo="100",
-    )
-
-    assert finding is not None
-    assert finding.kind == "advisory"
-    assert finding.severity == "warning"
-    assert finding.casilla_id == _DT12_ANTIQUITY_REDUCCION_CASILLA
-    assert finding.legal_refs == ("ley-35-2006:dt-12",)
-    assert finding.message_locale_key == "application.modelo.findings.dt12a_reduccion_antiquity_possible"
-    assert dict(finding.message_facts) == {
-        "reduccion_id": str(_DT12_ANTIQUITY_REDUCCION_CASILLA),
-        "reduccion_value": Decimal("4000"),
-    }
-    assert "next_action" not in finding.model_dump(mode="json")
-
-
-def test_dt12_antiquity_advisory_silent_when_reduccion_zero(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    """No false positive when no reducción has been applied at all."""
-    revision = _dt12_antiquity_revision()
-    casilla_values = {_DT12_ANTIQUITY_REDUCCION_CASILLA: Decimal("0")}
-
-    assert (
-        dt12_antiquity_advisory_finding(
-            revision,
-            casilla_values,
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
-
-
-def test_dt12_antiquity_advisory_silent_when_roles_absent(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    assert (
-        dt12_antiquity_advisory_finding(
-            _test_revision(),
-            {},
-            operation=authority_operation,
-            modelo="100",
-        )
-        is None
-    )
 
 
 def test_iva_wallet_blocked_exception_carries_translated_message_key(
@@ -862,12 +376,12 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
         reason_identity="filed_history_requires_override",
     )
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "1T"),
+            _FILING_YEAR,
+            Period.from_year_and_code(_FILING_YEAR, "1T"),
             bucket_id=_BUCKET_ID,
-            revision=_test_revision(),
+            revision=synthetic_revision(),
             taxpayer_nif="12345678Z",
             caller_binding_values={},
             backend_binding_values={},
@@ -881,6 +395,10 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
+    verdict = exc.precondition_failure.verdict
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+    assert set(verdict.missing_argument_names) == {"amount", "reason", "evidence_locator"}
     finding = iva_wallet_error_verification_finding(
         exc,
         work_unit=_minimal_work_unit(modelo="303", period="1T"),
@@ -891,14 +409,51 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key(
     assert not hasattr(exc, "suggestion")
 
 
+@pytest.mark.parametrize(
+    ("divergence", "reason_identity"),
+    [
+        ("filed_history_only", "filed_history_requires_override"),
+        ("wallet_missing", "local_recurrence_requires_override"),
+        ("wallet_stale", "stale_wallet_local_recurrence_requires_override"),
+    ],
+)
+def test_iva_wallet_refusal_only_an_override_settles_names_the_override_for_its_period(
+    divergence: IvaCompensationDivergence,
+    reason_identity: str,
+) -> None:
+    """A carry only the taxpayer's override can settle names that override, bound to the refused period."""
+    decision = _blocked_wallet_decision(divergence=divergence, reason_identity=reason_identity)
+    backend: dict[BindingId, Decimal] = {}
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
+        apply_iva_compensation_decision_binding(
+            "303",
+            _FILING_YEAR,
+            Period.from_year_and_code(_FILING_YEAR, "1T"),
+            bucket_id=_BUCKET_ID,
+            revision=synthetic_revision(),
+            taxpayer_nif="12345678Z",
+            caller_binding_values={},
+            backend_binding_values=backend,
+            decision=decision,
+        )
+
+    assert backend == {}, "a refused carry writes no binding value"
+    verdict = raised.value.precondition_failure.verdict
+    assert verdict.action is not None, f"{reason_identity} names no action"
+    assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+    bound = {item.argument_name: item.value for item in verdict.argument_bindings if item.value is not None}
+    assert bound == {"filing_year": _FILING_YEAR, "period": "1T"}
+    assert set(verdict.missing_argument_names) == {"amount", "evidence_locator", "reason"}
+
+
 def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
-        _apply_iva_compensation_decision_binding(
+        apply_iva_compensation_decision_binding(
             "303",
-            2026,
-            Period.from_year_and_code(2026, "1T"),
+            _FILING_YEAR,
+            Period.from_year_and_code(_FILING_YEAR, "1T"),
             bucket_id=_BUCKET_ID,
-            revision=_test_revision(),
+            revision=synthetic_revision(),
             taxpayer_nif="12345678Z",
             caller_binding_values={},
             backend_binding_values={},
@@ -917,11 +472,12 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
     revision = _source_bound_revision()
 
     with pytest.raises(ModeloAggregationBindingError) as raised:
-        _reject_caller_overrides_of_source_bindings(
+        reject_caller_overrides_of_source_bindings(
             revision=revision,
             owned_sources=frozenset({BindingSourceKind.LEDGER_IVA_AGGREGATION}),
             caller_binding_values={},
             caller_casilla_inputs={_SOURCE_BOUND_CASILLA: Decimal("12.34")},
+            subject_leaf_key="modelo.work.calculate",
         )
 
     assert raised.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
@@ -945,29 +501,34 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
 class TestWorkflowInputMismatchError:
     """Real-behavior tests for WorkflowInputMismatchError.
 
-    _RevisionInputsProvider.load_inputs raises WorkflowInputMismatchError when
+    RevisionInputsProvider.load_inputs raises WorkflowInputMismatchError when
     the requested (modelo, period) pair does not match the revision's stored
     work-unit axes. The error must be a CoreValidationError (ValueError) subclass
     and must carry structured context.
     """
 
-    def _make_provider(self, modelo: str = "100", period: str = "0A") -> _RevisionInputsProvider:
+    def _make_provider(
+        self,
+        operation: PinnedAuthorityOperation,
+        modelo: str = "100",
+        period: str = "0A",
+    ) -> RevisionInputsProvider:
         work_unit = _minimal_work_unit(modelo=modelo, period=period)
         revision = _minimal_calculation_revision(work_unit)
-        return _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        return RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
 
     def _resident_profile(self) -> TaxpayerProfile:
         """Return a minimal real profile (load_inputs discards it via ``del``)."""
-        return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+        return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
-    def test_matching_request_does_not_raise(self) -> None:
+    def test_matching_request_does_not_raise(self, operation: PinnedAuthorityOperation) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""
         from ..workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
-        expected_period = workflow_period_for_work_unit(work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
+        expected_period = workflow_period_for_work_unit(work_unit, operation=operation)
         result = provider.load_inputs(
             modelo="100",
             period=expected_period,
@@ -975,14 +536,14 @@ class TestWorkflowInputMismatchError:
         )
         assert isinstance(result, dict)
 
-    def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
+    def test_mismatched_modelo_raises_workflow_input_mismatch_error(self, operation: PinnedAuthorityOperation) -> None:
         """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
         from ..workflow_gate import workflow_period_for_work_unit
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
-        correct_period = workflow_period_for_work_unit(work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
+        correct_period = workflow_period_for_work_unit(work_unit, operation=operation)
 
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
@@ -997,23 +558,23 @@ class TestWorkflowInputMismatchError:
         assert exc.context["expected_modelo"] == "100"
         assert exc.context["requested_modelo"] == "303"
 
-    def test_mismatched_period_raises_workflow_input_mismatch_error(self) -> None:
+    def test_mismatched_period_raises_workflow_input_mismatch_error(self, operation: PinnedAuthorityOperation) -> None:
         """load_inputs with a wrong period raises WorkflowInputMismatchError."""
         work_unit = _minimal_work_unit(modelo="303", period="1T")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
 
         with pytest.raises(WorkflowInputMismatchError) as exc_info:
             provider.load_inputs(
                 modelo="303",
-                period=Period.from_year_and_code(2026, "2T"),
+                period=Period.from_year_and_code(_FILING_YEAR, "2T"),
                 profile=self._resident_profile(),
             )
 
         exc = exc_info.value
         assert exc.context is not None
-        assert exc.context["expected_period"] == "2026 1T"
-        assert exc.context["requested_period"] == "2026 2T"
+        assert exc.context["expected_period"] == f"{_FILING_YEAR} 1T"
+        assert exc.context["requested_period"] == f"{_FILING_YEAR} 2T"
 
     def test_error_is_registered_without_builtin_ancestry(self) -> None:
         """WorkflowInputMismatchError stays registered without builtin ancestry."""
@@ -1022,18 +583,18 @@ class TestWorkflowInputMismatchError:
         assert issubclass(WorkflowInputMismatchError, CoreValidationError)
         assert not issubclass(WorkflowInputMismatchError, ValueError)
 
-    def test_error_code_is_registered(self) -> None:
+    def test_error_code_is_registered(self, operation: PinnedAuthorityOperation) -> None:
         """WorkflowInputMismatchError maps to a stable error code in the registry."""
         from ....core.errors.error_codes import get_registered_error_code
 
         work_unit = _minimal_work_unit(modelo="100", period="0A")
         revision = _minimal_calculation_revision(work_unit)
-        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        provider = RevisionInputsProvider(revision=revision, work_unit=work_unit, operation=operation)
 
         try:
             provider.load_inputs(
                 modelo="999",
-                period=Period.from_year_and_code(2026, "0A"),
+                period=Period.from_year_and_code(_FILING_YEAR, "0A"),
                 profile=self._resident_profile(),
             )
         except WorkflowInputMismatchError as exc:
@@ -1045,21 +606,53 @@ class TestWorkflowInputMismatchError:
 
 def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
     """Verify-time draft replay must not feed M100 0224 back as an operator input."""
-    work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
-    snapshot = published_snapshot("100", filing_year=2024, period="0A", revision_id="2024")
-    binding_values: dict[BindingId, Decimal] = {
+    work_unit = _minimal_work_unit(
+        modelo="100", period="0A", filing_year=_M100_YEAR, revision_id=str(revision_covering("100", _M100_YEAR).id)
+    )
+    snapshot = published_snapshot(
+        "100", filing_year=_M100_YEAR, period="0A", revision_id=revision_covering("100", _M100_YEAR).id
+    )
+    candidate_binding_values: dict[BindingId, Decimal] = {
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+        "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+        **M100_NO_LET_PROPERTY_BINDINGS,
+        "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-profile-incremento-guarderia": Decimal("0"),
-        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-minimo-ascendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-ascendientes-autonomico": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        **{f"renta-base-liquidable-negativa-general-em{n}-pendiente-inicio": Decimal("0") for n in (2, 3, 4)},
+        **{
+            f"renta-saldo-negativo-{kind}-ahorro-em{n}-pendiente-inicio": Decimal("0")
+            for kind in ("gyp", "rcm")
+            for n in (1, 2, 3, 4)
+        },
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-deduccion-maternidad": Decimal("0"),
+        "renta-maritime-path-rebeca": Decimal("0"),
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-profile-deduccion-madrid-cuidado-ascendientes-count": Decimal("0"),
+        "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+    }
+    # Editions differ in which profile bindings they declare; supply only the ones this edition has.
+    declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    binding_values = {
+        binding_id: value
+        for binding_id, value in candidate_binding_values.items()
+        if binding_id in declared_binding_ids
     }
     relation_values = {
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
@@ -1070,7 +663,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     result = calculate_registry_snapshot(
         snapshot,
         inputs={_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: Decimal("10000")},
-        date_context={"filing_period": date(2024, 12, 31)},
+        date_context={"filing_period": date(_M100_YEAR, 12, 31)},
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
@@ -1081,7 +674,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         calculate_registry_snapshot(
             snapshot,
             inputs={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("10000")},
-            date_context={"filing_period": date(2024, 12, 31)},
+            date_context={"filing_period": date(_M100_YEAR, 12, 31)},
             binding_values=binding_values,
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
@@ -1125,7 +718,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         source_provenance=(),
     )
 
-    informational_replay_inputs = _informational_casilla_replay_inputs(
+    informational_replay_inputs = informational_casilla_replay_inputs(
         revision=revision,
         snapshot=snapshot,
     )
@@ -1140,10 +733,10 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     that are not enrolled in IVA. It must not leak into the operator-facing
     ``--iva-regime`` choice set.
     """
-    import click
-
+    from ....core.cli_value_parsers import CliChoice
     from ...wizard.catalogue import build_setup_flow
-    from ...wizard.commands import SETUP_OPTION_INFOS, build_wizard_command
+    from ...wizard.command_parameters import SETUP_OPTION_INFOS
+    from ...wizard.commands import build_wizard_command
 
     flow = build_setup_flow(operation)
     wizard_values = {
@@ -1156,8 +749,8 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     build_wizard_command(flow, mode="create", operation=operation)
     option = SETUP_OPTION_INFOS["iva-regime"]
     assert option is not None, "the command builder materialized no --iva-regime option"
-    choice_type = option.click_type
-    assert isinstance(choice_type, click.Choice)
+    choice_type = option.parser
+    assert isinstance(choice_type, CliChoice)
     choice_set = set(choice_type.choices)
     assert choice_set == wizard_values
     assert IVARegime("NO_APLICA").value not in choice_set

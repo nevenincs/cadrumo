@@ -6,14 +6,22 @@ import os
 
 import pytest
 
+from ....core.storage_environment import TEMPORARY_VARIABLES
+
+_BOOTSTRAP_BROWSER_CACHE = os.environ["PLAYWRIGHT_BROWSERS_PATH"]
+"""The browser binary directory the repository bootstrap pinned before private storage isolation."""
+
 
 @pytest.fixture(autouse=True)
 def _align_browser_binary_cache(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Restore driver-cache mutations and align direct Playwright starts.
+    """Align direct Playwright starts and restore a test's temporary variables.
 
-    The repository bootstrap pins the provisioned binary directory before
-    private storage isolation. Tests may explicitly choose an empty cache to
-    exercise refusal, and production driver startup mutates its native variable;
-    those mutations must not redirect the next test's direct driver startup.
+    Tests may explicitly choose an empty cache to exercise refusal. The
+    monkeypatch keeps those changes and any temporary-directory changes local
+    to the test, while direct Playwright starts use the bootstrap cache.
     """
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", _BOOTSTRAP_BROWSER_CACHE)
+    for name in TEMPORARY_VARIABLES:
+        current = os.environ.get(name)
+        if current is not None:
+            monkeypatch.setenv(name, current)

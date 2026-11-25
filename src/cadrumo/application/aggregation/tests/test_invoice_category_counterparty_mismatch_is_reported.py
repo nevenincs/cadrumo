@@ -15,15 +15,18 @@ import pytest
 
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ...exchange_rate_provider import exchange_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BUCKET_ID = "e5cd70fc-3d46-4768-a775-f9443282596d"
-_YEAR = 2024
+_YEAR = _YEAR
 _PERIOD = "1T"
 _BASE = Decimal("4500.00")
 
@@ -57,7 +60,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Clinica Madrid SL",
-        counterparty_tax_id="B58818501",
+        counterparty_tax_id="B00010181",
         counterparty_country="ES",
         invoice_number="FAC-PREDICATE-EXEMPT",
         issued_at=date(_YEAR, 2, 14),

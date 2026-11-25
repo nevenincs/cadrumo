@@ -24,13 +24,16 @@ from cadrumo.domain.calculations.registry.binding_temporal import (
 )
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
-from ..validate_bindings import informational_binding_ids, unreferenced_binding_advisories
+from ..validate_bindings import informational_binding_ids, unreferenced_binding_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_REF = "ley-37-1992:art-75"
 _SOURCE_REF = "aeat-test-source-001"
+_HORIZON = filing_year_envelope().horizon
+_RETIRED_IN = str(filing_year_envelope().floor + 1)
 _PROVIDER = {
     "kind": "manual_input",
     "casilla_id": "62",
@@ -56,8 +59,8 @@ def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="test-revision",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        valid_from=date(_HORIZON, 1, 1),
+        period_selector=PeriodSelector(years=(_HORIZON,), periods=("1T",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
         bindings=bindings,
@@ -94,32 +97,32 @@ def test_non_calculation_carries_the_retired_box_revision() -> None:
     """A retired box is traceable to the edition that retired it."""
     member = NonCalculation(
         reason="informational_total",
-        box_retired_in="2023",
+        box_retired_in=_RETIRED_IN,
         consumed_by="modelo-390 annual informational handoff",
     )
 
-    assert member.box_retired_in == "2023"
+    assert member.box_retired_in == _RETIRED_IN
     assert binding_applies_to_period(member, "1T") is False
 
 
-def test_advisory_skips_a_dispositioned_binding_and_counts_it_instead() -> None:
+def test_refusal_skips_a_dispositioned_binding_and_counts_it_instead() -> None:
     """The disposition moves a row between two reported lines, never out of both."""
     orphan = _binding("test.binding.orphan", applicability=AllRevisionContexts())
     dispositioned = _binding(
         "test.binding.informational",
         applicability=NonCalculation(
             reason="informational_total",
-            box_retired_in="2023",
+            box_retired_in=_RETIRED_IN,
             consumed_by="modelo-390 annual informational handoff",
         ),
     )
     revision = _revision(orphan, dispositioned)
 
-    advisories = unreferenced_binding_advisories(prefix="modelo test revision test-revision", revision=revision)
+    failures = unreferenced_binding_failures(prefix="modelo test revision test-revision", revision=revision)
     informational = informational_binding_ids(revision)
 
-    assert [advisory for advisory in advisories if "test.binding.informational" in advisory] == []
-    assert any("test.binding.orphan" in advisory for advisory in advisories)
+    assert [failure for failure in failures if "test.binding.informational" in failure] == []
+    assert any("test.binding.orphan" in failure for failure in failures)
     assert informational == ("test.binding.informational",)
 
 
@@ -128,4 +131,4 @@ def test_an_undispositioned_orphan_is_not_counted_as_informational() -> None:
     revision = _revision(_binding("test.binding.orphan", applicability=AllRevisionContexts()))
 
     assert informational_binding_ids(revision) == ()
-    assert len(unreferenced_binding_advisories(prefix="modelo test revision test-revision", revision=revision)) == 1
+    assert len(unreferenced_binding_failures(prefix="modelo test revision test-revision", revision=revision)) == 1

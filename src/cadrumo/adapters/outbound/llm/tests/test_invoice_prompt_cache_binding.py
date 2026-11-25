@@ -36,29 +36,31 @@ from .....core.config_support import LLMProvider
 from .....core.period import Period
 from .....core.time.clock import now
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.transactions.lineage_models import DecisionProvenance
 from ....persistence.llm.cache import LLMCache
 from ..evidence_draft_text import TextInvoiceFieldExtractor
-from ..evidence_draft_vision import LocalVisionDocumentTranscriber
+from ..evidence_draft_vision import VisionDocumentTranscriber
 from ..models import LLMRequest
 from .prompt_support import build_invoice_extraction_prompt
+from .transitional_rate_support import TRANSITIONAL_RATE_QUARTER
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
-_Q4_2024 = Period.from_year_and_code(2024, "4T")
+_HORIZON_ANNUAL = Period.from_year_and_code(filing_year_envelope().horizon, "0A")
+_TRANSITIONAL_QUARTER = TRANSITIONAL_RATE_QUARTER
 
 
 @pytest.fixture(scope="session")
-def annual_2026_values(operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
+def horizon_annual_values(operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
     """Resolve the annual values during execution, never while pytest imports tests."""
-    return resolve_invoice_extraction_authority_values(period=_ANNUAL_2026, operation=operation)
+    return resolve_invoice_extraction_authority_values(period=_HORIZON_ANNUAL, operation=operation)
 
 
 @pytest.fixture(scope="session")
-def q4_2024_values(operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
+def transitional_quarter_values(operation: PinnedAuthorityOperation) -> InvoiceExtractionAuthorityValues:
     """Resolve the comparison values once per run after collection completes."""
-    return resolve_invoice_extraction_authority_values(period=_Q4_2024, operation=operation)
+    return resolve_invoice_extraction_authority_values(period=_TRANSITIONAL_QUARTER, operation=operation)
 
 
 class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
@@ -73,19 +75,19 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
 
     def test_two_periods_compile_to_two_distinct_cache_keys(self, *, operation: PinnedAuthorityOperation) -> None:
         cache = LLMCache()
-        annual = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
-        q4 = build_invoice_extraction_prompt(period=_Q4_2024, operation=operation)
+        annual = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
+        q4 = build_invoice_extraction_prompt(period=_TRANSITIONAL_QUARTER, operation=operation)
 
         assert annual.text != q4.text
 
         annual_key = cache.build_key(
             LLMRequest(prompt=annual.text),
-            LLMProvider.LOCAL,
+            LLMProvider.AGENT,
             "vision-model",
         )
         q4_key = cache.build_key(
             LLMRequest(prompt=q4.text),
-            LLMProvider.LOCAL,
+            LLMProvider.AGENT,
             "vision-model",
         )
 
@@ -94,10 +96,10 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
     def test_the_same_compiled_prompt_derives_the_same_key(self, *, operation: PinnedAuthorityOperation) -> None:
         """The key is deterministic, so an unchanged registry still hits cache."""
         cache = LLMCache()
-        text = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation).text
+        text = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation).text
 
-        first = cache.build_key(LLMRequest(prompt=text), LLMProvider.LOCAL, "vision-model")
-        second = cache.build_key(LLMRequest(prompt=text), LLMProvider.LOCAL, "vision-model")
+        first = cache.build_key(LLMRequest(prompt=text), LLMProvider.AGENT, "vision-model")
+        second = cache.build_key(LLMRequest(prompt=text), LLMProvider.AGENT, "vision-model")
 
         assert first == second
 
@@ -110,14 +112,14 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
         nudge would be normalised away and prove nothing.
         """
         cache = LLMCache()
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        compiled = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
         enumerated = ", ".join(format(pct.normalize(), "f") for pct in compiled.iva_rate_pcts)
         assert enumerated in compiled.text
 
-        baseline = cache.build_key(LLMRequest(prompt=compiled.text), LLMProvider.LOCAL, "m")
+        baseline = cache.build_key(LLMRequest(prompt=compiled.text), LLMProvider.AGENT, "m")
         restated = cache.build_key(
             LLMRequest(prompt=compiled.text.replace(enumerated, f"{enumerated}, 19", 1)),
-            LLMProvider.LOCAL,
+            LLMProvider.AGENT,
             "m",
         )
 
@@ -138,54 +140,43 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         self,
         *,
         operation: PinnedAuthorityOperation,
-        annual_2026_values: InvoiceExtractionAuthorityValues,
+        horizon_annual_values: InvoiceExtractionAuthorityValues,
     ) -> None:
-        extractor = TextInvoiceFieldExtractor(
-            model="some-text-model",
-            operation=operation,
-            authority_values=annual_2026_values,
-        )
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026, operation=operation)
+        extractor = TextInvoiceFieldExtractor(operation=operation, authority_values=horizon_annual_values)
+        compiled = build_invoice_extraction_prompt(period=_HORIZON_ANNUAL, operation=operation)
 
-        assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
-        assert "2026-0A" in extractor.decided_by
+        assert extractor.decided_by == f"llm:agent-text-extract:configured:rates-{compiled.rate_provenance}"
+        assert f"{_HORIZON_ANNUAL.filing_year}-{_HORIZON_ANNUAL.code}" in extractor.decided_by
 
     def test_a_different_rate_period_produces_a_different_stamp(
         self,
         *,
         operation: PinnedAuthorityOperation,
-        annual_2026_values: InvoiceExtractionAuthorityValues,
-        q4_2024_values: InvoiceExtractionAuthorityValues,
+        horizon_annual_values: InvoiceExtractionAuthorityValues,
+        transitional_quarter_values: InvoiceExtractionAuthorityValues,
     ) -> None:
         """The discriminating control: the stamp moves when the rates move."""
-        annual = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
-        q4 = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=q4_2024_values)
+        annual = TextInvoiceFieldExtractor(operation=operation, authority_values=horizon_annual_values)
+        q4 = TextInvoiceFieldExtractor(operation=operation, authority_values=transitional_quarter_values)
 
         assert annual.decided_by != q4.decided_by
 
-    def test_the_transport_half_is_still_derived_from_the_provider(
+    def test_the_transport_half_names_the_agent(
         self,
         *,
         operation: PinnedAuthorityOperation,
-        annual_2026_values: InvoiceExtractionAuthorityValues,
+        horizon_annual_values: InvoiceExtractionAuthorityValues,
     ) -> None:
-        """The pre-existing property survives the extension."""
-        local = TextInvoiceFieldExtractor(model="m", operation=operation, authority_values=annual_2026_values)
-        cloud = TextInvoiceFieldExtractor(
-            model="m",
-            provider=LLMProvider.AGENT,
-            operation=operation,
-            authority_values=annual_2026_values,
-        )
+        """The pre-existing property survives the extension: the stamp names the transport the read uses."""
+        extractor = TextInvoiceFieldExtractor(operation=operation, authority_values=horizon_annual_values)
 
-        assert local.decided_by.startswith("llm:local-text-extract:")
-        assert not cloud.decided_by.startswith("llm:local-text-extract:")
+        assert extractor.decided_by.startswith("llm:agent-text-extract:")
 
     def test_the_extended_stamp_still_persists_as_a_decision_provenance(
         self,
         *,
         operation: PinnedAuthorityOperation,
-        annual_2026_values: InvoiceExtractionAuthorityValues,
+        horizon_annual_values: InvoiceExtractionAuthorityValues,
     ) -> None:
         """It must survive the persisted record's own validator and its 128-char bound.
 
@@ -193,12 +184,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         the shape rule here: a longer stamp that the record refuses is a broken
         stamp, and the record is the authority on that.
         """
-        extractor = TextInvoiceFieldExtractor(
-            model="claude-haiku-4-5-20251001",
-            provider=LLMProvider.AGENT,
-            operation=operation,
-            authority_values=annual_2026_values,
-        )
+        extractor = TextInvoiceFieldExtractor(operation=operation, authority_values=horizon_annual_values)
 
         provenance = DecisionProvenance(decided_by=extractor.decided_by, decided_at=now())
 
@@ -212,19 +198,18 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         withdrawal must be able to enumerate. A model identifier alone names the
         vendor only to a reader who already knows the catalogue.
         """
-        local = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity
-        cloud = LocalVisionDocumentTranscriber(provider=LLMProvider.AGENT).transcriber_identity
+        transcriber = VisionDocumentTranscriber()
+        nearby = transcriber.transcriber_identity("nearby/api/synthetic-vision:1")
+        faraway = transcriber.transcriber_identity("faraway/api/synthetic-vision:1")
 
-        # The transport rides its own field now. It began folded into ``name``,
+        # The transport rides its own field. It began folded into ``name``,
         # which is contracted to say WHICH reader produced the text and not to
         # carry a coarse label -- so asserting it there was asserting the
         # contract violation rather than the property.
-        assert local.transport == "local"
-        assert cloud.transport == "agent"
-        assert local.transport != cloud.transport
-        assert local.name == "qwen2.5vl:3b", "the name is the reader, with nothing else folded in"
-        assert local.revision.startswith("prompt-v")
-        assert "rates-" not in local.name, "stage one compiles no rates, so it must claim none"
-        # The complete typed identity keeps the trust contexts distinct without
+        assert nearby.transport == "agent"
+        assert nearby.name == "nearby/api/synthetic-vision:1", "the name is the served lane and model, nothing else"
+        assert nearby.revision.startswith("prompt-v")
+        assert "rates-" not in nearby.name, "stage one compiles no rates, so it must claim none"
+        # The complete typed identity keeps two lanes distinct without
         # maintaining a second derived cache-key surface.
-        assert local != cloud
+        assert nearby != faraway

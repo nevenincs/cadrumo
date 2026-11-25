@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pydantic import SecretBytes
 
-from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
 from .....application.user_profile.automation_custody_port import AutomationGrantMaterial
@@ -15,7 +14,7 @@ from .....application.user_profile.automation_enrollment import (
 from .....application.user_profile.automation_lifecycle import (
     AutomationDenial,
 )
-from .automation_control_projection import previous_enrollment_grant
+from .automation_control_projection import GRANT_STATES_WITHOUT_WRAPPED_KEY, previous_enrollment_grant
 from .automation_control_publication import AutomationControlPublication
 from .automation_crypto import (
     open_automation,
@@ -93,7 +92,7 @@ class AutomationEnrollmentCustody(AutomationControlPublication):
         fresh_dek: SecretBytes | None,
     ) -> AutomationGrantMaterial:
         """Use fresh password proof or unwrap only the exact previous grant material."""
-        if entry.grant.state in {AuthorityState.SUSPENDED, AuthorityState.REVOKED}:
+        if entry.grant.state in GRANT_STATES_WITHOUT_WRAPPED_KEY:
             return AutomationGrantMaterial(grant=entry.grant, keys=entry.keys, dek=None)
         old = previous_enrollment_grant(previous, entry)
         dek = fresh_dek

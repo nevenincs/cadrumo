@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -16,11 +16,11 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
-from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
-from .profile_schema_support import authored_history_supported_filing_years
+from .profile_schema_support import authored_fact_catalogue, authored_history_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,13 +31,14 @@ _FACT_IDS = frozenset(
         "lirpf-art-101:retencion-administrador-incn-umbral-eur",
     }
 )
-_REDUCTION_START = date(2015, 1, 1)
 
 
 def _catalogue() -> GovernedFactCatalogue:
-    facts = load_governed_facts(bundled_path("registry", "aeat", "facts"))
-    selected = {fact.fact_id: fact for fact in facts if fact.fact_id in _FACT_IDS}
-    return GovernedFactCatalogue(facts=selected)
+    return authored_fact_catalogue(_FACT_IDS)
+
+
+def _first_valid_from(fact_id: str) -> date:
+    return min(variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None)
 
 
 def _resolve(fact_id: str, effective_date: date) -> ResolvedScalarFact:
@@ -61,21 +62,20 @@ def test_administrator_facts_are_authored_once() -> None:
     assert authored_ids == _FACT_IDS
 
 
+def _redaction_boundaries(fact_id: str) -> tuple[date, ...]:
+    """Every BOE redaction boundary the catalogue authors for one fact, oldest first."""
+    return tuple(
+        sorted(variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None)
+    )
+
+
 @pytest.mark.parametrize(
-    ("effective_date", "variant_suffix"),
-    (
-        (date(2015, 1, 1), "2015-01-01"),
-        (date(2015, 7, 12), "2015-07-12"),
-        (date(2018, 7, 5), "2018-07-05"),
-        (date(2018, 12, 29), "2018-12-29"),
-        (date(2021, 1, 1), "2021-01-01"),
-        (date(2023, 1, 1), "2023-01-01"),
-    ),
+    "effective_date",
+    _redaction_boundaries("lirpf-art-101:retencion-administrador-reducida"),
+    ids=date.isoformat,
 )
-def test_each_boe_redaction_boundary_selects_the_exact_variant(
-    effective_date: date,
-    variant_suffix: str,
-) -> None:
+def test_each_boe_redaction_boundary_selects_the_exact_variant(effective_date: date) -> None:
+    variant_suffix = effective_date.isoformat()
     resolved = _resolve("lirpf-art-101:retencion-administrador-reducida", effective_date)
 
     assert resolved.variant_id.endswith(variant_suffix)
@@ -84,28 +84,39 @@ def test_each_boe_redaction_boundary_selects_the_exact_variant(
     assert resolved.source_refs == (f"boe-lirpf-art-101-administrator-{variant_suffix}",)
 
 
-def test_the_administrator_reduced_rate_does_not_precede_its_first_authored_variant() -> None:
-    """The reduced rate states when it entered into force, and that is a legal boundary.
+def test_the_administrator_reduced_rate_before_its_first_variant_reads_it_as_a_backward_projection() -> None:
+    """A standing rate reads its first variant before it began, and says so; a threshold does not.
 
-    2015 is where this rate begins; the day before it, no authored variant
-    governs the question, so resolution refuses rather than projecting a rate
-    backwards into a year that never carried it.
+    The turnover threshold declares no standing rate, so its first variant's start
+    is a legal boundary and the day before it resolves to nothing.
     """
+    first = _first_valid_from("lirpf-art-101:retencion-administrador-reducida")
+
+    before = _resolve("lirpf-art-101:retencion-administrador-reducida", first - timedelta(days=1))
+    assert before.variant_id.endswith(first.isoformat())
+    assert before.payload.value == Decimal("0.19")
+    assert before.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before.projected_from_date == first
+    assert not before.published_on_date
+
+    threshold = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
     with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve("lirpf-art-101:retencion-administrador-reducida", date(2014, 12, 31))
+        _resolve(threshold, _first_valid_from(threshold) - timedelta(days=1))
 
-    resolved = _resolve("lirpf-art-101:retencion-administrador-reducida", date(2015, 1, 1))
+    resolved = _resolve("lirpf-art-101:retencion-administrador-reducida", first)
 
-    assert resolved.variant_id.endswith("2015-01-01")
+    assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
+    assert resolved.variant_id.endswith(first.isoformat())
     assert resolved.payload.value == Decimal("0.19")
     assert resolved.payload.unit == "fraction"
-    assert resolved.source_refs == ("boe-lirpf-art-101-administrator-2015-01-01",)
+    assert resolved.source_refs == (f"boe-lirpf-art-101-administrator-{first.isoformat()}",)
 
 
 def test_authored_facts_preserve_units_values_and_exact_source_windows() -> None:
-    general = _resolve("lirpf-art-101:retencion-administrador-general", _REDUCTION_START)
-    reduced = _resolve("lirpf-art-101:retencion-administrador-reducida", _REDUCTION_START)
-    threshold = _resolve("lirpf-art-101:retencion-administrador-incn-umbral-eur", _REDUCTION_START)
+    reduction_start = _first_valid_from("lirpf-art-101:retencion-administrador-reducida")
+    general = _resolve("lirpf-art-101:retencion-administrador-general", reduction_start)
+    reduced = _resolve("lirpf-art-101:retencion-administrador-reducida", reduction_start)
+    threshold = _resolve("lirpf-art-101:retencion-administrador-incn-umbral-eur", reduction_start)
     source_root = bundled_path()
     shared = load_shared_catalogues(source_root / "registry" / "aeat")
 

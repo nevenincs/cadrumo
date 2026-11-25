@@ -1,24 +1,30 @@
 import { useId } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import {
+  toolIdentityWords,
+  toolKindWords,
+  toolReachWords,
+} from "../../shell/agentWords";
+import { useStrings, type Translate } from "../../shell/strings";
+import { AgentTextAction } from "./AgentAction";
 import type {
   AgentApproval,
   AgentApprovalOption,
-} from "../../shell/agentSession";
-import { offeredOptions } from "../../shell/agentPermission";
-import { toolKindWords } from "../../shell/agentWords";
-import { useStrings, type Translate } from "../../shell/strings";
-import { AgentTextAction } from "./AgentAction";
+} from "../../shell/agentSnapshotContract";
 
 /** Refusals first, and allowing once last, nearest the hand. The kind of an
  * option decides this, never its name or where the agent lists it. */
 const ORDER: readonly AgentApprovalOption["kind"][] = [
-  "reject_always",
   "reject_once",
-  "allow_always",
   "allow_session",
   "allow_once",
 ];
+
+/** Whose decision the card puts: a tool the agent wants to call, or, from
+ * the window's own attendance requests, a Cadrumo review. The host's
+ * approvals are only ever the agent's. */
+export type ApprovalPromptSource = AgentApproval["source"] | "cadrumo_review";
 
 /** Localized labels for the agent's canonical choices and unnamed options. */
 function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
@@ -27,12 +33,8 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
       return t("desktop.agent.approval_allow_once");
     case "allow_session":
       return t("desktop.agent.approval_allow_session");
-    case "allow_always":
-      return t("desktop.agent.approval_allow_always");
     case "reject_once":
       return t("desktop.agent.approval_reject_once");
-    case "reject_always":
-      return t("desktop.agent.approval_reject_always");
   }
 }
 
@@ -40,19 +42,11 @@ function kindWords(t: Translate, kind: AgentApprovalOption["kind"]): string {
  * supplied wording; their scope cannot safely be inferred from English prose. */
 function optionWords(
   t: Translate,
-  source: AgentApproval["source"],
+  source: ApprovalPromptSource,
   option: AgentApprovalOption,
-  server?: string | null,
 ): string {
-  if (source === "agent_tool") {
-    if (
-      option.option_id === "allow_server_session" &&
-      option.kind === "allow_session" &&
-      server
-    )
-      return t("desktop.agent.approval_allow_server_session", { server });
-    if (option.option_id === option.kind) return kindWords(t, option.kind);
-  }
+  if (source === "agent_tool" && option.option_id === option.kind)
+    return kindWords(t, option.kind);
   return option.name?.trim() || kindWords(t, option.kind);
 }
 
@@ -60,7 +54,7 @@ function optionWords(
  * complete targets, including the agent's escaped file/attachment names. */
 function descriptionWords(
   t: Translate,
-  source: AgentApproval["source"],
+  source: ApprovalPromptSource,
   tool: string | null | undefined,
   description: string | null | undefined,
 ): string | null | undefined {
@@ -88,9 +82,7 @@ function descriptionWords(
 /**
  * A decision a reply waits on: a tool the agent wants to use, or a Cadrumo
  * operation to review before it commits. It says what would run, and offers
- * the options the agent offers, each under its own name; an option that would
- * persist beyond the run is left out while a bounded option is
- * offered. Only a press of one of them decides: none is chosen beforehand,
+ * the options the agent offers, each under its own name. Only a press of one of them decides: none is chosen beforehand,
  * none has the focus, and no key answers for the person. The kind of an
  * option decides its place and its emphasis: refusals come first and allowing
  * once is the primary action. Of the call, the agent says its name and little
@@ -100,16 +92,22 @@ export function ApprovalPrompt({
   source,
   toolCall,
   toolServer,
+  toolName,
+  toolReach,
   toolKind,
   description,
   options,
   onDecide,
   title,
 }: {
-  source: AgentApproval["source"];
+  source: ApprovalPromptSource;
   /** What would run, as the agent names it. */
   toolCall?: string | null;
   toolServer?: string | null;
+  /** The tool's own name within its server, where the agent names one. */
+  toolName?: string | null;
+  /** How far the tool reaches, where the agent says. */
+  toolReach?: AgentApproval["tool_reach"];
   /** What kind of tool it is, one of the agent's ten. */
   toolKind?: AgentApproval["tool_kind"];
   description?: string | null;
@@ -123,54 +121,77 @@ export function ApprovalPrompt({
   const headingId = useId();
   const detail = descriptionWords(t, source, toolCall, description);
   const showKind = toolKind && toolKind !== "other";
+  // The agent's own tools are worded by what they are; a review is named as
+  // it was given.
+  const words =
+    source === "agent_tool" && toolCall
+      ? toolIdentityWords(t, {
+          server: toolServer,
+          name: toolName,
+          title: toolCall,
+          kind: toolKind,
+        })
+      : null;
+  const reach = source === "agent_tool" ? toolReachWords(t, toolReach) : null;
   // A stable sort: options of one kind keep the order the agent gave them.
-  const ordered = offeredOptions(options).sort(
+  const ordered = [...options].sort(
     (a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind),
   );
   return (
     <section
       aria-labelledby={headingId}
-      className="agent-approval grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl border border-border-strong bg-card p-3.5 text-card-foreground shadow-raised"
+      className="agent-approval flex max-h-[60dvh] flex-col gap-3 rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
     >
-      <div className="flex items-start gap-2">
-        <Icon
-          name={source === "agent_tool" ? "agent" : "lock"}
-          size="md"
-          className="mt-0.5 text-muted-foreground"
-        />
-        <div className="grid min-w-0 gap-1">
-          {toolCall && (
-            <p id={headingId} className="text-sm text-muted-foreground">
-              {title ??
+      <div className="-mx-1 min-h-0 overflow-y-auto px-1">
+        <div className="flex items-start gap-2">
+          <Icon
+            name={source === "agent_tool" ? "agent" : "lock"}
+            size="md"
+            className="mt-0.5 text-muted-foreground"
+          />
+          <div className="grid min-w-0 gap-1">
+            {toolCall && (
+              <p id={headingId} className="text-sm text-muted-foreground">
+                {title ??
+                  (source === "agent_tool"
+                    ? t("desktop.agent.approval_tool_title")
+                    : t("desktop.agent.approval_review_title"))}
+              </p>
+            )}
+            <h3
+              id={toolCall ? undefined : headingId}
+              className="text-base font-semibold text-foreground wrap-anywhere"
+            >
+              {words?.label ||
+                toolCall ||
+                title ||
                 (source === "agent_tool"
                   ? t("desktop.agent.approval_tool_title")
                   : t("desktop.agent.approval_review_title"))}
-            </p>
-          )}
-          <h3
-            id={toolCall ? undefined : headingId}
-            className="text-base font-semibold text-foreground wrap-anywhere"
-          >
-            {toolCall ||
-              title ||
-              (source === "agent_tool"
-                ? t("desktop.agent.approval_tool_title")
-                : t("desktop.agent.approval_review_title"))}
-          </h3>
-          {(toolServer || showKind) && (
-            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              {toolServer && <Badge>{toolServer}</Badge>}
-              {showKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
-            </div>
-          )}
-          {detail && (
-            <p className="text-sm whitespace-pre-wrap text-muted-foreground wrap-anywhere">
-              {detail}
-            </p>
-          )}
+            </h3>
+            {words?.description && (
+              <p className="text-sm text-muted-foreground wrap-anywhere">
+                {words.description}
+              </p>
+            )}
+            {(toolServer || showKind || reach) && (
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                {toolServer && !words?.description && (
+                  <Badge>{toolServer}</Badge>
+                )}
+                {showKind && <Badge>{toolKindWords(t, toolKind)}</Badge>}
+                {reach && <Badge>{reach}</Badge>}
+              </div>
+            )}
+            {detail && (
+              <p className="text-sm whitespace-pre-wrap text-muted-foreground wrap-anywhere">
+                {detail}
+              </p>
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex shrink-0 flex-wrap justify-end gap-2">
         {ordered.map((option) => (
           <AgentTextAction
             key={option.option_id}
@@ -180,7 +201,7 @@ export function ApprovalPrompt({
             className="h-auto min-h-control-sm max-w-full py-1 text-left whitespace-normal wrap-anywhere"
             onAction={onDecide ? () => onDecide(option.option_id) : undefined}
           >
-            {optionWords(t, source, option, toolServer)}
+            {optionWords(t, source, option)}
           </AgentTextAction>
         ))}
       </div>

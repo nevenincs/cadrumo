@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 
 from .....application.ledger.party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
     role_evidence_key_for_field,
@@ -54,7 +55,9 @@ def test_the_prompt_never_names_an_address_role_evidence_key(*, operation: Pinne
     A contract table can stay honest while the prompt template hardcodes an extra
     instruction, and the prompt is what the model's context actually pays for.
     """
-    compiled = build_invoice_extraction_prompt(period=Period(filing_year=2026, code="1T"), operation=operation)
+    compiled = build_invoice_extraction_prompt(
+        period=Period(filing_year=filing_year_envelope().horizon, code="1T"), operation=operation
+    )
     rendered = compiled.model_dump_json()
 
     for field in sorted(PARTY_ATTRIBUTED_ADDRESS_FIELDS):

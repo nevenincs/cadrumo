@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 22:33+0200\n"
+"POT-Creation-Date: 2026-11-01 02:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -126,7 +126,7 @@ msgstr "Cadrumo admet tres proveïdors:"
 
 #: ../../how-to/authenticate-with-aeat.md:49
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr "`certificate`: el fitxer del teu certificat digital (certificado digital)."
+msgstr "`certificate`: el fitxer del teu certificat digital."
 
 #: ../../how-to/authenticate-with-aeat.md:50
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
@@ -139,10 +139,12 @@ msgstr "`clave_permanente`: Cl@ve Permanente, un accés amb DNI/NIE i contraseny
 #: ../../how-to/authenticate-with-aeat.md:53
 msgid ""
 "Pass the identifier to `--provider`. Cl@ve PIN and the electronic "
-"national ID card (DNI electrónico) are not supported."
+"national ID card (<span lang=\"es\">DNI electrónico</span>) are not "
+"supported."
 msgstr ""
 "Passa l'identificador a `--provider`. No s'admeten Cl@ve PIN ni el "
-"document nacional d'identitat electrònic (DNI electrónico)."
+"document nacional d'identitat electrònic (<span lang=\"es\">DNI "
+"electrónico</span>)."
 
 #: ../../how-to/authenticate-with-aeat.md:56
 msgid "Configure a provider"
@@ -453,36 +455,36 @@ msgstr "Per eliminar l'estat d'autenticació local de cada proveïdor configurat
 
 #: ../../how-to/authenticate-with-aeat.md:233
 msgid "Act for someone else (apoderado)"
-msgstr "Actua en nom d'una altra persona (apoderado)"
+msgstr "Actua en nom d'una altra persona (apoderat)"
 
 #: ../../how-to/authenticate-with-aeat.md:235
 msgid ""
 "If you act as an authorized tax representative for another taxpayer, "
-"record locally who you represent and the relevant AEAT apoderamiento "
-"scopes. An apoderado is an authorized representative, such as a gestor or"
-" asesor."
+"record locally who you represent and the relevant AEAT <span "
+"lang=\"es\">apoderamiento</span> scopes. An <span "
+"lang=\"es\">apoderado</span> is an authorized representative, such as a "
+"<span lang=\"es\">gestor</span> or <span lang=\"es\">asesor</span>."
 msgstr ""
 "Si actues com a representant fiscal autoritzat d'un altre contribuent, "
-"registra localment qui representes i els àmbits d'apoderamiento de l'AEAT"
-" corresponents. Un apoderado és un representant autoritzat, com ara un "
+"registra localment qui representes i els àmbits d'apoderament de l'AEAT "
+"corresponents. Un apoderat és un representant autoritzat, com ara un "
 "gestor o assessor."
 
 #: ../../how-to/authenticate-with-aeat.md:239
 msgid ""
-"The apoderamiento itself is granted at AEAT. The represented party "
-"authorizes you through AEAT's own apoderamiento procedures. The commands "
-"in this section record that grant in your local profile so read commands "
-"know whose data they read. They never register, extend, revoke, or "
-"renounce an apoderamiento at AEAT. No command writes representation state"
-" to AEAT."
+"The power of attorney itself is granted at AEAT. The represented party "
+"authorizes you through AEAT's own power of attorney procedures. The "
+"commands in this section record that grant in your local profile so read "
+"commands know whose data they read. They never register, extend, revoke, "
+"or renounce a power of attorney at AEAT. No command writes representation"
+" state to AEAT."
 msgstr ""
-"L'apoderamiento en si es concedeix a l'AEAT. La part representada "
-"t'autoritza mitjançant els procediments d'apoderamiento de la mateixa "
-"AEAT. Les ordres d'aquesta secció registren aquesta concessió al teu "
-"perfil local perquè les ordres de lectura sàpiguen de qui llegeixen les "
-"dades. Mai no registren, amplien, revoquen ni renuncien a un "
-"apoderamiento a l'AEAT. Cap ordre no escriu l'estat de representació a "
-"l'AEAT."
+"L'apoderament en si es concedeix a l'AEAT. La part representada "
+"t'autoritza mitjançant els procediments d'apoderament de la mateixa AEAT."
+" Les ordres d'aquesta secció registren aquesta concessió al teu perfil "
+"local perquè les ordres de lectura sàpiguen de qui llegeixen les dades. "
+"Mai no registren, amplien, revoquen ni renuncien a un apoderament a "
+"l'AEAT. Cap ordre no escriu l'estat de representació a l'AEAT."
 
 #: ../../how-to/authenticate-with-aeat.md:245
 msgid "See the accepted scopes"
@@ -493,8 +495,8 @@ msgid "List the scope codes the tool accepts:"
 msgstr "Llista els codis d'àmbit que accepta l'eina:"
 
 #: ../../how-to/authenticate-with-aeat.md:253
-msgid "Each scope is an AEAT apoderamiento area. Examples include:"
-msgstr "Cada àmbit és una àrea d'apoderamiento de l'AEAT. Alguns exemples són:"
+msgid "Each scope is an AEAT power of attorney area. Examples include:"
+msgstr "Cada àmbit és una àrea d'apoderament de l'AEAT. Alguns exemples són:"
 
 #: ../../how-to/authenticate-with-aeat.md:255
 msgid "`RENT` for Modelos 100 and 714."
@@ -550,7 +552,7 @@ msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
 msgstr ""
-"El perfil actiu conté com a màxim una configuració d'apoderado; si el "
+"El perfil actiu conté com a màxim una configuració d'apoderat; si el "
 "tornes a configurar, el substitueixes. L'identificador representat "
 "s'emmagatzema xifrat."
 
@@ -583,12 +585,12 @@ msgstr "Elimina la configuració quan finalitzi la representació:"
 
 #: ../../how-to/authenticate-with-aeat.md:295
 msgid ""
-"Clearing removes only the local record. The apoderamiento at AEAT is "
+"Clearing removes only the local record. The power of attorney at AEAT is "
 "unaffected. Revoke it through AEAT's own procedures."
 msgstr ""
-"En esborrar-la només s'elimina el registre local. L'apoderamiento a "
-"l'AEAT no es veu afectat. Revoca'l mitjançant els procediments de la "
-"mateixa AEAT."
+"En esborrar-la només s'elimina el registre local. L'apoderament a l'AEAT "
+"no es veu afectat. Revoca'l mitjançant els procediments de la mateixa "
+"AEAT."
 
 #: ../../how-to/authenticate-with-aeat.md:298
 msgid "Next steps"

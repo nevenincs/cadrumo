@@ -8,7 +8,7 @@ from typing import Annotated
 
 import typer
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .checklist import render_checklist
 from .manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
@@ -20,7 +20,8 @@ app = typer.Typer(
 )
 
 
-def _default_manager() -> NewModeloScaffoldManager:
+def default_manager() -> NewModeloScaffoldManager:
+    """Return the new modelo scaffold manager over the registry modelos root."""
     # cli.py lives at dev/registry/newmodelo/cli.py; parents[3] is the repo root.
     repo_root = REPO_ROOT
     modelos_root = repo_root / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
@@ -53,7 +54,9 @@ def scaffold(
     modelo_id: Annotated[str, typer.Argument(help="Three-digit AEAT modelo identifier, e.g. '410'.")],
     revision_id: Annotated[
         str,
-        typer.Argument(help="Revision identifier, e.g. '2026-y-siguientes'."),
+        typer.Argument(
+            help="Revision identifier: the first filing year it selects and its scope, e.g. '<year>-y-siguientes'."
+        ),
     ],
     valid_from: Annotated[str, typer.Option("--valid-from", help="Grounded applicability start date (YYYY-MM-DD).")],
     year_from: Annotated[int, typer.Option("--year-from", help="First filing year selected by this revision.")],
@@ -89,7 +92,7 @@ def scaffold(
     manager = (
         NewModeloScaffoldManager(registry_modelos_root=registry_modelos_root)
         if registry_modelos_root is not None
-        else _default_manager()
+        else default_manager()
     )
     try:
         result = manager.scaffold(
@@ -129,7 +132,7 @@ def new_edition(
     manager = (
         NewModeloScaffoldManager(registry_modelos_root=registry_modelos_root)
         if registry_modelos_root is not None
-        else _default_manager()
+        else default_manager()
     )
     try:
         result = manager.scaffold(

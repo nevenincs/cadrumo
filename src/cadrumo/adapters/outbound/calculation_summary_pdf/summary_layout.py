@@ -465,6 +465,16 @@ def lay_out_summary(presentation: CalculationSummaryPresentation) -> tuple[Summa
     layout.y -= 10
     for index, section in enumerate(presentation.sections):
         _lay_section(layout, presentation, section, index=index)
+    if presentation.resolutions:
+        _lay_heading(layout, presentation.resolutions_heading, key="resolutions-heading", reserve=2 * _LINE + 8)
+        _lay_fact_rows(
+            layout,
+            presentation.resolutions,
+            table_key="resolutions",
+            value_face=SummaryFace.TEXT,
+            value_size=8,
+            value_below=True,
+        )
     _lay_heading(layout, presentation.trace_heading, key="trace-heading", reserve=2 * _LINE + 8)
     _lay_fact_rows(
         layout,

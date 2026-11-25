@@ -6,7 +6,7 @@ different names -- ``_ANY_HTTP_URL_ADAPTER``, ``_HTTP_URL_ADAPTER``,
 identical wherever it is built, so each copy was a duplicate definition.
 
 The four names mattered more than the six copies. ``_URL_ADAPTER`` is also the
-name :mod:`cadrumo.domain.portals._entries.common` gives to a
+name :mod:`cadrumo.domain.portals.entries.common` gives to a
 ``TypeAdapter(HttpUrl)``, which is a DIFFERENT validator. Both reject a
 non-http scheme, but ``HttpUrl`` additionally enforces a maximum URL length
 that ``AnyHttpUrl`` does not, so a long URL passes one and fails the other. One

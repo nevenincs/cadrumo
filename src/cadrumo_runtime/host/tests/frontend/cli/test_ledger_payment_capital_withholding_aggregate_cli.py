@@ -41,22 +41,16 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
 pytestmark = [
@@ -70,61 +64,20 @@ pytestmark = [
 # even though the bank paid it on 2 July.
 _Q2 = "2T"
 
-_CAPITAL_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Payer"),
-    UserProfileFact(path="activities.description", value="capital income payer activity"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
-
-
-def _capture_scope(client_id: UUID) -> AccessScope:
-    """Grant aggregate access with all-period transaction catalogue lookup."""
-    return AccessScope(
-        operations=frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID}),
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=f"{MODELO_AGGREGATE_OPERATION_DEFINITION_ID}.result",
-                    category=DisclosureCategory.TAX_VALUES,
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
+_CAPITAL_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Payer"),
+        UserProfileFact(path="activities.description", value="capital income payer activity"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # A filer stated as neither a gran empresa nor a large public administration files quarterly.
+        UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),
+        UserProfileFact(path="censo.large_company", value=False),
+        UserProfileFact(path="censo.public_administration_budget_gt_6000000", value=False),
     )
+)
 
 
 def _capital_profile_preparer(authority_operation: PinnedAuthorityOperation) -> Callable[[UUID, Path], Transaction]:
@@ -196,7 +149,7 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
     """A captured coupon lands in the 123 second quarter; calculating that period still refuses."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_capital_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:
@@ -227,7 +180,11 @@ def test_ledger_capital_payment_is_stored_in_m123_and_calculation_stays_refused(
     error = json.loads(calculated_output)["error"]
     assert error["code"] == "REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED", calculated_output
     context = error["context"]
-    assert context["effect"] == "unknown", calculated_output
+    # The gate reads the captured observations and refuses at the start of the evaluation
+    # (calculation_actions._evaluate_prepared_calculation), before any persistence commit. The
+    # operation journals an unknown effect only when the first commit is about to begin
+    # (FirstWriteEffectAnnouncement), so a refusal ahead of every write settles with no effect.
+    assert context["effect"] == "none", calculated_output
     assert context["captured_retencion_observations"] == "1"
     assert context["terminal_condition"] == "refused", calculated_output
     assert isinstance(context["operation_id"], str) and context["operation_id"], calculated_output
@@ -240,7 +197,7 @@ def test_ledger_capital_capture_refuses_the_wrong_modelo_and_other_123_transport
     """A coupon cannot settle through Modelo 111, and 123 takes no invoice evidence, alone or beside the payment."""
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_capture_scope,
+        scope_for_destination=operation_lifecycle_scope(frozenset({MODELO_AGGREGATE_OPERATION_DEFINITION_ID})),
         prepare_profile=_capital_profile_preparer(authority_operation),
         invoke_cli=run_cadrumo_cli,
     ) as session:

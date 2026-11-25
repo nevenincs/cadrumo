@@ -1,63 +1,38 @@
-"""Worded portfolio authorities, table groups and admitted key guidance."""
+"""Worded portfolio authorities, table groups and admitted key guidance.
+
+The group headings, what the list could read and what a row that opens
+nothing says are the application's words for the list; this module lays
+them out for a terminal and adds the keys that act.
+"""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from types import MappingProxyType
-from typing import Final
+from enum import StrEnum
 
 from rich.text import Text
 
-from ....application.modelo.declarations_calendar import DeclarationsCalendarSource
-from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
+from ....application.modelo.declarations_list import (
+    DeclarationListGroup,
+    DeclarationListRow,
+    group_words,
+    is_unlinked_local_draft,
+    row_help_words,
+    source_notices,
+)
 from ....core.external_constants import OutputLanguage
-from ....core.i18n.render import tr
+from ....core.i18n.render import output_language, tr
 from ..components.cell_text import wrap_words
 from ..components.widgets import ContentDataTable
 from .controller import (
     DeclarationsWorkspaceController,
 )
-from .row_words import is_unlinked_local_draft, row_lines
-
-DECLARATION_GROUP_LOCALE_KEYS: Final[Mapping[DeclarationListGroup, str]] = MappingProxyType(
-    {
-        DeclarationListGroup.ATTENTION: "tui.declarations.list.group.attention",
-        DeclarationListGroup.IN_PROGRESS: "tui.declarations.list.group.in_progress",
-        DeclarationListGroup.READY: "tui.declarations.list.group.ready",
-        DeclarationListGroup.NOT_STARTED: "tui.declarations.list.group.not_started",
-        DeclarationListGroup.RECORDED: "tui.declarations.list.group.recorded",
-        DeclarationListGroup.AEAT_UNLINKED: "tui.declarations.list.state.aeat_unlinked",
-        DeclarationListGroup.MAYBE: "tui.declarations.list.group.maybe",
-    }
-)
+from .row_words import row_lines
 
 
 def portfolio_source_lines(controller: DeclarationsWorkspaceController) -> list[str]:
-    """Describe observed authorities and retained incomplete evidence."""
-    lines = []
-    projection = controller.calendar_projection
-    if projection is not None:
-        for source in projection.sources:
-            if source.source is not DeclarationsCalendarSource.AEAT_EVIDENCE:
-                continue
-            from .controller import timestamp_label
-
-            observed = (
-                timestamp_label(source.observed_at)
-                if source.observed_at is not None
-                else tr("tui.declarations.calendar.never_observed")
-            )
-            lines.append(
-                tr(
-                    "tui.declarations.calendar.detail.source",
-                    source=tr("tui.declarations.calendar.source." + source.source.value),
-                    availability=tr("tui.declarations.availability." + source.availability.value),
-                    observed=observed,
-                )
-            )
-    if any(zone.availability.value == "stale" for zone in controller.projection.zones):
-        lines.append(tr("tui.declarations.refusal.source"))
-    return lines
+    """Say what the list could read, as the application words it."""
+    language = OutputLanguage(output_language())
+    return list(source_notices(controller.projection, controller.calendar_projection, language))
 
 
 def configure_portfolio_columns(table: ContentDataTable[Text | str], width: int) -> str | None:
@@ -66,8 +41,8 @@ def configure_portfolio_columns(table: ContentDataTable[Text | str], width: int)
     table.fill_column = None
     selected = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value if table.row_count else None
     table.clear(columns=True)
-    table.add_column(tr("tui.declarations.list.column.declaration"), width=width)
-    table.add_column(tr("tui.declarations.list.column.state"), width=width)
+    table.add_column(tr("workspace.declarations.list.column.declaration"), width=width)
+    table.add_column(tr("workspace.declarations.list.column.state"), width=width)
     return selected
 
 
@@ -98,8 +73,7 @@ def populate_portfolio_groups(
         members = [row for row in visible if row.group is group]
         folded = not members or group in folded_groups
         mark = "▹" if folded else "▿"
-        group_key = DECLARATION_GROUP_LOCALE_KEYS[group]
-        title = "\n".join(wrap_words(f"{mark} {tr(group_key)} ({len(members)})", width))
+        title = "\n".join(wrap_words(f"{mark} {group_words(group, language)} ({len(members)})", width))
         table.add_row(
             Text(title, style="bold"),
             "",
@@ -116,13 +90,13 @@ def portfolio_shortcuts(controller: DeclarationsWorkspaceController) -> list[str
     """List only supported list actions."""
     shortcuts = []
     if controller.work_create_handoff is not None:
-        shortcuts.append("+ " + tr("tui.declarations.list.key.new"))
+        shortcuts.append("+ " + tr("workspace.declarations.list.key.new"))
     shortcuts.extend(
         (
-            "/ " + tr("tui.modelo.workbench.key.search"),
-            "f " + tr("tui.modelo.workbench.key.filter"),
-            "s " + tr("tui.modelo.workbench.key.sort"),
-            "t " + tr("tui.modelo.workbench.issues.technical"),
+            "/ " + tr("workspace.modelo.key.search"),
+            "f " + tr("workspace.modelo.key.filter"),
+            "s " + tr("workspace.modelo.key.sort"),
+            "t " + tr("workspace.modelo.issues.technical"),
         )
     )
     return shortcuts
@@ -133,27 +107,47 @@ def portfolio_enter_action(
 ) -> str:
     """Describe the Enter action for exactly the current semantic row."""
     if key is not None and key.startswith("group:"):
-        return "Enter " + tr("tui.declarations.list.key.toggle_group")
+        return "Enter " + tr("workspace.declarations.list.key.toggle_group")
     row = next((item for item in rows if item.key == key), None)
     if row is None:
         return ""
     return row_enter_action(row, controller)
 
 
-def row_enter_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> str:
-    """Reflect the row's route without implying unavailable local work."""
+class RowAction(StrEnum):
+    """What Enter does on one declarations row in this session."""
+
+    OPEN = "open"
+    OPEN_LOCAL_DRAFT = "open_local_draft"
+    START = "start"
+    EXTERNAL_DETAILS = "external_details"
+
+
+_ROW_ACTION_LOCALE_KEYS = {
+    RowAction.OPEN: "workspace.declarations.calendar.action.open",
+    RowAction.OPEN_LOCAL_DRAFT: "workspace.declarations.list.next.open_local_draft",
+    RowAction.START: "workspace.declarations.list.next.start",
+    RowAction.EXTERNAL_DETAILS: "workspace.declarations.calendar.action.open",
+}
+
+
+def row_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> RowAction | None:
+    """The one step Enter takes on this row, or None where this session has none to take."""
     if row.declaration is not None and row.state != "unreadable":
-        if controller.modelo_workspace_factory is not None:
-            return "Enter " + tr(
-                "tui.declarations.list.next.open_local_draft"
-                if is_unlinked_local_draft(row)
-                else "tui.declarations.calendar.action.open"
-            )
-    elif row.state == "not_started" and row.period is not None and controller.work_create_handoff is not None:
-        return "Enter " + tr("tui.declarations.list.next.start")
-    elif row.state == "aeat_unlinked":
-        return "Enter " + tr("tui.declarations.calendar.action.open")
-    return ""
+        if controller.modelo_workspace_factory is None:
+            return None
+        return RowAction.OPEN_LOCAL_DRAFT if is_unlinked_local_draft(row) else RowAction.OPEN
+    if row.state == "not_started" and row.period is not None and controller.work_create_handoff is not None:
+        return RowAction.START
+    if row.state == "aeat_unlinked":
+        return RowAction.EXTERNAL_DETAILS
+    return None
+
+
+def row_enter_action(row: DeclarationListRow, controller: DeclarationsWorkspaceController) -> str:
+    """Say the row's Enter step, and nothing where Enter has none."""
+    action = row_action(row, controller)
+    return "" if action is None else "Enter " + tr(_ROW_ACTION_LOCALE_KEYS[action])
 
 
 def add_portfolio_row(
@@ -180,15 +174,7 @@ def add_portfolio_row(
     )
 
 
-def portfolio_row_refusal(row: DeclarationListRow) -> str:
-    """Keep the exact state-specific refusal after row routing."""
-    key = (
-        "tui.declarations.list.aeat_unlinked.help.confirmed"
-        if row.state == "aeat_unlinked"
-        else "tui.declarations.list.unreadable.help"
-        if row.state == "unreadable"
-        else "tui.declarations.list.maybe.help"
-        if row.state == "maybe"
-        else "tui.declarations.list.aeat_needs_check.help"
-    )
-    return tr(key)
+def portfolio_row_refusal(row: DeclarationListRow, language: OutputLanguage) -> str:
+    """What choosing a row with no step of its own says; a row this session cannot open says so."""
+    words = row_help_words(row, language)
+    return words if words is not None else tr("workspace.declarations.refusal.handoff")

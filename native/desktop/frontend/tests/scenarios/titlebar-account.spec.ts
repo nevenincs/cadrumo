@@ -193,3 +193,37 @@ for (const width of [1440, 520, 360]) {
       await expect(button).toBeDisabled();
   });
 }
+
+// The account trigger has one label. Without a profile the state is that
+// label, said once in the header and once in the menu; a named profile's state
+// is its dot, said in words in the menu.
+test("the account trigger and its menu say the account state once", async ({
+  page,
+}) => {
+  await page.goto("/scenarios.html?scenario=no-profile&latency=0&bar=off");
+  const titlebar = page.locator(".titlebar");
+  const none = label("desktop.account.no_profile");
+  await expect(titlebar.getByText(none, { exact: true })).toHaveCount(1);
+  await expect(titlebar.locator(".profile-status")).toHaveCount(0);
+  // Without a profile the sign-in dialog opens first.
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
+    .click();
+  const menu = page.locator(".account-menu");
+  await expect(menu.getByText(none, { exact: true })).toHaveCount(1);
+  await page.keyboard.press("Escape");
+
+  await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+  const signedIn = label("desktop.account.signed_in");
+  await expect(titlebar.locator(".profile-status.signed-in")).toBeVisible();
+  await expect(titlebar.getByText(signedIn, { exact: true })).toHaveCount(0);
+  const trigger = page.getByRole("button", {
+    name: label("desktop.titlebar.profile_menu"),
+  });
+  await expect(trigger).toHaveAccessibleName(new RegExp(`, ${signedIn}$`));
+  await trigger.click();
+  await expect(menu.getByText(signedIn, { exact: true })).toHaveCount(1);
+});

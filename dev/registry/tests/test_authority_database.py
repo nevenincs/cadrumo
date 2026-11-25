@@ -19,12 +19,9 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.locks import exclusive_file_lock
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
-    AuthorityArtifact,
     AuthorityComponentCodecError,
-    AuthorityEvidenceProjection,
     ModeloDirectoryComponentQuery,
     ProfileSchemaComponentQuery,
 )
@@ -35,23 +32,19 @@ from cadrumo.domain.calculations.registry.authority_store import (
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import MappingFactQuery
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
-    minimal_catalogues,
-    minimal_modelo,
-    minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo.domain.modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
-from dev._paths import DEFAULT_AUTHORITY_ROOT, REPO_ROOT
+from dev.paths import DEFAULT_AUTHORITY_ROOT, REPO_ROOT
 
 from ..compiler import authority_database as authority_database_compiler
 from ..compiler.authority_database import build_authority_database, require_acyclic_authority_dependencies
-from ..compiler.profile_schema import capture_profile_schema
 from ..pipeline import authority_publication
 from ..pipeline.authority_publication import install_validated_authority_database, promote_accepted_authority_database
+from .authority_generation_support import synthetic_authority_artifact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -116,12 +109,14 @@ def test_publication_refuses_a_cyclic_candidate_before_writing_a_descriptor(
 
     monkeypatch.setattr(
         authority_database_compiler,
-        "_insert_dependencies",
-        _followed_by(authority_database_compiler._insert_dependencies, add_a_reverse_edge),
+        "insert_dependencies",
+        _followed_by(authority_database_compiler.insert_dependencies, add_a_reverse_edge),
     )
 
     with pytest.raises(RegistryValidationError, match="dependency cycle"):
-        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+        install_validated_authority_database(
+            synthetic_authority_artifact(), destination=tmp_path, require_current=lambda: None
+        )
     assert _publishes_nothing(tmp_path)
 
 
@@ -140,12 +135,14 @@ def test_publication_refuses_a_candidate_with_a_dangling_dependency(
 
     monkeypatch.setattr(
         authority_database_compiler,
-        "_insert_dependencies",
-        _followed_by(authority_database_compiler._insert_dependencies, add_a_dangling_edge),
+        "insert_dependencies",
+        _followed_by(authority_database_compiler.insert_dependencies, add_a_dangling_edge),
     )
 
     with pytest.raises(RegistryValidationError, match="authority database compilation failed"):
-        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+        install_validated_authority_database(
+            synthetic_authority_artifact(), destination=tmp_path, require_current=lambda: None
+        )
     assert _publishes_nothing(tmp_path)
 
 
@@ -169,104 +166,24 @@ def test_publication_foreign_key_check_refuses_an_unenforced_dangling_dependency
 
     monkeypatch.setattr(
         authority_database_compiler,
-        "_create_schema",
-        _followed_by(authority_database_compiler._create_schema, disable_enforcement),
+        "create_schema",
+        _followed_by(authority_database_compiler.create_schema, disable_enforcement),
     )
     monkeypatch.setattr(
         authority_database_compiler,
-        "_insert_dependencies",
-        _followed_by(authority_database_compiler._insert_dependencies, add_a_dangling_edge),
+        "insert_dependencies",
+        _followed_by(authority_database_compiler.insert_dependencies, add_a_dangling_edge),
     )
 
     with pytest.raises(RegistryValidationError, match="foreign-key closure failed"):
-        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+        install_validated_authority_database(
+            synthetic_authority_artifact(), destination=tmp_path, require_current=lambda: None
+        )
     assert _publishes_nothing(tmp_path)
 
 
-def _artifact() -> AuthorityArtifact:
-    profile_schema = capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[1]
-    catalogues = minimal_catalogues()
-    # Snapshot validation resolves this declaration even when the miniature
-    # revision has no retenciones binding and therefore requires no redirect.
-    route = GovernedFact.model_validate(
-        {
-            "fact_id": "m130-retenciones-output-routing",
-            "family": "mapping",
-            "provider_id": "artifact-fixture",
-            "variants": (
-                {
-                    "variant_id": "m130-retenciones-output-routing:fixture",
-                    "date_axis": "filing_period",
-                    "valid_from": date(2024, 1, 1),
-                    "legal_refs": ("ley-35-2006:art-1",),
-                    "review_status": "agent_reviewed",
-                    "ownership": "authored",
-                    "payload": {
-                        "kind": "mapping",
-                        "entries": (
-                            {"key": "modelo", "value": "130"},
-                            {"key": "binding_id", "value": "fixture-retenciones"},
-                            {"key": "output_casilla", "value": "01"},
-                        ),
-                    },
-                },
-            ),
-        }
-    )
-    # The M190 perceptor clave scope is resolved by a cross-domain snapshot
-    # check, which runs for every modelo; the miniature revision declares no
-    # perceptor rows, so this states the smallest well-formed scope rather than
-    # leaving the declaration absent.
-    clave_scope = GovernedFact.model_validate(
-        {
-            "fact_id": PERCEPTOR_CLAVE_SCOPE_FACT_ID,
-            "family": "mapping",
-            "provider_id": "artifact-fixture",
-            "variants": (
-                {
-                    "variant_id": f"{PERCEPTOR_CLAVE_SCOPE_FACT_ID}:fixture",
-                    "date_axis": "filing_period",
-                    "valid_from": date(2024, 1, 1),
-                    "legal_refs": ("ley-35-2006:art-1",),
-                    "review_status": "agent_reviewed",
-                    "ownership": "authored",
-                    "payload": {
-                        "kind": "mapping",
-                        "entries": (
-                            {"key": "modelo", "value": "190"},
-                            {"key": "row_clave_binding", "value": "fixture-perceptor-clave"},
-                            {"key": "row_subclave_binding", "value": "fixture-perceptor-subclave"},
-                            # At least one scoped casilla, because a scope that
-                            # names none is refused as an empty declaration.
-                            {"key": "casilla:perc.ano-nacimiento", "value": "A"},
-                        ),
-                    },
-                },
-            ),
-        }
-    )
-    catalogues = catalogues.model_copy(
-        update={
-            "facts": GovernedFactCatalogue(
-                facts={
-                    **catalogues.facts.facts,
-                    route.fact_id: route,
-                    clave_scope.fact_id: clave_scope,
-                }
-            )
-        }
-    )
-    return AuthorityArtifact(
-        modelos=(minimal_modelo(minimal_revision()),),
-        catalogues=catalogues,
-        identity_digest=synthetic_legal_identity("source"),
-        evidence=AuthorityEvidenceProjection(),
-        profile_schema=profile_schema,
-    )
-
-
 def _published_candidate(directory: Path) -> Path:
-    compiled = build_authority_database(directory / "candidate.sqlite3", _artifact())
+    compiled = build_authority_database(directory / "candidate.sqlite3", synthetic_authority_artifact())
     database_name = f"authority-{compiled.physical_sha256}.sqlite3"
     compiled.path.replace(directory / database_name)
     descriptor = AuthorityDescriptor(
@@ -299,13 +216,13 @@ def test_cached_loads_verify_database_identity_once_per_lease_not_per_load(
 ) -> None:
     reader = SQLiteAuthorityReader(_published_candidate(tmp_path), max_connections=2)
     verifications: list[None] = []
-    real_verify = reader._verify_database_identity
+    real_verify = reader.verify_database_identity
 
     def counting_verify() -> None:
         verifications.append(None)
         real_verify()
 
-    monkeypatch.setattr(reader, "_verify_database_identity", counting_verify)
+    monkeypatch.setattr(reader, "verify_database_identity", counting_verify)
     try:
         with reader.lease() as pin:
             first = reader.load(ProfileSchemaComponentQuery(), pin=pin)
@@ -352,11 +269,11 @@ def test_revision_context_selects_directory_before_one_complete_revision(tmp_pat
     try:
         with authority.operation() as operation:
             directory = operation.modelo_directory("130")
-            selected = operation.revision_for_context("130", filing_year=2025, period="0A")
+            selected = operation.revision_for_context("130", filing_year=filing_year_envelope().horizon, period="0A")
             assert str(selected.id) == str(directory.revisions[0].id)
             snapshot = operation.snapshot(
                 "130",
-                filing_year=2025,
+                filing_year=filing_year_envelope().horizon,
                 period="0A",
                 grade=RegistryAuthorityGrade.CALCULATION,
             )
@@ -372,7 +289,7 @@ def test_operation_reuses_generation_scoped_fact_resolutions(tmp_path: Path) -> 
     query = MappingFactQuery(
         fact_id="spanish-tax-identifier-format",
         date_axis=DateAxis.FILING_PERIOD,
-        effective_date=date(2025, 1, 1),
+        effective_date=date(filing_year_envelope().horizon, 1, 1),
     )
     try:
         with authority.operation() as first_operation:
@@ -490,7 +407,9 @@ def test_failed_currentness_check_preserves_the_previous_descriptor(tmp_path: Pa
         raise RuntimeError("candidate changed")
 
     with pytest.raises(RuntimeError, match="candidate changed"):
-        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=refuse)
+        install_validated_authority_database(
+            synthetic_authority_artifact(), destination=tmp_path, require_current=refuse
+        )
 
     assert descriptor_path.read_bytes() == b"previous descriptor bytes"
     assert list(tmp_path.glob("authority-*.sqlite3")) == []
@@ -503,7 +422,9 @@ def test_failed_database_flush_removes_the_partial_install(tmp_path: Path, monke
     monkeypatch.setattr(authority_publication.os, "fsync", refuse_flush)
 
     with pytest.raises(OSError, match="simulated flush failure"):
-        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+        install_validated_authority_database(
+            synthetic_authority_artifact(), destination=tmp_path, require_current=lambda: None
+        )
 
     assert not (tmp_path / "authority.current.json").exists()
     assert list(tmp_path.glob("authority-*.sqlite3")) == []
@@ -511,7 +432,7 @@ def test_failed_database_flush_removes_the_partial_install(tmp_path: Path, monke
 
 def test_content_addressed_install_refuses_an_existing_collision(tmp_path: Path) -> None:
     descriptor = install_validated_authority_database(
-        _artifact(),
+        synthetic_authority_artifact(),
         destination=tmp_path,
         require_current=lambda: None,
     )
@@ -520,7 +441,7 @@ def test_content_addressed_install_refuses_an_existing_collision(tmp_path: Path)
 
     with pytest.raises(RegistryValidationError, match="content-addressed authority collision"):
         install_validated_authority_database(
-            _artifact(),
+            synthetic_authority_artifact(),
             destination=tmp_path,
             require_current=lambda: None,
         )
@@ -539,7 +460,7 @@ def test_promotion_copies_the_exact_accepted_bytes_without_recompiling(tmp_path:
 
 
 def test_public_installers_serialize_different_generations(tmp_path: Path) -> None:
-    first = _artifact()
+    first = synthetic_authority_artifact()
     second = first.__class__(
         modelos=first.modelos,
         catalogues=first.catalogues,
@@ -583,7 +504,7 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
         return prepared_candidate
 
     monkeypatch.setattr(authority_publication, "prepare_authority_candidate", prepare_candidate)
-    monkeypatch.setattr(authority_publication, "_require_candidate_receipt", lambda candidate: None)
+    monkeypatch.setattr(authority_publication, "require_candidate_receipt", lambda candidate: None)
     monkeypatch.setattr(
         authority_publication.AuthorityDescriptor,
         "read",
@@ -591,7 +512,7 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
     )
     monkeypatch.setattr(
         authority_publication,
-        "_install_authority_database",
+        "install_authority_database",
         lambda staged_database, logical_generation, *, destination, require_current: published_descriptor,
     )
     destination = tmp_path / "published"
@@ -636,12 +557,12 @@ def test_receipt_drift_after_preparation_refuses_before_installation(
     )
 
     monkeypatch.setattr(authority_publication, "prepare_authority_candidate", lambda **_kwargs: prepared_candidate)
-    monkeypatch.setattr(authority_publication, "_capture_receipt", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(authority_publication, "capture_receipt", lambda *_args, **_kwargs: object())
 
     def unexpected_install(*_args: object, **_kwargs: object) -> None:
         pytest.fail("receipt drift must refuse before database installation")
 
-    monkeypatch.setattr(authority_publication, "_install_authority_database", unexpected_install)
+    monkeypatch.setattr(authority_publication, "install_authority_database", unexpected_install)
 
     with pytest.raises(RegistryValidationError, match="input receipt changed") as refusal:
         authority_publication.publish_sqlite_authority_candidate(

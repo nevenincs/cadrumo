@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -31,7 +31,7 @@ from .modelo_profile_seed import ProfileSeeder, seed_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-__all__ = ["_isolated_cli_backend", "seed_profile"]
+__all__ = ["isolated_cli_backend", "seed_profile"]
 
 _INPUTS = {validated_casilla_id("03"): "180.25", validated_casilla_id("06"): "12.10"}
 _INCOMPLETE = "ERROR_MODELO_VERIFICATION_OUTCOME_INCOMPLETE"

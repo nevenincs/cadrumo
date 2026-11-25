@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.legal_grounding import verify_legal_reference_grounding
@@ -58,7 +59,7 @@ def test_compiler_validation_rejects_invalid_source_ref_on_model_copy() -> None:
 def test_construct_evidence_classifies_incomplete_model_copy_refs_as_unresolved() -> None:
     """An incomplete construct row remains visible and is marked unresolved."""
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("130", filing_year=2026, period="1T")
+    snapshot = authority.snapshot("130", filing_year=filing_year_envelope().horizon, period="1T")
     formula = snapshot.revision.formulas[0]
     mutated_formula = formula.model_copy(update={"source_refs": ()})
     mutated_revision = snapshot.revision.model_copy(

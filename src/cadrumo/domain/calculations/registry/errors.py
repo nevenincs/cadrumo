@@ -23,6 +23,7 @@ from typing import Self
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import CadrumoError, CoreValidationError, TerminalPreconditionErrorMixin
 from ....core.modelo import Modelo
+from ....core.text_fold import code_point_label
 from .ids import RevisionId
 
 
@@ -36,11 +37,14 @@ class RegistryFailureCondition(StrEnum):
 
     TAXPAYER_MODEL_DECLARED = "registry.applicability.taxpayer_model.declared"
     MODELO_202_INCN_DECLARED = "registry.applicability.modelo_202.incn.declared"
+    MODELO_202_NAVIERAS_DECLARED = "registry.applicability.modelo_202.navieras.declared"
     QUERY_FILING_YEAR_SCOPED = "registry.query.filing_year.scoped"
     QUERY_CASILLA_DECLARED = "registry.query.casilla.declared"
     SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT = "registry.snapshot.authority_grade.sufficient"
     SNAPSHOT_EXPORT_LAYOUT_DECLARED = "registry.snapshot.export_layout.declared"
     TREE_QUIESCENT = "registry.tree.concurrent_write.quiescent"
+    DECLARATION_CONSISTENT = "registry.declaration.consistent"
+    ROWS_WITHIN_DECLARED_CAPACITY = "registry.rows.within_declared_capacity"
 
 
 @dataclass(frozen=True)
@@ -186,6 +190,32 @@ class RegistryValidationError(RegistryError, CoreValidationError):
     """
 
     @classmethod
+    def for_inconsistent_declaration(cls, detail: str, *, declaration: str) -> Self:
+        """The selected registry's own declarations contradict what their reader requires.
+
+        The published registry is shipped data, so no filer input reaches the
+        fault; ``declaration`` names the declaration family that broke.
+        """
+        return cls(
+            detail,
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.DECLARATION_CONSISTENT,
+                facts={"declaration": declaration, "consistent": False},
+            ),
+        )
+
+    @classmethod
+    def for_rows_over_declared_capacity(cls, detail: str, *, rows: str, capacity: int, supplied: int) -> Self:
+        """More detail rows were supplied than the selected revision declares slots for."""
+        return cls(
+            detail,
+            registry_failure=RegistryFailureClassification(
+                condition=RegistryFailureCondition.ROWS_WITHIN_DECLARED_CAPACITY,
+                facts={"rows": rows, "capacity": capacity, "supplied": supplied},
+            ),
+        )
+
+    @classmethod
     def for_unknown_input_casilla_ids(cls, *, casilla_ids: Sequence[CasillaId]) -> Self:
         """Inputs to the runtime referenced casilla ids absent from the revision."""
         ids = sorted(casilla_ids)
@@ -238,6 +268,85 @@ class RegistryValidationError(RegistryError, CoreValidationError):
             f"of export records {records!r}: {ids!r}",
             translated_message="errors.calc.row_field_template_supplied_as_input",
             context={"casilla_ids": _csv(ids), "record_ids": _csv(records)},
+        )
+
+    @classmethod
+    def for_previous_filing_casillas_unobserved(
+        cls,
+        *,
+        source_modelo: str,
+        source_filing_year: int,
+        source_period: str,
+        casilla_ids: Sequence[CasillaId],
+        binding_ids: Sequence[str],
+    ) -> Self:
+        """A stored earlier return shows none of, or not all, the boxes a carry reads from it.
+
+        The return was observed, so this is not an absent filing; but a box it
+        does not show is unknown rather than zero, and the carry it feeds would
+        otherwise read as nothing pending.
+        """
+        ids = sorted(set(casilla_ids))
+        bindings = sorted(set(binding_ids))
+        return cls(
+            f"bindings {bindings!r} require observed casillas {ids!r} "
+            f"from {source_modelo!r}/{source_filing_year}/{source_period!r}",
+            translated_message="errors.calc.previous_filing_casillas_unobserved",
+            context={
+                "source_modelo": source_modelo,
+                "source_filing_year": source_filing_year,
+                "source_period": source_period,
+                "casilla_ids": _csv(ids),
+                "binding_ids": _csv(bindings),
+            },
+        )
+
+
+class FixedWidthValueOverflowError(RegistryValidationError):
+    """A value is wider than the fixed-width slot the record design gives it.
+
+    The codec refuses rather than truncates: a value cut to fit would be a
+    different value on the wire. The width facts are kept as attributes so a
+    filing boundary can say which slot refused and by how much, without
+    parsing the message.
+
+    Structured attributes: ``field_id`` (``None`` until a field is known),
+    ``field_length``, ``rendered`` (the text that did not fit).
+    """
+
+    def __init__(self, *, rendered: str, field_length: int, field_id: str | None = None) -> None:
+        """Construct the overflow refusal for ``rendered`` against ``field_length``."""
+        self.rendered: str = rendered
+        self.field_length: int = field_length
+        self.field_id: str | None = field_id
+        prefix = "fixed-width value" if field_id is None else f"export field {field_id!r} value"
+        super().__init__(
+            f"{prefix} exceeds length {field_length}",
+            context={"field_length": field_length, "value_length": len(rendered)},
+        )
+
+
+class FixedWidthUnrepresentableCharacterError(RegistryValidationError):
+    """A text value holds a character its record design cannot write.
+
+    The character is outside the record's declared encoding, or is a control
+    character that would break the record. The codec refuses rather than drops
+    or replaces it: a value written without it would be a different value.
+
+    Structured attributes: ``field_id`` (``None`` until a field is known),
+    ``character`` (the first refused character), ``rendered`` (the text as the
+    record's rule wrote it).
+    """
+
+    def __init__(self, *, rendered: str, character: str, field_id: str | None = None) -> None:
+        """Construct the refusal of ``character`` within ``rendered``."""
+        self.rendered: str = rendered
+        self.character: str = character
+        self.field_id: str | None = field_id
+        prefix = "fixed-width value" if field_id is None else f"export field {field_id!r} value"
+        super().__init__(
+            f"{prefix} holds a character its record cannot write",
+            context={"code_point": code_point_label(character)},
         )
 
 

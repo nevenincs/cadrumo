@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-from ..commands import _run_wizard_persistence_path
+from ..commands import run_wizard_persistence_path
 from ..errors import WizardEditUnsupportedConsoleError
 from ..models import WizardFlow
 from ..patch_edit import cleared_profile_paths
@@ -29,7 +29,7 @@ def test_installed_patch_uses_injected_persister_without_opening_local_record(
         return {"withholding.colegio_concertado": "false"}, True
 
     with bundled_indexed_authority().operation() as operation:
-        values, changed = _run_wizard_persistence_path(
+        values, changed = run_wizard_persistence_path(
             registry_setup_flow,
             "edit",
             {},
@@ -60,7 +60,7 @@ def test_edit_without_noninteractive_opt_in_refuses_before_any_persistence(
         return {}, False
 
     with bundled_indexed_authority().operation() as operation, pytest.raises(WizardEditUnsupportedConsoleError):
-        _run_wizard_persistence_path(
+        run_wizard_persistence_path(
             registry_setup_flow,
             "edit",
             {},

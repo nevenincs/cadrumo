@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
@@ -14,21 +15,18 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.filing_record import (
-    AeatConfirmationState,
-    FilingDeclarationKind,
-    FilingOrigin,
     ModeloRecord,
     ModeloRecordCatalogue,
-    derive_filing_record_id,
 )
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..amendment_context_operation import (
     MODELO_WORK_AMENDMENT_CONTEXT_OPERATION_DEFINITION_ID,
@@ -46,58 +44,24 @@ from ..filing_selection_operation import (
 )
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..verification_repository_ports import VerificationRepositoryBundle
+from .filing_source_support import filing_source
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _CALCULATION_REVISION_ID = "a" * 64
-_NOW = datetime(2026, 4, 10, 9, 0, tzinfo=UTC)
+_NOW = datetime(1980, 4, 10, 9, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
 _RESULT_REFERENCE = "f" * 64
 _ACTOR = "gestoria source"
 
 
 def _source() -> tuple[WorkUnit, ModeloRecord]:
-    """Build a valid filing receipt whose profile and period match its unit."""
-    period = Period.from_year_and_code(2026, "1T")
-    unit_id = derive_work_unit_id(
-        bucket_id=str(_PROFILE), modelo="303", filing_year=2026, period=period, revision_id="test-revision"
+    return filing_source(
+        profile_id=_PROFILE, calculation_revision_id=_CALCULATION_REVISION_ID, filed_by=_ACTOR, now=_NOW
     )
-    filing_id = derive_filing_record_id(
-        work_unit_id=unit_id,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_by=_ACTOR,
-    )
-    unit = WorkUnit(
-        work_unit_id=unit_id,
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        revision_id="test-revision",
-        name="First-quarter return",
-        created_at=_NOW,
-        updated_at=_NOW,
-        state=WorkUnitState.BORRADOR,
-        current_calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_calculation_revision_id=_CALCULATION_REVISION_ID,
-        current_filing_record_id=filing_id,
-    )
-    record = ModeloRecord(
-        filing_record_id=filing_id,
-        work_unit_id=unit_id,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        bucket_id=str(_PROFILE),
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        filed_at=_NOW,
-        filed_by=_ACTOR,
-        origin=FilingOrigin.LOCAL,
-        confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=FilingDeclarationKind.ORIGINAL,
-    )
-    return unit, record
 
 
 class _Repository:
@@ -134,7 +98,12 @@ def _bundle(
 
 
 def _build(bundle: VerificationRepositoryBundle):
-    def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def factory(
+        profile_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         assert profile_id == str(_PROFILE)
         assert isinstance(operation, PinnedAuthorityOperation)
         return bundle
@@ -159,13 +128,11 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=AccessAction.SUBMIT,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=operation,
     )
 
@@ -175,7 +142,12 @@ def test_fresh_filing_reads_refuse_missing_pin_before_repository_creation(kind: 
     unit, record = _source()
     calls = 0
 
-    def unavailable_factory(_bucket_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+    def unavailable_factory(
+        _bucket_id: str,
+        *,
+        operation: PinnedAuthorityOperation,
+        mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    ) -> VerificationRepositoryBundle:
         nonlocal calls
         calls += 1
         raise AssertionError("a fresh read needs pinned authority before private repository access")
@@ -288,7 +260,7 @@ def test_filing_reader_is_admitted_on_the_external_client_frontend_without_a_com
         ),
         (
             str(_PROFILE),
-            {"period": Period.from_year_and_code(2026, "2T")},
+            {"period": Period.from_year_and_code(_FILING_YEAR, "2T")},
             AccessDenialCode.PROFILE_MISMATCH,
         ),
     ],
@@ -326,7 +298,12 @@ def test_filing_and_amendment_access_refuse_identity_before_pin_or_shape(kind: s
         request = _request(record)
     else:
 
-        def factory(profile_id: str, *, operation: PinnedAuthorityOperation) -> VerificationRepositoryBundle:
+        def factory(
+            profile_id: str,
+            *,
+            operation: PinnedAuthorityOperation,
+            mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+        ) -> VerificationRepositoryBundle:
             assert profile_id == str(_PROFILE)
             assert isinstance(operation, PinnedAuthorityOperation)
             return bundle

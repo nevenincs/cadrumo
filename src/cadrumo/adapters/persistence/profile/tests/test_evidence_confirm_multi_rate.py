@@ -23,18 +23,18 @@ from cadrumo.core.config import Settings
 from cadrumo.domain.invoices.enums import IvaRate
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -43,7 +43,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 # 150,00, cuota 26,00, total 176,00. Two rates is the minimum that can detect a
 # collapse -- a single-rate document looks identical whether the breakdown
 # survived or was rebuilt from the totals.
-_TWO_RATE_FIXTURE = _EVIDENCE_CORPUS / "en16931_ubl_two_rate_invoice.xml"
+_TWO_RATE_FIXTURE = EVIDENCE_CORPUS / "en16931_ubl_two_rate_invoice.xml"
 
 _EXPECTED_BASE = Decimal("150.00")
 _EXPECTED_IVA = Decimal("26.00")
@@ -66,15 +66,15 @@ def _confirm_the_two_rate_document(
 ):
     source = tmp_path / "en16931_ubl_two_rate_invoice.xml"
     source.write_bytes(_TWO_RATE_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
     return confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 

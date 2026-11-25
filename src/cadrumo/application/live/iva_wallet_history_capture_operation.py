@@ -12,6 +12,8 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
+from ...core.storage_taxonomy import StorageCategory
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -23,7 +25,7 @@ from .filed_history_operation import (
     FiledHistoryBrowserResourcesFactory,
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
-    require_capture_output_root,
+    resolve_capture_output_root,
 )
 from .iva_remote_state import capture_iva_compensation_history
 from .live_operation_execution import (
@@ -31,7 +33,7 @@ from .live_operation_execution import (
     publish_live_capture_report,
     require_exact_profile_worker,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import IvaCompensationHistoryCaptureReport
 
 IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID = "live.iva-wallet.history-capture"
@@ -49,7 +51,7 @@ class IvaWalletHistoryCaptureRequest(BaseModel):
 
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
-    output_root: Path
+    output_root: Path | None = None
     year_from: FilingYear
     year_to: FilingYear
 
@@ -126,11 +128,11 @@ class IvaWalletHistoryCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
-        require_capture_output_root(payload.output_root)
+        output_root = resolve_capture_output_root(payload.output_root, StorageCategory.IVA_COMPENSATION_HISTORY)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,
             payload.profile_id,
-            payload.output_root,
+            output_root,
             self._composition_factory,
             self._browser_resources_factory,
             self._provider_preflight,
@@ -143,13 +145,13 @@ class IvaWalletHistoryCaptureExecutor:
                 ports=composition.iva_remote_state_port,
                 year_from=payload.year_from,
                 year_to=payload.year_to,
-                output_root=payload.output_root,
+                output_root=output_root,
                 effect_guard=context.cancellation.irreversible_section,
                 on_session_write=session_receipt,
                 authority_operation=context.authority_operation,
             )
         if (
-            report.output_root != str(payload.output_root)
+            report.output_root != str(output_root)
             or report.year_from != payload.year_from
             or report.year_to != payload.year_to
         ):
@@ -185,11 +187,11 @@ def resolve_iva_wallet_history_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile history access and a fresh COMMIT fence."""
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID,
-        payload_type=IvaWalletHistoryCaptureRequest,
+        request_type=IvaWalletHistoryCaptureRequest,
     )
 
 

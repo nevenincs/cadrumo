@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import cast
+from typing import Final, cast
 from uuid import UUID
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -14,8 +16,12 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 )
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ...adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -26,6 +32,9 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from ...application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+from ...application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
+from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...application.ledger.lifecycle_contracts import LedgerLifecycleOperationId
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
@@ -34,16 +43,20 @@ from ...application.live.expedientes_ports import ExpedientesDeclaration
 from ...application.live.notification_documents import NotificationDocumentRecord
 from ...application.live.notification_ports import NotificationsSnapshot, NotificationType, RemoteNotification
 from ...application.live.notifications import NotificationsService
-from ...application.modelo.calculation_actions import calculate_modelo_revision
+from ...application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.external_import_actions import import_external_filing_evidence
-from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from ...application.modelo.work_lifecycle import create_work_unit
 from ...application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
 from ...application.user_profile.section_rows import add_profile_repeatable_section_row
 from ...application.workflow.abort import WorkflowAbortReason
 from ...application.workflow.run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage, WorkflowStep
+from ...core.casilla_id import validated_casilla_id
 from ...core.config import load_settings
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
@@ -53,8 +66,9 @@ from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.deadlines.models import ObligationStatus
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import ExternalEvidenceKind
@@ -62,29 +76,31 @@ from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.notifications.sancion import SancionLiquidacion
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.aeat_literal_fixtures import aeat_url
-from ..adapter_composition import (
+from ..adapter_composition_ports import build_prorrata_register_repository
+from ..adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_expedientes_ports,
-    build_prorrata_register_repository,
     build_verification_repository_bundle,
+    build_work_lifecycle_ports,
 )
 from ..justificante_composition import build_justificante_capture_service
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..live_state_composition import compose_notifications_ports
-from ..operation_composition import build_production_operation_registry
 from . import modelo_operation_test_support
 from .ledger_lifecycle_operation_test_support import (
     LedgerLifecycleOperationConformanceCase,
     prepare_ledger_lifecycle_operation_conformance_case,
 )
+from .production_operation_registry import production_operation_registry
+from .profile_persistence.iva_wallet_engine_support import wallet_observation
 from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
 )
-from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS
+from .registered_executor_scenario_constants import OPERATOR_SCOPE_PORTS
 
 
-def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
+def seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
     """File one real revision and return its filing-record and casilla ids.
 
     Amendment corrects something already FILED, so its fixture cannot stop at a
@@ -141,9 +157,78 @@ def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthority
     return str(record.filing_record_id), str(casilla_id)
 
 
+@dataclass(frozen=True, slots=True)
+class ConformanceProfileSeed:
+    """A seed every case of some definitions starts from, applied once per run to the registered subject.
+
+    ``key`` names every input of ``apply``; ``apply`` writes through the real
+    doors on a profile whose session is live.
+    """
+
+    key: str
+    apply: Callable[[UUID, PinnedAuthorityOperation], object]
+
+
+def _seed_track_participation(profile_id: UUID, operation: PinnedAuthorityOperation) -> object:
+    return _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+
+
+_TRACK_PARTICIPATION_SEED: Final = ConformanceProfileSeed(
+    key="ledger track with a finalized participation", apply=_seed_track_participation
+)
+_PROFILE_SEEDS: Final[dict[str, ConformanceProfileSeed]] = {
+    "ledger.track": _TRACK_PARTICIPATION_SEED,
+    "ledger.participation": _TRACK_PARTICIPATION_SEED,
+    "ledger.participation.rebuild": _TRACK_PARTICIPATION_SEED,
+}
+
+
+def conformance_profile_seed(definition_id: str) -> ConformanceProfileSeed | None:
+    """Return the seed a case of ``definition_id`` starts from, when every such case starts from the same one."""
+    return _PROFILE_SEEDS.get(definition_id)
+
+
+def seeded_ledger_track_transaction_id(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:
+    """Return the ledger transaction a real, verified calculation consumed, seeding it unless the profile holds it.
+
+    A case whose runtime started from :data:`_TRACK_PARTICIPATION_SEED` already
+    holds exactly one such calculation; any other case seeds it here.
+    """
+    consumed = [
+        revision.source_transaction_ids
+        for revision in CalculationRevisionCatalogueRepository().load(operation=operation).revisions.values()
+        if revision.source_transaction_ids and revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    ]
+    if not consumed:
+        return _seeded_ledger_track_with_finalized_participation(profile_id, operation=operation)
+    assert len(consumed) == 1 and len(consumed[0]) == 1, consumed
+    return consumed[0][0]
+
+
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA = validated_casilla_id("iva.cuota-devengada-total")
+
+
 def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> str:
-    """Create one ledger transaction consumed by a real, verified calculation."""
-    unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+    """Create one ledger transaction consumed by a real, verified calculation.
+
+    The consumer is a first-quarter Modelo 303 over one domestic 21 % sale.
+    Modelo 130 would read the same kind of row, but its activity boxes stay
+    capped below filing grade until the imputation criterion is grounded, so a
+    Modelo 130 that consumes a ledger row cannot verify.
+    """
+    modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
+    period = Period.from_year_and_code(modelo_operation_test_support.MODELO_FILING_YEAR, "1T")
+    snapshot = operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
+    unit = create_work_unit(
+        bucket_id=str(profile_id),
+        modelo="303",
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
+        ports=build_work_lifecycle_ports(bucket_id=str(profile_id)),
+        operation=operation,
+    )
     seed_clean_cross_period_sources(
         unit,
         work_unit_repository=WorkUnitCatalogueRepository(),
@@ -152,39 +237,78 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         bucket_event_repository=BucketEventHistoryRepository(),
         operation=operation,
     )
+    sale_base = Decimal("12.00")
+    sale_rate = Decimal("0.21")
+    sale_cuota = (sale_base * sale_rate).quantize(Decimal("0.01"))
     ledger_ports = compose_ledger_action_ports(bucket_id=str(profile_id), operation=operation)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id=str(profile_id),
-            booked_date=date(2025, 1, 15),
-            amount=Decimal("12.00"),
+            booked_date=date(period.filing_year, 2, 15),
+            amount=sale_base + sale_cuota,
             direction=TransactionDirection.INCOMING,
             description="conformance track participation seed",
             business_classification=BusinessClassification.BUSINESS,
-            taxable_base=Decimal("12.00"),
-            iva_rate=Decimal("0"),
-            iva_amount=Decimal("0"),
+            taxable_base=sale_base,
+            iva_rate=sale_rate,
+            iva_amount=sale_cuota,
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         ),
         ports=ledger_ports,
         occurred_at=now(),
     )
     transaction_id = created.ref.transaction_id
-    calculation = calculate_modelo_revision(
+    # The wallet decision goes through the production reconciliation: the AEAT
+    # wallet shows the same pending credit the filed prior quarter recorded.
+    decided_at = now()
+    observation_repository = CalculationObservationRepository()
+    local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+        snapshot,
+        repository=observation_repository,
+        captured_at=decided_at,
+        iva_history_repository=IvaCompensationHistoryRepository(),
+        operation=operation,
+    )
+    pending = local_recurrence.amount if local_recurrence is not None else Decimal("0")
+    decision = reconcile_modelo_303_iva_compensation(
+        snapshot,
+        taxpayer_nif=SEEDED_SOURCE_TAX_ID,
+        wallet=wallet_observation(
+            pending=pending,
+            taxpayer_nif=SEEDED_SOURCE_TAX_ID,
+            target_year=period.filing_year,
+            target_period=period,
+            generation_year=period.filing_year - 1,
+            generation_period="4T",
+            captured_at=decided_at,
+        ),
+        repository=observation_repository,
+        decision_repository=IvaWalletDecisionRepository(),
+        decided_at=decided_at,
+        local_recurrence=local_recurrence,
+        prefill_report=prefill_report,
+        operation=operation,
+    ).decision
+    publication = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unit.work_unit_id,
         ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
         actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         casilla_inputs={},
-        binding_values=modelo_operation_test_support.FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
-        source_transaction_ids=(transaction_id,),
+        binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+        iva_compensation_decision=decision,
+        filing_instance_evidence=general_m303_filing_evidence(
+            unit.period, reference="test:conformance-track-participation", operation=operation
+        ),
     )
+    calculation = publication.revision
+    assert Decimal(calculation.casilla_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]) == sale_cuota
     report = verify_modelo_revision_with_preconditions(
         calculation.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_verification_repository_bundle(unit.bucket_id, operation=operation),
         actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         workflow_profile=resolve_active_workflow_profile(operation),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
         operation=operation,
     ).report
     if report.completeness_status is not VerificationCompletenessStatus.COMPLETE:
@@ -220,12 +344,11 @@ def seeded_modelo_edit_submission(
         ModeloEditSubmissionV1,
         ModeloScalarEditIntentV1,
     )
-    from ...core.casilla_id import validated_casilla_id
 
     unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
     seeded_casilla_id = validated_casilla_id("06")
     with bundled_indexed_authority().operation() as operation:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=unit.bucket_id, operation=operation),
             actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
@@ -244,7 +367,7 @@ def seeded_modelo_edit_submission(
         work_catalogue=work_catalogue,
         calculation_catalogue=calculation_catalogue,
         operation=operation,
-        operation_contracts=build_production_operation_registry().public_contract_set,
+        operation_contracts=production_operation_registry().public_contract_set,
     )
     assert isinstance(admission, ModeloEditAdmittedV1)
     baseline = admission.baseline
@@ -262,7 +385,7 @@ def seeded_modelo_edit_submission(
     return unit.work_unit_id, ModeloEditApplySubmissionV1.from_submission(submission)
 
 
-def _profile_baseline(profile_id: UUID, *, decode_context: ProfileDecodeContext) -> dict[str, object]:
+def profile_baseline(profile_id: UUID, *, decode_context: ProfileDecodeContext) -> dict[str, object]:
     """Use the actual encrypted record's CAS coordinates for a manager write."""
     record = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context).load(
         profile_id
@@ -270,11 +393,11 @@ def _profile_baseline(profile_id: UUID, *, decode_context: ProfileDecodeContext)
     return {"expected_revision": record.record_revision, "expected_content_digest": record.content_digest}
 
 
-def _seeded_repeatable_row(
+def seeded_repeatable_row(
     profile_id: UUID, *, operation: PinnedAuthorityOperation, decode_context: ProfileDecodeContext
 ) -> tuple[str, dict[str, object]]:
     """Create a real schema row so update/remove target a stored identity."""
-    baseline = _profile_baseline(profile_id, decode_context=decode_context)
+    baseline = profile_baseline(profile_id, decode_context=decode_context)
     mutation = add_profile_repeatable_section_row(
         profile_id=str(profile_id),
         section_key="activities",
@@ -283,6 +406,7 @@ def _seeded_repeatable_row(
         expected_content_digest=cast(str, baseline["expected_content_digest"]),
         schema=operation.profile_schema(),
         profile_decode_context=decode_context,
+        authority=operation,
     )
     return str(mutation.row_index), {
         "expected_revision": mutation.record.record_revision,
@@ -301,7 +425,7 @@ def _workflow_obligation(modelo: str, period: Period) -> WorkflowObligationFacts
     )
 
 
-def _workflow_result(
+def workflow_result(
     run_id: str,
     *,
     modelo: str,
@@ -356,7 +480,7 @@ def _workflow_result(
     )
 
 
-def _seeded_justificante_snapshot(profile_id: UUID):
+def seeded_justificante_snapshot(profile_id: UUID):
     """Persist one synthetic receipt for local list/show executor scenarios."""
     pdf_bytes = b"%PDF-1.4\nregistered executor conformance\n%%EOF"
     return build_justificante_capture_service(str(profile_id)).capture(
@@ -371,7 +495,7 @@ def _seeded_justificante_snapshot(profile_id: UUID):
     )
 
 
-def _seeded_expedientes_snapshot(profile_id: UUID):
+def seeded_expedientes_snapshot(profile_id: UUID):
     """Persist one synthetic declaration-register snapshot without opening AEAT."""
     bucket_id = str(profile_id)
     captured_at = now()
@@ -401,7 +525,7 @@ def _seeded_expedientes_snapshot(profile_id: UUID):
     )
 
 
-def _seeded_notifications_snapshot(profile_id: UUID):
+def seeded_notifications_snapshot(profile_id: UUID):
     """Persist one synthetic local notification snapshot; its query port is never called."""
     captured_at = now()
     return NotificationsService(ports=compose_notifications_ports(settings=load_settings())).capture(
@@ -430,7 +554,7 @@ def _seeded_notifications_snapshot(profile_id: UUID):
     )
 
 
-def _seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecord:
+def seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecord:
     """Persist one synthetic document custody index row for local read scenarios."""
     certificado_id = "2699101808461"
     digest = "c" * 64
@@ -462,7 +586,7 @@ def _seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecor
     return record
 
 
-def _ledger_lifecycle_case(
+def ledger_lifecycle_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> LedgerLifecycleOperationConformanceCase:
     operation_ids: tuple[LedgerLifecycleOperationId, ...] = (
@@ -477,7 +601,7 @@ def _ledger_lifecycle_case(
     raise ValueError(f"unsupported ledger lifecycle conformance case: {definition_id}")
 
 
-def _prorrata_case(
+def registered_executor_seeding_prorrata_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> ProrrataOperationConformanceCase:
     return prepare_prorrata_operation_conformance_case(
@@ -493,7 +617,7 @@ def _prorrata_case(
     )
 
 
-def _seed_conformance_invoice(profile_id: UUID) -> Invoice:
+def seed_conformance_invoice(profile_id: UUID) -> Invoice:
     """Persist one domain-valid invoice for registered catalogue read scenarios."""
     invoice = Invoice.model_validate(
         {
@@ -503,7 +627,7 @@ def _seed_conformance_invoice(profile_id: UUID) -> Invoice:
             "issued_at": date(2025, 5, 1),
             "counterparty_name": "Conformance Supplier",
             "notes": "Conformance note preserved by partial update",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

@@ -8,6 +8,8 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
+
 from .....core.aggregation import BindingSourceKind, IntracomOperationType
 from .....core.casilla_id import CasillaId
 from ..binding_selector_utils import selector_as_dict
@@ -19,18 +21,23 @@ from ..invoice_bindings import (
 )
 from ..schema import BindingDefinition
 from ..schema_input_kind import InputKind
-from ._modelo_349_registry_support import (
-    _DECL_IMPORTE_OPERACIONES_CASILLA,
-    _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
-    _DECL_NUMERO_OPERADORES_CASILLA,
-    _DECL_NUMERO_RECTIFICACIONES_CASILLA,
-    _DECLARANT_SUMMARY_CASILLAS,
-    _M349_SUBSTANTIVE_BINDING_LEGAL_REFS,
-    _load_modelo_349,
-    _modelo_349_revision,
+from .authored_editions import filing_year_envelope, open_ended_revision
+from .modelo_349_registry_support import (
+    DECL_IMPORTE_OPERACIONES_CASILLA,
+    DECL_IMPORTE_RECTIFICACIONES_CASILLA,
+    DECL_NUMERO_OPERADORES_CASILLA,
+    DECL_NUMERO_RECTIFICACIONES_CASILLA,
+    DECLARANT_SUMMARY_CASILLAS,
+    M349_SUBSTANTIVE_BINDING_LEGAL_REFS,
+    load_modelo_349,
+    modelo_349_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
+
+_YEAR = filing_year_envelope().horizon
+# A supported exercise before the one filed: the rectified operations' year.
+_RECTIFIED_YEAR = filing_year_envelope().floor
 
 
 def _selector(binding: BindingDefinition) -> dict[str, Any]:
@@ -38,7 +45,7 @@ def _selector(binding: BindingDefinition) -> dict[str, Any]:
 
 
 def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_summary() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     summary_bindings: dict[str, BindingDefinition] = {
         b.id: b
@@ -75,7 +82,7 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
 def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> None:
     """The shared invoice enum must cover the official M349 clave-de-operacion set."""
 
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     registry_claves = {
         clave
         for binding in revision.bindings
@@ -87,20 +94,20 @@ def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> Non
 
 
 def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:
-    modelo, catalogues = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    modelo, catalogues = load_modelo_349()
+    revision = modelo.revisions[str(open_ended_revision("349").id)]
     invoice_bindings = [binding for binding in revision.bindings if binding.source == "m349_intracommunity_operation"]
 
     assert len(invoice_bindings) == 17
-    assert set(catalogues.legal) >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS
+    assert set(catalogues.legal) >= M349_SUBSTANTIVE_BINDING_LEGAL_REFS
 
     for binding in invoice_bindings:
         refs = set(binding.legal_refs)
         unresolved_refs = sorted(ref for ref in refs if ref not in catalogues.legal)
         assert not unresolved_refs, f"binding {binding.id!r} has unresolved legal refs: {unresolved_refs!r}"
-        assert refs >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS, (
+        assert refs >= M349_SUBSTANTIVE_BINDING_LEGAL_REFS, (
             f"binding {binding.id!r} is missing substantive M349 legal refs: "
-            f"{sorted(_M349_SUBSTANTIVE_BINDING_LEGAL_REFS - refs)!r}"
+            f"{sorted(M349_SUBSTANTIVE_BINDING_LEGAL_REFS - refs)!r}"
         )
         assert "ley-37-1992:art-141" not in refs, (
             f"binding {binding.id!r} must not cite LIVA art. 141; that article is the travel-agency "
@@ -108,16 +115,14 @@ def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() 
         )
 
 
-def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
-    revision = _modelo_349_revision()
-
+def _mixed_invoice_observations() -> tuple[InvoiceObservation, ...]:
     non_rect_obs = (
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
         ),
@@ -126,7 +131,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
-            transaction_date=date(2026, 3, 5),
+            transaction_date=date(_YEAR, 3, 5),
             base_amount=Decimal("500.50"),
             intracommunity_clave="S",
         ),
@@ -136,17 +141,24 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
         invoice_id="inv-it-1-rect",
         party_tax_id="IT12345678901",
         country_code="IT",
-        transaction_date=date(2026, 3, 8),
+        transaction_date=date(_YEAR, 3, 8),
         base_amount=Decimal("200.00"),
         intracommunity_clave="E",
         is_rectification=True,
         rectified_base_previous=Decimal("180.00"),
         rectified_period="4T",
-        rectified_year=2025,
+        rectified_year=_RECTIFIED_YEAR,
     )
-    observations = (*non_rect_obs, rect_obs)
+    return (*non_rect_obs, rect_obs)
 
-    resolved = resolve_invoice_binding_values(revision, observations)
+
+def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
+    revision = modelo_349_revision()
+
+    observations = _mixed_invoice_observations()
+    *non_rect_obs, rect_obs = observations
+
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert set(resolved) == {
         "iva-349-declarante-numero-operadores",
@@ -171,7 +183,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
 
 def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_acquisitions() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -179,20 +191,20 @@ def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_ac
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             party_tax_id="IT12345678901",
             country_code="IT",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("3000.00"),
             intracommunity_clave="I",
         ),
     )
 
-    resolved = resolve_invoice_binding_values(revision, observations)
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert resolved["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolved["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
 
 
 def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record_sequence() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -200,34 +212,37 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
             invoice_id="inv-de-sale",
             party_tax_id="DE111111111",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
             party_legal_name="SALE GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="SALE GMBH"),
         ),
         InvoiceObservation(
             invoice_id="inv-de-acq",
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             party_tax_id="DE222222222",
             country_code="DE",
-            transaction_date=date(2026, 3, 2),
+            transaction_date=date(_YEAR, 3, 2),
             base_amount=Decimal("750.00"),
             intracommunity_clave="A",
             party_legal_name="SUPPLIER GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="SUPPLIER GMBH"),
         ),
         InvoiceObservation(
             invoice_id="inv-it-service-acq",
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             party_tax_id="IT12345678901",
             country_code="IT",
-            transaction_date=date(2026, 3, 3),
+            transaction_date=date(_YEAR, 3, 3),
             base_amount=Decimal("3000.00"),
             intracommunity_clave="I",
             party_legal_name="SERVIZI SRL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="SERVIZI SRL"),
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert rows[("iva-349-operador-row-clave", 1)] == "E"
     assert rows[("iva-349-operador-row-nif", 1)] == "111111111"
@@ -240,17 +255,18 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
 
 def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_record() -> None:
     """Clave T bought and sold with one operator is one operador record (aeat-dr-349-2020-current type 2)."""
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     observations = tuple(
         InvoiceObservation(
             source_kind=source_kind,
             invoice_id=invoice_id,
             party_tax_id="FR12345678901",
             country_code="FR",
-            transaction_date=date(2026, 3, day),
+            transaction_date=date(_YEAR, 3, day),
             base_amount=base,
             intracommunity_clave="T",
             party_legal_name="TRIANGLE SARL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="TRIANGLE SARL"),
         )
         for source_kind, invoice_id, day, base in (
             (BindingSourceKind.COLLECTIBLE_INVOICE, "inv-fr-t-sale", 4, Decimal("400.00")),
@@ -258,8 +274,8 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
         )
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
-    values = resolve_invoice_binding_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
+    values = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     assert rows[("iva-349-operador-row-clave", 1)] == "T"
     assert rows[("iva-349-operador-row-base", 1)] == Decimal("650.00")
@@ -269,7 +285,7 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
 
 
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     construct = revision.constructs[0]
     # Every 349 binding reads the combined-direction intra-community population.
     assert set(construct.bindings) == {b.id for b in revision.bindings}
@@ -277,14 +293,14 @@ def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
 
 
 def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bindings() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     casillas_by_id = {c.id: c for c in revision.casillas}
     expected_bindings: dict[CasillaId, str] = {
-        _DECL_NUMERO_OPERADORES_CASILLA: "iva-349-declarante-numero-operadores",
-        _DECL_IMPORTE_OPERACIONES_CASILLA: "iva-349-declarante-importe-operaciones",
-        _DECL_NUMERO_RECTIFICACIONES_CASILLA: "iva-349-declarante-numero-rectificaciones",
-        _DECL_IMPORTE_RECTIFICACIONES_CASILLA: "iva-349-declarante-importe-rectificaciones",
+        DECL_NUMERO_OPERADORES_CASILLA: "iva-349-declarante-numero-operadores",
+        DECL_IMPORTE_OPERACIONES_CASILLA: "iva-349-declarante-importe-operaciones",
+        DECL_NUMERO_RECTIFICACIONES_CASILLA: "iva-349-declarante-numero-rectificaciones",
+        DECL_IMPORTE_RECTIFICACIONES_CASILLA: "iva-349-declarante-importe-rectificaciones",
     }
     for casilla_id, expected_binding in expected_bindings.items():
         casilla = casillas_by_id[casilla_id]
@@ -293,7 +309,7 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
 
 
 def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     row_bindings: dict[str, BindingDefinition] = {
         b.id: b
@@ -330,7 +346,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
 
 
 def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -338,34 +354,37 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ALEMAN GMBH"),
         ),
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-2",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 5),
+            transaction_date=date(_YEAR, 3, 5),
             base_amount=Decimal("500.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ALEMAN GMBH"),
         ),
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
-            transaction_date=date(2026, 3, 7),
+            transaction_date=date(_YEAR, 3, 7),
             base_amount=Decimal("300.50"),
             intracommunity_clave="S",
             party_legal_name="FRANCE SARL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="FRANCE SARL"),
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
     # Two row groups: (DE, DE123456789, E) at row 1 and (FR, FR12345678901, S) at row 2.
     assert rows[("iva-349-operador-row-codigo-pais", 1)] == "DE"
@@ -390,7 +409,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
 
 
 def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clave_period() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -398,39 +417,41 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
             invoice_id="inv-de-rect",
             party_tax_id="DE123456789",
             country_code="DE",
-            transaction_date=date(2026, 3, 1),
+            transaction_date=date(_YEAR, 3, 1),
             base_amount=Decimal("1100.00"),
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ALEMAN GMBH"),
             is_rectification=True,
             rectified_base_previous=Decimal("1000.00"),
             rectified_period="2T",
-            rectified_year=2025,
+            rectified_year=_RECTIFIED_YEAR,
         ),
         InvoiceObservation(
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-it-rect",
             party_tax_id="IT12345678901",
             country_code="IT",
-            transaction_date=date(2026, 3, 5),
+            transaction_date=date(_YEAR, 3, 5),
             base_amount=Decimal("200.00"),
             intracommunity_clave="E",
             party_legal_name="ITALIA SRL",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="ITALIA SRL"),
             is_rectification=True,
             rectified_base_previous=Decimal("180.00"),
             rectified_period="4T",
-            rectified_year=2025,
+            rectified_year=_RECTIFIED_YEAR,
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_invoice_binding_row_values(revision, observations, effective_date=date(_YEAR, 3, 31))
 
-    # DE/DE123456789/E/2025/2T at row 1, IT/IT12345678901/E/2025/4T at row 2.
+    # DE/DE123456789/E/<rectified year>/2T at row 1, IT/IT12345678901/E/<rectified year>/4T at row 2.
     assert rows[("iva-349-rectificacion-row-codigo-pais", 1)] == "DE"
     assert rows[("iva-349-rectificacion-row-nif", 1)] == "123456789"
     assert rows[("iva-349-rectificacion-row-apellidos", 1)] == "ALEMAN GMBH"
     assert rows[("iva-349-rectificacion-row-clave", 1)] == "E"
-    assert rows[("iva-349-rectificacion-row-ejercicio", 1)] == "2025"
+    assert rows[("iva-349-rectificacion-row-ejercicio", 1)] == str(_RECTIFIED_YEAR)
     assert rows[("iva-349-rectificacion-row-periodo", 1)] == "2T"
     assert rows[("iva-349-rectificacion-row-base-rectificada", 1)] == Decimal("1100.00")
     assert rows[("iva-349-rectificacion-row-base-anterior", 1)] == Decimal("1000.00")
@@ -440,66 +461,33 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
 
 
 def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
-    non_rect_obs = (
-        InvoiceObservation(
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-            invoice_id="inv-de-1",
-            party_tax_id="DE123456789",
-            country_code="DE",
-            transaction_date=date(2026, 3, 1),
-            base_amount=Decimal("1000.00"),
-            intracommunity_clave="E",
-        ),
-        InvoiceObservation(
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-            invoice_id="inv-fr-1",
-            party_tax_id="FR12345678901",
-            country_code="FR",
-            transaction_date=date(2026, 3, 5),
-            base_amount=Decimal("500.50"),
-            intracommunity_clave="S",
-        ),
-    )
-    rect_obs = InvoiceObservation(
-        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-        invoice_id="inv-it-1-rect",
-        party_tax_id="IT12345678901",
-        country_code="IT",
-        transaction_date=date(2026, 3, 8),
-        base_amount=Decimal("200.00"),
-        intracommunity_clave="E",
-        is_rectification=True,
-        rectified_base_previous=Decimal("180.00"),
-        rectified_period="4T",
-        rectified_year=2025,
-    )
-    observations = (*non_rect_obs, rect_obs)
+    observations = _mixed_invoice_observations()
 
-    binding_values = resolve_invoice_binding_values(revision, observations)
+    binding_values = resolve_invoice_binding_values(revision, observations, effective_date=date(_YEAR, 3, 31))
     casilla_values = resolve_available_bound_inputs_by_casilla_id(revision, binding_values)
 
     # Assert the four expected casilla keys are present — wiring check.
-    expected_casilla_keys = set(_DECLARANT_SUMMARY_CASILLAS)
+    expected_casilla_keys = set(DECLARANT_SUMMARY_CASILLAS)
     assert expected_casilla_keys == set(casilla_values.keys()), (
         "invoice-to-casilla pipeline must produce exactly the four declarant casillas"
     )
 
     # Operator and importe values must equal what the resolver computed from the
     # non-rectification observations.
-    assert casilla_values[_DECL_NUMERO_OPERADORES_CASILLA] == binding_values["iva-349-declarante-numero-operadores"]
-    assert casilla_values[_DECL_IMPORTE_OPERACIONES_CASILLA] == binding_values["iva-349-declarante-importe-operaciones"]
+    assert casilla_values[DECL_NUMERO_OPERADORES_CASILLA] == binding_values["iva-349-declarante-numero-operadores"]
+    assert casilla_values[DECL_IMPORTE_OPERACIONES_CASILLA] == binding_values["iva-349-declarante-importe-operaciones"]
 
     # Rectification casillas must pass through from binding to casilla unchanged.
     assert (
-        casilla_values[_DECL_NUMERO_RECTIFICACIONES_CASILLA]
+        casilla_values[DECL_NUMERO_RECTIFICACIONES_CASILLA]
         == (binding_values["iva-349-declarante-numero-rectificaciones"])
     )
     assert (
-        casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA]
+        casilla_values[DECL_IMPORTE_RECTIFICACIONES_CASILLA]
         == (binding_values["iva-349-declarante-importe-rectificaciones"])
     )
 
     # Casilla 04 carries the rectified base (200.00), not its 20.00 delta against the previous base.
-    assert casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("200.00")
+    assert casilla_values[DECL_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("200.00")

@@ -27,8 +27,9 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${desktop_server
 file(READ "${desktop_server_contract}" desktop_server)
 string(JSON desktop_bind_address GET "${desktop_server}" host)
 set(CADRUMO_DESKTOP_BIND_ADDRESS "${desktop_bind_address}" CACHE STRING "Frontend development bind address")
+set(desktop_port_keys devPort previewPort docsPort cataloguePort scenariosPort scenariosDocsPort hotPort)
 set(desktop_ports "")
-foreach(port IN ITEMS devPort previewPort docsPort cataloguePort)
+foreach(port IN LISTS desktop_port_keys)
   string(JSON desktop_port GET "${desktop_server}" "${port}")
   if(NOT "${desktop_port}" MATCHES "^[0-9]+$" OR desktop_port LESS 1 OR desktop_port GREATER 65535)
     message(FATAL_ERROR "${port} must be a valid TCP port")
@@ -36,8 +37,9 @@ foreach(port IN ITEMS devPort previewPort docsPort cataloguePort)
   list(APPEND desktop_ports "${desktop_port}")
 endforeach()
 list(REMOVE_DUPLICATES desktop_ports)
+list(LENGTH desktop_port_keys desktop_port_key_count)
 list(LENGTH desktop_ports desktop_port_count)
-if(NOT desktop_port_count EQUAL 4)
+if(NOT desktop_port_count EQUAL desktop_port_key_count)
   message(FATAL_ERROR "Development listeners must have distinct ports")
 endif()
 # These are not cache options: every build and just dev use the same assignments.
@@ -49,7 +51,10 @@ set(CADRUMO_NATIVE_CONTRACT "${CADRUMO_PATH_GENERATED}/contract.json" CACHE FILE
 set(desktop_host_contracts native_contract)
 # The desktop resolves its own build identity (with the manager, installer and interpreter
 # hosts it links) before Tauri compiles it; an unchanged fingerprint changes no variable.
+# Only the image build opens the desktop's build record; preparation, tests and lints stage
+# nothing and leave it describing the staged desktop.
 cadrumo_identity_command(desktop_identity desktop)
+cadrumo_identity_command(desktop_identity_only IDENTITY_ONLY desktop)
 # A desktop image built from the desktop's current fingerprint by the same command is current:
 # the fingerprint covers every input, so the Tauri driver would only confirm it.
 function(cadrumo_reuse_built output component artifact)
@@ -72,6 +77,28 @@ set(CADRUMO_DESKTOP_HOST_EXECUTABLE
   "${CADRUMO_PATH_DESKTOP_CARGO}/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
 set(CADRUMO_DESKTOP_HOST_EXECUTABLE "${CADRUMO_DESKTOP_HOST_EXECUTABLE}" PARENT_SCOPE)
 cadrumo_reuse_built(desktop_reuse desktop "${CADRUMO_DESKTOP_HOST_EXECUTABLE}")
+# A platform that wraps the package in an application bundle gets the bundle's main
+# executable, which replaces itself with the desktop image at the declared placement.
+execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
+  "import json; from dev.packaging.native.layout import application_bundle, desktop_image, load_layout; l=load_layout('${CADRUMO_TARGET}'); b=application_bundle(l); print(json.dumps(b and {'payload': b.payload_from_executable, 'desktop': desktop_image(l).package_path}))"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" OUTPUT_VARIABLE desktop_bundle
+  OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+if(NOT desktop_bundle STREQUAL "null")
+  string(JSON desktop_bundle_payload GET "${desktop_bundle}" payload)
+  string(JSON desktop_bundle_desktop GET "${desktop_bundle}" desktop)
+  add_executable(cadrumo_bundle_launcher macos/bundle_launcher.c)
+  set_target_properties(cadrumo_bundle_launcher PROPERTIES OUTPUT_NAME bundle-launcher
+    RUNTIME_OUTPUT_DIRECTORY "${CADRUMO_PATH_BIN}/$<CONFIG>")
+  target_compile_definitions(cadrumo_bundle_launcher PRIVATE
+    "CADRUMO_BUNDLE_PAYLOAD=\"${desktop_bundle_payload}\"" "CADRUMO_BUNDLE_DESKTOP=\"${desktop_bundle_desktop}\"")
+  cadrumo_compile_policy(cadrumo_bundle_launcher)
+  set(CADRUMO_BUNDLE_LAUNCHER "${CADRUMO_PATH_BIN}/$<CONFIG>/bundle-launcher${CMAKE_EXECUTABLE_SUFFIX}")
+  set(CADRUMO_BUNDLE_LAUNCHER "${CADRUMO_BUNDLE_LAUNCHER}" PARENT_SCOPE)
+  cadrumo_describe_target(cadrumo_bundle_launcher GROUP desktop
+    SUMMARY "compile the application bundle's main executable" OUTPUTS "${CADRUMO_BUNDLE_LAUNCHER}")
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CADRUMO_SOURCE_ROOT}/native/package-layout.json" "${CADRUMO_SOURCE_ROOT}/native/platforms/${CADRUMO_TARGET}.json")
+endif()
 
 # The checkout's shared node_modules tree is an explicit developer prerequisite. A build
 # may validate it, but installation and removal belong to the operator outside CMake.
@@ -96,6 +123,8 @@ add_custom_target(clean-desktop-frontend-install
   VERBATIM)
 set(CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS "" CACHE STRING
   "Optional Playwright worker count for desktop-frontend-test")
+set(CADRUMO_DESKTOP_FRONTEND_TEST_FILTER "" CACHE STRING
+  "Optional Playwright test filter for desktop-frontend-test")
 option(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED "Rerun only the last failed frontend tests" OFF)
 if(NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS STREQUAL ""
     AND NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS MATCHES "^[1-9][0-9]*$")
@@ -109,6 +138,9 @@ foreach(action IN ITEMS check test)
     endif()
     if(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED)
       list(APPEND desktop_frontend_script_arguments --last-failed)
+    endif()
+    if(NOT CADRUMO_DESKTOP_FRONTEND_TEST_FILTER STREQUAL "")
+      list(APPEND desktop_frontend_script_arguments "${CADRUMO_DESKTOP_FRONTEND_TEST_FILTER}")
     endif()
     if(desktop_frontend_script_arguments)
       list(PREPEND desktop_frontend_script_arguments --)
@@ -137,15 +169,21 @@ file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
 list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
 list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
-  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
-  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
+  "${CADRUMO_SOURCE_ROOT}/dev/paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
+  # The invoice preview's served keys are declared from these.
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/domain/invoices/figures.py"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/application/invoices/figures_preview_contracts.py"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo/_data/registry/aeat/facts/0094-iva-rate-slot-catalogue.toml"
+  # The shell source names the keys; generation refuses one it would not carry.
+  "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_palette_inputs "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-docs.css"
-  "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/paths.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
 set(desktop_icons_inputs
   "${CADRUMO_PATH_AGENT}/agent-wheel.json" "${CADRUMO_PATH_AGENT}/wheels"
-  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/paths.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/provider_icon_assets.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/agent.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
@@ -153,18 +191,43 @@ set(desktop_icons_inputs
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/hashing.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py")
+# The navigation register, read through its validating client loader. Its label
+# keys are chrome strings too, so the chrome regenerates when it changes.
+set(desktop_navigation_register "${CADRUMO_SOURCE_ROOT}/src/cadrumo_client/contracts/navigation.toml"
+  "${CADRUMO_SOURCE_ROOT}/src/cadrumo_client/contracts/navigation.py")
+set(desktop_navigation_inputs ${desktop_navigation_register}
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/desktop_navigation.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
+list(APPEND desktop_chrome_inputs ${desktop_navigation_register})
 set(desktop_chrome_output chrome-strings.json)
 set(desktop_palette_output palette.css)
 set(desktop_icons_output provider-icons.json)
+set(desktop_navigation_output navigation.json)
+file(GLOB desktop_settings_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_*.py")
+list(APPEND desktop_settings_inputs
+  "${CADRUMO_SOURCE_ROOT}/native/application-environment.toml"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/application_environment.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/operational_settings.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/desktop_settings.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/paths.py")
+set(desktop_settings_output operational-settings.ts)
+set(desktop_settings_module dev.packaging.native.desktop_settings)
+set(desktop_settings_description "operational settings from the environment declaration")
 set(desktop_chrome_module dev.locales.desktop_chrome)
 set(desktop_palette_module dev.docs.desktop_palette)
 set(desktop_icons_module dev.packaging.native.provider_icon_assets)
+set(desktop_navigation_module dev.packaging.native.desktop_navigation)
 set(desktop_chrome_description "chrome strings from the locale catalogues")
 set(desktop_palette_description "palette from the documentation theme")
 set(desktop_icons_description "pinned provider marks from the admitted agent wheel")
+set(desktop_navigation_description "navigation register projection")
+set(desktop_chrome_arguments --shell-source "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_icons_arguments --build "${PROJECT_BINARY_DIR}")
 set(desktop_icons_dependencies agent_project)
-foreach(generator IN ITEMS chrome palette icons)
+foreach(generator IN ITEMS chrome palette icons navigation settings)
   set(generator_input_json "[]")
   set(generator_inputs ${desktop_${generator}_inputs}
     "${CADRUMO_DEV_PYTHON}" "${CADRUMO_SOURCE_ROOT}/uv.lock"
@@ -180,7 +243,7 @@ foreach(generator IN ITEMS chrome palette icons)
     SUMMARY "generate the shell ${desktop_${generator}_description}"
     OUTPUTS "${desktop_generated}/${desktop_${generator}_output}")
   add_custom_target(desktop-frontend-${generator}
-    COMMAND "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/content-build.mjs"
+    COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/content-build.mjs"
       --record "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json"
       --output "${desktop_generated}/${desktop_${generator}_output}" --inputs-file "${generator_input_file}"
       -- ${desktop_generator} ${desktop_${generator}_module} --output "${desktop_generated}/${desktop_${generator}_output}"
@@ -193,9 +256,49 @@ cadrumo_build_step(step_comment desktop-frontend-generated GROUP desktop
   SUMMARY "every generated shell input"
   OUTPUTS "${desktop_generated}")
 add_custom_target(desktop-frontend-generated
-  DEPENDS desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons COMMENT "${step_comment}")
-foreach(action IN ITEMS build test)
-  add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
+  DEPENDS desktop-frontend-settings desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation
+  COMMENT "${step_comment}")
+# The type check, stories and specs import the generated window projections
+# through @fixtures, and the frontend's type check reads them from this build's
+# own tree, so every target that type-checks the frontend produces them first.
+# The seed writes them into this build's window_fixtures directory, which it
+# finds through CADRUMO_CMAKE_BINARY_DIR, and records them in its index, this
+# step's output. Its depfile names every input, output and stamp file the window
+# families' freshness reads, so the step reruns only when one changes, and the
+# seed, digest-stamped, then produces only the families that are not fresh. The
+# depfile names files only, since a generator takes a directory there for a
+# missing file and reruns the step on every build. A file added beside the
+# inputs is noticed by the listing step instead: it runs on every build and
+# rewrites its listing of the window families' input files only when that set
+# changes, and the seed depends on the listing. A producer that cannot run, for
+# want of a published authority or the frontend packages, fails this step and
+# names its remedy. Only the generated window families are selected: a committed
+# family's outputs are source, never build output.
+set(desktop_window_index "${CADRUMO_PATH_WINDOW_FIXTURES}/.window-projections.json")
+set(desktop_window_depfile "${CADRUMO_PATH_DESKTOP_CACHE}/window-fixtures.d")
+set(desktop_window_listing "${CADRUMO_PATH_DESKTOP_CACHE}/window-inputs.listing")
+file(GLOB desktop_window_seeder CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/dev/fixture_projections/*.py")
+cadrumo_build_step(step_comment desktop-window-inputs GROUP desktop
+  SUMMARY "list the window projections' input files, rewritten only when that set changes"
+  OUTPUTS "${desktop_window_listing}")
+add_custom_target(desktop-window-inputs
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
+    ${desktop_generator} dev.fixture_projections window-listing "${desktop_window_listing}"
+  BYPRODUCTS "${desktop_window_listing}"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
+cadrumo_build_step(step_comment desktop-window-fixtures GROUP desktop
+  SUMMARY "seed the generated window projections the frontend imports"
+  OUTPUTS "${desktop_window_index}")
+add_custom_command(OUTPUT "${desktop_window_index}"
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
+    ${desktop_generator} dev.fixture_projections seed --window --depfile "${desktop_window_depfile}"
+  DEPFILE "${desktop_window_depfile}"
+  DEPENDS ${desktop_window_seeder} "${desktop_window_listing}"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+add_custom_target(desktop-window-fixtures DEPENDS "${desktop_window_index}")
+add_dependencies(desktop-window-fixtures desktop-window-inputs desktop-frontend-install registry_authority)
+foreach(action IN ITEMS build test check)
+  add_dependencies(desktop-frontend-${action} desktop-frontend-generated desktop-window-fixtures)
 endforeach()
 cadrumo_build_step(step_comment desktop-frontend-dev GROUP desktop
   SUMMARY "serve the development display from this build's generated inputs until stopped")
@@ -237,7 +340,7 @@ cadrumo_build_step(step_comment desktop-host-prepare GROUP desktop
   SUMMARY "prepare the desktop host project and its icons"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}")
 add_custom_target(desktop-host-prepare
-  ${desktop_identity}
+  ${desktop_identity_only}
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments}
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" prepare
@@ -261,13 +364,25 @@ if(NOT DEFINED CADRUMO_PACKAGE_USER_DOCS OR CADRUMO_PACKAGE_USER_DOCS)
   set(desktop_user_docs user_docs)
   set(desktop_test_user_docs 1)
 endif()
-set(CADRUMO_DESKTOP_HOST_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for desktop host tests")
+# A test filter narrows one run, never a target: tauri.mjs reads it from that build's own
+# environment and says so, so a value left in a shared cache cannot shrink a gate.
+if(DEFINED CACHE{CADRUMO_DESKTOP_HOST_TEST_FILTER})
+  message(WARNING "The cached CADRUMO_DESKTOP_HOST_TEST_FILTER is ignored and every desktop host test runs. "
+    "Set it in the environment of the one build it should narrow.")
+endif()
 foreach(action IN ITEMS test clippy unit-test unit-clippy)
   set(host_driver_action "${action}")
   set(host_dependencies desktop-frontend-build ${desktop_user_docs})
   set(host_fixture_check)
+  set(host_contract "${CADRUMO_NATIVE_CONTRACT}")
+  set(host_contracts ${desktop_host_contracts})
   if(action STREQUAL "unit-test" OR action STREQUAL "unit-clippy")
-    set(host_dependencies desktop-frontend-install)
+    # build.rs embeds the navigation projection, so even backend-only runs generate it.
+    set(host_dependencies desktop-frontend-install desktop-frontend-navigation)
+    # Backend-only runs launch no package, so they compile the contract no package embeds and
+    # build without publisher provisioning; the live-package actions keep the package contract.
+    set(host_contract "${CADRUMO_UNPROVISIONED_CONTRACT_DIR}/contract.json")
+    set(host_contracts native_contract_unprovisioned)
     if(action STREQUAL "unit-test")
       set(host_driver_action test-unit)
     else()
@@ -275,38 +390,65 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     endif()
     set(host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
       "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/sign_in/cli_contract_fixtures.py" --check)
+    list(APPEND host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
+      "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/ledger/relay_contracts.py" --check)
+    list(APPEND host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
+      "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/modelo/relay_contracts.py" --check)
   endif()
-  set(host_test_arguments)
+  # Test code embeds freshly serialized canonical provider-status bytes.
+  # A failed producer stops this target before Cargo can use an old fixture.
+  list(APPEND host_fixture_check COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
+    "${CADRUMO_DEV_PYTHON}" -B -c
+    "__import__('runpy').run_path(__import__('sys').argv.pop(1), run_name='__main__')"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/provider_settings/status_contract_fixture.py"
+    --build-dir "${CMAKE_BINARY_DIR}"
+    --output "${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json")
+  # The calendar tests compare the served calendar with a read the product's models produce.
+  list(APPEND host_fixture_check COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}"
+    "${CADRUMO_DEV_PYTHON}" -B -c
+    "__import__('runpy').run_path(__import__('sys').argv.pop(1), run_name='__main__')"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/user_profile/calendar_read_fixture.py"
+    --build-dir "${CMAKE_BINARY_DIR}"
+    --output "${CADRUMO_PATH_DESKTOP_TESTING}/calendar-read-contract.json")
   if(action STREQUAL "test" OR action STREQUAL "unit-test")
     set(host_summary "run the desktop host Rust tests")
-    if(NOT CADRUMO_DESKTOP_HOST_TEST_FILTER STREQUAL "")
-      list(APPEND host_test_arguments "${CADRUMO_DESKTOP_HOST_TEST_FILTER}")
-    endif()
   else()
     set(host_summary "lint the desktop host with clippy")
   endif()
   cadrumo_build_step(step_comment desktop-host-${action} GROUP verification SUMMARY "${host_summary}")
   add_custom_target(desktop-host-${action}
     ${host_fixture_check}
-    ${desktop_identity}
+    ${desktop_identity_only}
     COMMAND "${CMAKE_COMMAND}" -E env --unset=CARGO_BUILD_TARGET
       ${desktop_environment} "${desktop_configuration}" ${desktop_node_path_arguments} ${desktop_rust_environment}
-      "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}"
+      "CADRUMO_NATIVE_CONTRACT=${host_contract}"
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
+      "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json"
+      "CADRUMO_CALENDAR_READ_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/calendar-read-contract.json"
+      "CADRUMO_WINDOW_FIXTURES=${CADRUMO_PATH_WINDOW_FIXTURES}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
-      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action} ${host_test_arguments}
+      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
     DEPENDS ${host_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
-  add_dependencies(desktop-host-${action} ${desktop_host_contracts})
+  add_dependencies(desktop-host-${action} ${host_contracts})
 endforeach()
+# The backend-only lint needs the frontend packages but not a frontend build or staged
+# documentation. CTest drives the existing target, so its identity, fixture and environment
+# steps stay in one place; desktop.fmt and desktop.deny are registered with the other crates.
+if(BUILD_TESTING)
+  add_test(NAME desktop.clippy
+    COMMAND "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>" --target desktop-host-unit-clippy)
+  set_tests_properties(desktop.clippy PROPERTIES
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" LABELS rust_quality TIMEOUT 1800)
+endif()
 
 cadrumo_build_step(step_comment desktop-run GROUP desktop
-  SUMMARY "run the desktop application against the package root")
+  SUMMARY "run the desktop image in the selected package")
 add_custom_target(desktop-run
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
-    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" run
+    "${CADRUMO_DESKTOP_PACKAGE_ROOT}/${desktop_package_path}"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
 
 cadrumo_build_step(step_comment desktop-headless-test GROUP verification
@@ -320,20 +462,24 @@ add_custom_target(desktop-headless-test
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
 
 # The packaged end-to-end test drives the window over the WebView2 DevTools protocol, so
-# it needs an interactive desktop session. Its host carries the webview2-remote-debugging
-# feature and is built apart, into the desktop testing directory: it is never the image
-# desktop-host-build declares, and nothing stages or packages it.
+# it needs an interactive desktop session. Its isolated host carries the
+# webview2-remote-debugging and native-automation features, is never the image
+# desktop-host-build declares, and is never distributed.
 cadrumo_build_step(step_comment desktop-packaged-host GROUP verification
-  SUMMARY "compile the remote-debugging desktop host for packaged end-to-end tests (never shipped)"
+  SUMMARY "compile the automation desktop host for packaged tests (never shipped)"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_TESTING}")
 # The test host has its own build record (desktop-test-host): the desktop's inputs and identity
-# with one more feature. It is opened before the host builds and settled from the host.json
+# with test-only features. It is opened before the host builds and settled from the host.json
 # the build writes, with the image's digest.
 cadrumo_identity_command(desktop_test_host_identity desktop-test-host)
 set(desktop_test_host_record "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/host.json")
 cadrumo_reuse_built(desktop_test_host_reuse desktop-test-host
   "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/cargo/$<IF:$<CONFIG:Debug>,debug,release>/cadrumo${CMAKE_EXECUTABLE_SUFFIX}")
 set(desktop_resource_environment)
+set(desktop_identity_environment)
+if(CADRUMO_TARGET MATCHES "^macos-")
+  set(desktop_identity_environment "CADRUMO_DESKTOP_INFO_PLIST=${CADRUMO_PATH_GENERATED}/desktop-info.plist")
+endif()
 if(WIN32)
   get_directory_property(desktop_resource_compiler DIRECTORY "${CADRUMO_SOURCE_ROOT}/native"
     DEFINITION CADRUMO_RUST_ENV_CADRUMO_RC_COMPILER)
@@ -343,6 +489,7 @@ add_custom_target(desktop-packaged-host
   ${desktop_test_host_identity}
   COMMAND ${desktop_test_host_reuse} "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_NATIVE_CONTRACT=${CADRUMO_NATIVE_CONTRACT}" ${desktop_resource_environment}
+    ${desktop_identity_environment}
     "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged/host.mjs"
   COMMAND "${CMAKE_COMMAND}" -E chdir "${CADRUMO_SOURCE_ROOT}" ${CADRUMO_HELPER} run --build "${CMAKE_BINARY_DIR}"
     -- "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.build_stamp --build "${CMAKE_BINARY_DIR}"
@@ -360,6 +507,23 @@ add_custom_target(desktop-packaged-test
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged.test.mjs"
   DEPENDS desktop-packaged-host
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+# A persistent exploratory session, not a prescribed tax scenario. The launcher
+# verifies the existing stage and mirrors it with the isolated automation host.
+cadrumo_build_step(step_comment desktop-native-automation GROUP verification
+  SUMMARY "open an isolated native WebDriver session for exploratory GUI actions")
+add_custom_target(desktop-native-automation
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/automation/cli.mjs" start
+  DEPENDS desktop-packaged-host
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+cadrumo_build_step(step_comment desktop-native-automation-harness-test GROUP verification
+  SUMMARY "verify native automation isolation and session path admission")
+add_custom_target(desktop-native-automation-harness-test
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/automation/session.test.mjs"
+  DEPENDS desktop-frontend-install
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
+
 # The setup acceptance downloads the browser into one throwaway root under the testing
 # directory, interrupts and resumes it, and removes the root when it ends.
 cadrumo_build_step(step_comment desktop-packaged-setup-test GROUP verification
@@ -394,13 +558,13 @@ add_custom_target(desktop-packaged-harness-test
 # caches unless the operator explicitly selects their own clean target.
 cadrumo_register_clean(TARGET desktop-frontend-build PATHS
   "${CADRUMO_PATH_DESKTOP_FRONTEND}" "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-build.json")
-foreach(generator IN ITEMS chrome palette icons)
+foreach(generator IN ITEMS chrome palette icons navigation settings)
   cadrumo_register_clean(TARGET desktop-frontend-${generator} PATHS
     "${desktop_generated}/${desktop_${generator}_output}"
     "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json")
 endforeach()
 cadrumo_register_clean(TARGET desktop-frontend-generated DEPENDS
-  desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons)
+  desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation)
 cadrumo_register_clean(TARGET desktop-host-prepare PATHS
   "${CADRUMO_PATH_DESKTOP_HOST}" "${CADRUMO_PATH_DESKTOP_ICONS}"
   "${CADRUMO_PATH_DESKTOP_CACHE}/icons-build.json")

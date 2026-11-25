@@ -1,11 +1,5 @@
 """The state tree is built on request, not as a side effect of writing to it.
 
-Before this, directories in the derived-output taxonomy appeared only when
-some consumer happened to write one: the local provider made its root on
-first write, the journal repository made its own, bucket provisioning made a
-bucket's. A caller could not ask for the tree, and a fresh machine held
-whichever subset had been reached.
-
 The directory names asserted below are deliberate literals. What this module
 defends is that bootstrap *materialises* the declared tree on disk, so the
 expectation must come from outside the declaration: resolving it through the
@@ -38,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 @pytest.fixture(autouse=True)
 def unoverridden_settings(tmp_path: Path) -> Iterator[None]:
     """Exercise unset category settings independently of the runner's explicit paths."""
-    with isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "state")):
+    with isolated_aeat_env(CADRUMO_STORAGE_ROOT=str(tmp_path / "state")):
         token = settings_override.set(Settings(cadrumo_profile_kdf_measure_calibration=False))
         try:
             yield
@@ -50,10 +44,10 @@ def test_settings_and_derived_path_reads_do_not_materialise_storage(tmp_path: Pa
     """Reading configuration computes paths without creating their topology."""
     root = tmp_path / "read-only-state"
 
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         settings = load_settings()
-        assert settings.cadrumo_token_dir == root / "tokens"
-        assert settings.cadrumo_log_dir == root / "logs"
+        assert storage_path(StorageCategory.TOKENS, settings=settings) == root / "tokens"
+        assert storage_path(StorageCategory.LOGS, settings=settings) == root / "logs"
 
     assert not root.exists(), "settings/path resolution crossed the explicit materialization boundary"
 
@@ -63,7 +57,7 @@ def test_it_builds_the_tree_and_returns_the_root(tmp_path: Path) -> None:
     root = tmp_path / "state"
     assert not root.exists(), "the fixture must start absent, or this proves nothing"
 
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         returned = ensure_storage_tree()
 
     assert returned == root
@@ -78,7 +72,7 @@ def test_it_builds_the_tree_and_returns_the_root(tmp_path: Path) -> None:
 def test_calling_it_again_is_a_no_op(tmp_path: Path) -> None:
     """Idempotent, so a caller may ask without first checking."""
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         first = ensure_storage_tree()
         (first / "tokens" / "sentinel").write_text("kept", encoding="utf-8")
         second = ensure_storage_tree()
@@ -89,75 +83,10 @@ def test_calling_it_again_is_a_no_op(tmp_path: Path) -> None:
     )
 
 
-def test_missing_explicit_directory_is_refused_before_defaults_are_created(tmp_path: Path) -> None:
-    """An operator-owned path is a dependency, not a directory to invent."""
-    root = tmp_path / "state"
-    explicit_tokens = tmp_path / "operator-tokens"
-
-    with (
-        override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=explicit_tokens),
-        pytest.raises(CoreValidationError) as refusal,
-    ):
-        ensure_storage_tree()
-
-    assert refusal.value.context == {
-        "state_directory_target": str(explicit_tokens),
-        "occupied_by_file": False,
-        "directory_created": False,
-        "explicit_override": True,
-    }
-    assert not root.exists(), "explicit dependencies must be checked before default materialization"
-
-
-def test_missing_explicit_directory_is_refused_when_it_aliases_a_default(tmp_path: Path) -> None:
-    """Path equality cannot turn an operator dependency into an owned default."""
-    root = tmp_path / "state"
-    aliased_cache = root / "cache" / "llm-cache"
-
-    with (
-        override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=aliased_cache),
-        pytest.raises(CoreValidationError) as refusal,
-    ):
-        ensure_storage_tree()
-
-    assert refusal.value.context == {
-        "state_directory_target": str(aliased_cache),
-        "occupied_by_file": False,
-        "directory_created": False,
-        "explicit_override": True,
-    }
-    assert not root.exists(), "an aliased explicit dependency must still be checked first"
-
-
-def test_existing_explicit_directory_is_preserved_while_defaults_are_created(tmp_path: Path) -> None:
-    """A provisioned override passes and does not suppress sibling defaults."""
-    root = tmp_path / "state"
-    explicit_tokens = tmp_path / "operator-tokens"
-    explicit_tokens.mkdir()
-    sentinel = explicit_tokens / "sentinel"
-    sentinel.write_text("kept", encoding="utf-8")
-
-    with override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=explicit_tokens):
-        assert ensure_storage_tree() == root
-
-    assert sentinel.read_text(encoding="utf-8") == "kept"
-    assert (root / "cache" / "llm-cache").is_dir()
-
-
-def test_a_missing_explicit_runtime_namespace_is_neither_required_nor_created(tmp_path: Path) -> None:
-    """An operator-selected connection namespace belongs to the runtime, which creates and checks it."""
-    root = tmp_path / "state"
-    namespace = tmp_path / "operator-runtime"
-    with override_settings(cadrumo_local_storage_root=root, cadrumo_connection_socket_dir=namespace):
-        assert ensure_storage_tree() == root
-    assert root.is_dir()
-    assert not namespace.exists()
-
-
 def test_the_client_tree_never_creates_the_runtime_namespace_or_coordination_directory(tmp_path: Path) -> None:
     """A client materialises its own tree only; the runtime alone creates what it owns."""
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         ensure_storage_tree()
         ensure_storage_tree()
     assert root.is_dir()
@@ -173,6 +102,7 @@ def test_the_runtime_owned_members_are_declared_and_left_out_of_the_client_tree(
         StorageCategory.RUNTIME_COORDINATION,
         StorageCategory.RUNTIME_INSTALLATION_RECORD,
         StorageCategory.RUNTIME_INSTALLATION_LOCK,
+        StorageCategory.RUNTIME_FIXED_CLOCK_MARKER,
     }
     settings = load_settings()
     assert storage_path(StorageCategory.CONNECTION_SOCKETS, settings=settings) not in storage_tree_targets(settings)
@@ -188,7 +118,7 @@ def test_a_created_root_takes_the_declared_mode_under_a_permissive_umask(tmp_pat
     root = tmp_path / "fresh" / "state"
     previous = os.umask(0o022)
     try:
-        with override_settings(cadrumo_local_storage_root=root):
+        with override_settings(cadrumo_storage_root=root):
             ensure_storage_tree()
     finally:
         os.umask(previous)
@@ -202,9 +132,9 @@ def test_a_file_valued_setting_gets_its_parent_not_a_directory(tmp_path: Path) -
     be written, and the failure would surface much later at the write.
     """
     root = tmp_path / "state"
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         ensure_storage_tree()
-        ratios = Path(load_settings().cadrumo_usage_ratios_path)
+        ratios = storage_path(StorageCategory.USAGE_RATIOS)
 
     assert ratios.parent.is_dir(), "the file's directory must exist"
     assert not ratios.exists(), "the file itself must not be created"
@@ -220,7 +150,7 @@ def test_it_refuses_when_a_file_occupies_a_directory_path(tmp_path: Path) -> Non
     root.mkdir()
     (root / "tokens").write_text("not a directory", encoding="utf-8")
 
-    with override_settings(cadrumo_local_storage_root=root), pytest.raises(CoreValidationError) as refusal:
+    with override_settings(cadrumo_storage_root=root), pytest.raises(CoreValidationError) as refusal:
         ensure_storage_tree()
 
     context = refusal.value.context or {}
@@ -250,17 +180,16 @@ def test_the_refusal_probe_would_otherwise_succeed(tmp_path: Path) -> None:
     root = tmp_path / "state"
     root.mkdir()
 
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         assert ensure_storage_tree() == root
 
 
 def test_the_root_is_restricted_to_its_owner(tmp_path: Path) -> None:
     """The tree holds encrypted records, the keys that open them, and the state over both.
 
-    Nothing asserted these bits before, so a refactor restructuring the
-    materialiser could have dropped the hardening in silence -- every other
-    test would keep passing, because a world-readable directory works exactly
-    as well as a private one until someone reads it.
+    A refactor restructuring the materialiser could drop the hardening in
+    silence -- every other test would keep passing, because a world-readable
+    directory works exactly as well as a private one until someone reads it.
 
     The mode assertion is guarded rather than skipped: hosts without POSIX
     modes still exercise everything above it, and the guard carries its own
@@ -270,7 +199,7 @@ def test_the_root_is_restricted_to_its_owner(tmp_path: Path) -> None:
     """
     root = tmp_path / "state"
 
-    with override_settings(cadrumo_local_storage_root=root):
+    with override_settings(cadrumo_storage_root=root):
         ensure_storage_tree()
 
     assert root.is_dir()
@@ -292,7 +221,7 @@ def test_a_directory_removed_after_materialisation_is_rebuilt(tmp_path: Path) ->
     interrupted uninstall) would never come back, and the gap would surface
     much later at a write.
     """
-    with override_settings(cadrumo_local_storage_root=tmp_path / "state"):
+    with override_settings(cadrumo_storage_root=tmp_path / "state"):
         settings = load_settings()
         root = ensure_storage_tree(settings)
 
@@ -314,13 +243,11 @@ def test_the_warm_tree_costs_no_mkdir(tmp_path: Path) -> None:
     """Re-materialising an intact tree must not re-issue creation calls.
 
     Every CLI invocation runs this over the whole taxonomy, so the
-    already-built case is the one that matters. It used to ask three
-    questions per target -- exists, then is_dir, then an unconditional mkdir
-    that re-walked the path -- which is why this pins the absence of the
-    third rather than a duration: a timing would measure the machine, while
-    a mkdir on a directory that is already there is the waste itself.
+    already-built case is the one that matters. This pins the absence of a
+    repeated mkdir rather than a duration: a timing would measure the machine,
+    while a mkdir on a directory that is already there is the waste itself.
     """
-    with override_settings(cadrumo_local_storage_root=tmp_path / "state"):
+    with override_settings(cadrumo_storage_root=tmp_path / "state"):
         settings = load_settings()
         ensure_storage_tree(settings)
 
@@ -347,7 +274,7 @@ def test_the_warm_probe_would_catch_a_regression(tmp_path: Path) -> None:
     creations -- otherwise an empty list would prove only that the probe
     never ran.
     """
-    with override_settings(cadrumo_local_storage_root=tmp_path / "fresh"):
+    with override_settings(cadrumo_storage_root=tmp_path / "fresh"):
         settings = load_settings()
 
         created: list[Path] = []

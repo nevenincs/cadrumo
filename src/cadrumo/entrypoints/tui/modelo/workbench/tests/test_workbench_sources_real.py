@@ -13,27 +13,23 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
-from textual.pilot import Pilot
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.source_policy import SourceFamily, source_policy
-from ......application.modelo.work_form_models import address_key
+from ......application.modelo.work_form_field_vocabulary import address_key
+from ......application.modelo.work_form_source_groups import source_groups
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
 from ....tests.modelo_workbench_session import real_workbench
+from ....tests.settling import settle, settle_until
 from ..screen import ModeloWorkbenchScreen
-from ..sources import WorkbenchSourcesScreen, source_groups
+from ..sources import WorkbenchSourcesScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SIZE = (140, 40)
-
-
-async def _settle(pilot: Pilot[None], times: int = 3) -> None:
-    for _ in range(times):
-        await pilot.pause()
 
 
 @pytest.mark.asyncio
@@ -42,14 +38,11 @@ async def test_a_real_declaration_maps_every_box_once_and_names_no_binding(tmp_p
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            for _ in range(200):
-                await pilot.pause()
-                if screen.form is not None:
-                    break
+            await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
             form = screen.form
             assert form is not None
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             sources = app.screen
             assert isinstance(sources, WorkbenchSourcesScreen)
             groups = sources.query_one("#sources-groups", OptionList)
@@ -77,14 +70,11 @@ async def test_a_real_second_quarter_names_the_declaration_it_carries_from(tmp_p
         screen = ModeloWorkbenchScreen(installed, actions=installed)
         app = ScreenHostApp(screen)
         async with app.run_test(size=_SIZE) as pilot:
-            for _ in range(200):
-                await pilot.pause()
-                if screen.form is not None:
-                    break
+            await settle_until(pilot, lambda: screen.form is not None, "the workbench to read its declaration")
             form = screen.form
             assert form is not None
             await pilot.press("s")
-            await _settle(pilot)
+            await settle(pilot)
             sources = app.screen
             assert isinstance(sources, WorkbenchSourcesScreen)
             groups = sources.query_one("#sources-groups", OptionList)

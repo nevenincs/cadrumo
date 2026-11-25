@@ -16,12 +16,30 @@ import pytest
 
 from ..errors import RegistryValidationError
 from ..formula_runtime_ops import read_parameter
+from .authored_editions import (
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+    supported_authored_exercises,
+)
 from .published_authority import published_legal_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_EDS_RATE = "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
+_NEWEST_EXERCISE = newest_authored_edition("100")
+_NEWEST_REVISION = str(revision_covering("100", _NEWEST_EXERCISE).id)
 
-def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter() -> None:
+# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for the one tax
+# period its in-force window covers; the published provision names that exercise.
+_DA56_TEMPORARY_RATE_EXERCISE = published_legal_reference("ley-35-2006:da-56").effective_from.year
+
+
+@pytest.mark.parametrize(
+    "exercise",
+    [exercise for exercise in supported_authored_exercises("100") if exercise != _DA56_TEMPORARY_RATE_EXERCISE],
+)
+def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(exercise: int) -> None:
     """The gastos-difícil-justificación rate for estimación directa simplificada is 5% (RIRPF art. 30).
 
     The TOML source declares value = "5" with unit = "percent" and data_type = "ratio",
@@ -30,9 +48,9 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
     """
     value = read_parameter(
         "100",
-        "2025",
-        "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-        date_context={"filing_period": date(2025, 12, 31)},
+        str(revision_covering("100", exercise).id),
+        _EDS_RATE,
+        date_context={"filing_period": date(exercise, 12, 31)},
     )
     assert isinstance(value, Decimal)
     # The registry stores the raw percent figure (5); the `percent` formula op divides by 100.
@@ -41,11 +59,6 @@ def test_read_parameter_returns_a_decimal_for_a_registered_modelo_100_parameter(
         f"Expected the 5% gastos-difícil-justificación rate stored as Decimal('5'), got {value!r}. "
         "Check rd-439-2007:art-30 / orden-hac-277-2026:art-3 and the TOML parameter declaration."
     )
-
-
-# Ley 35/2006 DA 56 raised the simplified-direct-estimation rate for the one tax
-# period its in-force window covers; the published provision names that exercise.
-_DA56_TEMPORARY_RATE_EXERCISE = published_legal_reference("ley-35-2006:da-56").effective_from.year
 
 
 def test_read_parameter_returns_the_da56_temporary_rate() -> None:
@@ -72,9 +85,9 @@ def test_read_parameter_reads_the_bundled_authority() -> None:
     """A public parameter read resolves an actual bundled, law-selected value."""
     value = read_parameter(
         "100",
-        "2025",
-        "renta-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
-        date_context={"filing_period": date(2025, 12, 31)},
+        _NEWEST_REVISION,
+        _EDS_RATE,
+        date_context={"filing_period": date(_NEWEST_EXERCISE, 12, 31)},
     )
     assert isinstance(value, Decimal)
 
@@ -83,19 +96,19 @@ def test_read_parameter_raises_for_unknown_modelo() -> None:
     with pytest.raises(RegistryValidationError, match="modelo '999' is not registered"):
         read_parameter(
             "999",
-            "2025",
+            _NEWEST_REVISION,
             "any-parameter-id",
-            date_context={"filing_period": date(2025, 12, 31)},
+            date_context={"filing_period": date(_NEWEST_EXERCISE, 12, 31)},
         )
 
 
 def test_read_parameter_raises_for_unknown_revision() -> None:
-    with pytest.raises(RegistryValidationError, match="no revision '1999'"):
+    with pytest.raises(RegistryValidationError, match="no revision 'no-such-revision'"):
         read_parameter(
             "100",
-            "1999",
+            "no-such-revision",
             "any-parameter-id",
-            date_context={"filing_period": date(1999, 12, 31)},
+            date_context={"filing_period": date(filing_year_envelope().floor - 1, 12, 31)},
         )
 
 
@@ -103,7 +116,7 @@ def test_read_parameter_raises_for_unknown_parameter_id() -> None:
     with pytest.raises(RegistryValidationError, match="parameter 'does-not-exist'"):
         read_parameter(
             "100",
-            "2025",
+            _NEWEST_REVISION,
             "does-not-exist",
-            date_context={"filing_period": date(2025, 12, 31)},
+            date_context={"filing_period": date(_NEWEST_EXERCISE, 12, 31)},
         )

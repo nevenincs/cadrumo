@@ -8,26 +8,28 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, ExportJustification, ExportPadding
 
 from .export_field_derivation import (
-    _OFFICIAL_ALTERNATIVE_LITERALS_RE,
-    _OFFICIAL_BARE_CELL_LITERAL_RE,
-    _OFFICIAL_BARE_RECORD_TAG_RE,
-    _OFFICIAL_LABELLED_LITERAL_RE,
-    _OFFICIAL_LITERAL_RE,
-    _OFFICIAL_UNQUOTED_LITERAL_RE,
+    OFFICIAL_ALTERNATIVE_LITERALS_RE,
+    OFFICIAL_BARE_CELL_LITERAL_RE,
+    OFFICIAL_BARE_RECORD_TAG_RE,
+    OFFICIAL_CRLF_CONSTANT_RE,
+    OFFICIAL_LABELLED_LITERAL_RE,
+    OFFICIAL_LITERAL_RE,
+    OFFICIAL_QUOTED_TOKEN_RE,
+    OFFICIAL_UNQUOTED_LITERAL_RE,
 )
 from .export_field_literal_source_pins import (
-    _source_pinned_165_transport_constant,
-    _source_pinned_190_transport_constant,
-    _source_pinned_194_transport_constant,
-    _source_pinned_270_transport_constant,
-    _source_pinned_280_transport_without_parsed_content,
-    _source_pinned_341_pdf_constant,
-    _source_pinned_345_transport_constant,
-    _source_pinned_349_constant,
+    source_pinned_165_transport_constant,
+    source_pinned_190_transport_constant,
+    source_pinned_194_transport_constant,
+    source_pinned_270_transport_constant,
+    source_pinned_280_transport_without_parsed_content,
+    source_pinned_341_pdf_constant,
+    source_pinned_345_transport_constant,
+    source_pinned_349_constant,
 )
-from .export_field_note_references import _split_official_note_references
-from .export_field_render_profile_derivation import _render_profile_anchor
-from .export_field_schema import _schema_field
+from .export_field_note_references import split_official_note_references
+from .export_field_render_profile_derivation import render_profile_anchor
+from .export_field_schema import schema_field
 from .export_fragment_provenance import ExportFieldDerivation
 from .joined_record_design import JoinedRecordDesignField
 from .note_literals import NoteLiteralDeclaration, note_literal_for
@@ -40,7 +42,7 @@ from .source_defects import SourceDefectDeclaration, adjudicated_literal_for
 #: -- "Constante «D»." is Modelo 347's, and it read as an ambiguous
 #: constant because the pattern below only knew ' and ". Folded to a straight
 #: quote before matching, so one pattern reads every form AEAT ships.
-_OFFICIAL_QUOTE_FOLD: Final[dict[int, str]] = str.maketrans(
+OFFICIAL_QUOTE_FOLD: Final[dict[int, str]] = str.maketrans(
     {"«": '"', "»": '"', "“": '"', "”": '"', "‘": "'", "’": "'"},
 )
 
@@ -48,7 +50,7 @@ _OFFICIAL_QUOTE_FOLD: Final[dict[int, str]] = str.maketrans(
 _OFFICIAL_BLANK_LITERAL_CONTENT: Final[str] = "En blanco"
 
 
-def _literal_derivation(
+def literal_derivation(
     joined_field: JoinedRecordDesignField,
     *,
     encoding: ExportEncoding,
@@ -57,6 +59,7 @@ def _literal_derivation(
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
     literal_notes: tuple[NoteLiteralDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
+    """Derive the export field derivation for a literal field from its joined record design."""
     parser_field = joined_field.parser_field
     if (
         parser_field.source_cell is None
@@ -72,7 +75,7 @@ def _literal_derivation(
         if literal is None:
             raise RegistryValidationError("reserved zero run has no mapped literal")
         _validate_literal_bytes(joined_field, literal, expected, encoding, False)
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="text",
             required=True,
@@ -82,10 +85,10 @@ def _literal_derivation(
             export_record_id=export_record_id,
             derivation_code="literal-exact-v1",
         )
-    missing_content_literal = _source_pinned_280_transport_without_parsed_content(joined_field, render_profile)
+    missing_content_literal = source_pinned_280_transport_without_parsed_content(joined_field, render_profile)
     if missing_content_literal is not None:
         _validate_literal_bytes(joined_field, missing_content_literal, missing_content_literal, encoding, False)
-        return _schema_field(
+        return schema_field(
             joined_field,
             data_type="text",
             required=True,
@@ -97,7 +100,7 @@ def _literal_derivation(
         )
     literal, published_content = _literal_source_values(joined_field)
     official_content, note_literal = _resolve_literal_note_content(joined_field, published_content, literal_notes)
-    choice = render_profile.telematic_transport_choice_rule_by_anchor.get(_render_profile_anchor(joined_field))
+    choice = render_profile.telematic_transport_choice_rule_by_anchor.get(render_profile_anchor(joined_field))
     official_literal, blank_source_marker, m341_adjudicated = _select_official_literal(
         joined_field,
         render_profile,
@@ -108,7 +111,7 @@ def _literal_derivation(
     official_literal = _adjudicated_official_literal(joined_field, official_literal, source_defects)
     _validate_literal_bytes(joined_field, literal, official_literal, encoding, blank_source_marker)
     decimals = _literal_numeric_decimals(joined_field, literal, render_profile)
-    return _schema_field(
+    return schema_field(
         joined_field,
         data_type="text",
         required=True,
@@ -137,7 +140,7 @@ def _select_official_literal(
     choice: TelematicTransportChoiceRule | None,
 ) -> tuple[str, bool, bool]:
     """Apply exact source adjudications before falling back to printed content."""
-    m341_adjudicated = _source_pinned_341_pdf_constant(joined_field, render_profile, official_content)
+    m341_adjudicated = source_pinned_341_pdf_constant(joined_field, render_profile, official_content)
     if choice is not None:
         if official_content != choice.expected_source_content or literal != choice.selected_literal:
             raise RegistryValidationError("telematic transport choice no longer matches its exact source and literal")
@@ -158,12 +161,12 @@ def _source_pinned_literal_constant(
 ) -> str | None:
     """Read the first matching reviewed source pin in its established order."""
     for source_reader in (
-        _source_pinned_349_constant,
-        _source_pinned_190_transport_constant,
-        _source_pinned_194_transport_constant,
-        _source_pinned_345_transport_constant,
-        _source_pinned_270_transport_constant,
-        _source_pinned_165_transport_constant,
+        source_pinned_349_constant,
+        source_pinned_190_transport_constant,
+        source_pinned_194_transport_constant,
+        source_pinned_345_transport_constant,
+        source_pinned_270_transport_constant,
+        source_pinned_165_transport_constant,
     ):
         source_literal = source_reader(joined_field, render_profile, official_content)
         if source_literal is not None:
@@ -191,7 +194,7 @@ def _resolve_literal_note_content(
 ) -> tuple[str, str | None]:
     """Replace a note-only pointer only when its exact reviewed reading exists."""
     parser_field = joined_field.parser_field
-    official_content, note_references = _split_official_note_references(" ".join(published_content.split()))
+    official_content, note_references = split_official_note_references(" ".join(published_content.split()))
     note_literal = None
     if not official_content and note_references:
         note_literal = note_literal_for(
@@ -206,28 +209,39 @@ def _resolve_literal_note_content(
     return official_content, note_literal
 
 
+def _leading_literal(folded_content: str) -> str | None:
+    """Read the unambiguous spellings that take precedence over every cell-position rule."""
+    match = OFFICIAL_LITERAL_RE.fullmatch(folded_content)
+    if match is not None:
+        return str(match.group("literal"))
+    if OFFICIAL_CRLF_CONSTANT_RE.fullmatch(folded_content) is not None:
+        return "\r\n"
+    if OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
+        return folded_content
+    for pattern in (OFFICIAL_QUOTED_TOKEN_RE, OFFICIAL_UNQUOTED_LITERAL_RE):
+        matched = pattern.fullmatch(folded_content)
+        if matched is not None:
+            return str(matched.group("literal"))
+    return None
+
+
 def _parse_official_literal(joined_field: JoinedRecordDesignField, official_content: str) -> tuple[str, bool]:
     """Read one unambiguous literal spelling or retain the exact refusal."""
     if official_content == _OFFICIAL_BLANK_LITERAL_CONTENT:
         return "", True
-    folded_content = official_content.translate(_OFFICIAL_QUOTE_FOLD)
-    match = _OFFICIAL_LITERAL_RE.fullmatch(folded_content)
-    if match is not None:
-        return str(match.group("literal")), False
-    if _OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
-        return folded_content, False
-    unquoted = _OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)
-    if unquoted is not None:
-        return str(unquoted.group("literal")), False
+    folded_content = official_content.translate(OFFICIAL_QUOTE_FOLD)
+    leading = _leading_literal(folded_content)
+    if leading is not None:
+        return leading, False
     parser_field = joined_field.parser_field
-    if parser_field.content_in_contenido_column and _OFFICIAL_BARE_CELL_LITERAL_RE.fullmatch(folded_content):
+    if parser_field.content_in_contenido_column and OFFICIAL_BARE_CELL_LITERAL_RE.fullmatch(folded_content):
         return folded_content, False
-    if _OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded_content) is not None:
+    if OFFICIAL_ALTERNATIVE_LITERALS_RE.fullmatch(folded_content) is not None:
         raise RegistryValidationError(
             f"literal field {joined_field.semantic_entry.export_field_id!r} has ambiguous official constant "
             f"content {official_content!r}: it states two alternative constants and not which one applies",
         )
-    labelled = _OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded_content)
+    labelled = OFFICIAL_LABELLED_LITERAL_RE.fullmatch(folded_content)
     if labelled is not None:
         return str(labelled.group("literal")), False
     raise RegistryValidationError(
@@ -286,7 +300,7 @@ def _literal_numeric_decimals(
     render_profile: RenderProfile,
 ) -> int | None:
     """Validate a literal's reviewed numeric scale and return that scale."""
-    numeric_rule = render_profile.literal_numeric_rule_by_anchor.get(_render_profile_anchor(joined_field))
+    numeric_rule = render_profile.literal_numeric_rule_by_anchor.get(render_profile_anchor(joined_field))
     if numeric_rule is None:
         return None
     if numeric_rule.literal != literal:

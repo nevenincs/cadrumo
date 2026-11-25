@@ -1,0 +1,192 @@
+---
+tags:
+  - '#exec'
+  - '#assets-core'
+date: '2026-10-30'
+modified: '2026-11-01'
+body_schema: 'body-v2'
+body_hash: 'sha256:cc4479dcf4689da1e92753ec434c69a18eddcd93f4d34a49afe37ae0a69ca2d8'
+related:
+  - "[[2026-10-30-assets-core-plan]]"
+---
+
+# `assets-core` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/domain/renta/actividad_asset/schedule.py`
+- `S01` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_lifecycle.py`
+- `S01` `verify:` `pytest src/cadrumo/domain/renta/actividad_asset/tests` -> `pass`
+- `S01` `verify:` `pytest src/cadrumo/application/actividad_asset/tests` -> `pass`
+- `S01` `verify:` `ruff check` -> `pass`
+- `S05` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S05` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py`
+- `S05` `M` `src/cadrumo/application/actividad_asset/history.py`
+- `S05` `M` `src/cadrumo/application/actividad_asset/tests/test_history.py`
+- `S05` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S05` `M` `src/cadrumo/application/actividad_asset/operation_dtos.py`
+- `S05` `verify:` `pytest src/cadrumo/domain/renta/actividad_asset/tests` -> `pass`
+- `S05` `verify:` `pytest src/cadrumo/application/actividad_asset/tests` -> `pass`
+- `S05` `verify:` `pytest test_modelo_bindings_actividad_assets.py` -> `pass`
+- `S05` `by:` `vaultspec-standard-executor`
+- `S10` `A` `.vault/adr/2026-10-30-assets-core-disposal-adr.md`
+- `S10` `M` `.vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`
+- `S08` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S08` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S08` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S08` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S08` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S08` `M` `src/cadrumo/application/aggregation/source_diagnostic_reason.py`
+- `S08` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S08` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S08` `M` `src/cadrumo/domain/modelos/calculation_revision_sources.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/actividad_asset.py`
+- `S08` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S08` `verify:` `pytest test_modelo_bindings_actividad_assets.py` -> `pass`
+- `S08` `verify:` `pytest test_modelo_source_mesh_ledger.py` -> `pass`
+- `S08` `verify:` `lint-imports` -> `pass`
+- `S08` `verify:` `just check-import-boundaries` -> `fail`
+- `S08` `by:` `vaultspec-high-executor`
+- `S06` `M` `src/cadrumo/domain/renta/actividad_asset/lifecycle.py`
+- `S06` `A` `src/cadrumo/application/actividad_asset/acquisition_ledger.py`
+- `S06` `A` `src/cadrumo/application/actividad_asset/tests/ledger_support.py`
+- `S06` `M` `src/cadrumo/application/actividad_asset/ports.py`
+- `S06` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S06` `M` `src/cadrumo/application/actividad_asset/operation_dtos.py`
+- `S06` `M` `src/cadrumo/entrypoints/actividad_asset_composition.py`
+- `S06` `M` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S06` `verify:` `pytest src/cadrumo/domain/renta/actividad_asset/tests` -> `pass`
+- `S06` `verify:` `pytest src/cadrumo/application/actividad_asset/tests` -> `pass`
+- `S06` `by:` `vaultspec-standard-executor`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/parameters/0001-declarations.toml`
+- `S04` `M` `dev/registry/tests/test_activity_asset_authority_across_supported_years.py`
+- `S04` `A` `dev/registry/tests/test_amortization_tables_match_the_law.py`
+- `S04` `verify:` `pytest dev/registry/tests/test_amortization_tables_match_the_law.py` -> `pass`
+- `S04` `verify:` `pytest dev/registry/tests/test_activity_asset_authority_across_supported_years.py` -> `pass`
+- `S09` `M` `src/cadrumo/domain/modelos/calculation_revision_sources.py`
+- `S09` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S09` `M` `src/cadrumo/application/aggregation/ledger_membership.py`
+- `S09` `M` `src/cadrumo/application/modelo/_ledger_drift_gate.py`
+- `S09` `M` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S09` `A` `src/cadrumo/application/modelo/activity_asset_claim_consumers.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_ledger_drift_gate_activity_assets.py`
+- `S09` `A` `dev/acceptance/assets/acquisition_seed.py`
+- `S09` `verify:` `pytest test_ledger_drift_gate_activity_assets.py` -> `pass`
+- `S09` `verify:` `pytest dev/acceptance/assets/tests` -> `pass`
+- `S09` `verify:` `lint-imports` -> `pass`
+- `S09` `by:` `vaultspec-standard-executor`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/facts/2025/mapping/0090-2025-modelo-100-first-slice-expense-routing-mapping.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/form_layouts/0001-form-layout.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/form_layouts/0001-form-layout.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2023/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/form_layouts/0001-form-layout.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/revision.toml`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S07` `M` `src/cadrumo/application/aggregation/_shared_issue_reasons.py`
+- `S07` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S07` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S07` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S07` `M` `src/cadrumo/application/aggregation/renta_gasto_ledger.py`
+- `S07` `M` `src/cadrumo/application/aggregation/renta_ledger_models.py`
+- `S07` `M` `src/cadrumo/application/aggregation/tests/test_modelo_bindings_actividad_assets.py`
+- `S07` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S07` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S07` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S07` `M` `src/cadrumo/application/ledger/tests/test_ratios_censo_override.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`
+- `S07` `M` `src/cadrumo/domain/categories/proportionality.py`
+- `S07` `M` `src/cadrumo/domain/categories/proportionality_catalogue.py`
+- `S07` `M` `src/cadrumo/domain/categories/registry.py`
+- `S07` `M` `src/cadrumo/domain/categories/spending_category_catalogue.py`
+- `S07` `M` `src/cadrumo/domain/categories/tests/test_registry.py`
+- `S07` `M` `src/cadrumo/domain/renta/ledger_expenses.py`
+- `S07` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S07` `M` `src/cadrumo/domain/usage_ratios/service.py`
+- `S07` `M` `src/cadrumo/domain/usage_ratios/tests/test_censo_derivation.py`
+- `S07` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/profile/tests/test_usage_ratios_censo_refuse_load.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/tests/test_usage_ratio_resolution.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_ratios_verbs.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/registered_executor_outcome_assertions.py`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `verify:` `dev.registry.conformance integrity` -> `pass`
+- `S07` `verify:` `pytest amortizable category and asset authority tests` -> `pass`
+- `S12` `A` `src/cadrumo/application/actividad_asset/schedule_walk.py`
+- `S12` `A` `src/cadrumo/application/actividad_asset/register_reads.py`
+- `S12` `A` `src/cadrumo/application/actividad_asset/activity_asset_read_models.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/history.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/activity_asset_executors.py`
+- `S12` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
+- `S12` `A` `src/cadrumo/domain/renta/actividad_asset/register_records.py`
+- `S12` `M` `src/cadrumo/domain/renta/actividad_asset/schedule.py`
+- `S12` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S12` `verify:` `just check-types` -> `pass`
+- `S12` `verify:` `just check-import-boundaries` -> `pass`
+- `S12` `verify:` `pytest application/actividad_asset/tests` -> `pass`
+- `S12` `verify:` `pytest test_activity_asset_schedule_authority_resolution.py` -> `pass`
+- `S12` `by:` `vaultspec-high-executor`
+- `S13` `A` `src/cadrumo/application/aggregation/tests/test_activity_asset_official_oracles.py`
+- `S13` `verify:` `pytest test_activity_asset_official_oracles.py` -> `pass`
+- `S13` `verify:` `lint-imports` -> `pass`
+- `S13` `by:` `vaultspec-standard-executor`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/facts/0129-renta-ccaa-tax-residence-catalogue.toml`
+- `S16` `M` `src/cadrumo/domain/contribuyente/tax_residence.py`
+- `S16` `M` `src/cadrumo/application/aggregation/renta_ledger.py`
+- `S16` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S16` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S16` `verify:` `pytest test_foral_residence.py test_register.py test_operations.py` -> `pass`
+- `S16` `verify:` `pytest test_actividad_asset_foral_cli.py` -> `pass`
+- `S16` `by:` `vaultspec-standard-executor`
+- `S15` `M` `dev/locales/tests/test_activity_asset_refusals_are_localized.py`
+- `S15` `M` `src/cadrumo/application/actividad_asset/activity_asset_contracts.py`
+- `S15` `verify:` `pytest dev/locales/tests/test_activity_asset_refusals_are_localized.py` -> `pass`
+- `S15` `by:` `vaultspec-standard-executor`
+- `S11` `A` `src/cadrumo/domain/renta/actividad_asset/disposal.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/lifecycle.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/history.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S11` `A` `src/cadrumo/application/actividad_asset/disposal_calculation.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/registered_operations.py`
+- `S11` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S11` `verify:` `pytest test_disposal_operations.py` -> `pass`
+- `S11` `verify:` `pytest test_modelo_source_mesh_ledger.py -k foral or residence` -> `pass`
+- `S11` `verify:` `pytest test_registered_executor_conformance.py` -> `pass`
+- `S11` `verify:` `lint-imports` -> `pass`
+- `S11` `verify:` `just check-import-boundaries` -> `fail`
+- `S11` `verify:` `just check-types` -> `fail`
+- `S11` `by:` `vaultspec-high-executor`
+- `S14` `M` `.vault/audit/2026-09-21-assets-core-audit.md`
+- `S14` `verify:` `integrated review, two rounds, findings in audit` -> `pass`
+- `S17` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S17` `M` `src/cadrumo/application/actividad_asset/operations.py`
+- `S17` `M` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S17` `M` `src/cadrumo/application/filing/export_xml_value_limits.py`
+- `S17` `verify:` `domain 6985 passed` -> `pass`
+- `S17` `verify:` `tui and ledger tests 1449 passed, 1 failed` -> `fail`
+
+## Notes
+
+- `S05` `operation_dtos.py` field removal lands with the S06 commit because the file shared another agent's edits.
+- `S08` check-import-boundaries failed on another session's uncommitted core storage edits, in test-scoped code; rerun at review.
+- `S08` Filing handoff `project_m130` still reads claims and accrual can run past the useful period; both moved to S12.
+- `S06` Locale keys and three shared test files stayed uncommitted because they hold other sessions' hunks; installed journeys moved to S09; runtime-host and installed acceptance runs not repeated after collection recovered.
+- `S04` 2 failures in `test_activity_asset_schedule_authority_resolution` raise from the history.py basis recheck, outside this Step, reported to the owner
+- `S09` Commit 93b91e4bf2 swept S12 hunks in `modelo_bindings_actividad_assets.py` and `test_modelo_source_mesh_ledger.py.` Step stays open: five resolver-backed tests have not run, blocked on publishing the S07 authority.
+- `S09` Open for review: `stale_filed_revisions` checks the ledger only, not the register; `export_journey` Modelo 130 control totals may need updating; installed journeys not run.
+- `S12` Contract manifest and admitted.rs not updated; coordinated with the desktop session. Wide TUI directory last ran 718 pass, 8 fail before fixes and was not rerun. Table class display labels are absent from the registry.
+- `S13` Not proved: estimacion objetiva totals, leasing limit, RIS art. 4.3.b and c used-asset routes (no field), rebuilding opening history, registered-operation wrappers under a runtime. Manual's baja example of 486 exceeds the 482.01 day maximum; figures follow the ruling.
+- `S16` Commits cb2e94174b and bc9a05e9ac (residence-unresolved reason). The foral CLI test's unreadable case failed once and passed on rerun; cause not established.
+- `S15` Commits c96ed24d34, 7afacfdf69 and 21ed48d88b. MCP has a schema contract test only, no refusal run through the MCP server.
+- `S11` Commits b5977bc267 and bc9a05e9ac. check-import-boundaries: `tool_failure,` loadability unavailable, zero hard findings, while another session edits dev/quality import tooling; rerun at review. check-types: 6 diagnostics outside S11's files.
+- `S11` Modelo 100 gain, loss, baja and excess casillas have no bindings yet, so those rows are blocking `unrouted_observation` notes under the disposal ADR; clave 1626 and agrarian excess remain unestablished.
+- `S14` No independent review after the final fix round.
+- `S17` Open failures: 18 wording tests after 363afdf50f translated dotacion to English; installed runtime not rebuilt, no live journey run.

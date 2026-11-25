@@ -31,21 +31,22 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.invoice_confirmation import InvoiceConfirmationResult
 from cadrumo.core.config import Settings
+from cadrumo.domain.invoices.duplicates import likely_duplicate_invoice
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -53,7 +54,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 # A structured document, so the reading lane is the deterministic Facturae
 # parser: every re-read resolves the same figures, which is what makes a second
 # confirm a statement about the SAME document rather than a different reading.
-_FIXTURE = _EVIDENCE_CORPUS / "facturae_32_recargo_invoice.xml"
+_FIXTURE = EVIDENCE_CORPUS / "facturae_32_recargo_invoice.xml"
 
 
 def _attach_the_document(
@@ -66,8 +67,8 @@ def _attach_the_document(
     """Store the fixture as real evidence and return its evidence id."""
     source = tmp_path / file_name
     source.write_bytes(_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    return svc.add(bucket_id=_BUCKET_ID, source_path=source).record.evidence_id
+    svc = make_svc(isolated_settings, secure_objects)
+    return svc.add(bucket_id=BUCKET_ID, source_path=source).record.evidence_id
 
 
 def _confirm(
@@ -84,12 +85,12 @@ def _confirm(
 ) -> InvoiceConfirmationResult:
     """Confirm the attached document, optionally restating what the operator saw."""
     return confirm_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
         counterparty_name=counterparty_name,
         invoice_number=invoice_number,
         retention_rate=retention_rate,
@@ -343,3 +344,58 @@ def test_public_confirmation_overrides_are_checked_on_reconfirm(
         assert field in str(refusal.value)
 
     assert len(repository.load().invoices) == 1
+
+
+def test_the_writer_reports_the_duplicate_the_read_finds_and_still_confirms(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    invoice_authority: InvoiceAuthorityFixture,
+) -> None:
+    """Another document spelling a stored number otherwise: both owners name the stored one."""
+    repository = InvoiceCatalogueRepository(objects=secure_objects)
+    first_evidence = _attach_the_document(
+        isolated_settings=isolated_settings, secure_objects=secure_objects, tmp_path=tmp_path
+    )
+    first = _confirm(
+        evidence_id=first_evidence,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        invoice_number="PT 0412",
+        authority=invoice_authority,
+    )
+    # A retried confirm is the record itself, never its own duplicate.
+    retried = _confirm(
+        evidence_id=first_evidence,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        invoice_number="PT 0412",
+        authority=invoice_authority,
+    )
+    assert first.likely_duplicate_invoice_id is None
+    assert retried.likely_duplicate_invoice_id is None
+
+    other = tmp_path / "other.xml"
+    other.write_bytes(_FIXTURE.read_bytes() + b"\n")
+    other_evidence = make_svc(isolated_settings, secure_objects).add(bucket_id=BUCKET_ID, source_path=other)
+    invoice = first.invoice
+    read = likely_duplicate_invoice(
+        repository.load().invoices.values(),
+        kind=invoice.kind,
+        invoice_number="pt-0412",
+        counterparty_tax_id=invoice.counterparty_tax_id,
+        invoice_date=invoice.issued_at,
+        grand_total=invoice.grand_total,
+    )
+    second = _confirm(
+        evidence_id=other_evidence.record.evidence_id,
+        isolated_settings=isolated_settings,
+        repository=repository,
+        invoice_number="pt-0412",
+        authority=invoice_authority,
+    )
+
+    assert read is not None
+    assert read.basis == "number"
+    assert second.created is True
+    assert second.likely_duplicate_invoice_id == read.invoice_id == first.invoice.invoice_id

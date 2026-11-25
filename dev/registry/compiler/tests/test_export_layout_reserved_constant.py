@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
+
 from ...conformance.stamp import bundled_registry_root
 from ...pipeline.export_tree_serialization import render_toml_bytes
 from ..loader import load_modelo_directory, load_shared_catalogues
@@ -22,15 +24,16 @@ from ..validate_export_layout_coverage import validate_export_layout_record_cove
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_LAYOUT = Path("revisions") / "2010-y-siguientes" / "export_layouts" / "0001-declarations.toml"
+_REVISION = str(open_ended_revision("360").id)
+_LAYOUT = Path("revisions") / _REVISION / "export_layouts" / "0001-declarations.toml"
 
 
 def _modelo_360_with_constant(tmp_path: Path, *, literal: str) -> Path:
     """Copy the shipped Modelo 360 tree, re-declaring the @1897 constant's value."""
     modelo_dir = tmp_path / "360"
     shutil.copytree(bundled_registry_root() / "modelos" / "360", modelo_dir)
-    revision = load_modelo_directory(modelo_dir).revisions["2010-y-siguientes"]
-    generated = modelo_dir / "revisions" / "2010-y-siguientes" / "export"
+    revision = load_modelo_directory(modelo_dir).revisions[_REVISION]
+    generated = modelo_dir / "revisions" / _REVISION / "export"
     assert generated.resolve().is_relative_to(tmp_path.resolve())
     if generated.exists():
         shutil.rmtree(generated)
@@ -47,7 +50,7 @@ def _modelo_360_with_constant(tmp_path: Path, *, literal: str) -> Path:
     assert len(candidates) == 1
     assert candidates[0]["kind"] == "literal" and candidates[0]["literal"] == "00000"
     candidates[0]["literal"] = literal
-    payload = {"revisions": {"2010-y-siguientes": {"export_layouts": layouts}}}
+    payload = {"revisions": {_REVISION: {"export_layouts": layouts}}}
     layout.write_bytes(render_toml_bytes(layout.name, payload))
     return modelo_dir
 
@@ -59,9 +62,9 @@ def _reserved_write_lines(modelo_dir: Path) -> tuple[str, ...]:
     earlier catalogue phases can refuse first and leave the revision checks
     unreached -- a silence that would prove nothing about this rule.
     """
-    revision = load_modelo_directory(modelo_dir).revisions["2010-y-siguientes"]
+    revision = load_modelo_directory(modelo_dir).revisions[_REVISION]
     failures = validate_export_layout_record_coverage(
-        prefix="modelo 360 revision 2010-y-siguientes",
+        prefix=f"modelo 360 revision {_REVISION}",
         revision=revision,
         source_refs=load_shared_catalogues(bundled_registry_root()).sources,
     )

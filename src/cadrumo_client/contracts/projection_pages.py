@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, JsonValue, model_validator
@@ -14,11 +15,14 @@ from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .access_refusals import AccessDenialCode
+from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 
 # Base64 leaves room for both runtime and worker authority envelopes within
 # the 64 KiB transport frame, while reducing repeated projection work.
 PROJECTION_PAGE_BYTES = 32_768
 PROJECTION_DOCUMENT_MAX_BYTES = 16_777_216
+# A result refused above this size leaves headroom below the document bound for what the page envelope adds.
+PROJECTION_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 class ProjectionPageRequest(BaseModel):
@@ -40,9 +44,9 @@ class ProjectionPage(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     offset: Annotated[int, Field(ge=0, lt=PROJECTION_DOCUMENT_MAX_BYTES)]
-    total_bytes: Annotated[int, Field(ge=2, le=PROJECTION_DOCUMENT_MAX_BYTES)]
+    total_bytes: Annotated[int, Field(ge=MINIMUM_JSON_DOCUMENT_BYTES, le=PROJECTION_DOCUMENT_MAX_BYTES)]
     document_digest: ContentDigest
-    encoded: Annotated[str, Field(min_length=4, max_length=4 * ((PROJECTION_PAGE_BYTES + 2) // 3), repr=False)]
+    encoded: Annotated[str, Field(min_length=1, max_length=4 * ((PROJECTION_PAGE_BYTES + 2) // 3), repr=False)]
 
     def decode(self) -> bytes:
         """Reject malformed or noncanonical base64 and impossible byte ranges."""
@@ -60,10 +64,28 @@ class ProjectionPage(BaseModel):
         return self
 
 
-def project_document_page(document: dict[str, JsonValue], request: ProjectionPageRequest) -> ProjectionPage:
+@dataclass(frozen=True, slots=True)
+class EncodedProjectionDocument:
+    """The canonical bytes and digest every page of one document is sliced from."""
+
+    encoded: bytes
+    digest: str
+
+
+def encode_projection_document(document: dict[str, JsonValue]) -> EncodedProjectionDocument:
+    """Encode one whole document once, so its pages need not encode it again."""
+    try:
+        encoded = canonical_json_bytes(document)
+    except (TypeError, ValueError, RecursionError):
+        # A custom Pydantic serializer can return a non-JSON value even in
+        # JSON mode. Never let it publish a partial page or kill the worker.
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE) from None
+    return EncodedProjectionDocument(encoded=encoded, digest=sha256_hex(encoded))
+
+
+def project_encoded_page(document: EncodedProjectionDocument, request: ProjectionPageRequest) -> ProjectionPage:
     """Slice only while the operation owner retains its normal output guard."""
-    encoded = canonical_json_bytes(document)
-    digest = sha256_hex(encoded)
+    encoded, digest = document.encoded, document.digest
     if (
         len(encoded) > PROJECTION_DOCUMENT_MAX_BYTES
         or request.offset >= len(encoded)

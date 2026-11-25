@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.errors.hierarchy import CadrumoError
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....domain.justificante.errors import PdfModeloImportError
 from ..extracted_casilla import ExtractedCasilla
 
@@ -54,7 +55,7 @@ class TestExtractedCasillaShape:
         assert record.extraction_confidence == 1.0
 
     def test_accepts_every_documented_value_type(self) -> None:
-        for value in (Decimal("0"), 42, "SII", True, date(2025, 1, 1), None):
+        for value in (Decimal("0"), 42, "SII", True, date(filing_year_envelope().horizon, 1, 1), None):
             record = self._build(printed_value=value)
             assert record.printed_value == value
 

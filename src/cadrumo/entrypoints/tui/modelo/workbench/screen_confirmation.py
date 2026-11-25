@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .....application.modelo.work_form_models import (
-    ModeloFormField,
+from .....application.modelo.work_form_field_vocabulary import (
     ModeloFormOrigin,
     address_key,
+)
+from .....application.modelo.work_form_models import (
+    ModeloFormField,
     confirmable,
     section_fields,
 )
@@ -19,10 +21,10 @@ from .casilla_list_models import AddressKey
 from .navigator import section_of
 from .page_items import page_of
 from .screen_constants import (
-    _NONE_TO_CONFIRM_LOCALE_KEYS,
+    NONE_TO_CONFIRM_LOCALE_KEYS,
 )
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
-from .vocabulary import TYPED_EDITABILITIES
+from .vocabulary import states_something
 
 if TYPE_CHECKING:
     from .screen import ModeloWorkbenchScreen
@@ -45,7 +47,7 @@ class WorkbenchConfirmationMixin:
         fields, in_section = self._confirm_scope()
         assumed = tuple(field for field in fields if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM)
         if not assumed:
-            self._notice(tr(_NONE_TO_CONFIRM_LOCALE_KEYS[in_section]))
+            self._notice(tr(NONE_TO_CONFIRM_LOCALE_KEYS[in_section]))
             return
         if not any(confirmable(field) for field in assumed):
             self._open_box(address_key(assumed[0].address))
@@ -126,11 +128,16 @@ class WorkbenchConfirmationMixin:
             return
         refusals = [refusal for field in confirmed if (refusal := self._session.stage_confirmation(field)) is not None]
         self._refresh_after_staging()
-        self._notice(tr(f"tui.modelo.workbench.stage_refused.{refusals[0].value}") if refusals else "")
+        self._notice(tr(f"workspace.modelo.stage_refused.{refusals[0].value}") if refusals else "")
 
     def on_casilla_list_clear_requested(self: ModeloWorkbenchScreen, message: CasillaList.ClearRequested) -> None:
         """Stage removing the value the filer declared on the casilla under the cursor."""
-        self._after_stage(self._session.stage_clear(message.entry.field))
+        field = message.entry.field
+        form = self.form
+        if states_something(field) and form is not None:
+            self._after_stage(self._session.withdraw_stated(form, field))
+            return
+        self._after_stage(self._session.stage_clear(field))
 
     def on_casilla_list_revert_requested(self: ModeloWorkbenchScreen, message: CasillaList.RevertRequested) -> None:
         """Drop the change staged on the casilla under the cursor."""
@@ -158,7 +165,7 @@ class WorkbenchConfirmationMixin:
         if isinstance(choice, GoToCasilla):
             self._go_to(choice.key)
             entry = self.query_one(CasillaList).highlighted
-            if entry is not None and entry.key == choice.key and entry.field.editability in TYPED_EDITABILITIES:
+            if entry is not None and entry.key == choice.key and entry.field.takes_typed_value:
                 self._open_editor(entry)
         elif isinstance(choice, OpenSourceSurface):
             self._open_surface(choice)
@@ -170,6 +177,6 @@ class WorkbenchConfirmationMixin:
             navigate = root.navigate_to
         target = surface_target(choice.surface)
         if navigate is None or target is None:
-            self._notice(tr("tui.modelo.workbench.sources.not_here"))
+            self._notice(tr("workspace.modelo.sources.not_here"))
             return
         self._leave_then(lambda: navigate(target))

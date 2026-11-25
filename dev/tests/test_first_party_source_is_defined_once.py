@@ -48,7 +48,6 @@ import pathspec
 import pytest
 
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import (
     DEPENDENCY_DECLARATION_ROOTS,
     DEVELOPMENT_TOOLING,
@@ -57,6 +56,7 @@ from dev.first_party_source import (
     SOURCE_PACKAGES,
     is_production_source,
 )
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.suite import GATES
 from dev.source_tree import repository_files
 
@@ -138,38 +138,55 @@ def _restatements(tree: ast.Module) -> Iterator[tuple[int, str, str]]:
     parents = {id(child): parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     for node in ast.walk(tree):
         parent = parents.get(id(node))
-        value = _string(node)
-        if (
-            isinstance(node, ast.Constant)
-            and value in _ROOT_SPELLINGS - _TOOL_ROOTS
-            and id(node) not in docstrings
-            and not isinstance(parent, ast.JoinedStr)
-        ):
-            yield node.lineno, "root literal", repr(value)
+        if isinstance(node, ast.Constant):
+            yield from _literal_restatements(node, parent, docstrings)
         if isinstance(node, ast.Tuple | ast.List | ast.Set):
-            named = {_string(element) for element in node.elts} & _ROOT_SPELLINGS
-            if len(named) >= 2:
-                yield node.lineno, "root collection", ast.unparse(node)
-        is_chain_head = not (isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div) and parent.left is node)
-        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div) and is_chain_head and _ends_at_a_root(node):
-            yield node.lineno, "root path chain", ast.unparse(node)
+            yield from _collection_restatements(node)
+        if isinstance(node, ast.BinOp):
+            yield from _chain_restatements(node, parent)
         if isinstance(node, ast.Compare):
-            operands = [node.left, *node.comparators]
-            if _string(node.left) in _MEMBERSHIP_SPELLINGS and any(
-                isinstance(op, ast.In | ast.NotIn) for op in node.ops
-            ):
-                yield node.lineno, "test-surface membership", ast.unparse(node)
-            elif any(isinstance(op, ast.Eq | ast.NotEq) for op in node.ops) and any(
-                _string(operand) in _SEGMENT_SPELLINGS for operand in operands
-            ):
-                yield node.lineno, "test-surface equality", ast.unparse(node)
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "startswith"
-            and any(_string(constant) == _SUPPORT_PREFIX for argument in node.args for constant in ast.walk(argument))
-        ):
-            yield node.lineno, "test-support prefix", ast.unparse(node)
+            yield from _comparison_restatements(node)
+        if isinstance(node, ast.Call):
+            yield from _prefix_restatements(node)
+
+
+def _literal_restatements(
+    node: ast.Constant, parent: ast.AST | None, docstrings: frozenset[int]
+) -> Iterator[tuple[int, str, str]]:
+    value = _string(node)
+    if value in _ROOT_SPELLINGS - _TOOL_ROOTS and id(node) not in docstrings and not isinstance(parent, ast.JoinedStr):
+        yield node.lineno, "root literal", repr(value)
+
+
+def _collection_restatements(node: ast.Tuple | ast.List | ast.Set) -> Iterator[tuple[int, str, str]]:
+    named = {_string(element) for element in node.elts} & _ROOT_SPELLINGS
+    if len(named) >= 2:
+        yield node.lineno, "root collection", ast.unparse(node)
+
+
+def _chain_restatements(node: ast.BinOp, parent: ast.AST | None) -> Iterator[tuple[int, str, str]]:
+    is_chain_head = not (isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div) and parent.left is node)
+    if isinstance(node.op, ast.Div) and is_chain_head and _ends_at_a_root(node):
+        yield node.lineno, "root path chain", ast.unparse(node)
+
+
+def _comparison_restatements(node: ast.Compare) -> Iterator[tuple[int, str, str]]:
+    operands = [node.left, *node.comparators]
+    if _string(node.left) in _MEMBERSHIP_SPELLINGS and any(isinstance(op, ast.In | ast.NotIn) for op in node.ops):
+        yield node.lineno, "test-surface membership", ast.unparse(node)
+    elif any(isinstance(op, ast.Eq | ast.NotEq) for op in node.ops) and any(
+        _string(operand) in _SEGMENT_SPELLINGS for operand in operands
+    ):
+        yield node.lineno, "test-surface equality", ast.unparse(node)
+
+
+def _prefix_restatements(node: ast.Call) -> Iterator[tuple[int, str, str]]:
+    if (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr == "startswith"
+        and any(_string(constant) == _SUPPORT_PREFIX for argument in node.args for constant in ast.walk(argument))
+    ):
+        yield node.lineno, "test-support prefix", ast.unparse(node)
 
 
 def _imports_authority(tree: ast.Module, module: str) -> bool:

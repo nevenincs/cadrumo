@@ -9,7 +9,7 @@ forward guidance from ONE resolved projection, never from two independently
 derived strings.
 
 The executable text line is produced by the production envelope helper
-:func:`..common._action_text_lines` from the very notices the JSON envelope
+:func:`..common.action_text_lines` from the very notices the JSON envelope
 carries, so these tests drive that helper rather than reimplementing argv
 rendering; a second renderer here would defeat what they exist to prove.
 """
@@ -21,21 +21,24 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.contribuyente.entity_type import EntityType
-from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, ModeloEnrollment
 
 from ....application.overview.calendar import build_overview_calendar
+from ....application.overview.calendar_envelope import OverviewCalendarSupport
 from ....application.overview.calendar_models import OverviewCalendarRange, OverviewStatusReport
 from ....application.overview.coverage import AdvisedObligation, CoverageAdviceReason, ObligationCoverageReport
 from ....application.overview.next_actions import OverviewStatusNextStepId
+from ....core.i18n.render import lookup_translation
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.deadlines.models import TaxpayerProfile
-from .._overview_rendering import (
+from ..common import action_text_lines
+from ..overview_rendering import (
     overview_calendar_output,
     overview_coverage_notices,
     overview_status_output,
 )
-from ..common import _action_text_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -116,7 +119,7 @@ def test_status_text_and_envelope_notices_share_one_action_projection(report: Ov
     """
     lines, notices = overview_status_output(report)
 
-    executable_lines = _action_text_lines(notices)
+    executable_lines = action_text_lines(notices)
     actionable = [notice for notice in notices if isinstance(notice.action, ResolvedNoticeAction)]
     assert len(executable_lines) == len(actionable)
 
@@ -346,21 +349,27 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
     """A régimen simplificado calendar-gap warning must render operator text, not a raw locale key."""
 
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     with bundled_indexed_authority().operation() as operation:
         calendar = build_overview_calendar(profile, rng, operation=operation, today=date(2026, 4, 1))
 
-    _, lines, notices = overview_calendar_output(calendar, rng, evidence_notices=())
+    _, lines, notices = overview_calendar_output(
+        calendar, rng, support=OverviewCalendarSupport.for_range(rng, filing_year_envelope()), evidence_notices=()
+    )
 
     warning_line = next(line for line in lines if line.startswith("warning\tiva.regime.m303_simplificado"))
     assert "cli.overview.warning" not in warning_line
-    assert "forfait calculation engine is not yet available" in warning_line
+    # The line carries the catalogue's own sentence for this warning, in the language the run reads in.
+    expected_sentence = lookup_translation("cli.overview.warning.m303_simplificado_forfait_unavailable", locale="en")
+    assert expected_sentence is not None
+    assert expected_sentence in warning_line
 
     # The same warning reaches the envelope carrying the remedy as an action,
     # and its text line states the explanation only - one projection, two views.

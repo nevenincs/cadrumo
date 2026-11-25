@@ -1,5 +1,5 @@
-@step Record when the activity started so the quarter is a valid obligation.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Record when the activity started and that the taxpayer trades within the EU, so the quarter is a valid obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01 --does-intracomunitario
 @step Open a Modelo 349 draft for the first quarter before any intra-community invoice is recorded.
 aeat app modelo work create --modelo 349 --year 2026 --period 1T
 @step Calculate the draft; with no intra-community invoice there is no operator record.

@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.applicability import taxpayer_model_required_facts
+from ...domain.calculations.registry.applicability_models import TaxpayerModelFact
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.governed_fact_scope import (
     governed_facts_in_scope,
     validating_governed_facts,
@@ -16,12 +20,18 @@ from ...domain.calculations.registry.renta_codes_catalogue import (
     fiscal_residency_requires_country,
     resolve_fiscal_residency_catalogue,
 )
+from ...domain.calculations.registry.situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
 from ...domain.contribuyente.entity_type import (
     entity_type_legal_entity_token,
     entity_type_natural_person_token,
 )
-from ...domain.deadlines.models import irnr_representante_fiscal_required
-from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
+from ...domain.contribuyente.renta_codes import RentaDeclaracionType
+from ...domain.deadlines.models import irnr_representante_fiscal_required_on_every_date
+from ...domain.deadlines.profiles import (
+    filing_cadence_profile_required_paths,
+    modelo_iva_profile_required_paths,
+    modelo_iva_unanswered_paths,
+)
 
 if TYPE_CHECKING:
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
@@ -30,35 +40,45 @@ FISCAL_RESIDENCY_PATH = "taxpayer_type.fiscal_residency"
 COUNTRY_OF_FISCAL_RESIDENCE_PATH = "taxpayer_type.country_of_fiscal_residence"
 REPRESENTANTE_FISCAL_NIF_PATH = "taxpayer_type.representante_fiscal_nif"
 REPRESENTANTE_FISCAL_NOMBRE_PATH = "taxpayer_type.representante_fiscal_nombre"
-ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 LEGAL_ENTITY_FORM_PATH = "taxpayer_type.legal_entity_form"
 LEGAL_NAME_PATH = "identity.legal_name"
-IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
 AUTH_PROVIDER_PATH = "auth.provider"
 CLAVE_MOVIL_ROUTE_PATH = "auth.clave_movil_route"
+DECLARATION_TYPE_PATH = "renta_filing.declaration_type"
+SITUACION_FAMILIAR_PATH = "renta_family.situacion_familiar"
+SPOUSE_TAX_ID_PATH = "renta_spouse.tax_id"
 
 ATRIBUCION_SOCIOS_SECTION = "attribution_entity_socios"
 PARTICIPE_CLAVE_FIELD = "participe_clave"
 SOCIO_COUNTRY_FIELD = "country_of_residence"
-#: The one clave whose Modelo 184 record carries a country at positions 79-80.
-#:
-#: The other two claves -- residente, and no residente CON establecimiento
-#: permanente -- require BLANCOS there, so the country is not merely optional
-#: for them: the layout prohibits it. Both directions are enforced, because a
-#: rule that only asks for the value when it is due leaves the prohibited case
-#: to whatever the operator typed.
-PARTICIPE_CLAVE_BEARING_COUNTRY = "2"
+
+
+def participe_clave_bearing_country() -> str:
+    """Return the one clave whose Modelo 184 record carries a country.
+
+    The other two claves -- residente, and no residente CON establecimiento
+    permanente -- require BLANCOS there, so the country is not merely optional
+    for them: the layout prohibits it. Both directions are enforced, because a
+    rule that only asks for the value when it is due leaves the prohibited case
+    to whatever the operator typed.
+    """
+    return resolve_form_codes("modelo-184-member-form-codes").code("participe.country_bearing")
 
 
 @contextmanager
-def _pinned_registry_scope() -> Generator[None]:
+def pinned_registry_scope() -> Generator[None]:
     """Pin the published generation these rules read their vocabularies from.
 
     Entity type, legal form, IRPF income category and fiscal residency are
     governed facts, and their resolvers refuse outside a generation-pinned
     scope rather than reading a mutable default. A caller already holding one
     keeps it, so a whole fact set is judged against a single generation.
+
+    Public because the completeness rules are not the only reader of governed
+    profile facts a readiness surface joins them with: the modelo-work baseline
+    reads the entity type and the income categories through the same resolvers,
+    and must be judged against the same generation in the same walk.
     """
     if governed_facts_in_scope() is not None:
         yield
@@ -82,16 +102,23 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     the two authorities came apart: the resolver hard-required six facts that
     no readiness surface asked for, so ``config profile status`` reported a
     profile ready and pointed the operator at a command that refused it.
+
+    The taxpayer model's facts are owed the same way, from the same owner as
+    the calendar and modelo applicability read them: a profile could be
+    declared ready while the calendar still could not place one obligation.
     """
-    with _pinned_registry_scope():
+    with pinned_registry_scope():
         return _conditional_profile_required_paths(values)
 
 
 def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
     """Derive the conditional requirements inside a pinned registry scope."""
-    required: list[str] = list(modelo_iva_profile_required_paths(values))
+    entity_type = _token(values.get(TaxpayerModelFact.ENTITY_TYPE.value)).lower() or None
+    required: list[str] = [fact.value for fact in taxpayer_model_required_facts(entity_type)]
+    required.extend(modelo_iva_profile_required_paths(values))
+    required.extend(filing_cadence_profile_required_paths(values))
 
-    if _token(values.get(ENTITY_TYPE_PATH)).lower() == entity_type_legal_entity_token().value:
+    if _token(values.get(TaxpayerModelFact.ENTITY_TYPE.value)).lower() == entity_type_legal_entity_token().value:
         # A legal entity without a declared form has no selector for its
         # corporate tax rate schedule; the schema's `required` axis is
         # unconditional so the conditional requirement lives here.
@@ -104,6 +131,9 @@ def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[s
         # enforced that exclusivity, which is what made the fallback wrong
         # rather than merely redundant.
         required.append(LEGAL_NAME_PATH)
+
+    if _joint_return_of_married_unit(values):
+        required.append(SPOUSE_TAX_ID_PATH)
 
     residency = _token(values.get(FISCAL_RESIDENCY_PATH))
     # An undeclared token is refused by value validation; it cannot say whether
@@ -118,14 +148,48 @@ def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[s
         return (*required, COUNTRY_OF_FISCAL_RESIDENCE_PATH)
 
     required.append(COUNTRY_OF_FISCAL_RESIDENCE_PATH)
-    if irnr_representante_fiscal_required(country):
+    # Readiness holds no filing date. A country outside the EU/EEA on every date
+    # owes the representative now; one whose membership differs between editions
+    # is decided by verification, which holds the period of the filing.
+    if irnr_representante_fiscal_required_on_every_date(country) is True:
         required.extend((REPRESENTANTE_FISCAL_NIF_PATH, REPRESENTANTE_FISCAL_NOMBRE_PATH))
     return tuple(required)
+
+
+def _joint_return_of_married_unit(values: Mapping[str, object]) -> bool:
+    """Whether a joint return may be the married unit's, which declares the spouse.
+
+    Art. 82.1 LIRPF knows two units: spouses not legally separated, and a single
+    parent with the children. Only the first has a spouse to identify. A
+    situation that is unstated or undeclared could still be the married unit, so
+    it keeps the requirement; only a declared single-parent situation drops it.
+    """
+    joint_code = RentaDeclaracionType.form_codes()[RentaDeclaracionType.JOINT]
+    if _token(values.get(DECLARATION_TYPE_PATH)) != joint_code:
+        return False
+    situacion = _token(values.get(SITUACION_FAMILIAR_PATH))
+    catalogue = resolve_situacion_familiar_catalogue()
+    if situacion not in {str(token) for token in catalogue.all_situaciones}:
+        return True
+    return not catalogue.definition(situacion).monoparental_required
 
 
 def conditional_profile_missing_required(values: Mapping[str, object]) -> tuple[str, ...]:
     """Return conditionally required profile paths absent from ``values``."""
     return tuple(path for path in conditional_profile_required_paths(values) if not _has_value(values, path))
+
+
+def modelo_iva_block_missing_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the Modelo IVA block paths a claimed block owes and ``values`` leaves unanswered.
+
+    These are the facts the taxpayer projection refuses to build without: an
+    unanswered yes/no enrolment is neither yes nor no, so the projection cannot
+    stand in for it. A surface that projects the taxpayer asks for them first,
+    as a readiness gap the operator can answer, instead of failing inside the
+    projection.
+    """
+    with pinned_registry_scope():
+        return modelo_iva_unanswered_paths(values)
 
 
 def _socio_row_indices(values: Mapping[str, object]) -> tuple[str, ...]:
@@ -151,7 +215,7 @@ def atribucion_socio_missing_country_paths(values: Mapping[str, object]) -> tupl
     missing: list[str] = []
     for index in _socio_row_indices(values):
         clave = _token(values.get(f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{PARTICIPE_CLAVE_FIELD}"))
-        if clave != PARTICIPE_CLAVE_BEARING_COUNTRY:
+        if clave != participe_clave_bearing_country():
             continue
         path = f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{SOCIO_COUNTRY_FIELD}"
         if not _has_value(values, path):
@@ -174,7 +238,7 @@ def atribucion_socio_forbidden_country_paths(values: Mapping[str, object]) -> tu
     forbidden: list[str] = []
     for index in _socio_row_indices(values):
         clave = _token(values.get(f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{PARTICIPE_CLAVE_FIELD}"))
-        if not clave or clave == PARTICIPE_CLAVE_BEARING_COUNTRY:
+        if not clave or clave == participe_clave_bearing_country():
             continue
         path = f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{SOCIO_COUNTRY_FIELD}"
         if _has_value(values, path):
@@ -191,14 +255,29 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     pure-landlord profile must not be forced into ``GENERAL`` just to pass
     profile persistence.
     """
-    with _pinned_registry_scope():
-        entity_type = _token(values.get(ENTITY_TYPE_PATH))
+    with pinned_registry_scope():
+        entity_type = _token(values.get(TaxpayerModelFact.ENTITY_TYPE.value))
         if entity_type != entity_type_natural_person_token().value:
             return True
         categories = {
-            token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()
+            token.strip()
+            for token in _token(values.get(TaxpayerModelFact.IRPF_INCOME_CATEGORIES.value)).split(",")
+            if token.strip()
         }
         return irpf_income_category_actividad_economica_token().value in categories
+
+
+def schema_requirement_applies(path: str, values: Mapping[str, object]) -> bool:
+    """Return whether a field the schema marks required is owed by this profile.
+
+    The schema grammar has one unconditional ``required`` axis, and the IVA
+    regime is the schema-required field whose obligation is conditional: a
+    natural person without economic activity has no regime to declare. Every
+    surface that reads the schema's requirement reads it through here, so the
+    overview a frontend renders, the setup promotion and the modelo readiness
+    gate cannot disagree about whether that blank is missing.
+    """
+    return path != IVA_REGIME_PATH or iva_regime_required(values)
 
 
 def profile_value_is_present(value: object) -> bool:
@@ -229,6 +308,8 @@ def missing_required_field_paths(
 
     Presence is value-bearing, never fact-bearing, and is decided by the one
     shared :func:`profile_value_is_present` rule rather than restated here.
+    A required field this profile does not owe is never missing, by
+    :func:`schema_requirement_applies`.
     """
     present = {path for path, value in values.items() if profile_value_is_present(value)}
     missing: list[str] = []
@@ -236,8 +317,42 @@ def missing_required_field_paths(
         required = tuple(field.key for field in section.fields if field.required)
         if not required:
             continue
-        missing.extend(_missing_in_section(section, required=required, present=present))
+        missing.extend(
+            path
+            for path in _missing_in_section(section, required=required, present=present)
+            if schema_requirement_applies(path, values)
+        )
     return tuple(missing)
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCompletenessGaps:
+    """The paths a profile still owes before setup can be complete, by the rule that owes them."""
+
+    schema_required: tuple[str, ...]
+    """Schema-required paths left unanswered, row-aware."""
+    conditional: tuple[str, ...]
+    """Conditionally required paths left unanswered that the schema did not already name."""
+
+    @property
+    def paths(self) -> tuple[str, ...]:
+        """Every owed path, schema-required first."""
+        return (*self.schema_required, *self.conditional)
+
+
+def profile_completeness_gaps(
+    schema: ProfileSchemaDefinition,
+    values: Mapping[str, str],
+) -> ProfileCompletenessGaps:
+    """Report every path a value mapping leaves unanswered before setup can be complete.
+
+    This is the one answer to "what does completing setup still need": a
+    surface that read only the schema half reported a profile owing only a
+    conditional fact as missing nothing.
+    """
+    schema_required = missing_required_field_paths(schema, values)
+    conditional = tuple(path for path in conditional_profile_missing_required(values) if path not in schema_required)
+    return ProfileCompletenessGaps(schema_required=schema_required, conditional=conditional)
 
 
 def _missing_in_section(
@@ -327,19 +442,21 @@ __all__ = [
     "AUTH_PROVIDER_PATH",
     "CLAVE_MOVIL_ROUTE_PATH",
     "COUNTRY_OF_FISCAL_RESIDENCE_PATH",
-    "ENTITY_TYPE_PATH",
     "FISCAL_RESIDENCY_PATH",
-    "IRPF_INCOME_CATEGORIES_PATH",
     "IVA_REGIME_PATH",
-    "PARTICIPE_CLAVE_BEARING_COUNTRY",
     "REPRESENTANTE_FISCAL_NIF_PATH",
     "REPRESENTANTE_FISCAL_NOMBRE_PATH",
+    "ProfileCompletenessGaps",
     "atribucion_socio_forbidden_country_paths",
     "atribucion_socio_missing_country_paths",
     "conditional_profile_missing_required",
     "conditional_profile_required_paths",
     "iva_regime_required",
     "missing_required_field_paths",
+    "modelo_iva_block_missing_paths",
+    "pinned_registry_scope",
+    "profile_completeness_gaps",
     "profile_section_rows",
     "profile_value_is_present",
+    "schema_requirement_applies",
 ]

@@ -11,26 +11,21 @@ import re
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
-from pathlib import Path
 
 import rtoml
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.resources.bundled_data import bundled_path
 
-from ..compiler.loader import load_catalogue_file, load_modelo_directory
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
-    load_record_design_intermediate,
 )
 from ..pipeline.semantic_map import (
     SemanticMap,
     SemanticMapEntry,
-    load_semantic_map,
     semantic_anchor_key,
 )
-from .m200_record_design_support import record_design_field_index, record_design_source
+from .m200_record_design_support import record_design_field_index
 
 __all__ = [
     "M200CasillaCandidate",
@@ -104,7 +99,7 @@ def classify_m200_casilla_candidates(
         field = target_fields[key]
         sibling_field = sibling_fields.get(key)
         sibling_entry = sibling_entries.get(key)
-        disposition, reason, proposed_id, proposed_kind = _classify_sibling(
+        disposition, reason, proposed_id, proposed_kind = classify_sibling(
             field,
             sibling_field,
             sibling_entry,
@@ -152,48 +147,7 @@ def render_m200_casilla_candidates_toml(candidates: tuple[M200CasillaCandidate, 
     return rtoml.dumps({"schema_version": 1, "candidate": rows}, pretty=True)
 
 
-def _load_bundled_candidates() -> tuple[M200CasillaCandidate, ...]:
-    source_root = bundled_path()
-    registry_root = bundled_path("registry", "aeat")
-    modelo = load_modelo_directory(registry_root / "modelos" / "200")
-    catalogues = load_catalogue_file(registry_root / "legal" / "is.toml")
-    target = modelo.revisions["2024"]
-    sibling = modelo.revisions["2025-y-siguientes"]
-    target_source = record_design_source(target.source_refs, catalogues.sources)
-    sibling_source = record_design_source(sibling.source_refs, catalogues.sources)
-    target_epoch = catalogues.sources[target_source].record_design_epoch
-    sibling_epoch = catalogues.sources[sibling_source].record_design_epoch
-    if target_epoch is None or sibling_epoch is None:
-        raise ValueError("M200 record-design sources must declare epochs")
-    target_design = load_record_design_intermediate(
-        source_root,
-        catalogues.sources,
-        source_ref=target_source,
-        filing_year=target.valid_from.year,
-        design_epoch=target_epoch,
-    )
-    sibling_design = load_record_design_intermediate(
-        source_root,
-        catalogues.sources,
-        source_ref=sibling_source,
-        filing_year=sibling.valid_from.year,
-        design_epoch=sibling_epoch,
-    )
-    ids_by_number: dict[str, list[CasillaId]] = {}
-    for declaration in target.casillas:
-        ids_by_number.setdefault(declaration.number, []).append(declaration.id)
-    return classify_m200_casilla_candidates(
-        load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / target_epoch),
-        target_design,
-        target_casilla_ids=frozenset(declaration.id for declaration in target.casillas),
-        sibling_map=load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / sibling_epoch),
-        sibling_design=sibling_design,
-        sibling_casilla_ids=frozenset(declaration.id for declaration in sibling.casillas),
-        target_ids_by_number={number: tuple(ids) for number, ids in ids_by_number.items()},
-    )
-
-
-def _classify_sibling(
+def classify_sibling(
     target_field: RecordDesignIntermediateField,
     sibling_field: RecordDesignIntermediateField | None,
     sibling_entry: SemanticMapEntry | None,
@@ -201,6 +155,7 @@ def _classify_sibling(
     authored_token: CasillaId,
     target_ids_by_number: Mapping[str, tuple[CasillaId, ...]],
 ) -> tuple[M200CasillaDisposition, str, str | None, str | None]:
+    """Classify a sibling record design field relative to a target for casilla candidates."""
     printed_number = _printed_number(target_field)
     if printed_number is None or printed_number.lstrip("0") != authored_token.lstrip("0"):
         return (

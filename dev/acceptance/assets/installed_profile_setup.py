@@ -117,7 +117,7 @@ def _public_response_metadata(stdout: bytes, stderr: bytes) -> tuple[str | None,
     return response_status, error_code, setup_state, configured
 
 
-def _run_command(
+def run_command(
     *,
     command: ProfileSetupCommandId,
     executable: Path,
@@ -213,6 +213,54 @@ def _prepare_profile_setup_storage(aeat_executable: Path, storage_root: Path) ->
     storage_root.mkdir(parents=True, exist_ok=True)
 
 
+def _profile_create_arguments(profile_label: str) -> tuple[str, ...]:
+    return (
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "create",
+        profile_label,
+        "--quiet",
+        "--secrets-stdin",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "12345678Z",
+        "--name",
+        "Assets",
+        "--surnames",
+        "Acceptance",
+        "--fiscal-residency",
+        "resident_irpf",
+        "--tax-residence-jurisdiction-scope",
+        "common_regime",
+        "--tax-residence-ccaa",
+        "madrid",
+        "--irpf-income-categories",
+        "actividad_economica",
+        "--activity",
+        "consultoria",
+        "--irpf-estimation-regime",
+        "directa_normal",
+        "--iva-regime",
+        "GENERAL",
+        "--iva-m303-regime-composition",
+        "general",
+        "--no-iva-redeme-enrolled",
+        "--no-iva-cash-accounting-regime-enrolled",
+        "--no-iva-voluntary-sii-enrolled",
+        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        "--no-iva-roi-enrolled",
+        "--no-iva-oss-enrolled",
+        "--no-iva-sii-enrolled",
+        "--no-iva-group-member-enrolled",
+        "--no-iva-group-dominant-entity-enrolled",
+        "--no-iva-intracommunity-operations-exceed-50000-eur",
+        "--no-enrollment-large-company",
+    )
+
+
 def run_installed_cli_profile_setup(
     *,
     aeat_executable: Path,
@@ -232,47 +280,10 @@ def run_installed_cli_profile_setup(
     ).encode("utf-8")
     profile_secrets = json.dumps({"profile_passphrase": passphrase}, separators=(",", ":")).encode("utf-8")
 
-    create = _run_command(
+    create = run_command(
         command="profile_create",
         executable=aeat_executable,
-        argv=(
-            "--format",
-            "json",
-            "config",
-            "profile",
-            "create",
-            profile_label,
-            "--quiet",
-            "--secrets-stdin",
-            "--entity-type",
-            "natural_person",
-            "--tax-id",
-            "12345678Z",
-            "--name",
-            "Assets",
-            "--surnames",
-            "Acceptance",
-            "--fiscal-residency",
-            "resident_irpf",
-            "--tax-residence-jurisdiction-scope",
-            "common_regime",
-            "--tax-residence-ccaa",
-            "madrid",
-            "--irpf-income-categories",
-            "actividad_economica",
-            "--activity",
-            "consultoria",
-            "--irpf-estimation-regime",
-            "directa_normal",
-            "--iva-regime",
-            "GENERAL",
-            "--iva-m303-regime-composition",
-            "general",
-            "--no-iva-redeme-enrolled",
-            "--no-iva-cash-accounting-regime-enrolled",
-            "--no-iva-voluntary-sii-enrolled",
-            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        ),
+        argv=_profile_create_arguments(profile_label),
         stdin_payload=creation_secrets,
         workspace_root=workspace_root,
         storage_root=storage_root,
@@ -284,7 +295,7 @@ def run_installed_cli_profile_setup(
         _write_receipt(path=receipt_path, receipt=receipt)
         raise InstalledCliProfileSetupError(receipt=receipt)
 
-    login = _run_command(
+    login = run_command(
         command="profile_login",
         executable=aeat_executable,
         argv=("--format", "json", "config", "login", profile_label, "--secrets-stdin"),
@@ -299,7 +310,7 @@ def run_installed_cli_profile_setup(
         _write_receipt(path=receipt_path, receipt=receipt)
         raise InstalledCliProfileSetupError(receipt=receipt)
 
-    complete_setup = _run_command(
+    complete_setup = run_command(
         command="profile_complete_setup",
         executable=aeat_executable,
         argv=(
@@ -329,7 +340,7 @@ def run_installed_cli_profile_setup(
         _write_receipt(path=receipt_path, receipt=receipt)
         raise InstalledCliProfileSetupError(receipt=receipt)
 
-    status = _run_command(
+    status = run_command(
         command="profile_status",
         executable=aeat_executable,
         argv=("--format", "json", "--profile-secrets-stdin", "config", "profile", "status"),

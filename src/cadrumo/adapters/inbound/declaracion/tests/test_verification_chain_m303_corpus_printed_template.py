@@ -13,12 +13,12 @@ from __future__ import annotations
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._verification_chain_support import (
-    _M303_2023_ONWARDS_PARAMS,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-    _assert_m303_printed_resultado_regimen_general_arithmetic,
-    _extracted_m303_decimal,
-    _parse_extracted_declaracion_values,
+from .verification_chain_support import (
+    M303_2023_ONWARDS_PARAMS,
+    M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+    assert_m303_printed_resultado_regimen_general_arithmetic,
+    extracted_m303_decimal,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -32,7 +32,7 @@ _M303_SYNTHETIC_CLOSURE_CASES: tuple[tuple[CasillaId, str, CasillaId, str, str],
     (
         _M303_SUMA_RESULTADOS_CASILLA,
         "box 64 (suma de resultados)",
-        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+        M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
         "box 46 (resultado regimen general)",
         "Orden HAC/819/2024 art. 1 §4: box 64 = box 46 + box 58 + box 76; c58=0 and c76=0",
     ),
@@ -62,7 +62,7 @@ _M303_SYNTHETIC_CLOSURE_CASES: tuple[tuple[CasillaId, str, CasillaId, str, str],
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
-    _M303_2023_ONWARDS_PARAMS,
+    M303_2023_ONWARDS_PARAMS,
 )
 def test_verification_chain_m303_printed_resultado_regimen_general_arithmetic(
     pdf_stem: str,
@@ -86,20 +86,20 @@ def test_verification_chain_m303_printed_resultado_regimen_general_arithmetic(
     computed casillas as inputs. Engine coverage of those summation formulas is
     exercised on the calculate path instead.
     """
-    extracted = _parse_extracted_declaracion_values(
+    extracted = parse_extracted_declaracion_values(
         modelo="303",
         fixture_stem=pdf_stem,
         year=year,
         period=period,
     )
 
-    _assert_m303_printed_resultado_regimen_general_arithmetic(
+    assert_m303_printed_resultado_regimen_general_arithmetic(
         pdf_stem=pdf_stem,
         extracted=extracted,
     )
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_ONWARDS_PARAMS)
+@pytest.mark.parametrize("pdf_stem,year,period", M303_2023_ONWARDS_PARAMS)
 def test_verification_chain_m303_printed_closure_box_arithmetic(
     pdf_stem: str,
     year: int,
@@ -120,7 +120,7 @@ def test_verification_chain_m303_printed_closure_box_arithmetic(
     not a general claim about M303. The general closure formulas are the
     engine's, and they are exercised on the calculate path.
     """
-    extracted = _parse_extracted_declaracion_values(
+    extracted = parse_extracted_declaracion_values(
         modelo="303",
         fixture_stem=pdf_stem,
         year=year,
@@ -128,13 +128,13 @@ def test_verification_chain_m303_printed_closure_box_arithmetic(
     )
 
     for target_casilla, target_label, base_casilla, base_label, formula_context in _M303_SYNTHETIC_CLOSURE_CASES:
-        target_value = _extracted_m303_decimal(
+        target_value = extracted_m303_decimal(
             pdf_stem=pdf_stem,
             extracted=extracted,
             casilla_id=target_casilla,
             label=target_label,
         )
-        base_value = _extracted_m303_decimal(
+        base_value = extracted_m303_decimal(
             pdf_stem=pdf_stem,
             extracted=extracted,
             casilla_id=base_casilla,

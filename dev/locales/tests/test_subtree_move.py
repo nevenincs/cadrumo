@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .._subtree_move import LocaleMoveConflict
 from ..errors import LocaleError
 from ..locale_nodes import LocaleNode
-from ..locale_tree import _flatten_leaf_values
+from ..locale_tree import flatten_leaf_values
 from ..manager import LocaleManager
+from ..subtree_move import LocaleMoveConflict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -59,7 +59,7 @@ def _write_catalogue(locales_dir: Path, locale: str, leaves: dict[str, LocaleNod
 
 def _read_leaves(manager: LocaleManager, locales_dir: Path, locale: str) -> dict[str, str | None]:
     """Return one locale catalogue's flattened leaves, read back from disk."""
-    return _flatten_leaf_values(manager.load_locale(locales_dir / locale))
+    return flatten_leaf_values(manager.load_locale(locales_dir / locale))
 
 
 def _digests(locales_dir: Path) -> dict[Path, str]:

@@ -21,7 +21,7 @@ def test_lane_transport_accepts_caller_owned_names_and_continues(
         status = 7 if name == "test-registry" else 0
         return LaneResult(name, status, 1)
 
-    monkeypatch.setattr(lane_runner, "_run_lane", fake_run_lane)
+    monkeypatch.setattr(lane_runner, "run_lane", fake_run_lane)
 
     status = lane_runner.run_lanes(("test-unit", "test-registry"), repository=tmp_path)
 
@@ -59,7 +59,7 @@ def test_preflight_prefix_runs_completely_then_blocks_execution_lanes(
         observed.append(name)
         return LaneResult(name, preflight_statuses.get(name, 0), 1)
 
-    monkeypatch.setattr(lane_runner, "_run_lane", fake_run_lane)
+    monkeypatch.setattr(lane_runner, "run_lane", fake_run_lane)
 
     status = lane_runner.run_lanes(
         ("collect", "load", "parallel", "serial"),

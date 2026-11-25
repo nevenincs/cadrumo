@@ -18,11 +18,7 @@ import pytest
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -38,6 +34,7 @@ from cadrumo.application.wizard.persistence import profile_values_from_patch
 from cadrumo.application.workflow.errors import WorkflowInputMismatchError
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -208,7 +205,7 @@ def test_the_describe_tool_says_where_the_question_ids_are() -> None:
 def test_oversized_question_preserves_the_bound_without_a_nonadvancing_cursor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         vocabulary_module,
-        "_profile_questions",
+        "profile_questions",
         lambda: {"path": "values[].question_id", "logical_generation": "test", "questions": [{"help": "x" * 9_000}]},
     )
     page = payload_vocabulary(PROFILE_PATCH_OPERATION_DEFINITION_ID, limit=20)

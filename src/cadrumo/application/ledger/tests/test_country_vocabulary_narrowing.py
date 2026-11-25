@@ -57,10 +57,9 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
+    bundled_indexed_authority,
 )
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
-)
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ....core.classifier_input_source import ClassifierInputSource
 from ....core.draft_discrepancy import DraftDiscrepancyKind
@@ -82,6 +81,8 @@ from ..country_vocabulary_advisory import country_vocabulary_advisory
 from ..deterministic_findings import deterministic_findings
 from ..invoice_draft_records import InvoiceDraft
 from ..invoice_extraction_authority import default_invoice_extraction_period
+
+_ON_DATE = date(filing_year_envelope().horizon, 6, 15)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -136,7 +137,7 @@ def _issued_goods_to(customer_country_code: str, *, operation: PinnedAuthorityOp
         ),
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
-        inputs=collect_classifier_inputs(InvoiceDraft(customer_tax_id="12345678Z")),
+        inputs=collect_classifier_inputs(InvoiceDraft(customer_tax_id="12345678Z", invoice_date=_ON_DATE.isoformat())),
         customer_country_code=customer_country_code,
         operation=operation,
     )
@@ -201,7 +202,7 @@ def test_a_genuine_third_country_still_classifies_as_the_export(*, operation: Pi
     the entire file -- and refusing a legitimate export is the over-payment
     direction nothing else in this codebase watches.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assembly = _issued_goods_to("US", operation=operation)
 
         assert assembly.assembled
@@ -213,9 +214,11 @@ def test_a_genuine_third_country_still_classifies_as_the_export(*, operation: Pi
 @pytest.mark.parametrize("code", UNASSIGNED_PROBES)
 def test_an_unassigned_code_raises_the_typo_advisory(code: str) -> None:
     """The operator's typo signal, on the non-blocking channel."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         advisory = country_vocabulary_advisory(
-            InvoiceDraft(customer_stated_country_code=code), operation=_authority_operation_for_test
+            InvoiceDraft(customer_stated_country_code=code, invoice_date=_ON_DATE.isoformat()),
+            operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert advisory is not None
@@ -227,10 +230,12 @@ def test_an_unassigned_code_raises_the_typo_advisory(code: str) -> None:
 
 def test_an_assigned_uncatalogued_code_raises_the_catalogue_gap_advisory() -> None:
     """The two kinds must be distinguishable, or the operator hunts a typo we caused."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         specimen = an_uncatalogued_alpha2()
         advisory = country_vocabulary_advisory(
-            InvoiceDraft(customer_stated_country_code=specimen), operation=_authority_operation_for_test
+            InvoiceDraft(customer_stated_country_code=specimen, invoice_date=_ON_DATE.isoformat()),
+            operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert advisory is not None
@@ -243,9 +248,11 @@ def test_an_assigned_uncatalogued_code_raises_the_catalogue_gap_advisory() -> No
 
 def test_the_check_runs_on_the_issuing_side_too() -> None:
     """Both parties, because establishment is asked of each independently."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         advisory = country_vocabulary_advisory(
-            InvoiceDraft(supplier_stated_country_code="XX"), operation=_authority_operation_for_test
+            InvoiceDraft(supplier_stated_country_code="XX", invoice_date=_ON_DATE.isoformat()),
+            operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert advisory is not None
@@ -256,10 +263,12 @@ def test_the_check_runs_on_the_issuing_side_too() -> None:
 @pytest.mark.parametrize("code", ["US", "DE", "ES", "XI"])
 def test_a_catalogued_code_raises_no_country_advisory(code: str) -> None:
     """The negative control. A check that fired on everything would be noise."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             country_vocabulary_advisory(
-                InvoiceDraft(customer_stated_country_code=code), operation=_authority_operation_for_test
+                InvoiceDraft(customer_stated_country_code=code, invoice_date=_ON_DATE.isoformat()),
+                operation=_authority_operation_for_test,
+                effective_date=_ON_DATE,
             )
             is None
         )
@@ -268,10 +277,12 @@ def test_a_catalogued_code_raises_no_country_advisory(code: str) -> None:
 @pytest.mark.parametrize("stated", [None, "", "  ", "Calle Mayor 3, 28013 Madrid"])
 def test_nothing_that_is_not_a_code_raises_a_country_advisory(stated: str | None) -> None:
     """An absent field is an honest absence, and an address line is not a bad code."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             country_vocabulary_advisory(
-                InvoiceDraft(customer_stated_country_code=stated), operation=_authority_operation_for_test
+                InvoiceDraft(customer_stated_country_code=stated, invoice_date=_ON_DATE.isoformat()),
+                operation=_authority_operation_for_test,
+                effective_date=_ON_DATE,
             )
             is None
         )
@@ -284,10 +295,13 @@ def test_a_resolved_printed_name_suppresses_the_advisory() -> None:
     printed "Alemania" while the structured country-code slot carried a
     placeholder. The territory is established, so the placeholder cost nothing.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         advisory = country_vocabulary_advisory(
-            InvoiceDraft(customer_country="Alemania", customer_stated_country_code="XX"),
+            InvoiceDraft(
+                customer_country="Alemania", customer_stated_country_code="XX", invoice_date=_ON_DATE.isoformat()
+            ),
             operation=_authority_operation_for_test,
+            effective_date=_ON_DATE,
         )
 
         assert advisory is None
@@ -304,10 +318,15 @@ def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(
     reader checking only blockers would not know why), and a blocker could be
     raised from something other than a finding.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        draft = _as_read(InvoiceDraft(customer_stated_country_code=code), operation=operation)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        draft = _as_read(
+            InvoiceDraft(customer_stated_country_code=code, invoice_date=_ON_DATE.isoformat()), operation=operation
+        )
 
-        assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is not None
+        assert (
+            country_vocabulary_advisory(draft, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is not None
+        )
         assert draft.discrepancies == ()
         assert confirmation_blockers(draft) == ()
 
@@ -324,9 +343,13 @@ def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(
     conditions, so the same call that returns no country blocker returns the
     postal one.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         draft = _as_read(
-            InvoiceDraft(customer_stated_country_code=code, customer_postal_code=_UNREADABLE_POSTAL),
+            InvoiceDraft(
+                customer_stated_country_code=code,
+                customer_postal_code=_UNREADABLE_POSTAL,
+                invoice_date=_ON_DATE.isoformat(),
+            ),
             operation=operation,
         )
 
@@ -334,7 +357,10 @@ def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(
 
         assert [blocker.field for blocker in blockers] == ["customer_postal_code"]
         assert [finding.kind for finding in draft.discrepancies] == [DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE]
-        assert country_vocabulary_advisory(draft, operation=_authority_operation_for_test) is not None
+        assert (
+            country_vocabulary_advisory(draft, operation=_authority_operation_for_test, effective_date=_ON_DATE)
+            is not None
+        )
 
 
 def test_the_blocking_axis_carries_no_country_condition() -> None:

@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_grade_exercises
 
 from .....application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from .....application.calculations.relation_prefill import (
@@ -29,16 +29,16 @@ from .....application.calculations.relation_prefill import (
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from .....domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
+from .....tests.log_records import delivered_records
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from .published_authority_support import published_authority_operation
@@ -51,6 +51,7 @@ _M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19")
+_M130_PRIOR_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anteriores"
 
 
@@ -95,7 +96,7 @@ def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
 
 def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: Path) -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -185,7 +186,7 @@ def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_em
     cross-domain-handoffs audit 2026-05-16 must not accidentally
     broaden back to a silent-swallow ``except Exception``).
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             snapshot = _snapshot("180", 2026, "0A")
@@ -214,7 +215,7 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
     This pins the provenance-string contract across the
     modelo→filing handoff boundary (F2 finding, 2026-05-16 audit).
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             for observation in _modelo_115_observations():
@@ -272,7 +273,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
     and stays silent.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store
@@ -370,7 +371,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     """
     logger_name = "cadrumo.application.calculations.relation_prefill"
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — cold-start
@@ -393,7 +394,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
 
     operator_manual_records = [
         record
-        for record in caplog.records
+        for record in delivered_records(caplog)
         if record.name == logger_name and "remains operator-manual" in record.getMessage()
     ]
     assert operator_manual_records, (
@@ -411,7 +412,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
 def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_path: Path) -> None:
     """Modelo 202 1P has no previous same-year installment to fold into casilla 30."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -439,7 +440,7 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
 def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_path: Path) -> None:
     """Modelo 202 2P still requires the actual 1P installment relation."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -476,7 +477,7 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     re-run cross-section validation) to exercise the defensive guard.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — relation cannot resolve
@@ -521,31 +522,31 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     )
 
 
-# The newest Modelo 190 annual resumen the registry authors, and the projecting
-# horizon that carries it forward; both exercises read the same Modelo 111 relations.
-_SUPPORT = PublishedGovernedFactSource().supported_filing_years()
-_ANNUAL_RESUMEN_YEARS = (newest_authored_edition("190"), _SUPPORT.horizon)
+# The annual informative return that totals two relations off the same four quarterly
+# source returns: Modelo 180 reads Modelo 115.
+_ANNUAL_RESUMEN = "180"
+_ANNUAL_RESUMEN_SOURCE = "115"
 
 
-@pytest.mark.parametrize("filing_year", _ANNUAL_RESUMEN_YEARS)
-def test_modelo_190_empty_store_collapses_absent_m111_source_to_one_diagnostic(
+@pytest.mark.parametrize("filing_year", filing_grade_exercises(_ANNUAL_RESUMEN))
+def test_annual_resumen_empty_store_collapses_absent_quarterly_source_to_one_diagnostic(
     tmp_path: Path, filing_year: int
 ) -> None:
-    """Ten Modelo 190 relations reading the same absent Modelo 111 quarter fold to one advisory.
+    """The relations reading the same absent quarterly source filing fold to one advisory.
 
-    The real-corpus measurement the grouping change was built against: an
-    empty local store leaves every one of the annual resumen's monetary
-    relations unresolved, each reading a different Modelo 111 casilla (02,
-    05, 08, ..., 28) off the SAME absent 1T-4T filing. Un-grouped, that is
-    ten diagnostics naming one root cause; grouped by
-    ``(source_modelo, filing_year, periods)``, it must be exactly one.
+    An empty local store leaves every monetary relation of the annual resumen
+    unresolved, each reading a different casilla off the SAME absent 1T-4T
+    filing of the source modelo. Un-grouped, that is one diagnostic per
+    relation naming one root cause; grouped by
+    ``(source_modelo, filing_year, periods)``, it must be exactly one, and it
+    names every relation the revision declares on that source.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — nothing to resolve
-        snapshot = _snapshot("190", filing_year, "0A")
+        snapshot = _snapshot(_ANNUAL_RESUMEN, filing_year, "0A")
         source_resolution = RelationPrefillSourceResolver(
             repository=repository,
             profile_read_ports=empty_profile_read_ports(),
@@ -554,27 +555,32 @@ def test_modelo_190_empty_store_collapses_absent_m111_source_to_one_diagnostic(
         ).resolve(
             CalculationSourceContext(
                 bucket_id="operator",
-                modelo="190",
+                modelo=_ANNUAL_RESUMEN,
                 filing_year=filing_year,
                 period=Period.from_year_and_code(filing_year, "0A"),
                 revision=snapshot.revision,
             ),
         )
 
-    m111_diagnostics = [
+    declared = {
+        binding.id
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+        if provider.source_modelo == _ANNUAL_RESUMEN_SOURCE
+    }
+    # Without at least two relations on the source there is nothing to fold, and the test would prove nothing.
+    assert len(declared) >= 2, filing_year
+    source_diagnostics = [
         diagnostic
         for diagnostic in source_resolution.diagnostics
-        if diagnostic.message.startswith(f"modelo 111 {filing_year}")
+        if diagnostic.message.startswith(f"modelo {_ANNUAL_RESUMEN_SOURCE} {filing_year}")
     ]
-    assert len(m111_diagnostics) == 1, (
-        "one absent Modelo 111 source filing must fold to one diagnostic, not one per relation "
-        f"(got {len(m111_diagnostics)} diagnostics naming it)"
+    assert len(source_diagnostics) == 1, (
+        f"one absent Modelo {_ANNUAL_RESUMEN_SOURCE} source filing must fold to one diagnostic, not one per relation "
+        f"(got {len(source_diagnostics)} diagnostics naming it)"
     )
-    diagnostic = m111_diagnostics[0]
-    # The row's own measurement: ten annual-summary relations share this absent
-    # source. The structured field carries every one, machine-readable, whatever
-    # the length-capped prose message elides.
-    assert len(diagnostic.relation_ids) >= 9
+    diagnostic = source_diagnostics[0]
+    # The structured field carries every relation, machine-readable, whatever the length-capped prose elides.
+    assert set(diagnostic.relation_ids) == declared
     assert set(diagnostic.relation_ids) <= set(source_resolution.unresolved_relation_ids)
 
 
@@ -590,7 +596,8 @@ def _modelo_130_pagos_observations(values_by_period: dict[str, Decimal]) -> tupl
             modelo="130",
             filing_year=2024,
             period=period,
-            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value},
+            # Original autoliquidaciones: no earlier filing of the quarter, so casilla 18 is zero.
+            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value, _M130_PRIOR_RESULT_CASILLA: Decimal("0")},
         )
         for period, value in values_by_period.items()
     )
@@ -600,7 +607,10 @@ def _m130_pagos_requirement(
     requirements: tuple[RegistryFoldRequirement, ...],
 ) -> RegistryFoldRequirement:
     return next(
-        r for r in requirements if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
+        r
+        for r in requirements
+        if r.source_modelo == "130"
+        and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA, _M130_PRIOR_RESULT_CASILLA)
     )
 
 
@@ -613,7 +623,7 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
     not be required by the annual fold. Expected period sets derive from the
     calendar boundary (1T ends 31-Mar), not from the relation formula.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot("100", 2024, "0A")
         # Activity started 2024-04-01: 1T (ends 2024-03-31) is STRICTLY before it.
         scoped = scoped_relation_source_requirements(
@@ -631,7 +641,7 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
 def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Path) -> None:
     """A Q2-start filer folds the quarters it filed; the pre-activity 1T is scoped, not left unresolved (IRPF-1)."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -663,7 +673,7 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
 def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> None:
     """A missing POST-activity quarter still unresolves — no-silent-under-declaration is preserved (IRPF-1)."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()

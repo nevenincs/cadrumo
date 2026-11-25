@@ -25,6 +25,7 @@ from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar
 from ...tests.manager_pilot import wait_until_settled
+from ...tests.settling import settle, settle_until
 from ..overview import ProfileManagerScreen
 from ..plantilla_media import PlantillaMediaScreen
 
@@ -32,7 +33,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TERMINAL_SIZE = (120, 60)
 _PROFILE = "00000000-0000-4000-8000-0000000000c3"
-_DIALOG_OPEN_LIMIT = 200
 
 
 @dataclass
@@ -119,13 +119,14 @@ def _screen(doors: _FakePlantillaMediaDoors) -> ProfileManagerScreen:
 async def _open_dialog(screen: ProfileManagerScreen, pilot: Pilot[None]) -> PlantillaMediaScreen:
     """Press the section's button and wait for the listing read to open the dialog."""
     screen.query_one("#manager-plantilla-media", Button).press()
-    for _ in range(_DIALOG_OPEN_LIMIT):
-        await pilot.pause()
-        dialog = pilot.app.screen
-        if isinstance(dialog, PlantillaMediaScreen) and screen._pending_listing is None:
-            await pilot.pause()
-            return dialog
-    raise AssertionError("the average-workforce dialog never opened")
+    await settle_until(
+        pilot,
+        lambda: isinstance(pilot.app.screen, PlantillaMediaScreen) and screen._pending_listing is None,
+        "the average-workforce dialog to open",
+    )
+    dialog = pilot.app.screen
+    assert isinstance(dialog, PlantillaMediaScreen)
+    return dialog
 
 
 def _fill(
@@ -164,7 +165,7 @@ async def test_a_year_is_declared_replaced_and_withdrawn_and_the_page_follows_st
     doors = _FakePlantillaMediaDoors()
     screen = _screen(doors)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
 
         dialog = await _open_dialog(screen, pilot)
         assert _declared_prompts(dialog) == []
@@ -210,7 +211,7 @@ async def test_a_year_is_declared_replaced_and_withdrawn_and_the_page_follows_st
         dialog = await _open_dialog(screen, pilot)
         assert _declared_prompts(dialog) == []
         dialog.query_one("#btn-plantilla-cancel", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         pilot.app.exit(None)
 
 
@@ -225,12 +226,12 @@ async def test_a_declared_year_selected_in_the_listing_fills_the_dialog() -> Non
     )
     screen = _screen(doors)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         dialog = await _open_dialog(screen, pilot)
         assert len(_declared_prompts(dialog)) == 2
 
         dialog.query_one("#plantilla-declared", OptionList).highlighted = 1
-        await pilot.pause()
+        await settle(pilot)
 
         assert dialog.query_one("#plantilla-year", Input).value == "2025"
         assert dialog.query_one("#plantilla-workforce", Input).value == "9"
@@ -238,7 +239,7 @@ async def test_a_declared_year_selected_in_the_listing_fills_the_dialog() -> Non
             PlantillaMediaState.COMMITTED
         )
         dialog.query_one("#btn-plantilla-cancel", Button).press()
-        await pilot.pause()
+        await settle(pilot)
         assert [name for name, _ in doors.calls] == ["list"]
         pilot.app.exit(None)
 
@@ -254,7 +255,7 @@ async def test_a_value_the_service_refuses_is_shown_and_the_page_is_not_repainte
     screen = _screen(doors)
     opened = screen.overview
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         dialog = await _open_dialog(screen, pilot)
         _fill(dialog, year="2024", average_workforce="12.5055", state=PlantillaMediaState.OBSERVED)
         dialog.query_one("#btn-plantilla-save", Button).press()
@@ -276,7 +277,7 @@ async def test_withdrawing_an_undeclared_year_is_refused_without_a_success() -> 
     screen = _screen(doors)
     opened = screen.overview
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         dialog = await _open_dialog(screen, pilot)
         _fill(dialog, year="2019")
         dialog.query_one("#btn-plantilla-remove", Button).press()
@@ -313,11 +314,11 @@ async def test_an_unparseable_answer_is_refused_in_the_dialog_and_no_write_start
     doors = _FakePlantillaMediaDoors()
     screen = _screen(doors)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         dialog = await _open_dialog(screen, pilot)
         _fill(dialog, year=year, average_workforce=average_workforce, state=state)
         dialog.query_one("#btn-plantilla-save", Button).press()
-        await pilot.pause()
+        await settle(pilot)
 
         assert pilot.app.screen is dialog
         assert str(dialog.query_one("#plantilla-refusal", Static).render()) == tr(refusal_key)
@@ -336,6 +337,6 @@ async def test_the_section_offers_no_dialog_when_the_host_wires_no_doors() -> No
 
     screen = ProfileManagerScreen(doors.overview(), persist=unreachable_persist)
     async with ScreenHostApp(screen).run_test(size=_TERMINAL_SIZE) as pilot:
-        await pilot.pause()
+        await settle(pilot)
         assert not screen.query("#manager-plantilla-media")
         pilot.app.exit(None)

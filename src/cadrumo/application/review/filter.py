@@ -21,7 +21,7 @@ orchestration layer reads instead of re-parsing strings at every
 ReviewQueue / aggregator call site.
 
 The specs are *parsing* surfaces; the actual filtering logic lives in
-:class:`cadrumo.application.review._aggregator.ReviewQueue` and the per-scope
+:class:`cadrumo.application.review.aggregator.ReviewQueue` and the per-scope
 adapters.
 """
 
@@ -29,13 +29,14 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from datetime import datetime
 from enum import StrEnum
 from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodError
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -71,7 +72,7 @@ class FilterClause(BaseModel):
             generic substrate.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_.]*$")
     value: str = Field(min_length=1, max_length=128)
@@ -227,7 +228,7 @@ class DeclaracionReviewStatus(StrEnum):
 # ---------------------------------------------------------------------
 
 
-def _ensure_unique_keys(
+def ensure_unique_keys(
     clauses: tuple[FilterClause, ...],
     *,
     scope: str,
@@ -248,7 +249,7 @@ def _ensure_unique_keys(
         seen.add(clause.key)
 
 
-def _ensure_known_keys(
+def ensure_known_keys(
     clauses: tuple[FilterClause, ...],
     *,
     scope: str,
@@ -264,7 +265,7 @@ def _ensure_known_keys(
             )
 
 
-def _enum_value_or_raise[E: StrEnum](
+def enum_value_or_raise[E: StrEnum](
     clause: FilterClause,
     enum_cls: type[E],
     *,
@@ -327,12 +328,13 @@ def _filter_year_or_raise(clause: FilterClause) -> int:
         FilterParseError: When the value is not a four-digit year.
     """
     text = clause.value.strip()
-    if len(text) == 4 and text.isdigit():
-        return int(text)
-    raise FilterParseError(
-        f"--filter {clause.key}={clause.value}",
-        reason="invalid-value-ledger-year",
-    )
+    try:
+        return datetime.strptime(text, "%Y").year
+    except ValueError:
+        raise FilterParseError(
+            f"--filter {clause.key}={clause.value}",
+            reason="invalid-value-ledger-year",
+        ) from None
 
 
 def _ledger_filter_values(
@@ -349,49 +351,43 @@ def _ledger_filter_values(
     str | None,
 ]:
     status: LedgerReviewStatus | None = None
-    period_code: str | None = None
     filing_year: int | None = None
     issue: LedgerImportDiagnosticKind | None = None
-    import_id: str | None = None
     classification: BusinessClassification | None = None
-    text: str | None = None
     direction: TransactionDirection | None = None
     account: str | None = None
+    text_fields: dict[str, str] = {}
     for clause in clauses:
         if clause.key == LedgerReviewFilterKey.STATUS:
-            status = _enum_value_or_raise(
+            status = enum_value_or_raise(
                 clause,
                 LedgerReviewStatus,
                 scope="ledger-status",
             )
-        elif clause.key == LedgerReviewFilterKey.PERIOD:
-            period_code = clause.value
+        elif clause.key in {LedgerReviewFilterKey.PERIOD, LedgerReviewFilterKey.IMPORT, LedgerReviewFilterKey.TEXT}:
+            text_fields[clause.key] = clause.value
         elif clause.key == LedgerReviewFilterKey.YEAR:
             filing_year = _filter_year_or_raise(clause)
         elif clause.key == LedgerReviewFilterKey.ISSUE:
-            issue = _enum_value_or_raise(
+            issue = enum_value_or_raise(
                 clause,
                 LedgerImportDiagnosticKind,
                 scope="ledger-issue",
             )
-        elif clause.key == LedgerReviewFilterKey.IMPORT:
-            import_id = clause.value
         elif clause.key == LedgerReviewFilterKey.CLASSIFICATION:
             # case_fold so an operator may type the natural lowercase
             # (classification=business) as well as the enum-cased BUSINESS;
             # mirrors the invoice `kind` filter's case-folding.
-            classification = _enum_value_or_raise(
+            classification = enum_value_or_raise(
                 clause,
                 BusinessClassification,
                 scope="ledger-classification",
                 case_fold=True,
             )
-        elif clause.key == LedgerReviewFilterKey.TEXT:
-            text = clause.value
         elif clause.key == LedgerReviewFilterKey.DIRECTION:
             # case_fold so direction=ingreso-equivalent lowercase (incoming /
             # outgoing / internal_transfer) resolves as well as the enum case.
-            direction = _enum_value_or_raise(
+            direction = enum_value_or_raise(
                 clause,
                 TransactionDirection,
                 scope="ledger-direction",
@@ -399,7 +395,17 @@ def _ledger_filter_values(
             )
         elif clause.key == LedgerReviewFilterKey.ACCOUNT:
             account = _own_account_id_or_raise(clause)
-    return status, period_code, filing_year, issue, import_id, classification, text, direction, account
+    return (
+        status,
+        text_fields.get(LedgerReviewFilterKey.PERIOD),
+        filing_year,
+        issue,
+        text_fields.get(LedgerReviewFilterKey.IMPORT),
+        classification,
+        text_fields.get(LedgerReviewFilterKey.TEXT),
+        direction,
+        account,
+    )
 
 
 def _own_account_id_or_raise(clause: FilterClause) -> str:
@@ -495,7 +501,7 @@ class LedgerReviewFilterSpec(BaseModel):
             :mod:`cadrumo.application.transactions` import surface.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     clauses: tuple[FilterClause, ...] = ()
     status: LedgerReviewStatus | None = None
@@ -511,8 +517,8 @@ class LedgerReviewFilterSpec(BaseModel):
     def from_strings(cls, raw: Iterable[str]) -> LedgerReviewFilterSpec:
         """Parse ``--filter`` arguments into a typed :class:`LedgerReviewFilterSpec`."""
         clauses = parse_filter_clauses(raw)
-        _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
-        _ensure_unique_keys(clauses, scope="ledger")
+        ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
+        ensure_unique_keys(clauses, scope="ledger")
         status, period_code, filing_year, issue, import_id, classification, text, direction, account = (
             _ledger_filter_values(clauses)
         )
@@ -595,7 +601,7 @@ class InvoiceReviewFilterSpec(BaseModel):
             (``issued`` / ``received``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     clauses: tuple[FilterClause, ...] = ()
     status: InvoiceReviewStatus | None = None
@@ -609,19 +615,19 @@ class InvoiceReviewFilterSpec(BaseModel):
         populated from the parsed ``key=value`` clause strings.
         """
         clauses = parse_filter_clauses(raw)
-        _ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
-        _ensure_unique_keys(clauses, scope="invoice")
+        ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
+        ensure_unique_keys(clauses, scope="invoice")
         status: InvoiceReviewStatus | None = None
         kind: InvoiceKind | None = None
         for clause in clauses:
             if clause.key == InvoiceReviewFilterKey.STATUS:
-                status = _enum_value_or_raise(
+                status = enum_value_or_raise(
                     clause,
                     InvoiceReviewStatus,
                     scope="invoice-status",
                 )
             elif clause.key == InvoiceReviewFilterKey.KIND:
-                kind = _enum_value_or_raise(
+                kind = enum_value_or_raise(
                     clause,
                     InvoiceKind,
                     scope="invoice-kind",
@@ -649,7 +655,7 @@ class DeclaracionReviewFilterSpec(BaseModel):
         status: Resolved :class:`DeclaracionReviewStatus`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     clauses: tuple[FilterClause, ...] = ()
     status: DeclaracionReviewStatus | None = None
@@ -658,12 +664,12 @@ class DeclaracionReviewFilterSpec(BaseModel):
     def from_strings(cls, raw: Iterable[str]) -> DeclaracionReviewFilterSpec:
         """Parse ``--filter`` arguments into a typed :class:`DeclaracionReviewFilterSpec`."""
         clauses = parse_filter_clauses(raw)
-        _ensure_known_keys(clauses, scope="declaration", allowed=DeclaracionReviewFilterKey)
-        _ensure_unique_keys(clauses, scope="declaration")
+        ensure_known_keys(clauses, scope="declaration", allowed=DeclaracionReviewFilterKey)
+        ensure_unique_keys(clauses, scope="declaration")
         status: DeclaracionReviewStatus | None = None
         for clause in clauses:
             if clause.key == DeclaracionReviewFilterKey.STATUS:
-                status = _enum_value_or_raise(
+                status = enum_value_or_raise(
                     clause,
                     DeclaracionReviewStatus,
                     scope="declaration-status",

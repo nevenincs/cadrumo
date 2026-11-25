@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 22:33+0200\n"
+"POT-Creation-Date: 2026-11-01 02:37+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -57,7 +57,7 @@ msgid ""
 "guide](censo-update.md)."
 msgstr ""
 "Ha az azonosítóddal elérhető, a parancssori felület (CLI) beolvashatja a "
-"benyújtott bevallásokat, az expedientéket, az értesítéseket és az AEAT-"
+"benyújtott bevallásokat, az ügyiratokat, az értesítéseket és az AEAT-"
 "igazolásokat. A censo-címed profilodba importálásához használd a [censo-"
 "adatok útmutatóját](censo-update.md)."
 
@@ -123,7 +123,7 @@ msgstr "A Cadrumo három szolgáltatót támogat:"
 
 #: ../../how-to/authenticate-with-aeat.md:49
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr "`certificate`: a digitális tanúsítványfájlod (certificado digital)."
+msgstr "`certificate`: a digitális tanúsítványfájlod."
 
 #: ../../how-to/authenticate-with-aeat.md:50
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
@@ -136,10 +136,11 @@ msgstr "`clave_permanente`: Cl@ve Permanente, DNI/NIE és jelszavas bejelentkez�
 #: ../../how-to/authenticate-with-aeat.md:53
 msgid ""
 "Pass the identifier to `--provider`. Cl@ve PIN and the electronic "
-"national ID card (DNI electrónico) are not supported."
+"national ID card (<span lang=\"es\">DNI electrónico</span>) are not "
+"supported."
 msgstr ""
 "Az azonosítót add meg a `--provider` kapcsolóval. A Cl@ve PIN és az "
-"elektronikus személyi igazolvány (DNI electrónico) nem támogatott."
+"elektronikus személyi igazolvány (DNI) nem támogatott."
 
 #: ../../how-to/authenticate-with-aeat.md:56
 msgid "Configure a provider"
@@ -275,9 +276,9 @@ msgid ""
 "machine."
 msgstr ""
 "Újítsd meg a tanúsítványt azzal a szervezettel, amely kiállította, "
-"például a Fábrica Nacional de Moneda y Timbrével (FNMT) vagy az AEAT-val."
-" Ez az eszközön kívül történik. Töltsd le a megújított tanúsítványfájlt "
-"(`.p12` vagy `.pfx`) a gépedre."
+"például a <span lang=\"es\">Fábrica Nacional de Moneda y Timbre</span> "
+"(FNMT) vagy az AEAT-val. Ez az eszközön kívül történik. Töltsd le a "
+"megújított tanúsítványfájlt (`.p12` vagy `.pfx`) a gépedre."
 
 #: ../../how-to/authenticate-with-aeat.md:118
 msgid "Point the tool at the renewed file:"
@@ -448,34 +449,35 @@ msgstr ""
 
 #: ../../how-to/authenticate-with-aeat.md:233
 msgid "Act for someone else (apoderado)"
-msgstr "Eljárás valaki más nevében (apoderado)"
+msgstr "Eljárás valaki más nevében (meghatalmazott képviselő)"
 
 #: ../../how-to/authenticate-with-aeat.md:235
 msgid ""
 "If you act as an authorized tax representative for another taxpayer, "
-"record locally who you represent and the relevant AEAT apoderamiento "
-"scopes. An apoderado is an authorized representative, such as a gestor or"
-" asesor."
+"record locally who you represent and the relevant AEAT <span "
+"lang=\"es\">apoderamiento</span> scopes. An <span "
+"lang=\"es\">apoderado</span> is an authorized representative, such as a "
+"<span lang=\"es\">gestor</span> or <span lang=\"es\">asesor</span>."
 msgstr ""
 "Ha egy másik adózó felhatalmazott adóképviselőjeként jársz el, helyben "
-"rögzítsd, kit képviselsz, és a vonatkozó AEAT apoderamiento-hatóköröket. "
-"Az apoderado felhatalmazott képviselő, például egy gestor vagy asesor."
+"rögzítsd, kit képviselsz, és a vonatkozó AEAT meghatalmazási hatóköröket."
+" A meghatalmazott képviselő például könyvelő vagy adótanácsadó."
 
 #: ../../how-to/authenticate-with-aeat.md:239
 msgid ""
-"The apoderamiento itself is granted at AEAT. The represented party "
-"authorizes you through AEAT's own apoderamiento procedures. The commands "
-"in this section record that grant in your local profile so read commands "
-"know whose data they read. They never register, extend, revoke, or "
-"renounce an apoderamiento at AEAT. No command writes representation state"
-" to AEAT."
+"The power of attorney itself is granted at AEAT. The represented party "
+"authorizes you through AEAT's own power of attorney procedures. The "
+"commands in this section record that grant in your local profile so read "
+"commands know whose data they read. They never register, extend, revoke, "
+"or renounce a power of attorney at AEAT. No command writes representation"
+" state to AEAT."
 msgstr ""
-"Magát az apoderamientót az AEAT-nál adják meg. A képviselt fél az AEAT "
-"saját apoderamiento-eljárásain keresztül téged hatalmaz fel. Az ebben a "
+"Magát a meghatalmazást az AEAT-nál adják meg. A képviselt fél az AEAT "
+"saját meghatalmazási eljárásain keresztül téged hatalmaz fel. Az ebben a "
 "szakaszban szereplő parancsok ezt a felhatalmazást a helyi profilodban "
 "rögzítik, hogy az olvasási parancsok tudják, kinek az adatait olvassák. "
 "Soha nem regisztrálnak, hosszabbítanak meg, vonnak vissza vagy mondanak "
-"le apoderamientót az AEAT-nál. Egyetlen parancs sem ír képviseleti "
+"le meghatalmazást az AEAT-nál. Egyetlen parancs sem ír képviseleti "
 "állapotot az AEAT-hoz."
 
 #: ../../how-to/authenticate-with-aeat.md:245
@@ -487,8 +489,8 @@ msgid "List the scope codes the tool accepts:"
 msgstr "Listázd az eszköz által elfogadott hatókörkódokat:"
 
 #: ../../how-to/authenticate-with-aeat.md:253
-msgid "Each scope is an AEAT apoderamiento area. Examples include:"
-msgstr "Minden hatókör egy AEAT apoderamiento-terület. Például:"
+msgid "Each scope is an AEAT power of attorney area. Examples include:"
+msgstr "Minden hatókör egy AEAT-meghatalmazási terület. Például:"
 
 #: ../../how-to/authenticate-with-aeat.md:255
 msgid "`RENT` for Modelos 100 and 714."
@@ -544,7 +546,7 @@ msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
 msgstr ""
-"Az aktív profil legfeljebb egy apoderado-konfigurációt tárol; az újbóli "
+"Az aktív profil legfeljebb egy képviselői konfigurációt tárol; az újbóli "
 "beállítás felülírja azt. A képviselt azonosító titkosítva van tárolva."
 
 #: ../../how-to/authenticate-with-aeat.md:279
@@ -575,11 +577,11 @@ msgstr "Távolítsd el a konfigurációt, amikor a képviselet megszűnik:"
 
 #: ../../how-to/authenticate-with-aeat.md:295
 msgid ""
-"Clearing removes only the local record. The apoderamiento at AEAT is "
+"Clearing removes only the local record. The power of attorney at AEAT is "
 "unaffected. Revoke it through AEAT's own procedures."
 msgstr ""
 "A törlés csak a helyi bejegyzést távolítja el. Az AEAT-nál lévő "
-"apoderamientót ez nem érinti. Azt az AEAT saját eljárásain keresztül "
+"meghatalmazást ez nem érinti. Azt az AEAT saját eljárásain keresztül "
 "vonja vissza."
 
 #: ../../how-to/authenticate-with-aeat.md:298

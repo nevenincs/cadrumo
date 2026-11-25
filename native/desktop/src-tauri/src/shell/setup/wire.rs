@@ -1,19 +1,33 @@
 //! The closed shapes of the window's setup snapshot and the setup actions the
-//! window may ask for. The host builds each snapshot from the product's own
-//! worded documents; a value outside a closed set or a bound exceeded is a
-//! protocol failure, never passed on.
-use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+//! window may ask for. The snapshot carries codes and locale-neutral facts
+//! only: item ids, states and their reasons, step and failure codes, byte
+//! counts, hosts, folders and versions. The window words every one of them
+//! from its own catalogue. A value outside a closed set or a bound exceeded is
+//! a host failure, never passed on.
+use cadrumo_application::{
+    error::application::{ApplicationError, ErrorCode, Operation},
+    provisioning::{items::ItemId, local_ai::models::ModelName},
+};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, error::Error};
 
 const MAX_ITEMS: usize = 16;
 const MAX_HOSTS: usize = 8;
 const NAME_LIMIT: usize = 256;
-const SENTENCE_LIMIT: usize = 1024;
 const VERSION_LIMIT: usize = 128;
 const PATH_LIMIT: usize = 4096;
 const DETAILS_LIMIT: usize = 16 * 1024;
-const MODEL_LIMIT: usize = 128;
+
+/// The parts a local AI plan is made of: its program, then the model the
+/// person selected for each local role.
+pub const PARTS: [&str; 6] = [
+    "program",
+    "download",
+    "vision_transcription",
+    "text_extraction",
+    "column_role_mapping",
+    "supply_nature_proposal",
+];
 
 fn invalid() -> ApplicationError {
     ApplicationError::new(ErrorCode::InvalidArguments, Operation::Cli)
@@ -29,6 +43,56 @@ pub enum Refusal {
     NotPending,
     NotCancellable,
     Unavailable,
+    /// The requested model cannot be handed to the engine: it is not on a turned-on
+    /// local lane's model list, or its name is not one the engine can pull.
+    ModelSelectionUnusable,
+    /// The engine did not remove the model; what is stored is unchanged or reads
+    /// again on the next check.
+    ModelNotRemoved,
+    /// The engine did not remove the browser; what is stored is unchanged or reads
+    /// again on the next check.
+    BrowserNotRemoved,
+    /// The engine did not remove the local AI, or its program; what is stored is
+    /// unchanged or reads again on the next check.
+    LocalAiNotRemoved,
+}
+
+/// What the local AI's server does while its row is ready.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Server {
+    /// No server runs; it starts when a document is read.
+    Dormant,
+}
+
+/// What the local AI still waits for while its row is absent and its program is set up.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Awaits {
+    /// A model downloaded from the person's list.
+    Model,
+}
+
+/// What a removal deletes from this computer.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Removal {
+    /// The browser for the tax agency website.
+    Browser,
+    /// The local AI: its program, the models on the person's lists and its record.
+    LocalAi,
+    /// The local AI's program and record alone; every model stays.
+    LocalAiProgram,
+}
+
+impl Removal {
+    /// The item whose setup a removal waits for, and whose row it reads again.
+    pub fn item(self) -> ItemId {
+        match self {
+            Self::Browser => ItemId::Browser,
+            Self::LocalAi | Self::LocalAiProgram => ItemId::LocalAi,
+        }
+    }
 }
 
 /// What a command refuses with. Only the code crosses to the window.
@@ -51,6 +115,82 @@ impl From<ApplicationError> for CommandFailure {
 impl From<Refusal> for CommandFailure {
     fn from(code: Refusal) -> Self {
         Self::Refused(Refused { code })
+    }
+}
+
+/// Why a setup command or one of its steps stopped, before the window is told by a
+/// code alone. The window words `unavailable` as "the services are not answering"
+/// whatever lay behind it, so that cause travels here for diagnostics to keep.
+#[derive(Debug)]
+pub enum Stop {
+    /// A refusal the window words and the person can act on.
+    Refused(Refusal),
+    /// The window's `unavailable`, and the failure behind it.
+    Unavailable(ApplicationError),
+    /// A host failure: the window words only its code.
+    Host(ApplicationError),
+}
+
+impl Stop {
+    /// The window's `unavailable` for `reason`, a stable snake_case name of the cause.
+    pub fn unavailable(reason: &'static str) -> Self {
+        Self::Unavailable(
+            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason(reason),
+        )
+    }
+
+    /// This stop with `cause` chained to its failure. A refusal the person can act on
+    /// has no failure to chain to.
+    pub fn because<E: Error + Send + Sync + 'static>(self, cause: E) -> Self {
+        match self {
+            Self::Unavailable(error) => Self::Unavailable(error.caused_by(cause)),
+            Self::Host(error) => Self::Host(error.caused_by(cause)),
+            refused @ Self::Refused(_) => refused,
+        }
+    }
+
+    /// The failure diagnostics keep for this stop, if it is one.
+    pub fn cause(&self) -> Option<&ApplicationError> {
+        match self {
+            Self::Unavailable(error) | Self::Host(error) => Some(error),
+            Self::Refused(_) => None,
+        }
+    }
+
+    /// The refusal the window is told, unless it is told a host failure.
+    pub fn refusal(&self) -> Option<Refusal> {
+        match self {
+            Self::Refused(code) => Some(*code),
+            Self::Unavailable(_) => Some(Refusal::Unavailable),
+            Self::Host(_) => None,
+        }
+    }
+}
+
+impl From<ApplicationError> for Stop {
+    fn from(error: ApplicationError) -> Self {
+        Self::Host(error)
+    }
+}
+
+impl From<Refusal> for Stop {
+    /// An `unavailable` is never left without its cause.
+    fn from(code: Refusal) -> Self {
+        match code {
+            Refusal::Unavailable => Self::unavailable("setup_unavailable_unnamed"),
+            code => Self::Refused(code),
+        }
+    }
+}
+
+impl From<Stop> for CommandFailure {
+    fn from(stop: Stop) -> Self {
+        match stop {
+            Stop::Host(error) => error.into(),
+            Stop::Refused(code) => code.into(),
+            Stop::Unavailable(_) => Refusal::Unavailable.into(),
+        }
     }
 }
 
@@ -87,7 +227,6 @@ pub enum BlockedReason {
 #[serde(rename_all = "snake_case")]
 pub enum StaleReason {
     OlderRevision,
-    DifferentModelVersion,
     ProgramTooOld,
 }
 
@@ -96,6 +235,7 @@ pub enum StaleReason {
 pub enum Failure {
     Offline,
     HostUnreachable,
+    ServerError,
     SecureConnectionFailed,
     BlockedByNetwork,
     DiskFull,
@@ -105,6 +245,8 @@ pub enum Failure {
     MemoryBusy,
     ProgramMissing,
     ProgramNotRunning,
+    EngineProgramUnusable,
+    EnginePackageDamaged,
     Interrupted,
     NeedsSignIn,
     NotInThisBuild,
@@ -120,18 +262,7 @@ pub enum Recovery {
     TryAgain,
     Resume,
     CheckAgain,
-}
-
-/// Why a model's plan entry is worth telling the person about.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Advisory {
-    LicenceCommercialUseBarred,
-    LicenceUnverified,
-    OverrideNotInCatalogue,
-    OverrideBelowContextFloor,
-    FitExceedsMeasuredHeadroom,
-    FitUnverified,
+    ReinstallEngineProgram,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -254,10 +385,14 @@ pub struct Row {
     pub recovery_action_id: Option<String>,
     pub version: Option<String>,
     pub size_bytes: Option<u64>,
-    pub name: String,
-    pub sentence: String,
-    pub note: Option<String>,
-    pub action_label: Option<String>,
+    /// The removals the row offers, in the order they are listed; the window offers
+    /// no other.
+    pub removals: Vec<Removal>,
+    /// What the local AI's server does while it is ready; on no other row or state.
+    pub server: Option<Server>,
+    /// What the local AI still waits for while it is absent and its program is set up;
+    /// on no other row or state.
+    pub awaits: Option<Awaits>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -266,31 +401,40 @@ pub struct Check {
     pub operation_id: String,
     pub kind: CheckKind,
     pub stage: CheckStage,
+    /// The category a failed check carried, worded as a row's failure is; absent while
+    /// the check runs, when it is done, and when a failure carried no category.
+    pub failure: Option<Failure>,
+    /// Why the check was refused before the engine ran: the person's selection of local
+    /// models could not be handed to it, or the local engine record cannot be read, when a
+    /// status read still reads the browser alone. Present only on a failed check, and never
+    /// with a `failure`.
+    pub refusal: Option<Refusal>,
 }
 
-/// One part of an item planned in parts: the local AI program, or one role's model.
+/// One part of the local AI's plan: its program, or the model one role reads
+/// with. A part sharing an earlier part's download has size 0.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct PlanPart {
     pub part: String,
-    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
     pub download_bytes: Option<u64>,
+    /// The folder this part is stored in.
+    pub destination: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct PlanEntry {
     pub item: String,
-    pub name: String,
     pub download_bytes: Option<u64>,
     pub source_hosts: Vec<String>,
+    /// The folder the entry as a whole is stored in; none for the local AI, whose parts
+    /// each carry their own.
     pub destination: Option<String>,
     pub installs_outside_program: bool,
     pub shares_download_with: Option<String>,
-    /// Empty except on a local model's entry; the plan digest binds it.
-    pub advisories: Vec<Advisory>,
-    /// A model's licence notice, already in the profile's language; the plan digest binds it.
-    pub licence_notice: Option<String>,
     /// The parts of the local AI, in the order setup carries them out; empty
     /// for any other item.
     pub parts: Vec<PlanPart>,
@@ -300,7 +444,6 @@ pub struct PlanEntry {
 #[serde(deny_unknown_fields)]
 pub struct Review {
     pub plan_digest: String,
-    pub expires_at: Option<String>,
     pub entries: Vec<PlanEntry>,
     pub known_download_bytes: u64,
     pub has_unknown_size: bool,
@@ -315,7 +458,6 @@ pub struct Review {
 pub struct Retry {
     pub attempt: u32,
     pub delay_s: u32,
-    pub sentence: String,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -323,25 +465,42 @@ pub struct Retry {
 pub struct ItemResult {
     pub changed: bool,
     pub failure: Option<Failure>,
-    pub sentence: Option<String>,
     pub transferred_bytes: u64,
+}
+
+/// How far one part of the local AI's setup came: its program, which names no model,
+/// or the model one part pulls, which it always names so that model's own row finds its
+/// progress. A part sharing an earlier part's model moves no bytes of its own.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct PartProgress {
+    pub part: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+    pub step: Option<Step>,
+    pub completed: Option<u64>,
+    pub total: Option<u64>,
+    pub result: Option<ItemResult>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ItemProgress {
     pub item: String,
-    pub name: String,
     pub step: Option<Step>,
     pub completed: Option<u64>,
     pub total: Option<u64>,
     pub retry: Option<Retry>,
     pub result: Option<ItemResult>,
+    /// The local AI's parts in the order setup carries them out; empty for any other item.
+    pub parts: Vec<PartProgress>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Run {
+    /// The one item this setup sets up.
+    pub item: String,
     pub operation_id: String,
     pub stage: RunStage,
     pub review: Option<Review>,
@@ -349,7 +508,8 @@ pub struct Run {
     pub cancellable: bool,
     pub cancel_requested: bool,
     pub outcome: Option<Outcome>,
-    pub failure_sentence: Option<String>,
+    /// Why the setup failed; present exactly when `outcome` is `failed`.
+    pub failure: Option<Failure>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -362,8 +522,9 @@ pub struct Google {
     /// The profile's saved folder, only with a stored Drive grant.
     pub drive_folder_id: Option<String>,
     pub stage: GoogleStage,
+    /// Why the sign-in or sign-out failed; present exactly when `stage` is
+    /// `failed`.
     pub failure: Option<Failure>,
-    pub sentence: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -374,7 +535,8 @@ pub struct Snapshot {
     pub complete: Option<bool>,
     pub hardware_limited: Option<bool>,
     pub check: Option<Check>,
-    pub setup: Option<Run>,
+    /// Each item's setup, at most one per item, in the engine's item order.
+    pub runs: Vec<Run>,
     pub google: Google,
     pub details: String,
 }
@@ -382,15 +544,6 @@ pub struct Snapshot {
 /// `browser` or `local_ai`.
 pub fn is_item_id(text: &str) -> bool {
     matches!(text, "browser" | "local_ai")
-}
-
-/// A part of an item's plan: `program`, or the catalogue role a model serves.
-fn is_part_id(text: &str) -> bool {
-    text.len() <= 64
-        && text.bytes().next().is_some_and(|b| b.is_ascii_lowercase())
-        && text
-            .bytes()
-            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
 }
 
 pub fn is_hex64(text: &str) -> bool {
@@ -423,16 +576,11 @@ fn plain_option(text: Option<&String>, limit: usize) -> bool {
     text.is_none_or(|text| plain(text, limit))
 }
 
-/// A catalogue model name, as `dependencies.setup` accepts one.
-pub fn is_model_name(text: &str) -> bool {
-    text.len() <= MODEL_LIMIT
-        && text
-            .bytes()
-            .next()
-            .is_some_and(|b| b.is_ascii_alphanumeric())
-        && text
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b".-_:/".contains(&b))
+/// The engine item a stopped operation's registered refusal stands for: the
+/// browser, for the plain refusal that it is not usable here. Whether setup
+/// can act on it is the item's row to say.
+pub fn refused_item(error_detail: &serde_json::Value) -> Option<ItemId> {
+    (error_detail["error_code"] == "REFUSED_BROWSER_NOT_READY").then_some(ItemId::Browser)
 }
 
 /// An operator action's identifier: `operator.` and dotted lower-case words.
@@ -461,56 +609,73 @@ impl Row {
             self.failure.is_some(),
         ];
         is_item_id(&self.item)
-            && plain(&self.name, NAME_LIMIT)
-            && plain(&self.sentence, SENTENCE_LIMIT)
-            && plain_option(self.note.as_ref(), SENTENCE_LIMIT)
-            && plain_option(self.action_label.as_ref(), NAME_LIMIT)
             && plain_option(self.version.as_ref(), VERSION_LIMIT)
-            && self.recovery.is_some() == self.action_label.is_some()
             && self.recovery.is_some() == self.recovery_action_id.is_some()
             && self.recovery_action_id.as_deref().is_none_or(is_action_id)
             && reasons.iter().filter(|present| **present).count() <= 1
             && (self.stale_reason.is_none() || self.state == State::Stale)
             && (self.blocked_reason.is_none() || self.state == State::Blocked)
             && (self.failure.is_none() || self.state == State::Failed)
+            && (self.server.is_none()
+                || (self.state == State::Ready && self.kind == ItemKind::LocalAi))
+            && (self.awaits.is_none()
+                || (self.state == State::Absent && self.kind == ItemKind::LocalAi))
+            && self
+                .removals
+                .iter()
+                .all(|removal| removal.item().as_str() == self.item)
+            && self
+                .removals
+                .iter()
+                .enumerate()
+                .all(|(index, removal)| !self.removals[..index].contains(removal))
+    }
+}
+
+impl PlanEntry {
+    fn valid(&self) -> bool {
+        is_item_id(&self.item)
+            && !self.source_hosts.is_empty()
+            && self.source_hosts.len() <= MAX_HOSTS
+            && self.source_hosts.iter().all(|host| is_host(host))
+            && unique(&self.source_hosts)
+            && plain_option(self.destination.as_ref(), PATH_LIMIT)
+            && (self.parts.is_empty() || self.item == "local_ai")
+            && self.parts.len() <= PARTS.len()
+            && unique(self.parts.iter().map(|part| &part.part))
+            && self.parts.iter().all(|part| {
+                PARTS.contains(&part.part.as_str())
+                    && plain_option(part.destination.as_ref(), PATH_LIMIT)
+                    && if part.part == "download" {
+                        part.model
+                            .as_deref()
+                            .is_some_and(|model| ModelName::parse(model).is_ok())
+                    } else {
+                        part.model.is_none()
+                    }
+            })
+            && self
+                .shares_download_with
+                .as_deref()
+                .is_none_or(|other| is_item_id(other) && other != self.item)
+    }
+}
+
+impl Check {
+    fn valid(&self) -> bool {
+        is_hex64(&self.operation_id)
+            && (self.refusal.is_none()
+                || (self.stage == CheckStage::Failed && self.failure.is_none()))
     }
 }
 
 impl Review {
     fn valid(&self) -> bool {
         is_hex64(&self.plan_digest)
-            && plain_option(self.expires_at.as_ref(), 64)
             && !self.entries.is_empty()
             && self.entries.len() <= MAX_ITEMS
             && unique(self.entries.iter().map(|entry| &entry.item))
-            && self.entries.iter().all(|entry| {
-                is_item_id(&entry.item)
-                    && plain(&entry.name, NAME_LIMIT)
-                    && !entry.source_hosts.is_empty()
-                    && entry.source_hosts.len() <= MAX_HOSTS
-                    && entry.source_hosts.iter().all(|host| is_host(host))
-                    && unique(&entry.source_hosts)
-                    && plain_option(entry.destination.as_ref(), PATH_LIMIT)
-                    && plain_option(entry.licence_notice.as_ref(), SENTENCE_LIMIT)
-                    && (entry.advisories.is_empty() || entry.item == "local_ai")
-                    && (entry.parts.is_empty() || entry.item == "local_ai")
-                    && entry.parts.len() <= MAX_ITEMS
-                    && unique(entry.parts.iter().map(|part| &part.part))
-                    && entry
-                        .parts
-                        .iter()
-                        .all(|part| is_part_id(&part.part) && plain(&part.name, NAME_LIMIT))
-                    && entry.advisories.iter().collect::<BTreeSet<_>>().len()
-                        == entry.advisories.len()
-                    && entry.licence_notice.is_some()
-                        == entry
-                            .advisories
-                            .contains(&Advisory::LicenceCommercialUseBarred)
-                    && entry
-                        .shares_download_with
-                        .as_deref()
-                        .is_none_or(|other| is_item_id(other) && other != entry.item)
-            })
+            && self.entries.iter().all(PlanEntry::valid)
             && self.space_sufficient
                 == self
                     .free_bytes
@@ -518,37 +683,58 @@ impl Review {
     }
 }
 
+fn bytes_valid(completed: Option<u64>, total: Option<u64>) -> bool {
+    completed.is_some() == total.is_some()
+        && completed
+            .zip(total)
+            .is_none_or(|(completed, total)| total > 0 && completed <= total)
+}
+
+impl PartProgress {
+    fn valid(&self) -> bool {
+        PARTS.contains(&self.part.as_str())
+            && bytes_valid(self.completed, self.total)
+            && if self.part == "program" {
+                self.model.is_none()
+            } else {
+                self.model
+                    .as_deref()
+                    .is_some_and(|model| ModelName::parse(model).is_ok())
+            }
+    }
+}
+
 impl ItemProgress {
     fn valid(&self) -> bool {
         is_item_id(&self.item)
-            && plain(&self.name, NAME_LIMIT)
-            && self.completed.is_some() == self.total.is_some()
+            && bytes_valid(self.completed, self.total)
             && self
-                .completed
-                .zip(self.total)
-                .is_none_or(|(completed, total)| total > 0 && completed <= total)
-            && self.retry.as_ref().is_none_or(|retry| {
-                retry.attempt >= 2 && retry.delay_s >= 1 && plain(&retry.sentence, SENTENCE_LIMIT)
-            })
-            && self.result.as_ref().is_none_or(|result| {
-                result.failure.is_some() == result.sentence.is_some()
-                    && plain_option(result.sentence.as_ref(), SENTENCE_LIMIT)
-            })
+                .retry
+                .as_ref()
+                .is_none_or(|retry| retry.attempt >= 2 && retry.delay_s >= 1)
+            && (self.parts.is_empty() || self.item == "local_ai")
+            && self.parts.len() <= PARTS.len()
+            && unique(self.parts.iter().map(|part| &part.part))
+            && self.parts.iter().all(PartProgress::valid)
     }
 }
 
 impl Run {
     fn valid(&self) -> bool {
         let settled = self.stage == RunStage::Settled;
-        is_hex64(&self.operation_id)
+        is_item_id(&self.item)
+            && is_hex64(&self.operation_id)
             && (self.stage == RunStage::Review) == self.review.is_some()
-            && self.review.as_ref().is_none_or(Review::valid)
-            && self.items.len() <= MAX_ITEMS
-            && unique(self.items.iter().map(|item| &item.item))
-            && self.items.iter().all(ItemProgress::valid)
+            && self.review.as_ref().is_none_or(|review| {
+                review.valid() && review.entries.iter().all(|entry| entry.item == self.item)
+            })
+            && self.items.len() <= 1
+            && self
+                .items
+                .iter()
+                .all(|item| item.item == self.item && item.valid())
             && settled == self.outcome.is_some()
-            && (self.outcome == Some(Outcome::Failed)) == self.failure_sentence.is_some()
-            && plain_option(self.failure_sentence.as_ref(), SENTENCE_LIMIT)
+            && (self.outcome == Some(Outcome::Failed)) == self.failure.is_some()
             && !(settled && self.cancellable)
     }
 }
@@ -562,14 +748,12 @@ impl Snapshot {
             && self.rows.iter().all(Row::valid)
             && read == self.complete.is_some()
             && (read || self.rows.is_empty())
-            && self
-                .check
-                .as_ref()
-                .is_none_or(|check| is_hex64(&check.operation_id))
-            && self.setup.as_ref().is_none_or(Run::valid)
+            && self.check.as_ref().is_none_or(Check::valid)
+            && self.runs.len() <= MAX_ITEMS
+            && unique(self.runs.iter().map(|run| &run.item))
+            && unique(self.runs.iter().map(|run| &run.operation_id))
+            && self.runs.iter().all(Run::valid)
             && (self.google.stage == GoogleStage::Failed) == self.google.failure.is_some()
-            && self.google.failure.is_some() == self.google.sentence.is_some()
-            && plain_option(self.google.sentence.as_ref(), SENTENCE_LIMIT)
             && (self.google.email.is_none() || self.google.state == Some(GoogleState::SignedIn))
             && plain_option(self.google.email.as_ref(), NAME_LIMIT)
             && self.google.drive_folder_id.as_ref().is_none_or(|id| {
@@ -593,16 +777,27 @@ pub(super) fn is_drive_folder_id(id: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
 }
 
+/// A catalogue model the person requested without assigning a document task.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ModelDownload {
+    pub lane: String,
+    pub model: String,
+}
+
 /// One setup action the window asked for, in its closed form.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Action {
     Observe,
     Check(CheckMode),
     Verify(Option<Vec<String>>),
+    /// Setting up one item; with `reinstall`, the local AI with its program installed
+    /// afresh.
     Start {
-        items: Option<Vec<String>>,
-        model: Option<String>,
+        item: ItemId,
         resume: bool,
+        reinstall: bool,
+        download: Option<ModelDownload>,
     },
     Answer {
         operation_id: String,
@@ -612,6 +807,12 @@ pub enum Action {
     Cancel {
         operation_id: String,
     },
+    /// Removing one local model no role selects.
+    RemoveModel {
+        model: String,
+    },
+    /// Removing the browser, or the local AI or its program, from this computer.
+    Remove(Removal),
     GoogleSignIn,
     GoogleSignOut,
 }
@@ -641,19 +842,30 @@ pub fn verify_request(selected: Option<Vec<String>>) -> Result<Action, Applicati
     Ok(Action::Verify(items(selected)?))
 }
 
-/// Setup of `items`, or of every item not ready, planned first.
+/// Plans the setup of one item, or one explicitly requested catalogue model download.
+/// A reinstall is the local AI's alone, and is neither a resume nor a download.
 pub fn start_request(
-    selected: Option<Vec<String>>,
-    model: Option<String>,
+    item: &str,
     resume: bool,
+    reinstall: bool,
+    download: Option<ModelDownload>,
 ) -> Result<Action, ApplicationError> {
-    if model.as_deref().is_some_and(|model| !is_model_name(model)) {
+    let item = ItemId::parse(item).ok_or_else(invalid)?;
+    if reinstall && (item != ItemId::LocalAi || resume || download.is_some()) {
+        return Err(invalid());
+    }
+    if let Some(download) = &download
+        && (item != ItemId::LocalAi
+            || !plain(&download.lane, NAME_LIMIT)
+            || ModelName::parse(&download.model).is_err())
+    {
         return Err(invalid());
     }
     Ok(Action::Start {
-        items: items(selected)?,
-        model,
+        item,
         resume,
+        reinstall,
+        download,
     })
 }
 
@@ -672,6 +884,19 @@ pub fn answer_request(
         plan_digest: plan_digest.to_owned(),
         decision,
     })
+}
+
+/// Removing the local model `model`, named as a selection names it.
+pub fn remove_model_request(model: &str) -> Result<Action, ApplicationError> {
+    ModelName::parse(model).map_err(|_| invalid())?;
+    Ok(Action::RemoveModel {
+        model: model.to_owned(),
+    })
+}
+
+/// Removing what `removal` names from this computer.
+pub fn remove_request(removal: Removal) -> Action {
+    Action::Remove(removal)
 }
 
 /// Cancelling the setup this window started.
@@ -701,21 +926,19 @@ mod tests {
             "item": "browser", "kind": "browser", "mode": "quick", "state": "absent",
             "stale_reason": null, "blocked_reason": null, "failure": null, "recovery": "set_up",
             "recovery_action_id": "operator.provision.browser",
-            "version": null, "size_bytes": 180000000,
-            "name": "Browser for the tax agency website", "sentence": "Not set up yet.",
-            "note": null, "action_label": "Set up",
+            "version": null, "size_bytes": 180000000, "removals": [], "server": null,
+            "awaits": null,
         })
     }
 
     fn review() -> Value {
         json!({
-            "plan_digest": "a".repeat(64), "expires_at": "2026-10-18T10:00:00+00:00",
+            "plan_digest": "a".repeat(64),
             "entries": [{
-                "item": "browser", "name": "Browser for the tax agency website",
-                "download_bytes": 100, "source_hosts": ["cdn.playwright.dev"],
+                "item": "browser", "download_bytes": 100, "source_hosts": ["cdn.playwright.dev"],
                 "destination": "C:\\Cadrumo\\components\\playwright",
                 "installs_outside_program": false, "shares_download_with": null,
-                "advisories": [], "licence_notice": null, "parts": [],
+                "parts": [],
             }],
             "known_download_bytes": 100, "has_unknown_size": false,
             "installs_outside_program": false, "required_bytes": 1073741944,
@@ -725,26 +948,27 @@ mod tests {
 
     fn run(stage: &str) -> Value {
         json!({
-            "operation_id": "b".repeat(64), "stage": stage,
+            "item": "browser", "operation_id": "b".repeat(64), "stage": stage,
             "review": if stage == "review" { review() } else { Value::Null },
             "items": [{
-                "item": "browser", "name": "Browser for the tax agency website",
-                "step": "download", "completed": 40, "total": 100,
-                "retry": {"attempt": 2, "delay_s": 4, "sentence": "Trying again in 4 seconds."},
-                "result": null,
+                "item": "browser", "step": "download", "completed": 40, "total": 100,
+                "retry": {"attempt": 2, "delay_s": 4}, "result": null, "parts": [],
             }],
             "cancellable": stage == "running", "cancel_requested": false,
             "outcome": if stage == "settled" { json!("completed") } else { Value::Null },
-            "failure_sentence": null,
+            "failure": null,
         })
     }
 
     fn snapshot() -> Value {
         json!({
             "rows": [row()], "rows_mode": "quick", "complete": false, "hardware_limited": false,
-            "check": {"operation_id": "c".repeat(64), "kind": "status_quick", "stage": "done"},
-            "setup": run("review"),
-            "google": {"state": "signed_out", "email": null, "drive_folder_id": null, "stage": "idle", "failure": null, "sentence": null},
+            "check": {
+                "operation_id": "c".repeat(64), "kind": "status_quick", "stage": "done",
+                "failure": null, "refusal": null,
+            },
+            "runs": [run("review")],
+            "google": {"state": "signed_out", "email": null, "drive_folder_id": null, "stage": "idle", "failure": null},
             "details": "Cadrumo setup details\nitem: browser; state: absent; check: quick\n",
         })
     }
@@ -756,66 +980,112 @@ mod tests {
     fn a_snapshot_parses_into_the_closed_shapes_and_serializes_as_the_window_reads_it() {
         let shown = parsed(snapshot()).expect("a valid snapshot");
         assert_eq!(serde_json::to_value(&shown).unwrap(), snapshot());
-        assert_eq!(shown.setup.as_ref().unwrap().stage, RunStage::Review);
+        assert_eq!(shown.runs[0].stage, RunStage::Review);
         for stage in ["planning", "running", "settled"] {
             let mut next = snapshot();
-            next["setup"] = run(stage);
+            next["runs"] = json!([run(stage)]);
             assert!(parsed(next).is_some(), "{stage}");
         }
     }
 
     #[test]
-    fn a_value_outside_a_closed_set_or_a_bound_is_a_protocol_failure() {
-        let cases: [Case; 20] = [
+    fn an_absent_local_ai_whose_program_is_set_up_carries_the_model_it_awaits() {
+        let mut awaiting = snapshot();
+        awaiting["rows"][0]["item"] = json!("local_ai");
+        awaiting["rows"][0]["kind"] = json!("local_ai");
+        awaiting["rows"][0]["recovery"] = Value::Null;
+        awaiting["rows"][0]["recovery_action_id"] = Value::Null;
+        awaiting["rows"][0]["awaits"] = json!("model");
+        let shown = parsed(awaiting.clone()).expect("a valid snapshot");
+        assert_eq!(shown.rows[0].awaits, Some(Awaits::Model));
+        assert_eq!(serde_json::to_value(&shown).unwrap(), awaiting);
+    }
+
+    #[test]
+    fn a_value_outside_a_closed_set_or_a_bound_is_a_host_failure() {
+        let cases: [Case; 26] = [
             ("unknown state", |s| s["rows"][0]["state"] = json!("broken")),
-            ("unknown field", |s| s["rows"][0]["path"] = json!("C:\\")),
+            ("a server on another item", |s| {
+                s["rows"][0]["state"] = json!("ready");
+                s["rows"][0]["recovery"] = Value::Null;
+                s["rows"][0]["recovery_action_id"] = Value::Null;
+                s["rows"][0]["server"] = json!("dormant")
+            }),
+            ("unknown server", |s| {
+                s["rows"][0]["server"] = json!("asleep")
+            }),
+            ("a model awaited on another item", |s| {
+                s["rows"][0]["awaits"] = json!("model")
+            }),
+            ("a model awaited by a local AI that is not absent", |s| {
+                s["rows"][0]["item"] = json!("local_ai");
+                s["rows"][0]["kind"] = json!("local_ai");
+                s["rows"][0]["state"] = json!("ready");
+                s["rows"][0]["recovery"] = Value::Null;
+                s["rows"][0]["recovery_action_id"] = Value::Null;
+                s["rows"][0]["awaits"] = json!("model")
+            }),
+            ("unknown awaited part", |s| {
+                s["rows"][0]["item"] = json!("local_ai");
+                s["rows"][0]["kind"] = json!("local_ai");
+                s["rows"][0]["awaits"] = json!("program")
+            }),
+            ("another item's removal", |s| {
+                s["rows"][0]["removals"] = json!(["local_ai_program"])
+            }),
+            ("a removal twice", |s| {
+                s["rows"][0]["removals"] = json!(["browser", "browser"])
+            }),
+            ("unknown removal", |s| {
+                s["rows"][0]["removals"] = json!(["everything"])
+            }),
+            ("a word", |s| {
+                s["rows"][0]["sentence"] = json!("Not set up yet.")
+            }),
             ("bad item", |s| s["rows"][0]["item"] = json!("printer")),
-            ("label without recovery", |s| {
+            ("action without recovery", |s| {
                 s["rows"][0]["recovery"] = Value::Null
             }),
             ("reason on another state", |s| {
                 s["rows"][0]["failure"] = json!("offline")
             }),
-            ("control text", |s| {
-                s["rows"][0]["sentence"] = json!("a\u{7}b")
-            }),
-            ("empty sentence", |s| s["rows"][0]["sentence"] = json!("")),
             ("duplicate rows", |s| {
                 let copy = s["rows"][0].clone();
                 s["rows"].as_array_mut().unwrap().push(copy)
             }),
             ("bad host", |s| {
-                s["setup"]["review"]["entries"][0]["source_hosts"] = json!(["https://x.y"])
+                s["runs"][0]["review"]["entries"][0]["source_hosts"] = json!(["https://x.y"])
             }),
             ("no hosts", |s| {
-                s["setup"]["review"]["entries"][0]["source_hosts"] = json!([])
+                s["runs"][0]["review"]["entries"][0]["source_hosts"] = json!([])
             }),
             ("bad digest", |s| {
-                s["setup"]["review"]["plan_digest"] = json!("A".repeat(64))
+                s["runs"][0]["review"]["plan_digest"] = json!("A".repeat(64))
             }),
             ("space mismatch", |s| {
-                s["setup"]["review"]["space_sufficient"] = json!(false)
+                s["runs"][0]["review"]["space_sufficient"] = json!(false)
             }),
             ("review outside review", |s| {
-                s["setup"]["stage"] = json!("running")
+                s["runs"][0]["stage"] = json!("running")
             }),
             ("progress beyond total", |s| {
-                s["setup"]["items"][0]["completed"] = json!(101)
+                s["runs"][0]["items"][0]["completed"] = json!(101)
             }),
             ("first attempt retry", |s| {
-                s["setup"]["items"][0]["retry"]["attempt"] = json!(1)
+                s["runs"][0]["items"][0]["retry"]["attempt"] = json!(1)
             }),
-            ("unknown outcome", |s| s["setup"]["outcome"] = json!("done")),
-            (
-                "google failure without sentence",
-                |s| s["google"] = json!({"state": "signed_out", "email": null, "stage": "failed", "failure": "offline", "sentence": null}),
-            ),
+            ("unknown outcome", |s| {
+                s["runs"][0]["outcome"] = json!("done")
+            }),
+            ("google failure off a failed act", |s| {
+                s["google"]["failure"] = json!("offline")
+            }),
             ("google address while signed out", |s| {
                 s["google"]["email"] = json!("person@example.com")
             }),
             ("part outside the local AI", |s| {
-                s["setup"]["review"]["entries"][0]["parts"] =
-                    json!([{"part": "program", "name": "Program", "download_bytes": null}])
+                s["runs"][0]["review"]["entries"][0]["parts"] =
+                    json!([{"part": "program", "download_bytes": null}])
             }),
             ("rows before a read", |s| {
                 s["rows_mode"] = Value::Null;
@@ -830,15 +1100,51 @@ mod tests {
     }
 
     #[test]
-    fn a_settled_run_carries_its_outcome_and_a_failed_one_its_sentence() {
+    fn a_settled_run_carries_its_outcome_and_a_failed_one_its_failure() {
         let mut settled = snapshot();
-        settled["setup"] = run("settled");
-        settled["setup"]["outcome"] = json!("failed");
+        settled["runs"] = json!([run("settled")]);
+        settled["runs"][0]["outcome"] = json!("failed");
         assert!(parsed(settled.clone()).is_none());
-        settled["setup"]["failure_sentence"] = json!("Something unexpected happened.");
+        settled["runs"][0]["failure"] = json!("unexpected");
         assert!(parsed(settled.clone()).is_some());
-        settled["setup"]["cancellable"] = json!(true);
+        settled["runs"][0]["cancellable"] = json!(true);
         assert!(parsed(settled).is_none());
+    }
+
+    #[test]
+    fn a_model_download_requires_the_local_ai_item_and_valid_catalogue_identifiers() {
+        let request = || {
+            Some(ModelDownload {
+                lane: "synthetic_local_api".into(),
+                model: "synthetic-model:test".into(),
+            })
+        };
+        assert!(start_request("local_ai", false, false, request()).is_ok());
+        assert!(start_request("browser", false, false, request()).is_err());
+        assert!(
+            start_request(
+                "local_ai",
+                false,
+                false,
+                Some(ModelDownload {
+                    lane: "".into(),
+                    model: "synthetic-model:test".into()
+                })
+            )
+            .is_err()
+        );
+        assert!(
+            start_request(
+                "local_ai",
+                false,
+                false,
+                Some(ModelDownload {
+                    lane: "synthetic_local_api".into(),
+                    model: "../outside".into()
+                })
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -850,13 +1156,42 @@ mod tests {
         assert!(check_request("deep").is_err());
         assert_eq!(verify_request(None).unwrap(), Action::Verify(None));
         assert_eq!(
-            start_request(Some(vec!["local_ai".into()]), Some("qwen3:4b".into()), true).unwrap(),
+            start_request("local_ai", true, false, None).unwrap(),
             Action::Start {
-                items: Some(vec!["local_ai".into()]),
-                model: Some("qwen3:4b".into()),
+                item: ItemId::LocalAi,
                 resume: true,
+                reinstall: false,
+                download: None,
             }
         );
+        assert_eq!(
+            start_request("local_ai", false, true, None).unwrap(),
+            Action::Start {
+                item: ItemId::LocalAi,
+                resume: false,
+                reinstall: true,
+                download: None,
+            }
+        );
+        // A reinstall is the local AI's program alone: never the browser's, a resume or a
+        // model download.
+        assert!(start_request("browser", false, true, None).is_err());
+        assert!(start_request("local_ai", true, true, None).is_err());
+        assert!(
+            start_request(
+                "local_ai",
+                false,
+                true,
+                Some(ModelDownload {
+                    lane: "synthetic_local_api".into(),
+                    model: "synthetic-model:test".into(),
+                })
+            )
+            .is_err()
+        );
+        for item in ["", "printer", "browser,local_ai", "google"] {
+            assert!(start_request(item, false, false, None).is_err(), "{item}");
+        }
         for selected in [
             vec![],
             vec!["printer".to_owned()],
@@ -867,12 +1202,6 @@ mod tests {
             assert!(
                 verify_request(Some(selected.clone())).is_err(),
                 "{selected:?}"
-            );
-        }
-        for model in ["", "-x", "a b", "a\\b", &"m".repeat(129)] {
-            assert!(
-                start_request(None, Some(model.to_owned()), false).is_err(),
-                "{model}"
             );
         }
         let digest = "d".repeat(64);
@@ -894,57 +1223,211 @@ mod tests {
                 operation_id: "e".repeat(64)
             }
         );
+        assert_eq!(
+            remove_model_request("synthetic-text:test").unwrap(),
+            Action::RemoveModel {
+                model: "synthetic-text:test".to_owned()
+            }
+        );
+        assert!(remove_model_request("").is_err());
+        assert!(remove_model_request("not a model").is_err());
+        assert_eq!(
+            remove_request(Removal::LocalAiProgram),
+            Action::Remove(Removal::LocalAiProgram)
+        );
     }
 
-    fn licensed() -> Value {
-        let mut licensed = snapshot();
-        let entry = &mut licensed["setup"]["review"]["entries"][0];
+    fn with_parts() -> Value {
+        let mut planned = snapshot();
+        planned["runs"][0]["item"] = json!("local_ai");
+        planned["runs"][0]["items"][0]["item"] = json!("local_ai");
+        let entry = &mut planned["runs"][0]["review"]["entries"][0];
         entry["item"] = json!("local_ai");
         entry["parts"] = json!([
-            {"part": "program", "name": "The program that runs the models", "download_bytes": null},
-            {"part": "text_extraction", "name": "Model for document text", "download_bytes": 100},
+            {"part": "program", "download_bytes": null,
+             "destination": "/state/components/ollama"},
+            {"part": "text_extraction", "download_bytes": 100,
+             "destination": "/state/models/ollama"},
         ]);
-        entry["advisories"] = json!(["licence_commercial_use_barred", "fit_unverified"]);
-        entry["licence_notice"] = json!("This model may be used for non-commercial purposes only.");
-        licensed
+        planned
     }
 
     #[test]
-    fn a_model_entry_carries_its_closed_advisories_and_licence_notice() {
-        let shown = parsed(licensed()).expect("a valid snapshot");
-        assert_eq!(serde_json::to_value(&shown).unwrap(), licensed());
-        let cases: [Case; 7] = [
-            ("unknown advisory", |e| {
-                e["advisories"] = json!(["licence_free"])
+    fn the_local_ais_entry_carries_its_program_and_the_roles_it_pulls_for() {
+        let shown = parsed(with_parts()).expect("a valid snapshot");
+        assert_eq!(serde_json::to_value(&shown).unwrap(), with_parts());
+        let cases: [Case; 5] = [
+            ("an entry of another item", |e| e["item"] = json!("browser")),
+            ("a part folder past the path bound", |e| {
+                e["parts"][0]["destination"] = json!("x".repeat(PATH_LIMIT + 1))
             }),
-            ("repeated advisory", |e| {
-                e["advisories"] = json!([
-                    "licence_commercial_use_barred",
-                    "licence_commercial_use_barred"
-                ])
+            ("a part outside the roles", |e| {
+                e["parts"][1]["part"] = json!("weather")
             }),
-            ("advisory off a model", |e| e["item"] = json!("browser")),
-            ("notice without the barred advisory", |e| {
-                e["advisories"] = json!(["licence_unverified"])
+            ("a part twice", |e| e["parts"][1]["part"] = json!("program")),
+            ("a field the plan no longer carries", |e| {
+                e["advisories"] = json!([])
             }),
-            ("barred advisory without notice", |e| {
-                e["licence_notice"] = Value::Null
-            }),
-            ("control text", |e| e["licence_notice"] = json!("a	b")),
-            ("empty notice", |e| e["licence_notice"] = json!("")),
         ];
         for (name, change) in cases {
-            let mut changed = licensed();
-            change(&mut changed["setup"]["review"]["entries"][0]);
+            let mut changed = with_parts();
+            change(&mut changed["runs"][0]["review"]["entries"][0]);
+            assert!(parsed(changed).is_none(), "{name}");
+        }
+    }
+
+    /// A snapshot with the browser's setup running beside the local AI's, whose program
+    /// has finished downloading and whose model is on its way.
+    fn side_by_side() -> Value {
+        let mut both = snapshot();
+        let mut local_ai = run("running");
+        local_ai["item"] = json!("local_ai");
+        local_ai["operation_id"] = json!("f".repeat(64));
+        local_ai["items"] = json!([{
+            "item": "local_ai", "step": "download", "completed": 150, "total": 300,
+            "retry": null, "result": null,
+            "parts": [
+                {"part": "program", "step": "install", "completed": 100, "total": 100,
+                 "result": null},
+                {"part": "text_extraction", "model": "synthetic-text:test", "step": "download",
+                 "completed": 50, "total": 200, "result": null},
+            ],
+        }]);
+        both["runs"] = json!([run("running"), local_ai]);
+        both
+    }
+
+    #[test]
+    fn each_item_has_its_own_run_and_the_local_ai_its_parts() {
+        let shown = parsed(side_by_side()).expect("a valid snapshot");
+        assert_eq!(serde_json::to_value(&shown).unwrap(), side_by_side());
+        assert_eq!(
+            shown
+                .runs
+                .iter()
+                .map(|run| run.item.as_str())
+                .collect::<Vec<_>>(),
+            ["browser", "local_ai"]
+        );
+        let cases: [Case; 10] = [
+            ("two runs of one item", |s| {
+                s["runs"][1]["item"] = json!("browser");
+                s["runs"][1]["items"][0]["item"] = json!("browser");
+                s["runs"][1]["items"][0]["parts"] = json!([]);
+            }),
+            ("one operation twice", |s| {
+                s["runs"][1]["operation_id"] = json!("b".repeat(64))
+            }),
+            ("progress of another item", |s| {
+                s["runs"][0]["items"][0]["item"] = json!("local_ai")
+            }),
+            ("parts outside the local AI", |s| {
+                s["runs"][0]["items"][0]["parts"] = s["runs"][1]["items"][0]["parts"].clone()
+            }),
+            ("a part outside the plan's parts", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["part"] = json!("weather")
+            }),
+            ("a part twice", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["part"] = json!("program");
+                s["runs"][1]["items"][0]["parts"][1]["model"] = Value::Null;
+            }),
+            ("a model on the program", |s| {
+                s["runs"][1]["items"][0]["parts"][0]["model"] = json!("synthetic-text:test")
+            }),
+            ("a model part without its model", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["model"] = Value::Null
+            }),
+            ("a model the engine cannot pull", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["model"] = json!("../outside")
+            }),
+            ("a part beyond its total", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["completed"] = json!(201)
+            }),
+        ];
+        for (name, change) in cases {
+            let mut changed = side_by_side();
+            change(&mut changed);
             assert!(parsed(changed).is_none(), "{name}");
         }
     }
 
     #[test]
-    fn a_refusal_serializes_as_its_code_only() {
+    fn a_check_the_selection_refused_carries_that_refusal_and_no_failure() {
+        let refused = |change: fn(&mut Value)| {
+            let mut snapshot = snapshot();
+            snapshot["check"]["stage"] = json!("failed");
+            snapshot["check"]["refusal"] = json!("model_selection_unusable");
+            change(&mut snapshot["check"]);
+            parsed(snapshot)
+        };
+        let shown = refused(|_| ()).expect("a valid snapshot");
         assert_eq!(
-            serde_json::to_value(CommandFailure::from(Refusal::NotCancellable)).unwrap(),
-            json!({"code":"not_cancellable"})
+            shown.check.as_ref().and_then(|check| check.refusal),
+            Some(Refusal::ModelSelectionUnusable)
+        );
+        assert!(refused(|check| check["refusal"] = json!("not_signed_in")).is_some());
+        assert!(refused(|check| check["failure"] = json!("offline")).is_none());
+        assert!(refused(|check| check["stage"] = json!("running")).is_none());
+        assert!(refused(|check| check["refusal"] = json!("pigeon")).is_none());
+    }
+
+    #[test]
+    fn a_refusal_serializes_as_its_code_only() {
+        for (refusal, code) in [
+            (Refusal::NotCancellable, "not_cancellable"),
+            (Refusal::ModelSelectionUnusable, "model_selection_unusable"),
+            (Refusal::ModelNotRemoved, "model_not_removed"),
+            (Refusal::BrowserNotRemoved, "browser_not_removed"),
+            (Refusal::LocalAiNotRemoved, "local_ai_not_removed"),
+        ] {
+            assert_eq!(
+                serde_json::to_value(CommandFailure::from(refusal)).unwrap(),
+                json!({"code": code})
+            );
+        }
+    }
+
+    #[test]
+    fn the_window_is_told_a_stops_code_and_its_cause_stays_with_diagnostics() {
+        let unavailable = Stop::unavailable("setup_runtime_not_ready")
+            .because(std::io::Error::from(std::io::ErrorKind::ConnectionRefused));
+        assert_eq!(
+            unavailable.cause().and_then(|error| error.io_kind),
+            Some(std::io::ErrorKind::ConnectionRefused),
+            "the cause is chained for diagnostics"
+        );
+        assert_eq!(
+            serde_json::to_value(CommandFailure::from(unavailable)).unwrap(),
+            json!({"code": "unavailable"})
+        );
+        let contract = Stop::Host(
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("setup_local_models_contract"),
+        );
+        assert_eq!(contract.refusal(), None);
+        let shown = serde_json::to_value(CommandFailure::from(contract)).unwrap();
+        assert_eq!(
+            shown["code"], "read_failed",
+            "a host failure crosses as its error code"
+        );
+    }
+
+    #[test]
+    fn a_refusal_the_person_can_act_on_has_no_failure_but_unavailable_is_never_unexplained() {
+        for refusal in [
+            Refusal::NotSignedIn,
+            Refusal::Busy,
+            Refusal::ModelSelectionUnusable,
+        ] {
+            let stop = Stop::from(refusal);
+            assert!(stop.cause().is_none(), "{refusal:?}");
+            assert_eq!(stop.refusal(), Some(refusal));
+        }
+        let stop = Stop::from(Refusal::Unavailable);
+        assert_eq!(stop.refusal(), Some(Refusal::Unavailable));
+        assert_eq!(
+            stop.cause().and_then(|error| error.reason.as_deref()),
+            Some("setup_unavailable_unnamed")
         );
     }
 }

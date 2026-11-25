@@ -29,12 +29,6 @@ source_refs = [
     "boe-modelo-347-2008-form",
     "boe-modelo-347-2011-amendment",
 ]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes it cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off. An operator re-stamping this to
-# 'operator_reviewed' is what promotes the revision to a countersigned filing
-# grade.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-16
@@ -42,6 +36,18 @@ family_storage_baseline = "2011-2024"
 scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
+
+[revisions."2025-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure", "boe-modelo-347-2008-form", "boe-modelo-347-2011-amendment"]
+
+[revisions."2025-y-siguientes".family_dispositions.prevision_social_placements]
+reason = """
+The pension contribution placement declares, for each Modelo 345 clave and subclave a contribution certificate states, the Modelo 100 casilla of the reduction for contributions to social-welfare systems it reaches (LIRPF arts. 51 and 52). This modelo is not the annual Renta return and declares no casilla of that reduction, so there is no contribution for an entry to place."""
+legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure", "boe-modelo-347-2008-form", "boe-modelo-347-2011-amendment"]
 
 [revisions."2025-y-siguientes".family_dispositions.formulas]
 reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."

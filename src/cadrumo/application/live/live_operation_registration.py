@@ -12,18 +12,14 @@ from collections.abc import Callable
 from pydantic import BaseModel
 
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..ledger.read_access import resolve_ledger_commit_access, resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import OperationCapabilities
 from ..operations.models import (
-    OperationRequest,
     OperationTerminalReceipt,
     require_succeeded_receipt_references,
     require_terminal_receipt_match,
     require_terminal_receipt_match_any_effect,
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
-from ..operations.profile_guard import ProfileAccessPayload, require_access_request_profile_payload
 from ..operations.registry import OperationReconciliationPolicy
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.models import ActionReference
@@ -56,36 +52,6 @@ def build_live_operation_definition[ExecutorT](
         public_error_detail=True,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
-
-
-def resolve_whole_profile_read_access[PayloadT: ProfileAccessPayload](
-    request: OperationRequest[BaseModel],
-    context: OperationAccessContext,
-    /,
-    *,
-    definition_id: str,
-    payload_type: type[PayloadT],
-) -> ResolvedOperationAccess:
-    """Grant ledger reads over every period of the request's own profile."""
-    payload = require_access_request_profile_payload(
-        request, definition_id=definition_id, payload_type=payload_type, access_profile_id=context.profile_id
-    )
-    return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
-
-
-def resolve_whole_profile_capture_access[PayloadT: ProfileAccessPayload](
-    request: OperationRequest[BaseModel],
-    context: OperationAccessContext,
-    /,
-    *,
-    definition_id: str,
-    payload_type: type[PayloadT],
-) -> ResolvedOperationAccess:
-    """Grant whole-profile ledger reads plus a fresh COMMIT fence for the capture's local writes."""
-    payload = require_access_request_profile_payload(
-        request, definition_id=definition_id, payload_type=payload_type, access_profile_id=context.profile_id
-    )
-    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def require_live_read_receipt(

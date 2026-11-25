@@ -4,22 +4,19 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, contextmanager
-from datetime import UTC, datetime, timedelta
+from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import expedientes as expedientes_module
 from ...application.live.expedientes import PersistedExpedientesSnapshot
@@ -45,22 +42,32 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
-from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...application.operations.supervisor import OperationSupervisor
+from ...application.operations.registry import OperationRegistry
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
 )
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
+from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    operation_access_context,
+    run_to_terminal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_NOW = datetime(2026, 9, 29, 12, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_FILING_YEAR = newest_authored_edition("100")
+
+_NOW = datetime(_YEAR, 9, 29, 12, tzinfo=UTC)
 _PROFILE_ID = UUID("11111111-1111-4111-8111-111111111111")
 
 
@@ -87,54 +94,11 @@ class _SnapshotRepository:
         self.snapshots[str(snapshot.snapshot_id)] = snapshot
 
 
-class _Resources:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-        self.closed = False
-        self.close_calls = 0
-
-    @contextmanager
-    def activate(self):
-        self.events.append("resources-activate")
-        try:
-            yield
-        finally:
-            self.events.append("resources-deactivate")
-
-    async def close(self) -> None:
-        self.closed = True
-        self.close_calls += 1
-        self.events.append("resources-close")
-
-
-class _ExecutionAuthority:
-    def __init__(self, events: list[str]) -> None:
-        self.events = events
-
-    async def require(self, *, identity: object, request: object, action: AccessAction) -> None:
-        assert identity is not None and request is not None
-        self.events.append(f"require:{action.value}")
-
-    @asynccontextmanager
-    async def commit_guard(self, identity: object) -> AsyncGenerator[None]:
-        assert identity is not None
-        self.events.append("guard-enter")
-        try:
-            yield
-        finally:
-            self.events.append("guard-exit")
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
-
-
 def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
     return ExpedientesDeclaration(
         modelo=modelo,
-        ejercicio=2025,
-        period=Period.from_year_and_code(2025, "1T"),
+        ejercicio=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         expediente_id="12345678901234567890",
         estado="ALTA",
         tipo_solicitud="Presentación",
@@ -144,13 +108,8 @@ def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
 
 
 def _access_context(profile_id: UUID, contract: Any) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
+    return operation_access_context(
+        contract, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
     )
 
 
@@ -189,14 +148,14 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
             declaration_reader=cast(Any, Reader()),
             snapshot_repository_factory=lambda bucket_id: cast(SnapshotRepository[Any], repository),
         )
-        resources: list[_Resources] = []
+        resources: list[RecordingResources] = []
         provider_calls: list[tuple[UUID, PinnedAuthorityOperation]] = []
 
         async def active_session(**kwargs: object) -> tuple[object, object]:
             assert kwargs["authority_operation"] is authority
             assert kwargs["operation"] == "live-expedientes-read"
             events.append("authenticated-session")
-            return SimpleNamespace(identity_nif="X1234567L"), object()
+            return SimpleNamespace(identity_nif="X0001500M"), object()
 
         monkeypatch.setattr(expedientes_module, "active_verified_session", active_session)
         monkeypatch.setattr(expedientes_module, "now", lambda: _NOW)
@@ -205,8 +164,8 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
             provider_calls.append((profile_arg, pinned))
             events.append("provider-preflight")
 
-        def resources_factory() -> _Resources:
-            resource = _Resources(events)
+        def resources_factory() -> RecordingResources:
+            resource = RecordingResources(events)
             resources.append(resource)
             return resource
 
@@ -223,7 +182,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
         request = OperationRequest(
             definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
             subject_ref=profile_operation_subject(profile.bucket_id),
-            payload=ExpedientesSingleCaptureRequest(profile_id=profile_id, modelo="303", year=2025),
+            payload=ExpedientesSingleCaptureRequest(profile_id=profile_id, modelo="303", year=_FILING_YEAR),
         )
         access_context = _access_context(profile_id, registration.contract)
         admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
@@ -231,41 +190,23 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
         assert admitted.policy.requires_all_periods
         assert AccessAction.COMMIT in admitted.policy.actions
 
-        foreign_profile_id = uuid4()
-        foreign_request = request.model_copy(
-            update={
-                "subject_ref": profile_operation_subject(str(foreign_profile_id)),
-                "payload": request.payload.model_copy(update={"profile_id": foreign_profile_id}),
-            }
-        )
-        with pytest.raises(ProfileAccessRefusedError) as refusal:
-            resolve_operation_access(registry=registry, request=foreign_request, context=access_context)
-        assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+        assert_foreign_profile_refused(registry=registry, request=request, context=access_context)
 
         from ...application.live import expedientes_capture_operation as capture_module
 
         monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
-            execution_authority=_ExecutionAuthority(events),
+            now=_NOW,
+            execution_authority=RecordingExecutionAuthority(events),
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)
-            terminal = await _run_to_terminal(supervisor, submitted_id)
+            terminal = await run_to_terminal(supervisor, submitted_id)
             contract = registry.lookup_public_contract(EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID)
             assert contract.result_schema is not None
             projected = await result_service.resolve(
@@ -297,11 +238,11 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
     assert first_result.bucket_id == profile.bucket_id
     assert first_result.snapshot_id == second_result.snapshot_id
     assert first_result.declaration_count == 1
-    assert first_result.source_url == "declarations:modelo=303:ejercicio=2025"
+    assert first_result.source_url == f"declarations:modelo=303:ejercicio={_FILING_YEAR}"
     assert len(repository.snapshots) == 1
     assert events.count("snapshot-save") == 1
     assert (
-        events.index("remote-walk:303:2025")
+        events.index(f"remote-walk:303:{_FILING_YEAR}")
         < events.index("guard-enter")
         < events.index("snapshot-save")
         < events.index("guard-exit")
@@ -361,7 +302,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
         assert kwargs["authority_operation"] is authority
         assert kwargs["operation"] == "live-expedientes-read"
         events.append("authenticated-session")
-        return SimpleNamespace(identity_nif="X1234567L"), object()
+        return SimpleNamespace(identity_nif="X0001500M"), object()
 
     monkeypatch.setattr(expedientes_module, "active_verified_session", active_session)
     monkeypatch.setattr(expedientes_module, "now", lambda: _NOW)
@@ -396,7 +337,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
             assert getattr(family, "value", family) == "process"
             events.append("process-owned")
 
-    resources = _Resources(events)
+    resources = RecordingResources(events)
     operands = Operands()
     context = SimpleNamespace(
         identity=identity,
@@ -427,8 +368,8 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
         payload=ExpedientesBulkCaptureRequest(
             profile_id=_PROFILE_ID,
             modelos=("100", "303"),
-            year_from=2025,
-            year_to=2025,
+            year_from=_FILING_YEAR,
+            year_to=_FILING_YEAR,
         ),
     )
     access = resolve_expedientes_bulk_capture_access(request, _access_context(_PROFILE_ID, registration.contract))
@@ -441,7 +382,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
 
     assert reference == "result-ref"
     assert operands.report is not None
-    assert events.index("remote-walk:100:2025") < events.index("remote-walk:303:2025")
+    assert events.index(f"remote-walk:100:{_FILING_YEAR}") < events.index(f"remote-walk:303:{_FILING_YEAR}")
     assert (
         events.index("register-close")
         < events.index("guard-enter")
@@ -470,7 +411,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
     assert projected.declaration_count == 1
     assert projected.failed_count == 1
     assert len(projected.snapshot_ids) == 1
-    assert (projected.failures[0].modelo, projected.failures[0].year) == ("303", 2025)
+    assert (projected.failures[0].modelo, projected.failures[0].year) == ("303", _FILING_YEAR)
     assert projected.failures[0].error_type == "RuntimeError"
     assert "temporary register failure" in projected.failures[0].message
 
@@ -484,8 +425,8 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
         asyncio.run(
             expedientes_module.capture_expedientes_bulk(
                 bucket_id=str(_PROFILE_ID),
-                year_from=2025,
-                year_to=2025,
+                year_from=_FILING_YEAR,
+                year_to=_FILING_YEAR,
                 modelos=("AUTH",),
                 ports=ports,
                 certificate_secret_backend_factory=cast(Any, object()),

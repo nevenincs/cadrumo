@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo_client.commands.parameters import OptionSpec
 
-from .._profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
+from ..profile_inventory_specs import PROFILE_INVENTORY_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

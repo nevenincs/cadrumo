@@ -20,10 +20,11 @@ class TuiJourneyError(RuntimeError):
     """Raised when an acceptance receipt cannot identify a valid run coordinate."""
 
 
-class _TuiScreen(Protocol):
+class TuiScreen(Protocol):
     """The public Textual screen operation used by the installed adapter."""
 
-    def query_one(self, selector: str) -> object: ...
+    def query_one(self, selector: str) -> object:
+        """Return the widget matched by ``selector``."""
 
 
 @dataclass(frozen=True, slots=True)

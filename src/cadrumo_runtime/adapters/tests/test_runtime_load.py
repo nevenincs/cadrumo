@@ -40,13 +40,16 @@ def exchange(client: VerifiedConnection, boot_id: UUID) -> UUID:
 
 
 @pytest.mark.parametrize("connections", [1, 8, 24])
-def test_concurrent_native_round_trip_benchmark(server: Host, connections: int) -> None:
+@pytest.mark.parametrize("subscribed", [False, True], ids=["requests", "events-and-requests"])
+def test_concurrent_native_round_trip_benchmark(server: Host, connections: int, subscribed: bool) -> None:
     host, endpoint = server
     with ExitStack() as cleanup:
         clients = []
         for _ in range(connections):
             client = connect(endpoint)
             cleanup.callback(client.close)
+            if subscribed:
+                client.subscribe_session_events(lambda _event: None)
             clients.append(client)
         barrier = Barrier(connections)
 
@@ -75,6 +78,7 @@ def test_concurrent_native_round_trip_benchmark(server: Host, connections: int) 
             + json.dumps(
                 {
                     "connections": connections,
+                    "subscribed": subscribed,
                     "requests": len(samples),
                     "p50_ms": statistics.median(samples),
                     "p95_ms": samples[math.ceil(len(samples) * 0.95) - 1],

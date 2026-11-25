@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.json_contract import NoticeSeverity
-from cadrumo.entrypoints.cli._ledger_llm_cli import split_recommendation_notice
+from cadrumo.entrypoints.cli.ledger_llm_cli import split_recommendation_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

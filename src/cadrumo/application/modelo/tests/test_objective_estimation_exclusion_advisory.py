@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IVARegime
 
@@ -23,9 +22,9 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
-from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
+from ..objective_estimation_advisory import objective_estimation_exclusion_advisory_findings
 from ..verification_revision_findings import collect_revision_verification_findings
+from .advisory_diagnostic_repositories import EmptyTransactionCatalogueRepository
 from .invoice_catalogue_fake import InvoiceCatalogueFake
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -39,44 +38,6 @@ _DT32_LAST_EXTENDED_EXERCISE = int(
 _ARTICLE31_YEARS = tuple(year for year in _SUPPORT.years if year > _DT32_LAST_EXTENDED_EXERCISE)
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-
-
-class _EmptyTransactionRepository:
-    """Deterministic empty transaction port for the verification path."""
-
-    def __init__(self, bucket_id: str) -> None:
-        self._bucket_id = bucket_id
-
-    @property
-    def bucket_id(self) -> str:
-        return self._bucket_id
-
-    @staticmethod
-    def exists() -> bool:
-        return False
-
-    @staticmethod
-    def load() -> TransactionCatalogue:
-        return TransactionCatalogue()
-
-    @staticmethod
-    def load_for_date_range(start: date, end: date) -> TransactionCatalogue:
-        del start, end
-        return TransactionCatalogue()
-
-    @staticmethod
-    def load_by_ids(transaction_ids: Iterable[str]) -> TransactionCatalogue:
-        del transaction_ids
-        return TransactionCatalogue()
-
-    @staticmethod
-    def partition_by_date_range(start: date, end: date) -> LedgerDatePartition:
-        del start, end
-        return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
-
-    @staticmethod
-    def save(catalogue: TransactionCatalogue) -> None:
-        del catalogue
 
 
 def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
@@ -104,7 +65,7 @@ def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
 
 def _objective_profile(**overrides: Any) -> TaxpayerProfile:
     base_data: dict[str, Any] = {
-        "tax_id": "X1234567L",
+        "tax_id": "X0001500M",
         "iva_regime": IVARegime("GENERAL"),
         "irpf_estimation_regime": IrpfEstimationRegime.from_registry("objetiva"),
     }
@@ -148,7 +109,7 @@ def test_objective_estimation_exclusion_advisory_fires_for_settled_year_excess()
         objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
+    findings = objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
 
     assert len(findings) == 4
     assert {finding.kind for finding in findings} == {ModeloVerificationFindingKind.ADVISORY}
@@ -193,7 +154,7 @@ def test_objective_estimation_exclusion_advisory_reverts_to_article31_after_dt32
         objective_estimation_prior_year_purchases_eur=Decimal("250000.01"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(
+    findings = objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=filing_year),
         profile=profile,
     )
@@ -212,7 +173,7 @@ def test_objective_estimation_exclusion_advisory_uses_article31_for_the_invoice_
         objective_estimation_prior_year_invoice_gross_income_eur=Decimal("125000.01"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(
+    findings = objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=filing_year),
         profile=profile,
     )
@@ -230,7 +191,7 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
         objective_estimation_prior_year_purchases_eur=Decimal("999999.00"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(
+    findings = objective_estimation_exclusion_advisory_findings(
         work_unit=_work_unit(filing_year=2027),
         profile=profile,
     )
@@ -239,7 +200,7 @@ def test_objective_estimation_exclusion_advisory_does_not_project_beyond_officia
 
 
 def test_revision_verification_collects_objective_estimation_exclusion_advisory() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         work_unit = _work_unit(modelo="131", filing_year=2024)
         profile = _objective_profile(
             objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),
@@ -249,8 +210,9 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
             work_unit=work_unit,
             target=_calculation_revision(work_unit),
             profile=profile,
-            transaction_repository=_EmptyTransactionRepository(work_unit.bucket_id),
+            transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=work_unit.bucket_id),
             invoice_repository=InvoiceCatalogueFake(),
+            rectification_evidence_recordable=False,
             operation=_authority_operation_for_test,
             work_profile=None,
         )
@@ -268,12 +230,12 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
 
 def test_objective_estimation_exclusion_advisory_does_not_apply_direct_estimation_profile() -> None:
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),
     )
 
-    findings = _objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
+    findings = objective_estimation_exclusion_advisory_findings(work_unit=_work_unit(), profile=profile)
 
     assert findings == ()

@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.application.auth import operator
 from cadrumo.application.auth.sessions import ClaveCredentials
-from cadrumo.application.auth.tests._operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 
@@ -37,7 +37,7 @@ def test_login_precondition_admits_a_resolved_profile_credential(
 
     monkeypatch.setattr(operator, "probe_clave_credentials", _resolved_profile_credential)
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        operator._assert_login_precondition(
+        operator.assert_login_precondition(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
@@ -58,7 +58,7 @@ def test_login_precondition_still_refuses_when_no_credential_exists(
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(AuthLoginPreconditionError) as raised,
     ):
-        operator._assert_login_precondition(
+        operator.assert_login_precondition(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,

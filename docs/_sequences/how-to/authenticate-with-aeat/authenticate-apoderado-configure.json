@@ -10,7 +10,7 @@
         "apoderado",
         "configure",
         "--represented-nif",
-        "11111111H",
+        "00001000B",
         "--scope",
         "IVA",
         "--scope",
@@ -38,7 +38,7 @@
             "PAGOSF"
           ],
           "notes": "",
-          "represented_nif": "sha256:33982da1"
+          "represented_nif": "sha256:be4475cd"
         },
         "schema_version": "2",
         "status": "warning"

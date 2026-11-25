@@ -28,9 +28,9 @@ from ....application.operations.frontend_projection import OperationReviewProjec
 from ....application.operations.models import OperationIdentity
 from ....core.operations import OperationEffect, profile_operation_subject
 from .. import google_review_cli
-from .._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
-from .._profile_authentication_gate import _uses_profile_connection
 from ..google_review_cli import accept_google_review, publish_google_review_cli
+from ..modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
+from ..profile_authentication_gate import profile_authentication_gate_uses_profile_connection
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -74,7 +74,9 @@ def test_publish_help_exposes_saved_revision_and_readable_disclosure() -> None:
 
 def test_publish_routes_through_native_runtime_profile_admission() -> None:
     spec = next(item for item in MODELO_SPREADSHEET_COMMAND_SPECS if item.key == "app_modelo_spreadsheet_publish")
-    assert _uses_profile_connection(spec, {"calculation_revision_id": "a" * 64, "accept_readable_export": True})
+    assert profile_authentication_gate_uses_profile_connection(
+        spec, {"calculation_revision_id": "a" * 64, "accept_readable_export": True}
+    )
 
 
 def test_missing_disclosure_flag_refuses_before_profile_or_runtime_access() -> None:

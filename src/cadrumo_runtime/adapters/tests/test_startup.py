@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.process_support import launch_fixture, runtime_namespace_base
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_runtime.adapters.tests.process_support import launch_fixture, runtime_namespace_base
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 

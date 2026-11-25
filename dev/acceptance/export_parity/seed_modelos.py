@@ -8,15 +8,11 @@ from .scenario import (
     QUARTERS,
 )
 from .seed_contracts import (
-    _ACTOR,
-    _ANNUAL,
-    _M100_BINDINGS,
-    _M100_CASILLAS,
-    _PERIODIC,
+    ACTOR,
+    ANNUAL,
+    M100_CASILLAS,
+    PERIODIC,
     SeedRefusalError,
-)
-from .seed_inputs import (
-    _binding_ids,
 )
 from .seed_state import SeedState
 
@@ -25,7 +21,7 @@ def _verify_modelo_revision(self: ModeloSeedStage, stage: str, revision_id: str)
     """Verify modelo revision."""
     if self._pending(f"{stage}.verify"):
         verified = self._result(
-            ("app", "modelo", "work", "verify", revision_id, "--by", _ACTOR), stage=f"{stage}.verify"
+            ("app", "modelo", "work", "verify", revision_id, "--by", ACTOR), stage=f"{stage}.verify"
         )
         if verified.get("granted_verificado_completo") is not True:
             reasons = sorted(
@@ -63,7 +59,7 @@ class ModeloSeedStage(SeedState):
                     "--period",
                     period,
                     "--by",
-                    _ACTOR,
+                    ACTOR,
                 ),
                 stage=f"{stage}.create",
             )
@@ -72,7 +68,7 @@ class ModeloSeedStage(SeedState):
         work_id = self.receipt.identifiers[work_key]
         if self._pending(f"{stage}.calculate"):
             calculated = self._result(
-                ("app", "modelo", "work", "calculate", work_id, *extra(), "--by", _ACTOR), stage=f"{stage}.calculate"
+                ("app", "modelo", "work", "calculate", work_id, *extra(), "--by", ACTOR), stage=f"{stage}.calculate"
             )
             self._remember(revision_key, calculated["calculation_revision_id"])
             self._complete(f"{stage}.calculate")
@@ -87,7 +83,7 @@ class ModeloSeedStage(SeedState):
                     "file",
                     revision_id,
                     "--by",
-                    _ACTOR,
+                    ACTOR,
                     "--notes",
                     "Synthetic local filing record only; never sent to AEAT",
                 ),
@@ -100,13 +96,13 @@ class ModeloSeedStage(SeedState):
     def modelos(self, year: int) -> None:
         """Run the ordered quarterly and annual public modelo stages."""
         for period in QUARTERS:
-            for modelo in _PERIODIC:
+            for modelo in PERIODIC:
                 self._attempt(
                     lambda modelo=modelo, period=period: self._lifecycle(
                         modelo, year, period, lambda: self._calculation_inputs(modelo, year, period)
                     )
                 )
-        for modelo in _ANNUAL:
+        for modelo in ANNUAL:
             self._attempt(
                 lambda modelo=modelo: self._lifecycle(
                     modelo, year, "0A", lambda: self._calculation_inputs(modelo, year, "0A")
@@ -122,15 +118,7 @@ class ModeloSeedStage(SeedState):
                 inputs += ("--m303-exonerado-390-attachment-id", attachment_id, "--m303-exonerado-390-sha256", sha256)
             return inputs
         if modelo == "100":
-            declared = self._declared_bindings("100", year)
-            casillas = tuple(argument for value in _M100_CASILLAS for argument in ("--casilla", value))
-            bindings = tuple(
-                argument
-                for binding_id, value in _M100_BINDINGS.items()
-                if binding_id in declared
-                for argument in ("--binding", f"{binding_id}={value}")
-            )
-            return casillas + bindings
+            return tuple(argument for value in M100_CASILLAS for argument in ("--casilla", value))
         return ()
 
     def _m303_exonerado_390_attestation(self, year: int, period: str) -> tuple[str, str]:
@@ -150,7 +138,7 @@ class ModeloSeedStage(SeedState):
                     "--observed-at",
                     f"{year + 1}-01-10T12:00:00+00:00",
                     "--by",
-                    _ACTOR,
+                    ACTOR,
                 ),
                 stage=f"{key}.attest",
             )
@@ -158,11 +146,3 @@ class ModeloSeedStage(SeedState):
             self._remember(f"{key}:sha256", attested["sha256"])
             self._complete(key)
         return self.receipt.identifiers[f"{key}:attachment_id"], self.receipt.identifiers[f"{key}:sha256"]
-
-    def _declared_bindings(self, modelo: str, year: int) -> frozenset[str]:
-        """Read the binding ids the selected revision declares, so no other year's answer is sent."""
-        listed = self._result(
-            ("app", "modelo", "bindings", "list", "--modelo", modelo, "--year", str(year)),
-            stage=f"bindings:{modelo}:{year}",
-        )
-        return frozenset(_binding_ids(listed))

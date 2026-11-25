@@ -18,68 +18,35 @@ Covers the Stage-3b split contract:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import NoReturn
 
 import pytest
 
-from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification import suggest_evidence_split
-from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitSuggestion
+from .....application.ledger.llm_classification_ports import LLMSplitSuggestion
+from .....application.ledger.llm_evidence_split import suggest_evidence_split
 from .....core.config import load_settings
-from .....core.model_catalogue import ModelRole
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from .....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from .....domain.iva.schema import IvaCategory
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
 from .llm_evidence_split_support import (
-    _BUCKET,
-    _seed_parent,
+    BUCKET,
+    seed_parent,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .llm_evidence_split_support import (
     repositories as repositories,
 )
-from .llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
-)
+from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 __all__ = ["repositories"]
-
-
-def _unused_llm_port(*_args: object, **_kwargs: object) -> NoReturn:
-    """Fail loudly if a no-evidence split test reaches an unused reader port."""
-    raise AssertionError("the no-evidence split path must not use this reader port")
-
-
-def _run_reader(_role: ModelRole, run: Callable[[], object]) -> object:
-    return run()
-
-
-def _record_classifier_run(run: Callable[[], object], _provider: str) -> object:
-    return run()
-
-
-_LLM_PORTS = LLMClassificationPorts(
-    resolve_evidence_input=_unused_llm_port,
-    text_layer_ports=EvidenceTextLayerPorts(extract_pages_text=_unused_llm_port),
-    rasterise_pdf=_unused_llm_port,
-    make_text_classifier=_unused_llm_port,
-    make_vision_classifier=_unused_llm_port,
-    run_reader=_run_reader,
-    record_classifier_run=_record_classifier_run,
-)
 
 
 # ---------------------------------------------------------------------------
@@ -92,19 +59,19 @@ def test_suggest_derives_child_amounts_summing_to_parent(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events, _objects = repositories
         gross = Decimal("121.00")
-        tx_id = _seed_parent(repository, amount=gross)
+        tx_id = seed_parent(repository, amount=gross)
 
         suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -124,18 +91,18 @@ def test_suggest_derives_each_child_substrate_from_registry(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events, _objects = repositories
-        tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+        tx_id = seed_parent(repository, amount=Decimal("121.00"))
 
         suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 
@@ -154,21 +121,21 @@ def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events, _objects = repositories
         # No linked evidence -> _resolve_evidence_text returns (None, None) and the
         # suggestion carries no evidence id; read_evidence does not require cloud
         # acknowledgement when there is nothing to read.
-        tx_id = _seed_parent(repository)
+        tx_id = seed_parent(repository)
 
         suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=True,
             settings=load_settings(),
-            ports=_LLM_PORTS,
+            ports=NO_EVIDENCE_LLM_PORTS,
             operation=_authority_operation_for_test,
         )
 

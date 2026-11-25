@@ -1,4 +1,5 @@
 import { evaluatedLabel } from "@/shell/calendar";
+import { useStrings } from "@/shell/strings";
 
 /**
  * Where the past ends: a line across the list at the day the product worked
@@ -16,7 +17,8 @@ export function CalendarTodayMarker({
   today: string;
   locale: string;
 }) {
-  const label = evaluatedLabel(on, today, locale);
+  const t = useStrings();
+  const label = evaluatedLabel(t, on, today, locale);
   return (
     <div
       role="separator"

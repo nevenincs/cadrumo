@@ -9,12 +9,12 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
-from cadrumo.entrypoints.cli.tests.modelo_empty_profile_fixture import _isolated_backend
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.entrypoints.cli.tests.modelo_empty_profile_fixture import isolated_backend
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_fixture_worlds import invoke_joined_cli
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -39,7 +39,7 @@ _MISSING_M202_BINDINGS = {
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",
     "taxpayer_type.legal_entity_form": "sl",
-    "identity.tax_id": "B12345674",
+    "identity.tax_id": "B00015016",
     "identity.name": "",
     "identity.surnames": "",
     "taxpayer_type.irpf_income_categories": "",
@@ -67,6 +67,8 @@ def _create_lorentz_irene_profile() -> None:
                 "identity.legal_name": "Lorentz Irene SL",
                 "activities.description": "IVA corporate run",
                 "taxpayer_type.incn_prior_12_months": "500000",
+                "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
+                "taxpayer_type.pago_fraccionado_art_40_3_elected": "true",
                 "censo.activity_start_date": "2024-01-15",
                 "tax_residence.ccaa": "madrid",
                 "iva.regime": "GENERAL",
@@ -104,7 +106,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
         ],
     )
     assert readiness.exit_code == 2, readiness.output
-    readiness_payload = _payload(readiness.output)
+    readiness_payload = unwrap_schema_envelope(readiness.output)
     assert readiness_payload["ready"] is False
     assert readiness_payload["binding_ready"] is False
     assert {row["binding_id"] for row in readiness_payload["missing_bindings"]} == _MISSING_M202_BINDINGS
@@ -126,7 +128,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
         ],
     )
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
 
     calculated = invoke_joined_cli(
         [
@@ -158,7 +160,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
 
     status = invoke_joined_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
     assert status.exit_code == 0, status.output
-    status_payload = _payload(status.output)
+    status_payload = unwrap_schema_envelope(status.output)
     assert status_payload["current_calculation_revision_id"] is None
     assert status_payload["filed_calculation_revision_id"] is None
 
@@ -269,7 +271,7 @@ def test_lorentz_m202_first_period_calculates_with_prior_payments_zero() -> None
         ],
     )
     assert calculated.exit_code == 0, calculated.output
-    payload = _payload(calculated.output)
+    payload = unwrap_schema_envelope(calculated.output)
     assert payload["binding_overrides"][_M202_2023_2024_PRIOR_PAYMENTS_BINDING] == "0"
     assert payload["casilla_values"]["30"] == "0"
     assert payload["relation_overrides"] == {}

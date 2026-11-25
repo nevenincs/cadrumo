@@ -9,14 +9,11 @@ subtleties (key material, active-pointer clearing) across two test files. The
 storage fixtures themselves stay local to each test module so they cannot leak
 into the wider CLI test package.
 
-A prior ``stage_bucket_manifest`` helper staged a retired plaintext
-``manifest.toml`` stub with no committed custody capsule behind it, to
-simulate a ``missing_profile_record`` torn bucket. Listing and every
-resolution path (``list_profile_buckets``, ``resolve_profile_bucket``,
-``login_profile``) now project committed capsules exclusively and never
-read the manifest, so a manifest-only, capsule-less bucket is invisible to
-every operator-facing verb -- unreachable, not merely awkward -- and the
-helper was retired along with the tests it staged for.
+Listing and every resolution path (``list_profile_buckets``,
+``resolve_profile_bucket``, ``login_profile``) project committed capsules
+exclusively and never read the manifest, so a manifest-only, capsule-less
+bucket is invisible to every operator-facing verb -- unreachable, not merely
+awkward.
 """
 
 from __future__ import annotations
@@ -34,7 +31,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 
 
-def _profile_id_for_label(label: str) -> str:
+def profile_id_for_label(label: str) -> str:
     digest = bytearray(hashlib.sha256(label.encode("utf-8")).digest()[:16])
     digest[6] = (digest[6] & 0x0F) | 0x40
     digest[8] = (digest[8] & 0x3F) | 0x80
@@ -52,7 +49,7 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # can resolve the file-backed secure-object repository.
     #
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
-    profile_id = _profile_id_for_label(name)
+    profile_id = profile_id_for_label(name)
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id, display_name=name, overrides=overrides)
 

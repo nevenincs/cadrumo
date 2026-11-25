@@ -22,8 +22,8 @@ from cadrumo_client.contracts.installation_requests import (
     StorageReclaimRequest,
 )
 
-from .....application.operations.registry import OperationFrontendProjection
 from .....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from .....core.operations import OperationFrontendProjection
 from .....core.storage_taxonomy import StorageArea
 from ..acts import (
     CONFIRMATION_FIELD,

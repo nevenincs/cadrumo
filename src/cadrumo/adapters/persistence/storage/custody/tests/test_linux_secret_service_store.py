@@ -120,7 +120,7 @@ class _ProtocolReplies:
             if self.prompt == "/":
                 session = SimpleNamespace(object_path=_SESSION, aes_key=_KEY)
                 secret_bus = SimpleNamespace(call=lambda *args: (secret,))
-                self.item = native._read_item(cast(secret_transport.DeadlineSecretBus, secret_bus), _ITEM, session)
+                self.item = native.read_item(cast(secret_transport.DeadlineSecretBus, secret_bus), _ITEM, session)
                 if self.corrupt_write:
                     self.item = b"synthetic-corruption"
             return (_ITEM if self.prompt == "/" else "/", self.prompt)
@@ -157,7 +157,7 @@ def replies(monkeypatch: pytest.MonkeyPatch) -> _ProtocolReplies:
         bus.secret_sessions += 1
         yield SimpleNamespace(object_path=_SESSION, aes_key=_KEY, encrypted=True)
 
-    monkeypatch.setattr(native, "_session", session)
+    monkeypatch.setattr(native, "linux_secret_service_store_session", session)
     return bus
 
 
@@ -315,7 +315,7 @@ def test_malformed_encrypted_secret_is_rejected(defect: str) -> None:
     bus = SimpleNamespace(call=lambda *args: (tuple(secret),))
     session = SimpleNamespace(object_path=_SESSION, aes_key=_KEY)
     with pytest.raises((AutomationCustodyError, ValueError)):
-        native._read_item(cast(secret_transport.DeadlineSecretBus, bus), _ITEM, session)
+        native.read_item(cast(secret_transport.DeadlineSecretBus, bus), _ITEM, session)
 
 
 @pytest.mark.parametrize("content_type", ["", "application/json", None, b"text/plain", {}])
@@ -324,7 +324,7 @@ def test_unrecognized_or_nonstring_native_content_type_is_rejected(content_type:
     bus = SimpleNamespace(call=lambda *args: (secret,))
     session = SimpleNamespace(object_path=_SESSION, aes_key=_KEY)
     with pytest.raises(AutomationCustodyError) as refused:
-        native._read_item(cast(secret_transport.DeadlineSecretBus, bus), _ITEM, session)
+        native.read_item(cast(secret_transport.DeadlineSecretBus, bus), _ITEM, session)
     assert refused.value.reason is AutomationCustodyCode.INVALID
 
 
@@ -333,7 +333,7 @@ def test_invalid_target_never_connects(monkeypatch: pytest.MonkeyPatch, namespac
     def unexpected() -> Any:
         pytest.fail("invalid target attempted native connection")
 
-    monkeypatch.setattr(native, "_native_bus", unexpected)
+    monkeypatch.setattr(native, "native_bus", unexpected)
     with pytest.raises(AutomationCustodyError) as refused:
         LinuxSecretServiceAutomationSecretStore().read(namespace, account)
     assert refused.value.reason is AutomationCustodyCode.INVALID
@@ -404,7 +404,7 @@ def test_encrypted_session_uses_pinned_codec_and_closes_without_plain_fallback()
         return ()
 
     bus = SimpleNamespace(call=reply)
-    with native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session:
+    with native.linux_secret_service_store_session(cast(secret_transport.DeadlineSecretBus, bus)) as session:
         from secretstorage.dhcrypto import DH_PRIME_1024
 
         common = pow(client_public, 2, DH_PRIME_1024).to_bytes(128, "big")
@@ -420,7 +420,7 @@ def test_malformed_session_negotiation_is_rejected(peer: bytes) -> None:
     bus = SimpleNamespace(call=lambda *args: (("ay", peer), _SESSION))
     with (
         pytest.raises(AutomationCustodyError) as refused,
-        native._session(cast(secret_transport.DeadlineSecretBus, bus)),
+        native.linux_secret_service_store_session(cast(secret_transport.DeadlineSecretBus, bus)),
     ):
         pytest.fail("invalid session was admitted")
     assert refused.value.reason is AutomationCustodyCode.INVALID
@@ -778,7 +778,7 @@ def test_encrypted_session_close_preserves_body_primary_and_wipes_keys(mode: str
     expected = AutomationCustodyError if mode == "typed" else asyncio.CancelledError if mode == "cancel" else OSError
     with (
         pytest.raises(expected) as caught,
-        native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
+        native.linux_secret_service_store_session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
     ):
         captured.append(session)
         assert session.aes_key is not None and session.my_private_key != 0
@@ -811,7 +811,7 @@ def test_encrypted_session_close_retains_previous_cleanup_identity(kind: str) ->
     expected = AsyncResourceCleanupError if kind == "aggregate" else AutomationCustodyError
     with (
         pytest.raises(expected) as caught,
-        native._session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
+        native.linux_secret_service_store_session(cast(secret_transport.DeadlineSecretBus, bus)) as session,
     ):
         captured.append(session)
         raise primary

@@ -36,7 +36,7 @@ _SECRET_ROTATION_HORIZON = timedelta(days=365 * 10)
 _MUTATION_OPERATION_ID_METADATA_KEY = "certificate_secret_mutation_operation_id"
 
 
-def _secret_store_key(*, bucket_id: str, name: str) -> str:
+def secret_store_key(*, bucket_id: str, name: str) -> str:
     """Return the bucket-scoped natural key for one certificate source."""
     canonical = _CERTIFICATE_SOURCE_NAME.validate_python(name)
     return f"aeat:certificate-secret:{bucket_id}:{canonical}"
@@ -52,7 +52,7 @@ class SecureStorageCertificateSecretBackend:
 
     def get(self, name: str) -> SecretStr | None:
         """Return the persisted passphrase for ``name``, or ``None`` when absent."""
-        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        key = secret_store_key(bucket_id=self._bucket_id, name=name)
         try:
             record = self._store.get(key)
         except SecretNotFoundError:
@@ -68,7 +68,7 @@ class SecureStorageCertificateSecretBackend:
         occurred_at: datetime | None = None,
     ) -> None:
         """Persist (or rotate) the passphrase for ``name``."""
-        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        key = secret_store_key(bucket_id=self._bucket_id, name=name)
         written_at = occurred_at or now()
         metadata = {_MUTATION_OPERATION_ID_METADATA_KEY: operation_id} if operation_id is not None else {}
         record = SecretRecord(
@@ -83,7 +83,7 @@ class SecureStorageCertificateSecretBackend:
 
     def remove(self, name: str) -> bool:
         """Remove the persisted passphrase for ``name``; absent is a no-op."""
-        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        key = secret_store_key(bucket_id=self._bucket_id, name=name)
         try:
             self._store.delete(key)
         except SecretNotFoundError:
@@ -92,7 +92,7 @@ class SecureStorageCertificateSecretBackend:
 
     def mutation_operation_id(self, name: str) -> str | None:
         """Return the non-secret operation id stamped on ``name``, if present."""
-        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        key = secret_store_key(bucket_id=self._bucket_id, name=name)
         try:
             record = self._store.get(key)
         except SecretNotFoundError:
@@ -101,7 +101,7 @@ class SecureStorageCertificateSecretBackend:
 
     def request_witness(self, name: str, secret: SecretStr) -> str:
         """Return a master-keyed witness for matching a retried set request."""
-        key = _secret_store_key(bucket_id=self._bucket_id, name=name)
+        key = secret_store_key(bucket_id=self._bucket_id, name=name)
         return self._store.value_witness(
             key=key,
             value=secret.get_secret_value().encode(UTF_8_ENCODING),

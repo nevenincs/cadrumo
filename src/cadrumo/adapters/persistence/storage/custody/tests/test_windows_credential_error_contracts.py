@@ -5,14 +5,14 @@ from __future__ import annotations
 import pytest
 
 from ......core.errors.error_codes import ErrorCategory, get_registered_error_code
-from ..automation_secret_store import _InvalidWindowsCredentialError, _WindowsCredentialError
+from ..automation_secret_store import InvalidWindowsCredentialError, WindowsCredentialError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_native_failure_retains_status_mapping_without_claiming_retryability() -> None:
     """Win32 status evidence survives registration for the exact adapter catch."""
-    error = _WindowsCredentialError(1168)
+    error = WindowsCredentialError(1168)
 
     registered = get_registered_error_code(error)
 
@@ -24,7 +24,7 @@ def test_native_failure_retains_status_mapping_without_claiming_retryability() -
 
 def test_malformed_native_record_is_an_integrity_failure() -> None:
     """Invalid secret storage is distinct from native facility unavailability."""
-    registered = get_registered_error_code(_InvalidWindowsCredentialError())
+    registered = get_registered_error_code(InvalidWindowsCredentialError())
 
     assert registered.code == "INTEGRITY_WINDOWS_CREDENTIAL_RECORD"
     assert registered.category is ErrorCategory.INTEGRITY

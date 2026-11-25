@@ -14,6 +14,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ..operator_actions.invariant_verdicts import internal_invariant_verdict
 
 if TYPE_CHECKING:
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
@@ -49,7 +50,10 @@ def work_unit_catalogue_repository(*, bucket_id: str) -> WorkUnitCatalogueReposi
     try:
         factory = _BOUND_WORK_UNIT_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise InternalInvariantError("work-unit catalogue persistence has not been composed") from error
+        raise InternalInvariantError(
+            "work-unit catalogue persistence has not been composed",
+            precondition_verdict=internal_invariant_verdict("work_unit_catalogue.composed"),
+        ) from error
     return factory(bucket_id=bucket_id)
 
 

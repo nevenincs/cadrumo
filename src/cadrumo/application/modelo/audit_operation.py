@@ -442,14 +442,7 @@ class ModeloAuditExportExecutor:
                     work, tracker=tracker, context=context, task_name=MODELO_AUDIT_EXPORT_OPERATION_DEFINITION_ID
                 )
             except BaseException:
-                effect = (
-                    OperationEffect.UNKNOWN
-                    if tracker.has_uncertain_write
-                    else OperationEffect.UPDATED
-                    if tracker.confirmed_write
-                    else OperationEffect.NONE
-                )
-                await context.events.effect(effect)
+                await context.events.effect(tracker.effect(incomplete=False))
                 raise
             if not tracker.confirmed_write or tracker.has_uncertain_write or tracker.attempt_count != 1:
                 raise ValueError("audit ZIP outcome disagrees with its concrete writer receipt")

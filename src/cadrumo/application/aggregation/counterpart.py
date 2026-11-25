@@ -14,10 +14,12 @@ taxonomy.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -34,11 +36,16 @@ from ...core.period import FilingPeriodCode, Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.schema_base import DateAxis
-from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+from ...domain.calculations.registry.temporal import select_revision_metadata_for_year
+from .grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:
     return counterpart_source_kind(value)
+
+
+_OPERATION_KINDS_KEY: Final = re.compile(r"modelo\.(\w+)\.operation_kinds")
+_READINESS_KEY: Final = re.compile(r"modelo\.(\w+)\.readiness\.groi_country")
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +53,7 @@ class _CounterpartRegistryCatalogue:
     """Generic counterpart projection of the selected registry mapping."""
 
     model_kinds: Mapping[str, frozenset[str]]
+    readiness_modelo: str
     groi_countries: frozenset[str]
     nif_iva_for_non_groi_country: bool
 
@@ -83,41 +91,65 @@ def counterpart_operation_catalogue_entries(
     return entries
 
 
+def counterpart_catalogue_entry(entries: Mapping[str, str], key: str) -> str:
+    """Return the stripped value the counterpart mapping declares for *key*, refusing an absent or blank one."""
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise ValueError(f"counterpart registry mapping is missing {key!r}")
+    return value.strip()
+
+
+def _active_counterpart_modelos(
+    entries: Mapping[str, str],
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Validate that the canonical temporal selection yields a revision for every counterpart vocabulary."""
+    modelos = tuple(str(match.group(1)) for key in entries if (match := _OPERATION_KINDS_KEY.fullmatch(key)))
+    for modelo in modelos:
+        select_revision_metadata_for_year(
+            operation.modelo_directory(modelo),
+            filing_year=effective_date.year,
+            on=effective_date,
+        )
+    return modelos
+
+
 # Registry authority: selected M347/M349 counterpart declarations are consumed through
 # one generation-pinned operation and the dated mapping fact.
-def _registry_counterpart_catalogue(
+def registry_counterpart_catalogue(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
 ) -> _CounterpartRegistryCatalogue:
     """Resolve counterpart kinds and readiness gates from registry authority."""
-    for modelo in (Modelo("347").value, Modelo("349").value):
-        directory = operation.modelo_directory(modelo)
-        if not any(metadata.contains_date(effective_date) for metadata in directory.revisions):
-            raise ValueError(f"{modelo} has no registry revision in force on {effective_date.isoformat()}")
     entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
-
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if value is None or not value.strip():
-            raise ValueError(f"counterpart registry mapping is missing {key!r}")
-        return value
+    modelos = _active_counterpart_modelos(entries, effective_date=effective_date, operation=operation)
+    readiness_modelos = tuple(match[1] for key in entries if (match := _READINESS_KEY.fullmatch(key)))
+    if len(readiness_modelos) != 1:
+        raise ValueError("counterpart registry mapping must name one form with readiness gates")
+    readiness_modelo = readiness_modelos[0]
 
     def tokens(key: str) -> frozenset[str]:
-        result = frozenset(token.strip() for token in required(key).split(",") if token.strip())
+        result = frozenset(
+            token.strip() for token in counterpart_catalogue_entry(entries, key).split(",") if token.strip()
+        )
         if not result:
             raise ValueError(f"counterpart registry mapping {key!r} has no tokens")
         return result
 
-    readiness = required("modelo.349.readiness.nif_iva_for_non_groi_country").casefold()
+    readiness = counterpart_catalogue_entry(
+        entries, f"modelo.{readiness_modelo}.readiness.nif_iva_for_non_groi_country"
+    ).casefold()
     if readiness not in {"true", "false"}:
         raise ValueError("counterpart registry readiness flag must be true or false")
     return _CounterpartRegistryCatalogue(
-        model_kinds={
-            Modelo("347").value: tokens("modelo.347.operation_kinds"),
-            Modelo("349").value: tokens("modelo.349.operation_kinds"),
-        },
-        groi_countries=frozenset({required("modelo.349.readiness.groi_country").strip()}),
+        model_kinds={modelo: tokens(f"modelo.{modelo}.operation_kinds") for modelo in modelos},
+        readiness_modelo=readiness_modelo,
+        groi_countries=frozenset(
+            {counterpart_catalogue_entry(entries, f"modelo.{readiness_modelo}.readiness.groi_country")}
+        ),
         nif_iva_for_non_groi_country=readiness == "true",
     )
 
@@ -184,8 +216,8 @@ class CounterpartObservation(_CounterpartBoundaryModel):
 
     source_kind: CounterpartSourceKind
     source_object_id: str = Field(min_length=1)
-    counterparty_nif: str = Field(min_length=1, max_length=20)
-    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_nif: str = Field(min_length=1, max_length=32)
+    counterparty_name: str = Field(default="", max_length=256)
     # Required, and deliberately not defaulted to Spain. This is an operator
     # boundary, so a default is an INFERENCE about a fact the operator did not
     # state -- and it was the one inference the Modelo 349 readiness rule turns
@@ -205,7 +237,7 @@ class CounterpartObservation(_CounterpartBoundaryModel):
     operation_period: FilingPeriodCode
     taxable_base: Decimal = Field(ge=Decimal("0"))
     invoice_total: Decimal = Field(ge=Decimal("0"))
-    accrued_on: IsoDateString = Field(min_length=10, max_length=10)
+    accrued_on: IsoDateString
     groi_verified: bool = False
     nif_iva_verified: bool = False
 
@@ -214,8 +246,8 @@ class CounterpartRollup(_CounterpartBoundaryModel):
     """One (source_kind, counterparty_nif, operation_kind) rollup row."""
 
     source_kind: CounterpartSourceKind
-    counterparty_nif: str = Field(min_length=1, max_length=20)
-    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_nif: str = Field(min_length=1, max_length=32)
+    counterparty_name: str = Field(default="", max_length=256)
     counterparty_country: CountryCodeAlpha2
     operation_kind: str = Field(min_length=1)
     observations_count: NonNegativeInt
@@ -265,7 +297,7 @@ def _aggregate_for_modelo(
     period: Period,
     operation: PinnedAuthorityOperation,
 ) -> CounterpartAggregation:
-    registry_catalogue = _registry_counterpart_catalogue(period.end_date, operation=operation)
+    registry_catalogue = registry_counterpart_catalogue(period.end_date, operation=operation)
     # A clave of the other modelo is filtered below; only a token in neither
     # vocabulary would silently vanish from both passes.
     undeclared = sorted(
@@ -404,7 +436,7 @@ def _counterpart_readiness_for_modelo(
     observations: tuple[CounterpartObservation, ...],
     registry_catalogue: _CounterpartRegistryCatalogue,
 ) -> dict[str, bool]:
-    if modelo != Modelo("349").value:
+    if modelo != registry_catalogue.readiness_modelo:
         return {
             "requires_groi_check": False,
             "requires_nif_iva_check": False,
@@ -433,5 +465,6 @@ __all__ = [
     "CounterpartRollup",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
+    "counterpart_catalogue_entry",
     "counterpart_operation_catalogue_entries",
 ]

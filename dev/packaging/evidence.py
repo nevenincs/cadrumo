@@ -17,7 +17,7 @@ from typing import Final, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .cohort_manifest import (
     ArtifactRecord,

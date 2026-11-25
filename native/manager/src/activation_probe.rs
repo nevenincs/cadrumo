@@ -12,10 +12,29 @@ use std::{
 const PROBE_BOUND: Duration = Duration::from_secs(2);
 const CLEANUP_BOUND: Duration = Duration::from_secs(2);
 const POLL: Duration = Duration::from_millis(10);
+/// A late answer is asked again: on a loaded machine a capable image can miss one bound,
+/// and refusing the person's Retry for that would leave the recovery they asked for undone.
+const PROBE_ATTEMPTS: u32 = 3;
+const PROBE_BACKOFF: Duration = Duration::from_millis(250);
 
 /// The caller retains its admitted package lease throughout this metadata-only probe.
 /// Success establishes Retry grammar support, never session admission or readiness.
+/// Only a late answer is asked again; an image that answers without Retry support, or
+/// fails, is refused at once.
 pub fn require_retry_support(manager: &Path, package: &Path) -> io::Result<()> {
+    let mut attempt = 1;
+    loop {
+        match probe_once(manager, package) {
+            Err(error) if error.kind() == io::ErrorKind::TimedOut && attempt < PROBE_ATTEMPTS => {
+                thread::sleep(PROBE_BACKOFF * attempt);
+                attempt += 1;
+            }
+            settled => return settled,
+        }
+    }
+}
+
+fn probe_once(manager: &Path, package: &Path) -> io::Result<()> {
     let mut child = cadrumo_application::process::creation::run(|| {
         Command::new(manager)
             .arg("--supports-retry")

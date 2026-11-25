@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -13,22 +14,21 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
-)
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.entrypoints.cli.config.errors import ConfigBoundaryError
 
 from ...cli_runner import invoke_cached_cli
 from .isolated_storage_fixture import native_profile_view_server
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -43,7 +43,7 @@ def _create_profile(name: str = "test-operator") -> None:
             "identity.surnames": "Operator",
             "identity.tax_id": "00000000T",
             "activities.description": "Servicios",
-            "censo.activity_start_date": "2026-01-01",
+            "censo.activity_start_date": date(filing_year_envelope().horizon, 1, 1).isoformat(),
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
             "tax_residence.ccaa": "madrid",
@@ -340,7 +340,7 @@ def _record_divergence(profile_name: str) -> None:
     from cadrumo.application.workflow.persistence import workflow_state_repository
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     pointer = read_profile_bucket(profile_name)
     assert pointer is not None
     with open_test_profile_session(pointer.bucket_id):

@@ -114,7 +114,7 @@ def test_self_authenticating_leaves_reject_root_sources_before_profile_or_secret
         profile_admission, "resolve_login_target", lambda *_args: pytest.fail("refusal resolved a profile")
     )
     monkeypatch.setattr(
-        profile_admission, "_open_recovery_profile", lambda *_args: pytest.fail("refusal opened a recovery connection")
+        profile_admission, "open_recovery_profile", lambda *_args: pytest.fail("refusal opened a recovery connection")
     )
     monkeypatch.setattr(
         profile_selection, "runtime_login_target", lambda *_args: pytest.fail("refusal asked the runtime for a profile")

@@ -39,24 +39,18 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
-from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
-    AccessScope,
-    DisclosureCategory,
-    DisclosurePermission,
-)
 
 from .cli_runner import semantic_cli_output
-from .native_api_cli_support import NativeApiCliSession, native_api_cli_session
+from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 
 pytestmark = [
     pytest.mark.integration,
@@ -75,23 +69,16 @@ _OVERLONG_PROFILE_LABEL = "x" * (BUCKET_ACTOR_LABEL_MAX_LENGTH + 1)
 _SHORT_PROFILE_LABEL = "Calculate boundary probe profile"
 
 
-_LEGAL_ENTITY_FACTS = (
-    UserProfileFact(path="identity.name", value="Probe IS Operator"),
-    UserProfileFact(path="identity.legal_name", value="Probe IS Operator SL"),
-    UserProfileFact(path="identity.tax_id", value="B12345674"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-    UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-    UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000.00")),
-    UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+_LEGAL_ENTITY_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.name", value="Probe IS Operator"),
+        UserProfileFact(path="identity.legal_name", value="Probe IS Operator SL"),
+        UserProfileFact(path="identity.tax_id", value="B00015016"),
+        UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000.00")),
+        UserProfileFact(path="taxpayer_type.regimen_entidades_navieras_tonelaje", value=False),
+        UserProfileFact(path="activities.description", value="economic activity"),
+    ),
+    persona_id="sociedad-limitada",
 )
 
 _OPERATIONS = frozenset(
@@ -102,45 +89,6 @@ _OPERATIONS = frozenset(
         MODELO_WORK_REVISION_OPERATION_DEFINITION_ID,
     }
 )
-
-
-def _scope(client_id: UUID) -> AccessScope:
-    """Grant the Modelo 200 work lifecycle these commands submit."""
-    return AccessScope(
-        operations=_OPERATIONS,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.COMMIT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset(
-            {
-                DisclosurePermission(
-                    destination_id=client_id,
-                    projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                    category=DisclosureCategory.OPERATION_METADATA,
-                ),
-                *(
-                    DisclosurePermission(
-                        destination_id=client_id,
-                        projection_id=f"{definition_id}.result",
-                        category=DisclosureCategory.TAX_VALUES,
-                    )
-                    for definition_id in _OPERATIONS
-                ),
-            }
-        ),
-        periods=None,
-        allow_period_independent=True,
-        allow_delegation=False,
-    )
 
 
 @contextmanager
@@ -166,7 +114,7 @@ def _legal_entity_session(
 
     with native_api_cli_session(
         tmp_path,
-        scope_for_destination=_scope,
+        scope_for_destination=operation_lifecycle_scope(_OPERATIONS),
         prepare_profile=prepare,
         profile_label=profile_label,
         invoke_cli=invoke_cli,
@@ -186,7 +134,7 @@ def _calculate_args(work_unit_id: str) -> list[str]:
         "--casilla", "DP200012:00501=100000.00",
         "--casilla", "DP200013:00417=0.00",
         "--casilla", "DP200013:00418=0.00",
-        "--casilla", "01032=0.00",
+        "--casilla", "DP200014:01032=0.00",
         "--casilla", "DP200014:00547=0.00",
         "--casilla", "DP200014:01033=0.00",
         "--casilla", "DP200014:01034=0.00",
@@ -196,7 +144,9 @@ def _calculate_args(work_unit_id: str) -> list[str]:
         "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
         "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
         "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-        "--relation", "modelo-200-pagos-fraccionados-anuales=0",
+        "--relation", "modelo-200-pago-fraccionado-primero-40-3=0",
+        "--relation", "modelo-200-pago-fraccionado-segundo-40-3=0",
+        "--relation", "modelo-200-pago-fraccionado-tercero-40-3=0",
     ]  # fmt: skip
 
 

@@ -19,10 +19,10 @@ from ....domain.calculations.registry.schema_exports import (
     FilingEnvelopePrefixRole,
 )
 from .. import export as export_module
-from .._producer_ownership import filing_producer_ownership
 from ..export import export_draft, render_filing_envelope
 from ..export_envelope import FilingEnvelopeOccurrence, FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
-from ..export_producer import _SHARED_SNAPSHOT_PRODUCER_KEYS
+from ..export_producer import SHARED_SNAPSHOT_PRODUCER_KEYS
+from ..producer_ownership import filing_producer_ownership
 from ..record_field_renderer import COMPUTED_VALUE_PRODUCERS, DRAFT_VALUE_PRODUCERS
 
 modelo_export_module = import_module("...modelo.export", package=__package__)
@@ -31,13 +31,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> None:
-    ownership = filing_producer_ownership(shared_snapshot_keys=_SHARED_SNAPSHOT_PRODUCER_KEYS)
+    ownership = filing_producer_ownership(shared_snapshot_keys=SHARED_SNAPSHOT_PRODUCER_KEYS)
     assert set(ownership) == set(FilingProducerKey)
     assert all(owner.strip() for owner in ownership.values())
 
 
 def test_legacy_header_surfaces_are_deleted_instead_of_normalised() -> None:
     assert not hasattr(registry, "ExportHeaderKey")
+    assert not hasattr(export_module, "normalise_export_headers")
     assert not hasattr(export_module, "_normalise_export_headers")
     assert not hasattr(modelo_export_module, "compose_export_headers")
     assert "headers" not in inspect.signature(export_draft).parameters
@@ -122,6 +123,7 @@ def test_filing_envelope_defining_module_exposes_one_closed_request() -> None:
     }
 
 
+@pytest.mark.usefixtures("operation")
 def test_m303_envelope_occurrence_and_result_validate_emitted_byte_evidence() -> None:
     period = Period.from_year_and_code(2023, "4T")
     envelope = _m303_envelope_definition()

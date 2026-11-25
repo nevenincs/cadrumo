@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from itertools import pairwise
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
 from .export_value_policy import ExportValuePolicy
+from .fixed_width_codec import fixed_width_field_order
+from .form_codes import form_codes_in_scope
 
 if TYPE_CHECKING:
     from .schema_exports import ExportFieldDefinition, ExportRecordDefinition
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
 
 def validate_export_record_components(record: ExportRecordDefinition) -> None:
     """Require complete adjacent components bound to one semantic value."""
-    fields = tuple(sorted(record.fields, key=lambda field: field.offset or 0))
+    fields = fixed_width_field_order(record.fields)
     component_policies = frozenset(
         {
             ExportValuePolicy.SIGNED_COMPONENT_SIGN,
@@ -44,11 +46,19 @@ def validate_export_record_components(record: ExportRecordDefinition) -> None:
         raise RegistryValidationError("component export fields have an unpaired member")
 
 
+def _declared_component_lengths(key: str) -> set[tuple[int, ...]] | None:
+    """Return the component lengths the record designs declare, or ``None`` outside every scope."""
+    codes = form_codes_in_scope()
+    if codes is None:
+        return None
+    return {tuple(int(length) for length in group.split(".")) for group in codes.codes(key)}
+
+
 def _component_grammar(
     fields: tuple[ExportFieldDefinition, ...], index: int
-) -> tuple[tuple[ExportValuePolicy | None, ...], set[tuple[int, ...]]]:
+) -> tuple[tuple[ExportValuePolicy | None, ...], set[tuple[int, ...]] | None]:
     first = fields[index]
-    lengths: set[tuple[int, ...]]
+    lengths: set[tuple[int, ...]] | None
     if first.value_policy is ExportValuePolicy.YYYYMMDD_TEXT_YEAR:
         policies = (
             ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
@@ -58,21 +68,21 @@ def _component_grammar(
         lengths = {(4, 2, 2)}
     elif index + 1 < len(fields) and fields[index + 1].value_policy is ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE:
         policies = (ExportValuePolicy.SIGNED_COMPONENT_SIGN, ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE)
-        lengths = {(1, 13)}
+        lengths = _declared_component_lengths("export.signed_magnitude.component_lengths")
     else:
         policies = (
             first.value_policy,
             ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
             ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
         )
-        lengths = {(1, 13, 2), (1, 8, 2)}
+        lengths = _declared_component_lengths("export.signed_amount.component_lengths")
     return policies, lengths
 
 
 def _require_component_group(
     group: tuple[ExportFieldDefinition, ...],
     policies: tuple[ExportValuePolicy | None, ...],
-    lengths: set[tuple[int, ...]],
+    lengths: set[tuple[int, ...]] | None,
     first: ExportFieldDefinition,
 ) -> None:
     endpoint = (first.kind, first.casilla_id, first.binding)
@@ -80,7 +90,10 @@ def _require_component_group(
         _component_shape_differs(group, policies, lengths, first)
         or any((field.kind, field.casilla_id, field.binding) != endpoint for field in group)
         or _component_positions_incomplete(group)
-        or any(right.offset != cast(int, left.offset) + cast(int, left.length) for left, right in pairwise(group))
+        or any(
+            left.offset is None or left.length is None or right.offset != left.offset + left.length
+            for left, right in pairwise(group)
+        )
     ):
         raise RegistryValidationError(
             f"export field {first.id!r} requires complete adjacent components of one semantic value"
@@ -90,14 +103,14 @@ def _require_component_group(
 def _component_shape_differs(
     group: tuple[ExportFieldDefinition, ...],
     policies: tuple[ExportValuePolicy | None, ...],
-    lengths: set[tuple[int, ...]],
+    lengths: set[tuple[int, ...]] | None,
     first: ExportFieldDefinition,
 ) -> bool:
     return (
         len(group) != len(policies)
         or first.kind not in {CasillaFieldKind.CASILLA, CasillaFieldKind.BINDING}
         or tuple(field.value_policy for field in group) != policies
-        or tuple(field.length for field in group) not in lengths
+        or (lengths is not None and tuple(field.length for field in group) not in lengths)
     )
 
 

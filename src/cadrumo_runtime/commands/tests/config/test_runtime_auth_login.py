@@ -25,7 +25,7 @@ from cadrumo_client.commands.registered_operation_errors import (
     detailed_registered_operation_error,
     submitted_operation_error,
 )
-from cadrumo_runtime.commands.main import _emit_error
+from cadrumo_runtime.commands.main import emit_error
 
 from ... import runtime_auth_login as bridge
 
@@ -168,7 +168,7 @@ def test_failed_clave_login_renders_its_typed_cause_and_diagnostic_follow_up(
         bridge.run_auth_login(
             cast(typer.Context, cast(object, None)), provider="clave_movil", fresh=True, reset_lock=False
         )
-    exit_code = _emit_error(refused.value, ("--format", "text", "config", "auth", "login"))
+    exit_code = emit_error(refused.value, ("--format", "text", "config", "auth", "login"))
     assert exit_code != 0
     rendered = capsys.readouterr().err
     internal = tr(get_registered_error_code(CliUnexpectedBoundaryError).message_key)

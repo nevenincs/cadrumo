@@ -11,13 +11,9 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo.projection import (
-    ModeloCompareDeltaRow,
-    ModeloProjectionCasillaObservation,
-    compare_modelo_years,
-)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from cadrumo.application.modelo.projection import ModeloProjectionCasillaObservation
+from cadrumo.application.modelo.projection_compare import ModeloCompareDeltaRow, compare_modelo_years
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -31,14 +27,13 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -77,6 +72,29 @@ def _seed_work_unit(
         clock=clock,
         operation=operation,
     )
+
+
+def _seed_consecutive_work_units(
+    profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
+) -> tuple[CalculationRevisionCatalogueRepository, WorkUnit, WorkUnit]:
+    """Open the profile's calculation catalogue and seed its 2025 work unit and, a minute later, its 2026 one."""
+    work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
+    calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+    work_2025 = _seed_work_unit(
+        work_repository,
+        bucket_id=profile.bucket_id,
+        filing_year=2025,
+        clock=_T0,
+        operation=operation,
+    )
+    work_2026 = _seed_work_unit(
+        work_repository,
+        bucket_id=profile.bucket_id,
+        filing_year=2026,
+        clock=_T0 + timedelta(minutes=1),
+        operation=operation,
+    )
+    return calculation_repository, work_2025, work_2026
 
 
 def _seed_revision(
@@ -130,49 +148,8 @@ def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
 ) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="identity.name", value="Test"),
-                    UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="activities.description", value="economic activity"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-                ),
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
-        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        work_2025 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2025,
-            clock=_T0,
-            operation=operation,
-        )
-        work_2026 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2026,
-            clock=_T0 + timedelta(minutes=1),
-            operation=operation,
-        )
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
+        calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
         revision_2025 = _seed_revision(
             calculation_repository,
             work_unit=work_2025,
@@ -232,49 +209,8 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        seed_test_profile_record(
-            _create_profile_record_for_test(
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=profile.bucket_id,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="identity.name", value="Test"),
-                    UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="activities.description", value="economic activity"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-                ),
-                created_at=_T0,
-                updated_at=_T0,
-                context=_profile_creation_context_for_test(),
-            ),
-        )
-        work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
-        calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        work_2025 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2025,
-            clock=_T0,
-            operation=operation,
-        )
-        work_2026 = _seed_work_unit(
-            work_repository,
-            bucket_id=profile.bucket_id,
-            filing_year=2026,
-            clock=_T0 + timedelta(minutes=1),
-            operation=operation,
-        )
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
+        calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
         _seed_revision(
             calculation_repository,
             work_unit=work_2025,

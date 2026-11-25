@@ -46,33 +46,27 @@ from cadrumo.core.operations import (
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     ResumableReviewExecutor,
     ReviewExecutor,
-    _capabilities,
-    _pending_interaction,
-    _registry,
-    _repositories,
-    _request,
-    _response,
-    _supervisor,
+    lapse_settler,
+    operation_repositories,
+    operation_supervisor,
+    pending_interaction,
+    resumable_review_supervisor,
+    supervisor_capabilities,
+    supervisor_registry,
+    supervisor_request,
+    supervisor_response,
 )
 from .test_censal_operation_executor import (
-    _OPERATOR_SCOPE_PORTS,
-    _observation,
-    _test_censal_operation_definition_id,
-)
-from .test_censal_operation_executor import (
-    NOW as _CENSAL_NOW,
-)
-from .test_censal_operation_executor import (
-    censal_request_payload as _payload,
-)
-from .test_censal_operation_executor import (
-    censal_supervisor as _censal_supervisor,
-)
-from .test_censal_operation_executor import (
-    subject as _subject,
+    NOW,
+    OPERATOR_SCOPE_PORTS,
+    censal_request_payload,
+    censal_supervisor,
+    censal_test_operation_definition_id,
+    observation,
+    subject,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -121,7 +115,7 @@ class AnsweredBeforeReturnExecutor:
     ) -> str | None:
         del request
         assert isinstance(context, SupervisorExecutorContext)
-        await context.interactions.request(_pending_interaction(context.identity))
+        await context.interactions.request(pending_interaction(context.identity))
         type(self).published.set()
         await type(self).release_execute.wait()
         return None
@@ -151,9 +145,11 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
     """A running executor that returns nothing settles failed and releases its subject."""
     storage_root = tmp_path / "durable-state"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(storage_root=storage_root, profile_objects=profile.repository)
-        supervisor = _supervisor(
-            registry=_registry(executor_type=EffectThenNoResultExecutor, build=EffectThenNoResultExecutor),
+        journal, leases, operands = operation_repositories(
+            storage_root=storage_root, profile_objects=profile.repository
+        )
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(executor_type=EffectThenNoResultExecutor, build=EffectThenNoResultExecutor),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -162,7 +158,7 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
         )
 
         async def run() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             await supervisor.start(operation_id)
             # The blocking caller gets the terminal snapshot, not an unsettled error.
             settled = await supervisor.settled(operation_id)
@@ -176,7 +172,7 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
                     subject_ref=settled.identity.subject_ref,
                 ),
                 settled.identity.operation_id,
-                observed_at=_NOW,
+                observed_at=SUPERVISOR_NOW,
             )
         )
         replay = asyncio.run(journal.read_after(settled.identity.operation_id, 0, limit=20))
@@ -199,38 +195,24 @@ def test_running_executor_returning_no_result_settles_failed_with_its_registered
 def test_resumed_executor_returning_no_result_settles_failed_with_its_registered_code(tmp_path: Path) -> None:
     """The recovery path applies the same rule to a resume that returns nothing while running."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        registry = _registry(
+        registry, owner = resumable_review_supervisor(
             executor_type=ResumableReviewExecutor,
             build=ResumableReviewExecutor,
-            capabilities=_capabilities(
-                durability=OperationDurability.RESUMABLE,
-                replay=OperationReplayPolicy.RESUMABLE,
-            ),
-            interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
-            reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
-        )
-        owner = _supervisor(
-            registry=registry,
             journal=journal,
             leases=leases,
             operands=operands,
-            owner_id="1" * 64,
-            token="2" * 64,
-            lease_duration=timedelta(minutes=1),
         )
-        operation_id = asyncio.run(owner.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = _supervisor(
-            registry=registry,
+        recovery = lapse_settler(
             journal=journal,
             leases=leases,
             operands=operands,
-            owner_id="4" * 64,
-            token="5" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=registry,
         )
         terminal = asyncio.run(recovery.reconcile(operation_id))
 
@@ -245,11 +227,11 @@ def test_resumed_executor_returning_no_result_settles_failed_with_its_registered
 def test_executor_suspended_at_an_interaction_stays_unsettled(tmp_path: Path) -> None:
     """Returning nothing after publishing a checkpoint waits for the response instead of failing."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=ReviewExecutor,
                 build=ReviewExecutor,
                 interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
@@ -260,7 +242,7 @@ def test_executor_suspended_at_an_interaction_stays_unsettled(tmp_path: Path) ->
             owner_id="1" * 64,
             token="2" * 64,
         )
-        operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
+        operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(supervisor, operation_id))
         persisted = asyncio.run(journal.load(operation_id))
         replay = asyncio.run(journal.read_after(operation_id, 0, limit=20))
@@ -276,14 +258,14 @@ def test_suspended_executor_answered_before_it_returns_is_not_failed(tmp_path: P
     """A review consumed before its execution returns leaves settlement to the continuation."""
     AnsweredBeforeReturnExecutor.reset()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands = _repositories(
+        journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
-        supervisor = _supervisor(
-            registry=_registry(
+        supervisor = operation_supervisor(
+            registry=supervisor_registry(
                 executor_type=AnsweredBeforeReturnExecutor,
                 build=AnsweredBeforeReturnExecutor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     durability=OperationDurability.RESUMABLE,
                     replay=OperationReplayPolicy.RESUMABLE,
                 ),
@@ -298,13 +280,13 @@ def test_suspended_executor_answered_before_it_returns_is_not_failed(tmp_path: P
         )
 
         async def answer_then_return() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
-            operation_id = await supervisor.submit(_request(), operation_id="3" * 64)
+            operation_id = await supervisor.submit(supervisor_request(), operation_id="3" * 64)
             start_task = asyncio.create_task(run_to_settlement(supervisor, operation_id))
             await AnsweredBeforeReturnExecutor.published.wait()
             waiting = await supervisor.inspect(operation_id)
             assert waiting.pending_interaction is not None
             await supervisor.respond(
-                _response(
+                supervisor_response(
                     intent="apply", operation_id=operation_id, revision=waiting.pending_interaction.request.revision
                 )
             )
@@ -330,37 +312,35 @@ def test_censal_review_checkpoint_waits_for_its_response_instead_of_failing(tmp_
     """The production censal executor suspends at its review, before and after owner recovery."""
 
     async def acquire():
-        return _observation()
+        return observation()
 
-    with _subject(tmp_path) as (profile_id, objects, _session):
+    with subject(tmp_path) as (profile_id, objects, _session):
         durable_root = tmp_path / "operations"
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
             provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
         )
-        owner = _censal_supervisor(
-            root=durable_root, objects=objects, executor=executor, owner="1" * 64, token="2" * 64
-        )
+        owner = censal_supervisor(root=durable_root, objects=objects, executor=executor, owner="1" * 64, token="2" * 64)
         request = OperationRequest(
-            definition_id=_test_censal_operation_definition_id(),
+            definition_id=censal_test_operation_definition_id(),
             subject_ref=profile_id,
-            payload=_payload(profile_id),
+            payload=censal_request_payload(profile_id),
         )
 
         async def run() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot, OperationPersistedSnapshot]:
             operation_id = await owner.submit(request, operation_id="3" * 64)
             waiting = await run_to_settlement(owner, operation_id)
-            recovery = _censal_supervisor(
+            recovery = censal_supervisor(
                 root=durable_root,
                 objects=objects,
                 executor=executor,
                 owner="4" * 64,
                 token="5" * 64,
-                now=_CENSAL_NOW + timedelta(minutes=2),
+                now=NOW + timedelta(minutes=2),
             )
             # Recovery re-enters the executor with the still-unanswered
             # checkpoint; it returns nothing and the review stays open.
@@ -371,11 +351,11 @@ def test_censal_review_checkpoint_waits_for_its_response_instead_of_failing(tmp_
         lease = asyncio.run(
             OperationLeaseFilesystemRepository(storage_root=durable_root).inspect(
                 operation_conflict_scope_reference(
-                    definition_id=_test_censal_operation_definition_id(),
+                    definition_id=censal_test_operation_definition_id(),
                     subject_ref=profile_id,
                 ),
                 "3" * 64,
-                observed_at=_CENSAL_NOW + timedelta(minutes=2),
+                observed_at=NOW + timedelta(minutes=2),
             )
         )
 

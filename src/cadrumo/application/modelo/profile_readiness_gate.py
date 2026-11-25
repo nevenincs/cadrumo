@@ -23,19 +23,21 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import AbstractContextManager, nullcontext
 from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.errors.severity import BaseSeverity
-from ...core.modelo import Modelo
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
-from ...domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-)
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.form_codes import form_for_role, forms_for_role
+from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope, validating_governed_facts
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
@@ -45,27 +47,42 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, section_field_key
-from ..operator_actions.preconditions import profile_setup_incomplete_verdict
+from ..operations.next_step import (
+    OperationCompleteProfileSetupStepV1,
+    OperationNextStepWording,
+    OperationOpenProfileFieldStepV1,
+    is_profile_field_path,
+)
+from ..operator_actions.models import PreconditionVerdict
+from ..operator_actions.preconditions import profile_required_facts_missing_verdict, profile_setup_incomplete_verdict
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
-from ..user_profile.completeness import missing_required_field_paths
+from ..user_profile.completeness import modelo_iva_block_missing_paths, profile_completeness_gaps
 from ..user_profile.preflight import (
     ProfilePreflightService,
     build_profile_preflight_requirement,
     deferred_profile_grounding_index,
     format_profile_preflight_requirement,
 )
+from ..user_profile.profile_read_recorder import profile_values_under
 from ..user_profile.profile_record_repository import ProfileRecordRepository, take_invocation_profile_record
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
-from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE, ProfileValidationService
+from ..user_profile.validation import (
+    MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
+    ProfileValidationService,
+    refuse_overlong_profile_text,
+)
 from .action_errors import ModeloProfileReadinessError
+from .lifecycle_view_refusal_doors import no_active_profile_verdict
+from .refusal_door_verdicts import operator_choice_verdict
 from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
-_PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo("130").value, Modelo("303").value})
+_PRE_ACTIVITY_LIFECYCLE_ROLE = "pre_activity_lifecycle.modelos"
 _FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id",)
 _PROFILE_ACTIVITY_DESCRIPTION_PATH = "activities.description"
 #: Shared with :mod:`.work_create_policy`, which runs the same applicability
@@ -137,9 +154,95 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
         ):
             return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
         return _FILING_BASELINE_PROFILE_PATHS
-    if modelo.strip() != Modelo("100").value or not income_categories or declares_economic_activity:
+    if modelo.strip() != form_for_role("renta.annual") or not income_categories or declares_economic_activity:
         return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
     return _FILING_BASELINE_PROFILE_PATHS
+
+
+_OPEN_PROFILE_FIELD_LOCALE_KEY = "application.modelo.profile_readiness.next_step.open_profile_field"
+_COMPLETE_PROFILE_SETUP_LOCALE_KEY = "application.modelo.profile_readiness.next_step.complete_profile_setup"
+
+
+def open_profile_field_step(*, path: str, label: str) -> OperationNextStepWording:
+    """Offer filling in the profile detail at ``path``, named by its schema ``label``."""
+
+    def worded(language: OutputLanguage) -> OperationOpenProfileFieldStepV1:
+        return OperationOpenProfileFieldStepV1(
+            path=path,
+            words=tr(_OPEN_PROFILE_FIELD_LOCALE_KEY, field=label, locale=language.value),
+        )
+
+    return worded
+
+
+def open_profile_path_step(path: str) -> OperationNextStepWording:
+    """Offer filling in the profile detail at ``path``, its label worded in the step's own language."""
+    section_key, _, field_key = path.partition(".")
+
+    def worded(language: OutputLanguage) -> OperationOpenProfileFieldStepV1:
+        label = tr(profile_field_label_key(section_key, field_key), locale=language.value)
+        return OperationOpenProfileFieldStepV1(
+            path=path,
+            words=tr(_OPEN_PROFILE_FIELD_LOCALE_KEY, field=label, locale=language.value),
+        )
+
+    return worded
+
+
+def complete_profile_setup_step() -> OperationNextStepWording:
+    """Offer declaring the profile setup complete, the one door that ends it."""
+
+    def worded(language: OutputLanguage) -> OperationCompleteProfileSetupStepV1:
+        return OperationCompleteProfileSetupStepV1(
+            words=tr(_COMPLETE_PROFILE_SETUP_LOCALE_KEY, locale=language.value),
+        )
+
+    return worded
+
+
+def _first_missing_field_step(
+    missing: tuple[ProfilePreflightRequirement, ...] | list[ProfilePreflightRequirement],
+) -> OperationNextStepWording | None:
+    """Offer the first detail a readiness refusal names, or nothing where it names none."""
+    for requirement in missing:
+        path = f"{requirement.section_key}.{requirement.field_key}"
+        # A requirement whose selector is not a profile fact's own address has
+        # no row for a profile surface to open; the refusal's words still name
+        # it, and offering an address nothing can show would be worse.
+        if is_profile_field_path(path):
+            return open_profile_field_step(path=path, label=requirement.label)
+    return None
+
+
+def _missing_facts_verdict(
+    modelo: str,
+    requirements: tuple[ProfilePreflightRequirement, ...] | list[ProfilePreflightRequirement],
+) -> PreconditionVerdict:
+    """The profile-questions door for a refusal naming ``requirements``, by canonical field address."""
+    return profile_required_facts_missing_verdict(
+        modelo=modelo,
+        field_paths=tuple(f"{item.section_key}.{item.field_key}" for item in requirements),
+    )
+
+
+def modelo_work_profile_baseline_paths(
+    record: UserProfileRecord,
+    *,
+    modelo: str | None = None,
+) -> tuple[str, ...]:
+    """Return every profile fact filing-grade work for a target requires, filled or not.
+
+    The requirement itself, where
+    :func:`modelo_work_profile_baseline_missing_paths` returns the subset the
+    record leaves blank. A completeness surface needs both: which fields are
+    required decides what it marks, and which are missing decides what it
+    counts. Deriving the mark from the missing set alone would unmark a field
+    the moment it was filled in.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    return _modelo_work_baseline_paths(record, modelo=modelo)
 
 
 def modelo_work_profile_baseline_missing_paths(
@@ -165,7 +268,14 @@ def modelo_work_profile_baseline_missing_paths(
     values = record_to_path_values(record)
 
     def has_value(path: str) -> bool:
-        return any(section_field_key(candidate) == path and bool(value.strip()) for candidate, value in values.items())
+        if values.get(path, "").strip():
+            return True
+        # Otherwise the field may be held on an indexed row of its section.
+        section = f"{path.partition('.')[0]}."
+        return any(
+            section_field_key(candidate) == path and bool(value.strip())
+            for candidate, value in profile_values_under(values, section).items()
+        )
 
     return tuple(path for path in _modelo_work_baseline_paths(record, modelo=modelo) if not has_value(path))
 
@@ -368,6 +478,79 @@ def _require_not_pre_activity_period(
         message,
         context=context,
         translated_message="application.modelo.errors.profile_readiness_pre_activity",
+        profile_precondition_verdict=operator_choice_verdict("period_before_activity"),
+    )
+
+
+def _governed_facts_scope(operation: PinnedAuthorityOperation) -> AbstractContextManager[None]:
+    """Judge registry vocabularies against the caller's pin, or the scope already open."""
+    if governed_facts_in_scope() is not None:
+        return nullcontext()
+    return validating_governed_facts(operation)
+
+
+def taxpayer_projection_missing_paths(
+    record: UserProfileRecord,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Return the unanswered profile questions the taxpayer projection cannot be built without.
+
+    Applicability is judged on that projection, so while any is unanswered
+    applicability is unknown: a readiness surface reports the questions as
+    missing and claims no applicability verdict either way.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    values = record_to_path_values(record)
+    with _governed_facts_scope(operation):
+        return modelo_iva_block_missing_paths(values)
+
+
+def require_taxpayer_projection_facts_declared(
+    *,
+    record: UserProfileRecord,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse, naming the first unanswered question, before projecting a profile that cannot be projected.
+
+    Applicability is judged on the taxpayer projection, and that projection
+    refuses to build a claimed Modelo IVA block whose required yes/no answers
+    are missing rather than guess either answer. A missing answer is the
+    operator's to give, so it is refused here as a readiness gap whose door
+    opens that question, before any projection or effect.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    missing_paths = taxpayer_projection_missing_paths(record, operation=operation)
+    if not missing_paths:
+        return
+    grounding_index = deferred_profile_grounding_index(operation)
+    requirements = tuple(
+        _requirement_for_profile_path(
+            path,
+            grounding_index=grounding_index,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        for path in missing_paths
+    )
+    raise ModeloProfileReadinessError(
+        translated_message="application.modelo.errors.profile_readiness_missing",
+        context={
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period": period.registry_token,
+            "profile_requirements": ", ".join(
+                format_profile_preflight_requirement(requirement) for requirement in requirements
+            ),
+        },
+        profile_precondition_verdict=_missing_facts_verdict(modelo, requirements),
+        next_step=_first_missing_field_step(requirements),
     )
 
 
@@ -376,12 +559,22 @@ def _require_modelo_applicable_for_local_work(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    filing_year: int,
+    period: Period,
     operation: PinnedAuthorityOperation,
 ) -> None:
+    require_taxpayer_projection_facts_declared(
+        record=record,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        operation=operation,
+    )
     refusal = modelo_applicability_refusal(
         record=record,
         bucket_id=bucket_id,
         modelo=modelo,
+        filing_year=filing_year,
         operation=operation,
     )
     if refusal is None:
@@ -391,6 +584,7 @@ def _require_modelo_applicable_for_local_work(
         message,
         context=context,
         translated_message="application.modelo.errors.profile_readiness_not_applicable",
+        profile_precondition_verdict=operator_choice_verdict("modelo_not_applicable"),
     )
 
 
@@ -399,6 +593,7 @@ def modelo_applicability_refusal(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[str, dict[str, str]] | None:
     """Return the local-work applicability refusal for a target, if any.
@@ -409,11 +604,18 @@ def modelo_applicability_refusal(
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
+        filing_year: Year of the return; applicability is decided for the
+            tax period ending on 31 December of that year.
         operation: Caller-held pinned operation for applicability facts.
     """
     modelo_code = modelo.strip()
     profile = projection_for_taxpayer(record, schema=operation.profile_schema())
-    applicability = derive_modelo_applicability(profile, modelo_code, operation=operation)
+    applicability = derive_modelo_applicability(
+        profile,
+        modelo_code,
+        reference_date=date(filing_year, 12, 31),
+        operation=operation,
+    )
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return (
@@ -449,7 +651,7 @@ def pre_activity_period_refusal(
             against the profile activity-start date.
     """
     modelo_code = modelo.strip()
-    if modelo_code not in _PRE_ACTIVITY_LIFECYCLE_MODELOS or not period.has_date_span():
+    if modelo_code not in forms_for_role(_PRE_ACTIVITY_LIFECYCLE_ROLE) or not period.has_date_span():
         return None
     activity_start_date = profile_activity_start_date(record)
     if activity_start_date is None:
@@ -511,6 +713,7 @@ def _require_profile_filing_ready(
             missing.append(requirement)
     if not missing:
         return
+    refuse_overlong_profile_text(record, schema=profile_decode_context.schema)
     # These are public schema labels/citations, not the private wizard question
     # ids stored under "missing" and stripped from recorded runtime errors.
     raise ModeloProfileReadinessError(
@@ -523,20 +726,9 @@ def _require_profile_filing_ready(
                 format_profile_preflight_requirement(requirement) for requirement in missing
             ),
         },
+        profile_precondition_verdict=_missing_facts_verdict(modelo, missing),
+        next_step=_first_missing_field_step(missing),
     )
-
-
-def _render_missing_requirement(requirement: ProfilePreflightRequirement) -> str:
-    """Render one missing requirement as its label plus the articles demanding it.
-
-    A label alone tells an operator WHICH field is missing; the refusal's job is
-    also to say on whose authority. Where the registry grounds the field, the
-    refs follow the label in parentheses; where it grounds nothing, the label
-    stands alone rather than trailing an empty bracket.
-    """
-    if not requirement.legal_refs:
-        return requirement.label
-    return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
 
 
 def load_modelo_work_profile(
@@ -569,6 +761,7 @@ def _load_profile_for_modelo_work(
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
+            profile_precondition_verdict=no_active_profile_verdict("profile_readiness_profile"),
         )
     return loaded
 
@@ -585,15 +778,17 @@ def _require_profile_setup_complete(
     if record.setup_state is not ProfileSetupState.INCOMPLETE:
         return
     schema = profile_decode_context.schema
-    missing_paths = missing_required_field_paths(schema, record_to_path_values(record))
+    # Schema-required and conditional gaps alike: a setup owing only a
+    # conditional fact (the large-company answer a claimed IVA block owes)
+    # otherwise reached the generic refusal naming nothing to fill in.
+    missing_paths = profile_completeness_gaps(schema, record_to_path_values(record)).paths
     if missing_paths:
         grounding = grounding_index or {}
-        missing_labels = ", ".join(
-            _render_missing_requirement(
-                build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding),
-            )
+        requirements = tuple(
+            build_profile_preflight_requirement(path, schema=schema, grounding_index=grounding)
             for path in missing_paths
         )
+        missing_labels = ", ".join(format_profile_preflight_requirement(requirement) for requirement in requirements)
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
             context={"bucket_id": bucket_id, "modelo": modelo, "profile_requirements": missing_labels},
@@ -601,6 +796,9 @@ def _require_profile_setup_complete(
                 modelo=modelo,
                 missing_required_field_count=len(missing_paths),
             ),
+            # A setup still missing facts is put right by filling them in, not
+            # by declaring it complete: that door refuses while any is blank.
+            next_step=_first_missing_field_step(requirements),
         )
     raise ModeloProfileReadinessError(
         translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
@@ -609,6 +807,7 @@ def _require_profile_setup_complete(
             modelo=modelo,
             missing_required_field_count=0,
         ),
+        next_step=complete_profile_setup_step(),
     )
 
 
@@ -631,6 +830,8 @@ def _raise_if_profile_preflight_missing(
                 format_profile_preflight_requirement(requirement) for requirement in report.missing
             ),
         },
+        profile_precondition_verdict=_missing_facts_verdict(modelo, report.missing),
+        next_step=_first_missing_field_step(report.missing),
     )
 
 
@@ -678,12 +879,14 @@ def require_profile_ready_for_modelo_work(
         profile_decode_context=resolved_profile_decode_context,
         grounding_index=grounding_index,
     )
-    applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
+    applicability_first = enforce_applicability and modelo.strip() in forms_for_role(_PRE_ACTIVITY_LIFECYCLE_ROLE)
     if applicability_first:
         _require_modelo_applicable_for_local_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     _require_profile_filing_ready(
@@ -700,6 +903,8 @@ def require_profile_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     report = modelo_work_profile_preflight_report(
@@ -747,12 +952,14 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     if loaded is None:
         return
     record = loaded.record
-    applicability_first = enforce_applicability and modelo.strip() in _PRE_ACTIVITY_LIFECYCLE_MODELOS
+    applicability_first = enforce_applicability and modelo.strip() in forms_for_role(_PRE_ACTIVITY_LIFECYCLE_ROLE)
     if applicability_first:
         _require_modelo_applicable_for_local_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     _require_profile_filing_ready(
@@ -768,6 +975,8 @@ def require_existing_profile_baseline_ready_for_modelo_work(
             record=record,
             bucket_id=bucket_id,
             modelo=modelo,
+            filing_year=filing_year,
+            period=period,
             operation=operation,
         )
     _require_not_pre_activity_period(
@@ -809,14 +1018,20 @@ def require_profile_ready_for_work_unit(
 
 __all__ = [
     "BLOCKING_APPLICABILITY_VERDICTS",
+    "complete_profile_setup_step",
     "load_modelo_work_profile",
     "modelo_applicability_refusal",
     "modelo_work_profile_baseline_missing_paths",
+    "modelo_work_profile_baseline_paths",
     "modelo_work_profile_baseline_validation_issues",
     "modelo_work_profile_preflight_report",
+    "open_profile_field_step",
+    "open_profile_path_step",
     "pre_activity_period_refusal",
     "profile_activity_start_date",
     "require_existing_profile_baseline_ready_for_modelo_work",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
+    "require_taxpayer_projection_facts_declared",
+    "taxpayer_projection_missing_paths",
 ]

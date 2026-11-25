@@ -33,6 +33,17 @@ def _exec_argument(value: str) -> str:
     return '"' + argument.replace("\\", "\\\\") + '"'
 
 
+def _validate_manager_identity(identity: DistributionIdentity) -> None:
+    if not identity.target.startswith("linux-"):
+        raise ValueError("XDG autostart requires a Linux distribution")
+    if not identity.manager_id or any(
+        not (char.isascii() and (char.isalnum() or char in "._-")) for char in identity.manager_id
+    ):
+        raise ValueError("Invalid manager desktop identifier")
+    if any(ord(char) < 32 for char in identity.manager_name):
+        raise ValueError("Manager name contains desktop-entry control characters")
+
+
 def author_autostart(
     identity: DistributionIdentity,
     entrypoint: PurePosixPath,
@@ -46,14 +57,7 @@ def author_autostart(
     configuration directory. This author does no install, home discovery or opt-out
     mutation. Native package ownership and admission remain the installer's job.
     """
-    if not identity.target.startswith("linux-"):
-        raise ValueError("XDG autostart requires a Linux distribution")
-    if not identity.manager_id or any(
-        not (char.isascii() and (char.isalnum() or char in "._-")) for char in identity.manager_id
-    ):
-        raise ValueError("Invalid manager desktop identifier")
-    if any(ord(char) < 32 for char in identity.manager_name):
-        raise ValueError("Manager name contains desktop-entry control characters")
+    _validate_manager_identity(identity)
     executable = _absolute(entrypoint)
     if scope == "machine":
         if user_config is not None:

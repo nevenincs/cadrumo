@@ -14,6 +14,7 @@ from ...operations.models import OperationIdentity, OperationTerminalReceipt
 from .. import update_contracts as contracts
 from .. import update_operation as operation
 from ..transaction_projection import LedgerTransactionProjection
+from .transaction_projection_support import ledger_transaction_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,46 +29,7 @@ def test_currency_patch_refuses_noncanonical_text_instead_of_rewriting_it(value:
 
 
 def _transaction() -> LedgerTransactionProjection:
-    return LedgerTransactionProjection.model_validate(
-        {
-            "transaction_id": "b" * 64,
-            "date": "2026-04-15",
-            "booked_date": "2026-04-15",
-            "value_date": None,
-            "amount": "121.00",
-            "currency": "EUR",
-            "direction": "OUTFLOW",
-            "counterparty": "Client SL",
-            "description": "Invoice 1",
-            "business_classification": "MIXED",
-            "business_pct": "0.5",
-            "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
-            "iva_category": None,
-            "counterparty_country": None,
-            "counterparty_identification_state": None,
-            "irpf_category": None,
-            "m210_income_classification": None,
-            "usage_ratio_id": None,
-            "prorrata_reference": None,
-            "purchase_invoice_evidence_id": None,
-            "invoice_id": None,
-            "attachment_ids": (),
-            "notes": "",
-            "lifecycle_state": "ACTIVE",
-            "classified_by": "manual",
-            "classified_at": None,
-            "classification_reason": "",
-            "classification_confidence": None,
-            "source_jurisdiction": None,
-            "value_in_eur": None,
-            "fx_rate": None,
-            "created_at": "2026-04-15T09:30:00+00:00",
-            "modified_at": "2026-04-15T09:30:00+00:00",
-        },
-    )
+    return ledger_transaction_projection()
 
 
 def _receipt(
@@ -130,7 +92,7 @@ def test_terminal_projector_rejects_forged_definition_and_result_reference() -> 
     )
 
     with pytest.raises(ValueError):
-        operation._project_operation_result(result, wrong_definition)
+        operation.project_operation_result(result, wrong_definition)
     with pytest.raises(ValidationError):
         OperationTerminalReceipt.model_validate({**receipt.model_dump(), "result_ref": None})
 
@@ -144,7 +106,7 @@ def test_terminal_projector_rejects_foreign_refusal_and_receipt_forbids_its_resu
     receipt = _receipt(OperationTerminalCondition.REFUSED, OperationEffect.NONE)
 
     with pytest.raises(ValueError):
-        operation._project_operation_result(result, receipt.model_copy(update={"refusal_ref": "REFUSED_OTHER"}))
+        operation.project_operation_result(result, receipt.model_copy(update={"refusal_ref": "REFUSED_OTHER"}))
     with pytest.raises(ValidationError):
         OperationTerminalReceipt.model_validate({**receipt.model_dump(), "result_ref": "f" * 64})
 
@@ -161,7 +123,7 @@ def test_update_result_preserves_the_source_id_across_the_worker_wire() -> None:
     result = contracts.LedgerUpdateExecutionResult(outcome="updated", profile_id=_PROFILE, result=projected)
     decoded = contracts.LedgerUpdateExecutionResult.model_validate_json(result.model_dump_json())
     assert (
-        operation._project_operation_result(
+        operation.project_operation_result(
             decoded,
             _receipt(OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED),
         )

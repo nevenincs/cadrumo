@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#website-repository-boundary'
 date: '2026-09-22'
-modified: '2026-10-03'
+modified: '2026-11-04'
 body_schema: 'body-v2'
-body_hash: 'sha256:9914183e895d26f139e3b38dd996845e55df019198271466b8ed7be076b8fd57'
+body_hash: 'sha256:53e2c951b0f5bfd8429f2c02feea128eccbff8bf0c122ee22f3501c57ebe843f'
 related:
   - "[[2026-08-23-website-repository-boundary-adr]]"
 ---
@@ -69,7 +69,7 @@ documentation deployment workflow:
    enters the `docs` environment, verifies the authority marker, and calls
    `python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs`.
 5. The publisher performs a fresh strict multi-root build, validates artifacts and
-   Pagefind records, resolves and verifies the CloudFormation target, synchronizes
+   Pagefind records, resolves and verifies the deployment target, synchronizes
    only `docs/`, invalidates only `/docs/*`, probes the public site, and compares
    served search records with the built records. A failure reaches the optional
    alert webhook but never transfers authority to the marketing repository.
@@ -140,9 +140,7 @@ neither command publishes product documentation.
   evidence. `dev/docs/pagefind_index.py` and `dev/docs/pagefind_inject.py` own the
   record-bearing search contract.
 - `dev/deploy/docs_static_site.py` is the sole product docs deploy service and
-  command-line entry point. `infra/docs-static-site.yaml` is its CloudFormation
-  authority for the private versioned bucket, origin access control, CloudFront
-  distribution, certificate/alias integration, and bucket policy.
+  command-line entry point.
   gitlink, invokes the product build in user scope, stages only `dist/docs`, and
   landing-site publisher whose protected-prefix rule excludes `docs/*` on every
   synchronization pass.
@@ -193,16 +191,9 @@ audit is intentionally advisory because it depends on the network.
   require the deploy artifacts, canonical sitemap and substantive search records;
   `dev/deploy/docs_static_site.py:334` through `dev/deploy/docs_static_site.py:529`
   build and validate every language root and the apex language entry.
-- `dev/deploy/docs_static_site.py:601` provisions the fixed `cadrumo-docs`
-  CloudFormation stack. `infra/docs-static-site.yaml:28` declares a private,
-  encrypted, versioned S3 bucket; `infra/docs-static-site.yaml:50` declares the
-  CloudFront origin access control; `infra/docs-static-site.yaml:94` declares the
-  distribution and `cadrumo.neve.md` alias; `infra/docs-static-site.yaml:140`
-  restricts bucket reads to that distribution.
-- `dev/deploy/docs_static_site.py:646` reads bucket and distribution identifiers from
-  stack outputs and `dev/deploy/docs_static_site.py:678` refuses the wrong alias.
+- `dev/deploy/docs_static_site.py:646` resolves the bucket and distribution identifiers and `dev/deploy/docs_static_site.py:678` refuses the wrong alias.
   `dev/deploy/docs_static_site.py:701` synchronizes generated HTML only to
-  `s3://<stack bucket>/docs/`; `dev/deploy/docs_static_site.py:719` limits cache
+  `s3://<docs bucket>/docs/`; `dev/deploy/docs_static_site.py:719` limits cache
   invalidation to `/docs/*`.
 - `dev/deploy/docs_static_site.py:972` composes the exact dry-run and publish build;
   `dev/deploy/docs_static_site.py:1004` validates it without AWS or upload;
@@ -285,4 +276,4 @@ last writer or identify the deployed commit. The current-source localized
 `/docs/es/` path returned HTTP 404, so the live surface must not be represented as a
 proven deployment of the audited product commit.
 
-The focused product suites `dev/deploy/tests/test_docs_static_site.py`, `dev/deploy/tests/test_publish_authority.py`, `dev/deploy/tests/test_deploy_lane_isolation.py`, and `dev/docs/tests/test_deployment_search_parity.py` passed 55 tests. These results prove the checked-in boundaries and fail-closed behavior; they do not substitute for a successful credentialed dry run, CloudFormation inspection, or release publish.
+The focused product suites `dev/deploy/tests/test_docs_static_site.py`, `dev/deploy/tests/test_publish_authority.py`, `dev/deploy/tests/test_deploy_lane_isolation.py`, and `dev/docs/tests/test_deployment_search_parity.py` passed 55 tests. These results prove the checked-in boundaries and fail-closed behavior; they do not substitute for a successful credentialed dry run, deployed-infrastructure inspection, or release publish.

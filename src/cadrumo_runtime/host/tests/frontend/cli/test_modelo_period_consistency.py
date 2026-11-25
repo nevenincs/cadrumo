@@ -23,9 +23,10 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.config import override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .profile_password_cli import invoke_with_profile_password
 
 
@@ -57,16 +58,16 @@ def _create_profile() -> None:
     register_cli_profile(
         label="operator",
         facts={
-            "identity.tax_id": "B12345674",
+            **native_general_iva_facts(),
+            "identity.tax_id": "B00015016",
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
             "identity.name": "Operator",
             "identity.surnames": "Operator SL",
             "identity.legal_name": "Operator SL",
             "activities.description": "design",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
             "taxpayer_type.incn_prior_12_months": "7500000.00",
+            "taxpayer_type.regimen_entidades_navieras_tonelaje": "false",
         },
         log_in=False,
     )
@@ -82,7 +83,7 @@ def _create_202_work_unit(period: str) -> str:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     _assert_payload_period(payload, year=2026, code=period)
     work_unit_id = STR_KEYED_MAPPING_ADAPTER.validate_python(payload)["work_unit_id"]
     assert isinstance(work_unit_id, str)
@@ -108,7 +109,7 @@ def _calculate_202_work_unit(work_unit_id: str) -> dict[str, object]:
     assert result.exit_code == 0, result.output
     assert "cannot map workflow period" not in result.output
     assert "invalid registry period" not in result.output
-    return STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(result.output))
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(result.output))
 
 
 def test_create_calculate_status_verify_agree_on_modelo_202_pago_fraccionado_periods() -> None:
@@ -137,7 +138,7 @@ def test_create_calculate_status_verify_agree_on_modelo_202_pago_fraccionado_per
             ["--format", "json", "app", "modelo", "work", "status", work_unit_id],
         )
         assert status_result.exit_code == 0, f"{period}: {status_result.output}"
-        status_payload = _payload(status_result.output)
+        status_payload = unwrap_schema_envelope(status_result.output)
         _assert_payload_period(status_payload, year=2026, code=period)
 
         # Verify must accept the same period token without crashing. Exit code 0

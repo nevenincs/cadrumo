@@ -1,4 +1,5 @@
 cadrumo_cargo_command(application_cargo
+  --env "CADRUMO_TEST_PYTHON=${CADRUMO_DEV_PYTHON}"
   --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
 set(application_manifest "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(application_profile "$<IF:$<CONFIG:Debug>,dev,release>")
@@ -43,23 +44,53 @@ endif()
 if(BUILD_TESTING)
   set(CADRUMO_APPLICATION_TEST_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     CACHE STRING "Package root for Rust compatibility acceptance; defaults to the staged configuration")
+  set(CADRUMO_APPLICATION_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for application tests")
+  option(CADRUMO_APPLICATION_TEST_LIBRARY_ONLY "Limit application Rust tests to the library test harness" OFF)
+  # Keep source-owned verification separate from production outputs and other isolated crates.
+  set(application_test_target_dir "${CADRUMO_PATH_CARGO}/application-tests")
+  set(application_test_arguments --target-dir "${application_test_target_dir}")
+  if(CADRUMO_APPLICATION_TEST_LIBRARY_ONLY)
+    list(APPEND application_test_arguments --lib)
+  endif()
+  if(NOT CADRUMO_APPLICATION_TEST_FILTER STREQUAL "")
+    list(APPEND application_test_arguments "${CADRUMO_APPLICATION_TEST_FILTER}")
+  endif()
   if(NOT IS_ABSOLUTE "${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}")
     message(FATAL_ERROR "CADRUMO_APPLICATION_TEST_PACKAGE_ROOT must be absolute")
   endif()
+  # The diagnostics integration tests wait for the writer through the library's shared helper,
+  # which an integration test sees only under this feature; it carries no dependency.
   add_test(NAME application.rust
     COMMAND ${application_cargo} test --locked --manifest-path "${application_manifest}"
-      --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}" --features platform)
-  set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
-  cadrumo_cargo_command(application_package_cargo
-    --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
-    --env "CADRUMO_TEST_PACKAGE_ROOT=${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}"
-    --env "CADRUMO_TEST_PACKAGE_MANIFEST=${package_manifest}"
-    --env "CADRUMO_TEST_PACKAGE_PLATFORM=${CADRUMO_PLATFORM}"
-    --env "CADRUMO_TEST_PACKAGE_ABI=${application_layout_abi}")
-  add_test(NAME application.package
-    COMMAND ${application_package_cargo} test --locked --manifest-path "${application_manifest}"
       --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
-      --features live-package-tests --test live_package -- --nocapture)
-  set_tests_properties(application.package PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    TIMEOUT 900 RESOURCE_LOCK package_inventory)
+      --features platform,diagnostics-test-support
+      ${application_test_arguments})
+  # The live runtime tests read the generated Modelo 303 envelope from this build tree's window projections.
+  # The bound catches a hang only: the crate takes about two minutes on an idle host and
+  # several times that beside other test runs, and a per-test TIMEOUT overrides ctest --timeout.
+  set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 1800
+    ENVIRONMENT "CADRUMO_WINDOW_FIXTURES=${CADRUMO_PATH_WINDOW_FIXTURES}")
+  # The package test reads the complete application package: the staged one, which only a
+  # payload graph assembles, or a separately supplied artifact root.
+  if(CADRUMO_CONFIGURE_PAYLOAD
+      OR NOT CADRUMO_APPLICATION_TEST_PACKAGE_ROOT STREQUAL "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+    cadrumo_cargo_command(application_package_cargo
+      --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
+      --env "CADRUMO_TEST_PACKAGE_ROOT=${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}"
+      --env "CADRUMO_TEST_PACKAGE_MANIFEST=${package_manifest}"
+      --env "CADRUMO_TEST_PACKAGE_PLATFORM=${CADRUMO_PLATFORM}"
+      --env "CADRUMO_TEST_PACKAGE_ABI=${application_layout_abi}")
+    add_test(NAME application.package
+      COMMAND ${application_package_cargo} test --locked --manifest-path "${application_manifest}"
+        --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
+        --features live-package-tests --test live_package -- --nocapture)
+    set_tests_properties(application.package PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      TIMEOUT 900 RESOURCE_LOCK package_inventory)
+  endif()
+  # The second lint enables every feature, so the platform and live-test code is linted as well.
+  cadrumo_rust_quality(application MANIFEST "${application_manifest}"
+    CLIPPY_CARGO application_cargo
+    CLIPPY_ARGS --profile "${application_profile}" --target-dir "${application_test_target_dir}")
+  cadrumo_rust_clippy(application.features MANIFEST "${application_manifest}" CARGO application_cargo
+    ARGS --profile "${application_profile}" --target-dir "${application_test_target_dir}" --all-features)
 endif()

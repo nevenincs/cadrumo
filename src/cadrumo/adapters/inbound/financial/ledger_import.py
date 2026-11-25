@@ -26,12 +26,12 @@ from .providers.base import FinancialProvider, FinancialProviderError
 from .providers.csv import CsvProvider
 from .providers.detection import detect_provider
 from .providers.ofx import OfxProvider
-from .providers.pdf_n26 import PdfN26Provider
+from .providers.pdf_statement import PdfStatementProvider
 from .providers.xls import XlsProvider
 from .providers.xlsx import XlsxProvider
 
 
-class _FinancialProviderBoundary(FinancialProviderProtocol):
+class FinancialProviderBoundary(FinancialProviderProtocol):
     """Translate one concrete parser to the application provider protocol."""
 
     def __init__(self, provider: FinancialProvider) -> None:
@@ -42,9 +42,17 @@ class _FinancialProviderBoundary(FinancialProviderProtocol):
         """Yield application rows while translating provider failures."""
         try:
             for row in self._provider.ingest(path):
-                yield LedgerParsedRow(raw=row.raw, direction=row.direction)
+                yield LedgerParsedRow(raw=row.raw, direction=row.direction, operation_date=row.operation_date)
         except FinancialProviderError as exc:
             raise _translate_provider_error(exc, operation="ingest", path=path) from exc
+
+    @override
+    def statement_account(self, path: Path, *, source_sha256: str) -> str | None:
+        """Return the one account the statement names, translating provider failures."""
+        try:
+            return self._provider.statement_account(path, source_sha256=source_sha256)
+        except FinancialProviderError as exc:
+            raise _translate_provider_error(exc, operation="statement_account", path=path) from exc
 
     @override
     def validate_source(self, path: Path) -> LedgerProviderValidation:
@@ -61,6 +69,7 @@ class _FinancialProviderBoundary(FinancialProviderProtocol):
             unavailable_optional_extra=(
                 None if result.unavailable_optional_extra is None else dict(result.unavailable_optional_extra)
             ),
+            reader_unavailable_verdict=result.reader_unavailable_verdict,
         )
 
 
@@ -70,13 +79,13 @@ class FinancialProviderResolverAdapter:
     def resolve(self, *, provider_id: str, path: Path) -> FinancialProviderProtocol | None:
         """Return a translated provider for ``provider_id`` and ``path``."""
         try:
-            provider = self._resolve_concrete_provider(provider_id=provider_id, path=path)
+            provider = self.resolve_concrete_provider(provider_id=provider_id, path=path)
         except FinancialProviderError as exc:
             raise _translate_provider_error(exc, operation="resolve", path=path) from exc
-        return None if provider is None else _FinancialProviderBoundary(provider)
+        return None if provider is None else FinancialProviderBoundary(provider)
 
     @staticmethod
-    def _resolve_concrete_provider(*, provider_id: str, path: Path) -> FinancialProvider | None:
+    def resolve_concrete_provider(*, provider_id: str, path: Path) -> FinancialProvider | None:
         """Select and construct the parser owned by this adapter package."""
         if provider_id == "auto":
             return detect_provider(path)
@@ -88,8 +97,8 @@ class FinancialProviderResolverAdapter:
             return XlsxProvider()
         if provider_id == "xls":
             return XlsProvider()
-        if provider_id == "pdf-n26":
-            return PdfN26Provider()
+        if provider_id == "pdf":
+            return PdfStatementProvider()
         raise TransactionValidationError(
             translated_message="errors.transaction.unknown_ledger_provider",
             context={"provider": provider_id},

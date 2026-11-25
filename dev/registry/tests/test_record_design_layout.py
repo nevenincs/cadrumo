@@ -16,12 +16,26 @@ from ..compiler.record_design import (
     extract_record_design,
     extract_record_design_pdf,
 )
-from ._record_design_support import (
-    _RECORD_DESIGN_ROOT,
-    _write_pdf_lines,
+from .record_design_support import (
+    RECORD_DESIGN_ROOT,
+    write_pdf_lines,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _first_listed_design(modelo_id: str) -> Path:
+    """Return the design AEAT lists first for one modelo: the corpus numbers it ``01``."""
+    (design,) = (
+        path
+        for path in scan_directory(
+            RECORD_DESIGN_ROOT / f"modelo_{modelo_id}" / "files",
+            pattern=f"01-{modelo_id}-*",
+            select=DirectoryEntryKind.FILES,
+        )
+        if path.suffix.lower() in {".xls", ".xlsx"}
+    )
+    return design
 
 
 def test_header_matching_ignores_an_abbreviating_full_stop_on_either_side() -> None:
@@ -35,11 +49,11 @@ def test_header_matching_ignores_an_abbreviating_full_stop_on_either_side() -> N
     broken set. This one fails for any token whose two spellings disagree.
     """
     for token in ("lon", "posic", "tipo", "descripcion", "oblig", "validacion", "contenido"):
-        with_stop = record_design_headers_module._optional_header_index((f"{token}.",), token)
-        without_stop = record_design_headers_module._optional_header_index((token,), token)
+        with_stop = record_design_headers_module.optional_header_index((f"{token}.",), token)
+        without_stop = record_design_headers_module.optional_header_index((token,), token)
         assert with_stop == without_stop == 0, token
         # And the expected side may carry the stop just as the cell may.
-        assert record_design_headers_module._optional_header_index((token,), f"{token}.") == 0, token
+        assert record_design_headers_module.optional_header_index((token,), f"{token}.") == 0, token
 
 
 def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
@@ -51,7 +65,7 @@ def test_a_workbook_mixing_both_header_spellings_yields_every_sheet() -> None:
     presented as carrying no record sheets at all.
     """
     design = scan_directory(
-        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xls", select=DirectoryEntryKind.FILES
+        RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xls", select=DirectoryEntryKind.FILES
     )[0]
     sheets = extract_record_design(design).accept_partial()
 
@@ -77,12 +91,7 @@ def test_a_design_with_a_dropped_sheet_reports_the_read_as_partial() -> None:
     two disjoint -- rather than on the counts, which move whenever the header
     vocabulary widens or AEAT republishes.
     """
-    design = (
-        _RECORD_DESIGN_ROOT
-        / "modelo_232"
-        / "files"
-        / "01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx"
-    )
+    design = _first_listed_design("232")
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     extraction = extract_record_design(design)
@@ -116,7 +125,7 @@ def test_a_design_with_an_undeclared_hole_reports_the_read_as_partial(tmp_path: 
     instead of the partial read this asserts.
     """
     pdf_path = tmp_path / "holed-record-design.pdf"
-    _write_pdf_lines(
+    write_pdf_lines(
         pdf_path,
         (
             "Pág 1 DISEÑO DE REGISTRO 01/12/2003",
@@ -158,7 +167,7 @@ def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still
     (spot-checked against the raw workbook, not just "it parsed"), AND a sheet
     matching NEITHER shape -- no ``Descripción``, no ``Com.`` -- still skips.
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_151" / "files" / "01-151-ejercicio-2023-y-siguientes.xls"
+    design = _first_listed_design("151")
     assert design.is_file(), f"corpus anchor moved: {design}"
     extraction = extract_record_design(design)
 
@@ -178,7 +187,7 @@ def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still
 
     # Negative case: a header row with NEITHER "Descripcion" NOR "Com." must still refuse,
     # proving Shape B did not widen the match rather than add a second one.
-    no_shape_match = record_design_headers_module._probe_header_row(
+    no_shape_match = record_design_headers_module.probe_header_row(
         ("Nº", "Posic.", "Lon", "Tipo", "Contenido"),
         1,
         label="test",
@@ -189,7 +198,7 @@ def test_a_second_recognised_header_shape_is_read_and_a_non_matching_sheet_still
 
     # Negative case: "Com." present but the following column is blank -- no caption to
     # treat as the description -- must also still refuse.
-    blank_caption = record_design_headers_module._probe_header_row(
+    blank_caption = record_design_headers_module.probe_header_row(
         ("Nº", "Posic.", "Lon", "Tipo", "Com.", None, "Contenido"),
         1,
         label="test",
@@ -210,7 +219,7 @@ def test_a_declared_header_cell_correction_is_read_and_an_undeclared_blank_colum
     without one, the same blank cell must still refuse (proven with a
     synthetic row carrying no declared correction).
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xls"
+    design = RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xls"
     assert design.is_file(), f"corpus anchor moved: {design}"
     extraction = extract_record_design(design)
 
@@ -236,7 +245,7 @@ def test_a_declared_header_cell_correction_is_read_and_an_undeclared_blank_colum
 
     # Negative case: the identical blank-length-column shape with NO declared correction
     # must still refuse -- proving the sidecar is load-bearing, not a fallback default.
-    undeclared = record_design_headers_module._probe_header_row(
+    undeclared = record_design_headers_module.probe_header_row(
         ("Nº", "Posic.", "", "Tipo", "Descripción", "Validación", "Contenido"),
         5,
         label="test",
@@ -255,7 +264,7 @@ def test_a_design_read_in_full_reports_complete_and_hands_over_its_sheets() -> N
     which is the more expensive failure and the easier one to ship unnoticed.
     """
     design = scan_directory(
-        _RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xls", select=DirectoryEntryKind.FILES
+        RECORD_DESIGN_ROOT / "modelo_115" / "files", pattern="*.xls", select=DirectoryEntryKind.FILES
     )[0]
     extraction = extract_record_design(design)
 
@@ -276,7 +285,7 @@ def test_every_sheet_of_a_source_is_either_read_or_named_as_skipped() -> None:
     from openpyxl import load_workbook
 
     design = scan_directory(
-        _RECORD_DESIGN_ROOT / "modelo_232" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
+        RECORD_DESIGN_ROOT / "modelo_232" / "files", pattern="*.xlsx", select=DirectoryEntryKind.FILES
     )[0]
     workbook = load_workbook(design, read_only=True, data_only=True)
     try:
@@ -302,14 +311,14 @@ def test_a_truncated_header_spelling_names_the_same_column() -> None:
     the moment AEAT wrote a spelling nobody had enrolled.
     """
     for spelling in ("lon", "lon.", "long", "long.", "longitud"):
-        assert record_design_headers_module._optional_header_index((spelling,), "lon") == 0, spelling
+        assert record_design_headers_module.optional_header_index((spelling,), "lon") == 0, spelling
 
     # The floor: a token under three characters may not prefix-match a column.
-    assert record_design_headers_module._optional_header_index(("n",), "no") is None
-    assert record_design_headers_module._optional_header_index(("lo",), "lon") is None
+    assert record_design_headers_module.optional_header_index(("n",), "no") is None
+    assert record_design_headers_module.optional_header_index(("lo",), "lon") is None
     # And an unrelated column is still not matched, however long it is.
-    assert record_design_headers_module._optional_header_index(("contenido",), "lon") is None
-    assert record_design_headers_module._optional_header_index(("descripcion",), "tipo") is None
+    assert record_design_headers_module.optional_header_index(("contenido",), "lon") is None
+    assert record_design_headers_module.optional_header_index(("descripcion",), "tipo") is None
 
 
 def test_the_truncation_rule_recovers_a_sheet_that_was_silently_dropped() -> None:
@@ -321,7 +330,7 @@ def test_the_truncation_rule_recovers_a_sheet_that_was_silently_dropped() -> Non
     COMPLETE, which is the property; the sheet count is checked as "more than the
     survivors" rather than pinned, so a republished design cannot make it vacuous.
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_714" / "files" / "DR714_2025.xls"
+    design = RECORD_DESIGN_ROOT / "modelo_714" / "files" / "DR714_2025.xls"
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     extraction = extract_record_design(design)
@@ -347,7 +356,7 @@ def test_a_declared_end_of_record_terminator_is_separated_and_kept() -> None:
     because those two bytes are part of the record and a parse that drops them
     understates every record built from it.
     """
-    design = _RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xls"
+    design = RECORD_DESIGN_ROOT / "modelo_100" / "files" / "20-100-ejercicio-2015-1-75-mb-xls.xls"
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     envelopes = [sheet.variable_envelope for sheet in extract_record_design(design).accept_partial()]
@@ -409,12 +418,7 @@ def test_a_design_declaring_no_terminator_does_not_acquire_one() -> None:
     variable envelope as the older editions that DO carry a terminator, so the two
     differ in exactly the thing under test.
     """
-    design = (
-        _RECORD_DESIGN_ROOT
-        / "modelo_303"
-        / "files"
-        / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-    )
+    design = _first_listed_design("303")
     assert design.is_file(), f"corpus anchor moved: {design}"
 
     extraction = extract_record_design(design)

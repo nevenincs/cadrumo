@@ -24,16 +24,16 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
+    published_profile_schema,
 )
-from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..values import (
     ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     UserProfileSnapshot,
-    _derive_canonical_hash,
     create_user_profile_record,
+    derive_canonical_hash,
 )
 from .snapshot_factory import create_user_profile_snapshot, new_profile_snapshot_id
 
@@ -56,7 +56,7 @@ def _facts() -> tuple[UserProfileFact, ...]:
 
 
 def _record(**overrides: object) -> UserProfileRecord:
-    context = _profile_creation_context_for_test()
+    context = leased_profile_create_context()
     return UserProfileRecord.model_validate(
         {
             "schema_id": context.schema.id,
@@ -112,7 +112,7 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
     """
     raw_payload = create_user_profile_snapshot(
         _record(),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
         snapshot_id=new_profile_snapshot_id(_PROFILE_ID),
     ).model_dump()
     assert isinstance(raw_payload, dict)
@@ -121,7 +121,7 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
         assert isinstance(key, str)
         payload[key] = value
     payload.update(overrides)
-    payload["canonical_hash"] = _derive_canonical_hash(
+    payload["canonical_hash"] = derive_canonical_hash(
         schema_id=str(payload["schema_id"]),
         schema_version=int(str(payload["schema_version"])),
         profile_id=str(payload["profile_id"]),
@@ -134,7 +134,7 @@ def test_snapshot_refuses_an_unknown_schema_id() -> None:
     with pytest.raises(ValidationError, match=_SCHEMA_REFUSAL):
         UserProfileSnapshot.model_validate(
             _snapshot_payload(schema_id="bogus.profile"),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
 
 
@@ -144,7 +144,7 @@ def test_snapshot_refuses_a_future_schema_version() -> None:
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         UserProfileSnapshot.model_validate(
             _snapshot_payload(schema_version=canonical.version + 1),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
 
 
@@ -154,7 +154,7 @@ def test_snapshot_refuses_a_pre_current_schema_version() -> None:
     with pytest.raises(ValidationError, match=_VERSION_REFUSAL):
         UserProfileSnapshot.model_validate(
             _snapshot_payload(schema_version=_pre_current_version(canonical.version)),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
 
 
@@ -173,7 +173,7 @@ def test_the_current_schema_hydrates_through_the_snapshot() -> None:
 
     snapshot = UserProfileSnapshot.model_validate(
         _snapshot_payload(),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
     assert snapshot.schema_id == canonical.id
@@ -186,7 +186,7 @@ def test_a_created_record_carries_the_canonical_version() -> None:
     canonical = published_profile_schema()
 
     defaulted = create_user_profile_record(
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
         profile_id=_PROFILE_ID,
         facts=_facts(),
         setup_state=ProfileSetupState.COMPLETE,

@@ -8,6 +8,8 @@ import os
 import unicodedata
 from pathlib import Path
 
+from .action_cache import enrolled_input_paths
+
 
 def _canonical_file(path: Path) -> Path:
     if not path.is_absolute() or ".." in path.parts:
@@ -16,6 +18,15 @@ def _canonical_file(path: Path) -> Path:
     if path != resolved or not resolved.is_file():
         raise ValueError(f"Documentation input aliases another path or is not a file: {path}")
     return resolved
+
+
+def _enroll_name(relative: str, names: set[str]) -> None:
+    if "\\" in relative or ":" in relative:
+        raise ValueError(f"Documentation input has a nonportable name: {relative}")
+    collision = unicodedata.normalize("NFC", relative).casefold()
+    if collision in names:
+        raise ValueError(f"Documentation input names collide: {relative}")
+    names.add(collision)
 
 
 def shared_docs_inputs(inputs: Path, authority: tuple[Path, Path], *, source: Path, build: Path) -> str:
@@ -46,8 +57,8 @@ def shared_docs_inputs(inputs: Path, authority: tuple[Path, Path], *, source: Pa
     for role, path in zip(("authority/descriptor", "authority/database"), selected, strict=True):
         enroll(role, path)
     names: set[str] = set()
-    for line in inputs.read_text(encoding="utf-8").splitlines():
-        path = _canonical_file(Path(line))
+    for enrolled in enrolled_input_paths(inputs, resolve_roots=True):
+        path = _canonical_file(enrolled)
         if path.is_relative_to(build):
             continue
         if path in selected:
@@ -55,12 +66,7 @@ def shared_docs_inputs(inputs: Path, authority: tuple[Path, Path], *, source: Pa
         if not path.is_relative_to(source):
             raise ValueError(f"Documentation input is outside the enrolled checkout: {path}")
         relative = path.relative_to(source).as_posix()
-        if "\\" in relative or ":" in relative:
-            raise ValueError(f"Documentation input has a nonportable name: {relative}")
-        collision = unicodedata.normalize("NFC", relative).casefold()
-        if collision in names:
-            raise ValueError(f"Documentation input names collide: {relative}")
-        names.add(collision)
+        _enroll_name(relative, names)
         enroll(f"source/{relative}", path)
     encoded = json.dumps({"schema": 1, "files": sorted(records)}, ensure_ascii=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()

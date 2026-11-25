@@ -38,6 +38,7 @@ import pytest
 from cadrumo.core.record_design_epoch import RECORD_DESIGN_EPOCH_PATTERN
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.modelos.calculation_revision_m303_evidence import M303RegimenSimplificadoCalculationResult
 
@@ -92,7 +93,18 @@ def test_a_document_version_suffix_is_refused_as_an_epoch() -> None:
     uniqueness check below without either being wrong on its face.
     """
     source = next(iter(_tagged_sources().values()))
-    for rejected in ("2019-v18", "v18", "2019v18", "ejercicio-2019", "2019-EARLY", "19", "20244", ""):
+    year = str(filing_year_envelope().horizon)
+    rejected_epochs = (
+        f"{year}-v18",
+        "v18",
+        f"{year}v18",
+        f"ejercicio-{year}",
+        f"{year}-EARLY",
+        year[2:],
+        f"{year}4",
+        "",
+    )
+    for rejected in rejected_epochs:
         with pytest.raises((RegistryValidationError, ValueError)):
             _rebuild(source, record_design_epoch=rejected)
 
@@ -105,7 +117,13 @@ def test_a_sub_year_relayout_label_is_accepted_as_an_epoch() -> None:
     years would refuse the tree's own declarations.
     """
     source = next(iter(_tagged_sources().values()))
-    for accepted in ("2024-early", "2024-late", "2026", "2003"):
+    envelope = filing_year_envelope()
+    for accepted in (
+        f"{envelope.horizon}-early",
+        f"{envelope.horizon}-late",
+        str(envelope.horizon),
+        str(envelope.floor),
+    ):
         assert _rebuild(source, record_design_epoch=accepted).record_design_epoch == accepted
 
 

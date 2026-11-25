@@ -15,12 +15,11 @@ from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
 from .....application.modelo.calculation_notes import REOPEN_HINT_LOCALE_KEY, STALE_LOCALE_KEY
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.i18n.render import tr
 from .issue_scale import (
-    _UNENTERED_LOCALE_KEYS,
-    TO_DO_LEVELS,
-    IssueLevel,
+    UNENTERED_LOCALE_KEYS,
     IssueLine,
     UnenteredBoxes,
     UnenteredSection,
@@ -30,21 +29,22 @@ from .issue_scale import (
 from .keys import describe_bindings
 from .sources import BoxNumbers
 
-_CONFIRM_SCOPE_KEY: Final[str] = "b"
+CONFIRM_SCOPE_KEY: Final[str] = "b"
 
 _CALCULATE_KEY: Final[str] = "c"
 
 _OPEN_AREA_KEY: Final[str] = "a"
+OPEN_COMPARED_KEY: Final[str] = "o"
 
-_CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "tui.modelo.workbench.issues.confirm_all"
+_CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.confirm_all"
 
-_BOXES_SUFFIX: Final[str] = "-boxes"
+BOXES_SUFFIX: Final[str] = "-boxes"
 
 _INTRO_SUFFIX: Final[str] = "-intro"
 
-_SECTION_INFIX: Final[str] = "-section-"
+SECTION_INFIX: Final[str] = "-section-"
 
-_ISSUE_ID_PREFIX: Final[str] = "issue-"
+ISSUE_ID_PREFIX: Final[str] = "issue-"
 
 _INDENT: Final[int] = 2
 
@@ -62,8 +62,9 @@ def _paragraph(text: str, style: str = "") -> Text | None:
     return Text(text, style=style) if text else None
 
 
-def _issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
-    action = None if line.level is IssueLevel.INFO else _action_with_key(line)
+def issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
+    """Render an issue line's location, message, action and detail as a prompt entry."""
+    action = None if line.level is ModeloFormAttention.INFO else _action_with_key(line)
     return _entry(
         _paragraph(f"[{line.box}] {line.where}" if line.action_targets_box and line.box != "·" else line.where, "bold"),
         _paragraph(line.message),
@@ -79,18 +80,21 @@ def _action_with_key(line: IssueLine) -> str:
         return f"{line.action} [{_CALCULATE_KEY}]"
     if line.action_targets_box and line.key is not None:
         return f"{line.action} [Enter]"
-    if line.area is not None:
-        return f"{line.action} [{_OPEN_AREA_KEY}]"
+    keys = [
+        key for key, area in ((_OPEN_AREA_KEY, line.area), (OPEN_COMPARED_KEY, line.compared_area)) if area is not None
+    ]
+    if keys:
+        return f"{line.action} {' '.join(f'[{key}]' for key in keys)}"
     return line.action
 
 
 def _what_to_do(key: str) -> Text | None:
-    return _paragraph(tr("tui.modelo.workbench.issues.what_to_do", action=tr(key)), "italic")
+    return _paragraph(tr("workspace.modelo.issues.what_to_do", action=tr(key)), "italic")
 
 
 def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
-    what, action, _ = _UNENTERED_LOCALE_KEYS[boxes.level]
-    unnumbered = tr("tui.modelo.workbench.issues.where.unnumbered", count=boxes.unnumbered) if boxes.unnumbered else ""
+    what, action, _ = UNENTERED_LOCALE_KEYS[boxes.level]
+    unnumbered = tr("workspace.modelo.issues.where.unnumbered", count=boxes.unnumbered) if boxes.unnumbered else ""
     return _entry(
         BoxNumbers(boxes.boxes, style="bold") if boxes.boxes else None,
         _paragraph(unnumbered, "bold"),
@@ -101,25 +105,26 @@ def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
 
 
 def _unentered_intro(boxes: UnenteredBoxes) -> RenderableType:
-    what, _, by_section = _UNENTERED_LOCALE_KEYS[boxes.level]
+    what, _, by_section = UNENTERED_LOCALE_KEYS[boxes.level]
     return _entry(_paragraph(tr(what)), _what_to_do(by_section), _confirm_key_line(boxes))
 
 
 def _confirm_key_line(boxes: UnenteredBoxes) -> Text | None:
     """Under the assumed values, the key that confirms those of a part of the form, in full words."""
-    if boxes.level is not IssueLevel.CONFIRM:
+    if boxes.level is not ModeloFormAttention.CONFIRM:
         return None
-    return _paragraph(f"[{_CONFIRM_SCOPE_KEY}] {tr(_CONFIRM_SCOPE_LOCALE_KEY)}", "italic")
+    return _paragraph(f"[{CONFIRM_SCOPE_KEY}] {tr(_CONFIRM_SCOPE_LOCALE_KEY)}", "italic")
 
 
 def _section_prompt(section: UnenteredSection) -> RenderableType:
     return _entry(_paragraph(f"{section.title} ({len(section.keys)})", "bold"))
 
 
-class _IssueList(OptionList):
+class IssueList(OptionList):
     """The grouped list, able to describe its own Enter key."""
 
     def describe_enter(self, locale_key: str) -> None:
+        """Update the list's Enter key binding description."""
         describe_bindings(self._bindings.key_to_bindings, {"enter": locale_key})
         self.refresh_bindings()
 
@@ -140,11 +145,11 @@ class _IssueList(OptionList):
 def unentered_options(boxes: UnenteredBoxes) -> list[Option]:
     level = boxes.level.value
     if not boxes.by_section:
-        return [Option(_unentered_prompt(boxes), id=f"{level}{_BOXES_SUFFIX}")]
+        return [Option(_unentered_prompt(boxes), id=f"{level}{BOXES_SUFFIX}")]
     return [
         Option(_unentered_intro(boxes), id=f"{level}{_INTRO_SUFFIX}", disabled=True),
         *(
-            Option(_section_prompt(section), id=f"{level}{_SECTION_INFIX}{index}")
+            Option(_section_prompt(section), id=f"{level}{SECTION_INFIX}{index}")
             for index, section in enumerate(boxes.sections)
         ),
     ]
@@ -153,13 +158,13 @@ def unentered_options(boxes: UnenteredBoxes) -> list[Option]:
 def options_for_screen(
     form: ModeloWorkForm,
     lines: tuple[IssueLine, ...],
-    unentered: Mapping[IssueLevel, UnenteredBoxes],
+    unentered: Mapping[ModeloFormAttention, UnenteredBoxes],
     *,
     recorded: bool,
 ) -> list[Option]:
     """Build the grouped options, preserving level order and recorded-filing counts."""
     options: list[Option] = []
-    for level in IssueLevel:
+    for level in ModeloFormAttention:
         options.extend(_level_options(level, lines, unentered.get(level), recorded=recorded))
     if form.calculation_notes and form.calculation_out_of_date:
         options.insert(0, Option(Text(tr(STALE_LOCALE_KEY), style="italic"), id=_STALE_ID, disabled=True))
@@ -167,29 +172,29 @@ def options_for_screen(
     if reopen_hint:
         options.append(Option(Text(tr(REOPEN_HINT_LOCALE_KEY), style="italic"), id=_REOPEN_ID, disabled=True))
     if not options:
-        options.append(Option(tr("tui.modelo.workbench.issues.empty"), id="empty", disabled=True))
+        options.append(Option(tr("workspace.modelo.issues.empty"), id="empty", disabled=True))
     return options
 
 
 def _level_options(
-    level: IssueLevel,
+    level: ModeloFormAttention,
     lines: tuple[IssueLine, ...],
     boxes: UnenteredBoxes | None,
     *,
     recorded: bool,
 ) -> list[Option]:
     indexed = [(index, line) for index, line in enumerate(lines) if line.level is level]
-    count = len(indexed) + (0 if boxes is None else len(boxes.keys))
-    if not count:
+    if not indexed and boxes is None:
         return []
     heading = level_words(level)
-    if not (recorded and level in TO_DO_LEVELS):
+    if not recorded:
+        count = len(indexed) + (0 if boxes is None else len(boxes.keys))
         heading = f"{heading} ({count})"
     options = [Option(levels_marked(heading).stylize("bold"), id=f"level-{level.value}", disabled=True)]
     if boxes is not None:
         options.extend(unentered_options(boxes))
     options.extend(
-        Option(_issue_prompt(line, expanded=False, technical=False), id=f"{_ISSUE_ID_PREFIX}{index}")
+        Option(issue_prompt(line, expanded=False, technical=False), id=f"{ISSUE_ID_PREFIX}{index}")
         for index, line in indexed
     )
     return options
@@ -205,12 +210,13 @@ def footer_keys_for_width(
     has_open_area: bool,
     has_confirm_target: bool,
     gap: int,
+    has_compared_area: bool = False,
 ) -> set[str]:
     """Choose whole footer bindings in priority order, stopping before one would be clipped."""
     shown: set[str] = set()
     for key in priority:
         binding = _footer_binding(key, enter_binding, bindings)
-        binding = _available_footer_binding(key, binding, has_open_area, has_confirm_target)
+        binding = _available_footer_binding(key, binding, has_open_area, has_confirm_target, has_compared_area)
         if binding is None:
             continue
         cost = cell_len(f"{key_display(binding)} {binding.description}") + gap
@@ -229,20 +235,25 @@ def _footer_binding(key: str, enter_binding: Binding | None, bindings: Mapping[s
 
 
 def _available_footer_binding(
-    key: str, binding: Binding | None, has_open_area: bool, has_confirm_target: bool
+    key: str, binding: Binding | None, has_open_area: bool, has_confirm_target: bool, has_compared_area: bool
 ) -> Binding | None:
     if binding is None or not binding.description:
         return None
-    if (key == "a" and not has_open_area) or (key == "b" and not has_confirm_target):
+    if (
+        (key == _OPEN_AREA_KEY and not has_open_area)
+        or (key == OPEN_COMPARED_KEY and not has_compared_area)
+        or (key == "b" and not has_confirm_target)
+    ):
         return None
     return binding
 
 
 __all__ = (
-    "_BOXES_SUFFIX",
+    "BOXES_SUFFIX",
+    "ISSUE_ID_PREFIX",
+    "OPEN_COMPARED_KEY",
+    "SECTION_INFIX",
     "_INTRO_SUFFIX",
-    "_ISSUE_ID_PREFIX",
-    "_SECTION_INFIX",
-    "_IssueList",
+    "IssueList",
     "options_for_screen",
 )

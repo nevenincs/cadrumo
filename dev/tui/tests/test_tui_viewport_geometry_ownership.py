@@ -13,8 +13,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._artifacts import FailedFrame, FrameFailureKind, Manifest, RenderedFrame, SkippedFrame
-from .._viewports import VIEWPORTS, Orientation, ViewportName
+from ..artifacts import FailedFrame, FrameFailureKind, Manifest, RenderedFrame, SkippedFrame
+from ..viewports import VIEWPORTS, Orientation, ViewportName
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -117,7 +117,7 @@ def test_a_manifest_read_back_from_disk_carries_the_same_refusals() -> None:
     disk exactly as unchecked as it was.
     """
     coherent = Manifest(
-        generated_at="2026-01-01T00:00:00+00:00",
+        generated_at="1980-01-01T00:00:00+00:00",
         source_revision="a" * 64,
         source_revision_at_end="a" * 64,
         cell_height=22,

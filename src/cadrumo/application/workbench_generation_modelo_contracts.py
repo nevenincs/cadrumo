@@ -10,7 +10,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Literal, Self
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
 from cadrumo.application.modelo.row_source_fingerprint import (
@@ -42,7 +42,7 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceStaticInspectionScopeV1,
 )
 from cadrumo.application.operator_actions.models import ActionReference
-from cadrumo.application.state_projection import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
+from cadrumo.application.state_projection_models import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
 from cadrumo.application.user_profile.commands import ProfilePreflightRequirement
 from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationAvailability,
@@ -57,6 +57,7 @@ from cadrumo.core.operator_action_enums import (
     NoRecoveryOutcome,
     OperatorActionAxis,
 )
+from cadrumo.core.precondition_action_invariants import ServedActionWords, ServedNoRecoveryWords
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.schema_family_disposition import (
     RegistrySchemaFamilyDisposition,
@@ -66,6 +67,8 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.filing.schema import ModeloValueKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import (
+    BelowFilingGradeField,
+    DisclosedLimitationFlag,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
@@ -297,6 +300,10 @@ class PublicLedgerPreflightIssue(BaseModel):
     transaction_id: str | Literal["__period__"]
     reason: LedgerPreflightIssueReason
     detail: str
+    missing_facts: tuple[str, ...] = ()
+    derived_modification_base: str | None = None
+    derived_modification_cuota: str | None = None
+    derived_modification_recargo: str | None = None
 
 
 class PublicProjectionModeloBindingRequirement(BaseModel):
@@ -309,8 +316,8 @@ class PublicProjectionModeloBindingRequirement(BaseModel):
     input_channel: str
 
 
-class PublicPreconditionVerdict(BaseModel):
-    """Typed local-human workbench view of PreconditionVerdict."""
+class PublicPreconditionVerdict(ServedActionWords, ServedNoRecoveryWords):
+    """Typed local-human workbench view of PreconditionVerdict, with its served action words."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -321,6 +328,20 @@ class PublicPreconditionVerdict(BaseModel):
     missing_argument_names: tuple[str, ...]
     conditionality: ActionConditionality
     no_recovery_outcome: NoRecoveryOutcome | None
+    alternative_actions: tuple[PublicAlternativeRecoveryAction, ...] = Field(
+        default_factory=tuple, exclude_if=lambda value: not value
+    )
+
+
+class PublicAlternativeRecoveryAction(ServedActionWords):
+    """Typed local-human workbench view of AlternativeRecoveryAction, with its served action words."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    action: ActionReference
+    argument_bindings: tuple[PublicActionArgumentBinding, ...] = Field(default_factory=tuple)
+    missing_argument_names: tuple[str, ...] = Field(default_factory=tuple)
+    conditionality: ActionConditionality
 
 
 class PublicConditionEvidence(BaseModel):
@@ -413,6 +434,7 @@ class PublicModeloWorkReview(BaseModel):
     calculation_revision_id: str | None
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
+    verification_sources_digest: str | None = None
     progress: ModeloWorkProgress
     casillas: tuple[PublicModeloWorkReviewCasilla, ...]
     findings: tuple[PublicModeloVerificationFinding, ...]
@@ -494,6 +516,8 @@ class PublicModeloVerificationFinding(BaseModel):
     message_facts: tuple[PublicFactEntryV1, ...]
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
+    disclosed_limitation: DisclosedLimitationFlag = False
+    below_filing_grade: BelowFilingGradeField = None
 
     @model_validator(mode="after")
     def _distinct_message_facts(self) -> Self:

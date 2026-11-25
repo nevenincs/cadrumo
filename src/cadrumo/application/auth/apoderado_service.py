@@ -135,9 +135,9 @@ class ApoderadoService:
         """Bind the repository factory, settings, and authoritative catalogue."""
         # `load_settings()` honours `override_settings`; bare `Settings()`
         # bypasses the context-var.
-        from ...core.config import load_settings as _load_settings
+        from ...core.config import load_settings
 
-        self._settings = settings or _load_settings()
+        self._settings = settings or load_settings()
         self._catalogue = catalogue or load_default_catalogue(operation=operation)
         self._repository_factory = repository_factory
         # Build repositories lazily per requested bucket so catalogue-only

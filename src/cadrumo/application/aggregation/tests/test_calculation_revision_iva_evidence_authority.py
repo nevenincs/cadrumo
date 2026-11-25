@@ -8,12 +8,15 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 from ..evidence_advisory import calculation_revision_claims_ledger_iva
+
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -29,11 +32,11 @@ def test_revision_iva_evidence_duty_uses_the_resolved_filing_frame(
     stale_reference: bool,
     requires_iva_evidence: bool,
 ) -> None:
-    snapshot = operation.snapshot(modelo, filing_year=2026, period="1T")
+    snapshot = operation.snapshot(modelo, filing_year=_YEAR, period="1T")
     reference = snapshot.snapshot_ref
     if stale_reference:
         reference = reference.model_copy(update={"revision_id": "different-stored-revision"})
-    now = datetime(2026, 4, 16, tzinfo=UTC)
+    now = datetime(_YEAR, 4, 16, tzinfo=UTC)
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id="a" * 64,

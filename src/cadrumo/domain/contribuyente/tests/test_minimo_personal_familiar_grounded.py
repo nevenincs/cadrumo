@@ -24,7 +24,7 @@ import pytest
 
 from ....core.modelo import Modelo
 from ...calculations.registry.formula_runtime_ops import read_parameter
-from ...calculations.registry.tests.published_authority import published_supported_filing_years
+from ...calculations.registry.tests.authored_editions import revision_covering, supported_authored_exercises
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,22 +53,16 @@ _MINIMO_AMOUNTS: tuple[tuple[str, str], ...] = (
     ("minimo-discapacidad-gastos-asistencia", "3000"),
 )
 
-#: Ejercicios whose amounts were checked against AEAT. Only those inside the
-#: published support envelope are resolvable; the floor is a hard gate.
-_GROUNDING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
-
 
 def test_minimo_personal_familiar_amount_matches_aeat() -> None:
-    support = published_supported_filing_years()
-    assert support is not None
-    years = tuple(year for year in _GROUNDING_YEARS if support.admits_filing_year(year))
-    assert years, "no grounded ejercicio lies inside the supported filing-year envelope"
+    years = supported_authored_exercises(Modelo("100").value)
+    assert years, "no authored ejercicio of modelo 100 lies inside the supported filing-year envelope"
     failures: list[str] = []
     for year in years:
         for stem, expected in _MINIMO_AMOUNTS:
             value = read_parameter(
                 Modelo("100").value,
-                str(year),
+                str(revision_covering(Modelo("100").value, year).id),
                 f"renta-{stem}",
                 date_context={"filing_period": date(year, 12, 31)},
             )

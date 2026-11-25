@@ -101,7 +101,7 @@ def _tracked_checkout(tmp_path: Path) -> Path:
     return checkout
 
 
-def _run_probe(
+def run_probe(
     *, python: Path, pythonpath: tuple[Path, ...], cwd: Path, editable_site: Path | None = None
 ) -> dict[str, object]:
     environment = os.environ.copy()
@@ -121,7 +121,7 @@ def _run_probe(
     return cast("dict[str, object]", decoded)
 
 
-def _assert_complete_projection(payload: dict[str, object], *, checkout: Path) -> None:
+def assert_complete_projection(payload: dict[str, object], *, checkout: Path) -> None:
     assert payload["nodes"] == payload["paths"]
     assert payload["help_exit"] == 0
     assert payload["help_has_roots"] is True
@@ -144,8 +144,8 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
     )
 
     source_paths = (checkout / "src",)
-    _assert_complete_projection(
-        _run_probe(python=Path(sys.executable), pythonpath=source_paths, cwd=checkout), checkout=checkout
+    assert_complete_projection(
+        run_probe(python=Path(sys.executable), pythonpath=source_paths, cwd=checkout), checkout=checkout
     )
 
     editable_target = checkout / ".editable-target"
@@ -156,8 +156,8 @@ def test_clean_tracked_checkout_direct_source_and_editable_install(tmp_path: Pat
         cwd=checkout,
     )
     assert completed.returncode == 0, completed.stderr
-    _assert_complete_projection(
-        _run_probe(
+    assert_complete_projection(
+        run_probe(
             python=Path(sys.executable),
             pythonpath=(),
             cwd=checkout,

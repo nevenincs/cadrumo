@@ -15,18 +15,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _INSTALLED = ("-I", "-B", "-m", "cadrumo_runtime.host.worker")
 
 
-def test_installed_worker_prefix_and_its_complete_command_are_accepted() -> None:
+@pytest.mark.parametrize("role", [(), ("--role", "python")])
+def test_installed_worker_prefix_and_its_complete_command_are_accepted(role: tuple[str, ...]) -> None:
     assert validated_worker_arguments() == _INSTALLED
-    command = (*_INSTALLED, "--worker-id", "w")
+    command = (*role, *_INSTALLED, "--worker-id", "w")
     assert validated_worker_arguments(command) == command
 
 
-def test_selected_script_replaces_the_installed_module(tmp_path: Path) -> None:
+@pytest.mark.parametrize("role", [(), ("--role", "python")])
+def test_selected_script_replaces_the_installed_module(tmp_path: Path, role: tuple[str, ...]) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
     selected = ("-I", "-B", str(script.resolve(strict=True)))
     assert validated_worker_arguments(worker_script=script) == selected
-    assert validated_worker_arguments((*selected, "--x"), worker_script=script) == (*selected, "--x")
+    assert validated_worker_arguments((*role, *selected, "--x"), worker_script=script) == (*role, *selected, "--x")
     with pytest.raises(RefusalError):
         validated_worker_arguments(_INSTALLED, worker_script=script)
 
@@ -38,6 +40,12 @@ def test_selected_script_replaces_the_installed_module(tmp_path: Path) -> None:
         ("-B", "-m", "cadrumo_runtime.host.worker"),
         (*_INSTALLED, "bad\0argument"),
         (),
+        ("--role", "runtime", *_INSTALLED),
+        ("--role=python", *_INSTALLED),
+        ("--role", "python", "--role", "python", *_INSTALLED),
+        ("--role", "python", "-O", *_INSTALLED),
+        ("--role", "python", "-I", "-B", "-m", "other.worker"),
+        ("--role", "python", "-B", "-m", "cadrumo_runtime.host.worker"),
     ],
 )
 def test_substituted_module_dropped_isolation_or_nul_refuses(command: tuple[str, ...]) -> None:
@@ -55,9 +63,10 @@ def test_unusable_selected_script_refuses(tmp_path: Path, invalid: str) -> None:
 
 
 @pytest.mark.parametrize("script_mode", [False, True])
+@pytest.mark.parametrize("role", [(), ("--role", "python")])
 @pytest.mark.parametrize("defect", ["missing-bytecode-flag", "unexpected-flag"])
 def test_worker_bytecode_policy_must_be_explicit_without_extra_flags(
-    tmp_path: Path, script_mode: bool, defect: str
+    tmp_path: Path, script_mode: bool, role: tuple[str, ...], defect: str
 ) -> None:
     script = tmp_path / "worker.py"
     script.write_text("# synthetic trusted host entrypoint\n", encoding="ascii")
@@ -65,5 +74,5 @@ def test_worker_bytecode_policy_must_be_explicit_without_extra_flags(
     entrypoint = (str(script.resolve(strict=True)),) if script_mode else ("-m", "cadrumo_runtime.host.worker")
     flags = ("-I",) if defect == "missing-bytecode-flag" else ("-I", "-B", "-O")
     with pytest.raises(RefusalError) as caught:
-        validated_worker_arguments((*flags, *entrypoint), worker_script=selected)
+        validated_worker_arguments((*role, *flags, *entrypoint), worker_script=selected)
     assert caught.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE

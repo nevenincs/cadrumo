@@ -29,6 +29,12 @@ class MissingFinancialExecution(importlib.abc.MetaPathFinder):
         }:
             raise ModuleNotFoundError('fixture: domain execution model unavailable', name=fullname)
 
+import platform
+
+# Resolve the host identity before the effects guard goes in: on Windows the first
+# uname() asks WMI and, when that query fails under load, launches cmd for `ver`.
+platform.uname()
+
 def refuse_actions(event, args):
     if event in {'socket.connect', 'socket.bind', 'subprocess.Popen', 'os.system'}:
         raise AssertionError('repository port import attempted an active effect')
@@ -54,7 +60,6 @@ assert not any(name.startswith('cadrumo.domain.') for name in sys.modules)
     environment = {key: value for key, value in os.environ.items() if key.upper() in allowed}
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_STORAGE_ROOT": str(tmp_path / "storage"),
             "PYDANTIC_DISABLE_PLUGINS": "__all__",
             "TEMP": str(tmp_path),

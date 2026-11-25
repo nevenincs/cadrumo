@@ -19,7 +19,7 @@ See Also:
         Coverage for bundled-root versus mutable-authoring-tree separation.
     :func:`~domain.calculations.registry.tests.testloader_cache_isolation.test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl`
         Coverage for the longer bundled-root fingerprint TTL window.
-    :func:`~dev.registry.conftest._isolate_registry_caches`
+    :func:`~dev.registry.conftest.isolate_registry_caches`
         Session fixture that clears registry caches around pytest runs.
 """
 
@@ -27,31 +27,32 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
+from threading import Lock
 
 from cadrumo.core.directory_scan import (
     DirectoryEntryKind,
     iter_directory,
     scan_directory,
 )
-from cadrumo.core.hashing import blake2b_hex
+from cadrumo.core.hashing import blake2b_hex, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
-from cadrumo.core.toml import read_toml
+from cadrumo.core.toml import TomlDecodeError, load_toml, read_toml, to_str_keyed_dict
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
     RegistryLoadError,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 
-from ._toml_helpers import as_toml_table as _as_toml_table
 from .export_fragment_grammar import is_generated_export_provenance
+from .toml_helpers import as_toml_table
 
 type TomlReader = Callable[..., dict[str, object]]
 """Parses one authored registry TOML file, refusing through ``error_factory``."""
@@ -154,7 +155,7 @@ def _validate_modelos_directory_entries(modelos_dir: Path) -> tuple[Path, ...]:
     return tuple(directories)
 
 
-def _read_modelo_id(path: Path, *, description: str, read: TomlReader | None = None) -> str:
+def read_modelo_id(path: Path, *, description: str, read: TomlReader | None = None) -> str:
     """Read ``[modelo].id`` from one authored manifest or revision TOML.
 
     Only a read/parse refusal from the TOML reader is relabelled with
@@ -172,7 +173,7 @@ def _read_modelo_id(path: Path, *, description: str, read: TomlReader | None = N
         raw_data = reader(path, error_factory=RegistryLoadError)
     except RegistryLoadError as exc:
         raise RegistryLoadError(f"{path}: invalid {description}: {exc}") from exc
-    modelo_table = _as_toml_table(raw_data.get("modelo"))
+    modelo_table = as_toml_table(raw_data.get("modelo"))
     if modelo_table is None or "id" not in modelo_table:
         raise RegistryLoadError(f"{path}: missing [modelo].id")
     return str(modelo_table["id"])
@@ -190,7 +191,7 @@ def _directory_modelo_source(entry: Path) -> ModeloSource:
     revision_sources = validate_modelo_directory_source(entry)
     manifest_path = entry / "manifest.toml"
     return ModeloSource(
-        modelo_id=_read_modelo_id(manifest_path, description="manifest"),
+        modelo_id=read_modelo_id(manifest_path, description="manifest"),
         path=entry.resolve(),
         manifest_path=manifest_path.resolve(),
         revision_sources=revision_sources,
@@ -413,7 +414,7 @@ def _validate_section_fragment_names(section_dir: Path) -> None:
 
 
 @lru_cache(maxsize=1)
-def _bundled_registry_root() -> Path:
+def bundled_registry_root() -> Path:
     """Return the resolved package-bundled registry root, computed once per process."""
     return bundled_path("registry", "aeat").resolve()
 
@@ -434,7 +435,7 @@ def is_bundled_registry_root(resolved: Path) -> bool:
     file content.
     """
     try:
-        return resolved == _bundled_registry_root()
+        return resolved == bundled_registry_root()
     except (ImportError, OSError, ValueError):
         # A resources boundary failure (e.g. no bundled data under an unusual
         # install) must never be mistaken for "this is the bundled tree";
@@ -515,7 +516,7 @@ def registry_disk_cache_dir() -> Path:
     """
     override = os.environ.get(REGISTRY_DISK_CACHE_DIR_ENV)
     if (override is not None and override) and override.strip():
-        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+        return resolve_storage_path(override, root=configured_storage_root())
     return dev_cache_dir("registry-disk-cache")
 
 
@@ -535,3 +536,77 @@ def registry_disk_cache_max_entries() -> int:
     if value < 1:
         raise ValueError(f"{REGISTRY_DISK_CACHE_MAX_ENTRIES_ENV} must be a positive integer, got {raw!r}")
     return value
+
+
+class TomlContentCache[T]:
+    """One build over authored TOML documents, remembered per distinct file content.
+
+    A staged export candidate is a copy of the bundled ``facts/`` tree under a
+    new temporary root, and one candidate check compiles it more than once,
+    re-reading and re-validating bytes already validated for the bundled tree
+    and every earlier candidate. Neither a path nor a stat identity can key
+    that reuse: every candidate has new paths, and a stat identity is what a
+    metadata-preserving rewrite forges. The key is the SHA-256 of the bytes
+    read for this call, and a value is only ever built from those bytes. Only
+    a successful build is remembered; a refusal is raised by the build on
+    every call, naming the path it was asked about.
+
+    ``build`` receives the path, for refusal messages only, and the parsed
+    document. Its value must be a pure function of the document and
+    deep-immutable, because one value is shared with every later caller that
+    reads the same bytes, whatever path they read them from.
+    """
+
+    __slots__ = ("_build", "_error_factory", "_lock", "_results")
+
+    def __init__(
+        self,
+        build: Callable[[Path, dict[str, object]], T],
+        *,
+        error_factory: Callable[[str], Exception],
+    ) -> None:
+        """Remember ``build``'s values; ``error_factory`` refuses unreadable or invalid TOML."""
+        self._build = build
+        self._error_factory = error_factory
+        self._results: dict[str, T] = {}
+        self._lock = Lock()
+
+    def load(self, path: Path) -> T:
+        """Return the build of ``path``'s document, building at most once per distinct content.
+
+        Reading, parsing and their refusal wording match
+        :func:`cadrumo.core.toml.read_toml`.
+        """
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            raise self._error_factory(f"{path}: cannot read TOML: {exc}") from exc
+        digest = sha256_hex(raw)
+        with self._lock:
+            if digest in self._results:
+                return self._results[digest]
+        value = self._build(path, self._parse(path, raw))
+        with self._lock:
+            self._results[digest] = value
+        return value
+
+    def clear(self) -> None:
+        """Forget every remembered build."""
+        with self._lock:
+            self._results.clear()
+
+    def __len__(self) -> int:
+        """Return how many distinct contents hold a remembered build."""
+        with self._lock:
+            return len(self._results)
+
+    def _parse(self, path: Path, raw: bytes) -> dict[str, object]:
+        try:
+            loaded = load_toml(BytesIO(raw))
+            if not isinstance(loaded, Mapping):
+                raise self._error_factory(f"{path}: TOML root must be a mapping")
+            return to_str_keyed_dict(loaded, error_factory=self._error_factory)
+        except TomlDecodeError as exc:
+            raise self._error_factory(f"{path}: invalid TOML: {exc}") from exc
+        except UnicodeDecodeError as exc:
+            raise self._error_factory(f"{path}: invalid TOML: {exc}") from exc

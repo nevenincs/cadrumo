@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...command_execution import run_command
 from ..hashing import digest
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_health_failure_facts_preserve_native_io_codes_without_private_fields(tmp_path: Path) -> None:
-    from ..package_launch_smoke import _health_facts
+    from ..package_health_facts import health_facts
 
     events = [
         {
@@ -41,7 +41,7 @@ def test_health_failure_facts_preserve_native_io_codes_without_private_fields(tm
         },
     ]
     (tmp_path / "cadrumo-native.jsonl").write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
-    facts = _health_facts(tmp_path)
+    facts = health_facts(tmp_path)
     assert facts == {
         "schema": 1,
         "failures": [
@@ -91,9 +91,9 @@ def test_health_retains_primary_and_evidence_before_failed_process_settlement(
 
     monkeypatch.setattr(health, "TemporaryDirectory", temporary)
     monkeypatch.setattr(health, "WindowsProcessScope", Scope)
-    monkeypatch.setattr(health, "_recover_runtime", recover)
+    monkeypatch.setattr(health, "recover_runtime", recover)
     with pytest.raises(AssertionError) as caught:
-        health.verify_health(executable, "CADRUMO_LOCAL_STORAGE_ROOT", scratch_root=tmp_path)
+        health.verify_health(executable, "CADRUMO_STORAGE_ROOT", scratch_root=tmp_path)
     assert caught.value is primary
     assert json.loads((retained[0] / "health-failure.json").read_text(encoding="utf-8")) == {
         "schema": 1,
@@ -278,20 +278,26 @@ def test_native_installer_preserves_configuration_and_clears_stale_desktop(tmp_p
 
     def build(directory: Path) -> None:
         result = run_command(
-            [cmake, "--build", str(directory), "--config", "Release", "--target", "native-installer"], cwd=source
+            [cmake, "--build", str(directory), "--config", "Release", "--target", "native-installer"],
+            cwd=source,
+            # This covers the complete owned process tree, including waiting
+            # for the other package's lock, configure, and nested build. A
+            # future-only timeout left those processes running until executor
+            # shutdown and could expire while the serialized build progressed.
+            timeout_seconds=120,
         )
         assert result.returncode == 0, result.stdout + result.stderr
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         first = executor.submit(build, binary)
-        deadline = time.monotonic() + 30
         while not (nested / "entered").exists():
             if first.done():
                 first.result()
                 pytest.fail("native package did not start")
-            assert time.monotonic() < deadline, "native package did not start within its fixture bound"
             time.sleep(0.01)
         second = executor.submit(build, other_binary)
-        first.result(timeout=30)
-        second.result(timeout=30)
+        # run_command owns the deadline and terminates the complete build tree
+        # on expiry; readiness and joins observe that same bounded outcome.
+        first.result()
+        second.result()
     assert (nested / "consumed.txt").read_text().splitlines()[0] == (other_binary / "stage/Release/app").as_posix()

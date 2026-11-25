@@ -23,7 +23,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ....core.filing_projection_ref import (
+from ....core.filing_projection_m296 import (
     M296AnexoCertificadoField,
     M296AnexoCertificadoProjectionRef,
     M296AnexoPagoField,
@@ -38,24 +38,31 @@ from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from .._m296_projection import build_m296_filing_projection_plan
+from ....domain.calculations.registry.tests.authored_editions import filing_grade_exercises, revision_covering
+from ..m296_projection import build_m296_filing_projection_plan
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
+    PresenterIdentity,
+    TaxpayerIdentityFacts,
+    build_filing_producer_snapshot,
+)
+from ..producer_snapshot_m296 import (
     Modelo296AnexoCertificadoRow,
     Modelo296AnexoPagoRow,
     Modelo296PerceptorInteresesRow,
     Modelo296PerceptorRow,
     Modelo296ProfileFacts,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _MODELO = "296"
-_REVISION = "2024-2025"
+# The detail-record layout exists only on an edition authored at filing grade: a newer
+# edition whose diseño de registro AEAT has not published is applicability grade and
+# ships no export layout, so the newest filing-grade exercise is the one that carries it.
+_EXERCISE = filing_grade_exercises(_MODELO)[-1]
+_REVISION = str(revision_covering(_MODELO, _EXERCISE).id)
 
 type _M296ProfileFactory = Callable[[tuple[str, ...]], Modelo296ProfileFacts]
 
@@ -80,7 +87,7 @@ _FAMILIES: tuple[_Family, ...] = (
         "m296-perceptor",
         M296PerceptorField,
         lambda values: Modelo296ProfileFacts(
-            ejercicio="2024",
+            ejercicio=str(_EXERCISE),
             nif_del_declarante="B12345678",
             apellidos_y_nombre_o_razon_social_del="EMPRESA PAGADORA SL",
             perceptor_rows=tuple(Modelo296PerceptorRow(nif_del_perceptor=value) for value in values),
@@ -91,7 +98,7 @@ _FAMILIES: tuple[_Family, ...] = (
         "m296-perceptor-intereses",
         M296PerceptorInteresesField,
         lambda values: Modelo296ProfileFacts(
-            ejercicio="2024",
+            ejercicio=str(_EXERCISE),
             nif_del_declarante="B12345678",
             apellidos_y_nombre_o_razon_social_del="EMPRESA PAGADORA SL",
             perceptor_intereses_rows=tuple(Modelo296PerceptorInteresesRow(nif_del_perceptor=value) for value in values),
@@ -102,7 +109,7 @@ _FAMILIES: tuple[_Family, ...] = (
         "m296-anexo-a-pagos",
         M296AnexoPagoField,
         lambda values: Modelo296ProfileFacts(
-            ejercicio="2024",
+            ejercicio=str(_EXERCISE),
             nif_del_declarante="B12345678",
             apellidos_y_nombre_o_razon_social_del="EMPRESA PAGADORA SL",
             anexo_pago_rows=tuple(Modelo296AnexoPagoRow(nif_del_contribuyente=value) for value in values),
@@ -113,7 +120,7 @@ _FAMILIES: tuple[_Family, ...] = (
         "m296-anexo-b-certificados",
         M296AnexoCertificadoField,
         lambda values: Modelo296ProfileFacts(
-            ejercicio="2024",
+            ejercicio=str(_EXERCISE),
             nif_del_declarante="B12345678",
             apellidos_y_nombre_o_razon_social_del="EMPRESA PAGADORA SL",
             anexo_certificado_rows=tuple(
@@ -126,14 +133,14 @@ _FAMILIES: tuple[_Family, ...] = (
 
 
 def _snapshot_and_layout():
-    """Resolve the shipped snapshot and layout the law selects for 296/2024/0A.
+    """Resolve the shipped snapshot and layout the law selects for 296/<exercise>/0A.
 
     Resolved from (modelo, filing_year, period), never from a stored revision id: which
     revision applies is a derived fact, and the id is only asserted equal to it.
     """
-    snapshot = published_snapshot(_MODELO, filing_year=2024, period="0A", on=None)
+    snapshot = published_snapshot(_MODELO, filing_year=_EXERCISE, period="0A", on=None)
     assert str(snapshot.revision.id) == _REVISION, (
-        f"the law-determined revision for 296/2024/0A is {snapshot.revision.id}, not {_REVISION}"
+        f"the law-determined revision for {_MODELO}/{_EXERCISE}/0A is {snapshot.revision.id}, not {_REVISION}"
     )
     return snapshot, snapshot.revision.export_layouts[0]
 

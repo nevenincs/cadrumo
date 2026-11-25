@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -36,21 +37,21 @@ def third_party_observations(year: int) -> tuple[InvoiceObservation, ...]:
             False,
         ),
         (
-            "87654321X",
+            "X0001502F",
             "Cliente ficticio Luis",
             BindingSourceKind.COLLECTIBLE_INVOICE,
             ("4840", "3630", "2420", "1210"),
             False,
         ),
         (
-            "11111111H",
+            "00001500M",
             "Arrendatario ficticio Carmen",
             BindingSourceKind.COLLECTIBLE_INVOICE,
             ("1815", "1815", "1815", "1815"),
             True,
         ),
         (
-            "22222222J",
+            "00001501Y",
             "Proveedor ficticio bajo umbral",
             BindingSourceKind.PAYABLE_INVOICE,
             ("121", "242", "363", "484"),
@@ -66,6 +67,7 @@ def third_party_observations(year: int) -> tuple[InvoiceObservation, ...]:
                     operation_clave=m347_operation_clave(source),
                     party_tax_id=nif,
                     party_legal_name=name,
+                    party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
                     country_code="ES",
                     transaction_date=date(year, quarter * 3, 15),
                     base_amount=gross / Decimal("1.21"),

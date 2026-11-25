@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
+from cadrumo.domain.filing.declared_party_name import DeclaredPartyFilingName, DeclaredPartyKind
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,6 +28,7 @@ def intracommunity_observations(year: int) -> tuple[InvoiceObservation, ...]:
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             party_tax_id=nif,
             party_legal_name=name,
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social=name),
             country_code=country,
             transaction_date=date(year, 12, index),
             base_amount=Decimal(amount),
@@ -48,6 +50,7 @@ def intracommunity_observations(year: int) -> tuple[InvoiceObservation, ...]:
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             party_tax_id="IT12345678901",
             party_legal_name="Empresa ficticia C",
+            party_filing_name=DeclaredPartyFilingName(kind=DeclaredPartyKind.ENTITY, razon_social="Empresa ficticia C"),
             country_code="IT",
             transaction_date=date(year, 12, 4),
             base_amount=Decimal("900"),
@@ -60,11 +63,20 @@ def intracommunity_observations(year: int) -> tuple[InvoiceObservation, ...]:
     )
 
 
+def _demo_filing_date(snapshot: RegistrySnapshot) -> date:
+    """Use the snapshot period, or this example's explicit fourth quarter."""
+    return snapshot.filing_period.end_date if snapshot.filing_period is not None else date(snapshot.filing_year, 12, 31)
+
+
 def intracommunity_summary(snapshot: RegistrySnapshot) -> dict[BindingId, Decimal]:
     """Let the registry decide grouping, counts and corrected-base totals."""
     if str(snapshot.modelo.id) != "349":
         raise ValueError("intracommunity example requires Modelo 349")
-    return resolve_invoice_binding_values(snapshot.revision, intracommunity_observations(snapshot.filing_year))
+    return resolve_invoice_binding_values(
+        snapshot.revision,
+        intracommunity_observations(snapshot.filing_year),
+        effective_date=_demo_filing_date(snapshot),
+    )
 
 
 def intracommunity_records(snapshot: RegistrySnapshot) -> CalculationRevision:
@@ -73,7 +85,7 @@ def intracommunity_records(snapshot: RegistrySnapshot) -> CalculationRevision:
         raise ValueError("intracommunity example requires Modelo 349")
     bindings: dict[BindingId, dict[str, str]] = {}
     for (binding, index), value in resolve_invoice_binding_row_values(
-        snapshot.revision, intracommunity_observations(snapshot.filing_year)
+        snapshot.revision, intracommunity_observations(snapshot.filing_year), effective_date=_demo_filing_date(snapshot)
     ).items():
         bindings.setdefault(binding, {})[str(index)] = str(value)
     work_id = sha256_hex(f"fictional-349-{snapshot.revision.id}-{snapshot.filing_year}-4T".encode())

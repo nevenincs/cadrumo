@@ -8,6 +8,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....domain.calculations.registry.tests.legal_inventory import legal_reference_ids
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
@@ -18,6 +19,8 @@ from ...calculations.cross_period_models import (
 from ..verification_cross_period import cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
 
 _SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="not-applicable localization")
 _SOURCE_REF: SourceRefId = "aeat-modelo-303-procedure"
@@ -52,8 +55,8 @@ def test_not_applicable_verify_finding_is_locale_neutral() -> None:
     evidence = CrossPeriodDependencyEvidence(
         requirement=CrossPeriodDependencyRequirement(
             source_modelo="303",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
+            filing_year=_YEAR - 1,
+            period=Period.from_year_and_code(_YEAR - 1, "4T"),
             source_casilla_ids=(_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("modelo-303-compensacion-pendiente-anteriores",),
@@ -65,8 +68,8 @@ def test_not_applicable_verify_finding_is_locale_neutral() -> None:
     verdict = CrossPeriodCleanStateVerdict(
         bucket_id="not-applicable-localization",
         target_modelo="303",
-        target_filing_year=2026,
-        target_period=Period.from_year_and_code(2026, "1T"),
+        target_filing_year=_YEAR,
+        target_period=Period.from_year_and_code(_YEAR, "1T"),
         dependencies=(evidence,),
     )
 

@@ -47,30 +47,37 @@ import pytest
 
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
-from .....core.period import Period
 from .....tests.inventory import FIXTURES_DIR
-from ....period import calculation_filing_date
 from ..binding_selector_utils import selector_as_dict
 from ..binding_temporal import BindingTemporalKind
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
-from ..errors import FilingYearOutsideSupportEnvelopeError
+from ..errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relation_dependency import RelationDependencyRole, RelationKind
 from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..runtime_graph import expression_binding_refs
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
-from ._cross_dependency_calculation_support import (
-    _casilla_inputs,
-    _grounded_observations,
-    _observations_from_requirements,
+from .authored_editions import (
+    authored_revisions,
+    authored_revisions_where,
+    filing_year_envelope,
+    newest_authored_edition,
+    revision_covering,
+)
+from .cross_dependency_calculation_support import (
+    casilla_inputs,
+    grounded_observations,
+    observations_from_requirements,
     source_editions_calculate,
 )
-from .authored_editions import authored_revisions_where
-from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
+from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS, M100_NO_LET_PROPERTY_BINDINGS
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
+from .registry_filing_date_support import registry_filing_date
 from .relation_fixture import resolve_relation_values_from_observations
+from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -95,6 +102,9 @@ _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-profile-madrid-
 _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-profile-unidad-familiar-otros-miembros-base"
 _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING = "renta-profile-minimo-descendientes-estatal"
 _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING = "renta-profile-minimo-descendientes-autonomico"
+_M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING = "renta-profile-minimo-ascendientes-estatal"
+_M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING = "renta-profile-minimo-ascendientes-autonomico"
+_M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING = "renta-profile-deduccion-madrid-cuidado-ascendientes-count"
 _M131_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     "15",
     surface="_M131_PAGOS_FRACCIONADOS_CASILLA",
@@ -124,10 +134,6 @@ _M190_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
     surface="_M190_RETENCIONES_TOTAL_CASILLA",
 )
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
-_RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozenset(
-    validated_casilla_id(value, surface="_RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS")
-    for value in ("01", "04", "07", "10", "13", "16", "19", "22", "25")
-)
 _SPANISH_AMOUNT_PATTERN = r"-?\d{1,3}(?:\.\d{3})*(?:,\d{2})?|-?\d+(?:,\d{2})?"
 _ANNUAL_SUMMARY_FIXTURE_PATTERNS: dict[str, dict[CasillaId, str]] = {
     "180": {
@@ -153,51 +159,44 @@ _ANNUAL_SUMMARY_FIXTURE_PATTERNS: dict[str, dict[CasillaId, str]] = {
         ),
     },
 }
-#: Quarterly probe amounts for the M111 -> M190 fold.
+#: Probe amounts for three Modelo 190 type-2 records.
 #:
 #: PROBES, NOT AN ORACLE. These are chosen by this test and assert no tax fact.
-#: They are DISTINCT and non-round on purpose: a fold tested with four equal
-#: amounts cannot be told apart from a max, a first-element pick, or a
-#: hardcoded constant, which is why the previous fixture-placeholder version of
-#: this test survived having every amount replaced by an arbitrary number.
-#: Their sums (12345.60 and 1740.73) are the expected annual totals, and no
-#: individual probe equals a sum, so a partial fold is visible too.
-_M190_PERCEPCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
+#: They are DISTINCT and non-round on purpose: a sum over records tested with
+#: equal amounts cannot be told apart from a max, a first-record pick, or a
+#: hardcoded constant, and no single probe equals the sum, so a partial sum is
+#: visible too.
+_M190_PERCEPCION_PROBES: tuple[Decimal, Decimal, Decimal] = (
     Decimal("1234.56"),
     Decimal("2345.67"),
     Decimal("3456.78"),
-    Decimal("5308.59"),
 )
-_M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
+_M190_RETENCION_PROBES: tuple[Decimal, Decimal, Decimal] = (
     Decimal("185.18"),
     Decimal("351.85"),
     Decimal("518.52"),
-    Decimal("685.18"),
 )
 #: A second clave for the same perceptor, so the count_distinct aggregation is
 #: exercised against more than one (perceptor, clave) pair. "A" is trabajo
 #: (empleados) against the fixture perceptor's "G" actividades profesionales.
 _M190_SECOND_CLAVE = "A"
-# The first exercise whose Modelo 190 totals route through the Modelo 111
-# relation prefills: they rest on the 2025 instrucciones, and the 2024 edition
-# totals its own type-2 records as its design states.
-_M190_RELATION_YEAR = 2025
-_M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-111-actividades-dinerario-importe-anual"
-_M190_REL_111_RETENCIONES = "modelo-190-111-retenciones-anual"
-_M190_EXPECTED_RELATION_IDS = frozenset(
-    {
-        "modelo-190-111-trabajo-dinerario-importe-anual",
-        "modelo-190-111-trabajo-especie-importe-anual",
-        _M190_REL_111_ACTIVIDADES_DINERARIO,
-        "modelo-190-111-actividades-especie-importe-anual",
-        "modelo-190-111-premios-dinerario-importe-anual",
-        "modelo-190-111-premios-especie-importe-anual",
-        "modelo-190-111-ganancias-dinerario-importe-anual",
-        "modelo-190-111-ganancias-especie-importe-anual",
-        "modelo-190-111-derechos-imagen-importe-anual",
-        _M190_REL_111_RETENCIONES,
-    }
+#: The per-position row sums the record design names for the two money totals:
+#: positions 82-94, 109-121, 256-268 and 283-295 for the percepciones, and
+#: 95-107, 122-134, 269-281 and 296-308 for the retenciones e ingresos a cuenta.
+_M190_PERCEPCIONES_ROW_SUMS = (
+    "modelo-190-perceptor-rows-percepcion-dineraria-total",
+    "modelo-190-perceptor-rows-percepcion-especie-total",
+    "modelo-190-perceptor-rows-incapacidad-dineraria-total",
+    "modelo-190-perceptor-rows-incapacidad-especie-total",
 )
+_M190_RETENCIONES_ROW_SUMS = (
+    "modelo-190-perceptor-rows-retencion-practicada-total",
+    "modelo-190-perceptor-rows-ingreso-a-cuenta-total",
+    "modelo-190-perceptor-rows-incapacidad-retencion-total",
+    "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total",
+)
+# The newest Modelo 100 edition the registry authors, which is filing grade.
+_M100_YEAR = newest_authored_edition("100")
 
 
 def _casilla_decimal_sequences(values: Mapping[object, tuple[Decimal, ...]]) -> dict[CasillaId, tuple[Decimal, ...]]:
@@ -221,8 +220,15 @@ _EXPECTED_FIXTURE_ROLE: dict[str, str] = {
 
 
 @cache
-def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
-    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem}.pdf"
+def _fixture_stem(modelo: str) -> str:
+    """The stem of the one justificante fixture committed for ``modelo``."""
+    (pdf_path,) = sorted((FIXTURES_DIR / "justificantes" / modelo).glob("*.pdf"))
+    return pdf_path.stem
+
+
+@cache
+def _fixture_pdf_text(modelo: str, fixture_stem: str | None = None) -> str:
+    pdf_path = FIXTURES_DIR / "justificantes" / modelo / f"{fixture_stem or _fixture_stem(modelo)}.pdf"
     sidecar = json.loads(pdf_path.with_suffix(".json").read_text(encoding="utf-8"))
     assert sidecar.get("provenance") in {"real_corpus", "synthetic_generated"}, (
         f"{pdf_path} fixture sidecar must declare real or synthetic provenance"
@@ -240,7 +246,7 @@ def _fixture_pdf_text(modelo: str, fixture_stem: str = "2024-0A") -> str:
 
 
 @cache
-def _annual_summary_fixture_values(modelo: str, fixture_stem: str = "2024-0A") -> dict[CasillaId, Decimal]:
+def _annual_summary_fixture_values(modelo: str, fixture_stem: str | None = None) -> dict[CasillaId, Decimal]:
     """Read the resumen-anual amounts a justificante fixture PRINTS.
 
     These are printed values, not AEAT-authoritative figures: the M190 fixture
@@ -249,6 +255,7 @@ def _annual_summary_fixture_values(modelo: str, fixture_stem: str = "2024-0A") -
     use them as a self-consistent reference to close the fold arithmetic
     against — see the module docstring for what that does and does not prove.
     """
+    fixture_stem = fixture_stem or _fixture_stem(modelo)
     text = _fixture_pdf_text(modelo, fixture_stem)
     values: dict[CasillaId, Decimal] = {}
     for casilla_id, pattern in _ANNUAL_SUMMARY_FIXTURE_PATTERNS[modelo].items():
@@ -316,47 +323,23 @@ def _m190_fixture_detail_observation() -> tuple[str, str, Decimal, Decimal]:
     )
 
 
-def _m190_fixture_relation_source_value(
-    requirement: RegistryFoldRequirement,
-    period_index: int,
-    *,
-    percepciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
-    retenciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
-) -> Decimal:
-    relation_id = requirement.target_bindings[0]
-    if relation_id == _M190_REL_111_ACTIVIDADES_DINERARIO:
-        return percepciones_quarterly[period_index]
-    if relation_id == _M190_REL_111_RETENCIONES:
-        return retenciones_quarterly[period_index]
-    return Decimal("0")
-
-
 def _withholding_observation(
     source_id: str,
     nif: str,
     clave: str,
     *,
+    exercise: int,
     percibido_dinerario: Decimal,
     retencion_practicada: Decimal,
 ) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
-        transaction_date=date(_M190_RELATION_YEAR, 6, 1),
+        transaction_date=date(exercise, 6, 1),
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=percibido_dinerario,
         retencion_practicada=retencion_practicada,
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
+        **zero_incapacity_and_foral_fields(),
     )
 
 
@@ -389,6 +372,7 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
                     filing_year=filing_year,
                     period=period,
                     relation_ids=relation_ids,
+                    floor=supported_years.floor,
                     scope=f"{modelo.id}/{revision.id}/{filing_year}/{period}",
                 )
     assert exercised, "no relation-bearing revision reached a supported filing year"
@@ -424,16 +408,34 @@ def _assert_relations_resolve_from_observations(
     filing_year: int,
     period: str,
     relation_ids: set[str],
+    floor: int,
     scope: str,
 ) -> None:
-    """Drive the relation-source -> observation -> resolution roundtrip and assert closure."""
+    """Drive the relation-source -> observation -> resolution roundtrip and assert closure.
+
+    A source filing whose year lies below the support floor cannot be held, so
+    it is never observed, and resolution refuses on the relation it feeds rather
+    than resolving it below the floor; that relation stays for the filer to state.
+    """
     requirements = relation_source_requirements(revision, filing_year=filing_year, period=period)
-    observations = _observations_from_requirements(
-        requirements,
+    held = tuple(requirement for requirement in requirements if requirement.filing_year >= floor)
+    below_floor = {
+        str(binding_id)
+        for requirement in requirements
+        if requirement.filing_year < floor
+        for binding_id in requirement.target_bindings
+    }
+    observations = observations_from_requirements(
+        held,
         lambda _requirement, period_index: Decimal(period_index + 1),
         target_modelo=target_modelo,
         fallback_revision=revision,
     )
+    if below_floor:
+        with pytest.raises(RegistryValidationError) as refusal:
+            resolve_relation_values_from_observations(revision, observations, filing_year=filing_year, period=period)
+        assert any(binding_id in str(refusal.value) for binding_id in below_floor), scope
+        return
     resolved = resolve_relation_values_from_observations(revision, observations, filing_year=filing_year, period=period)
     assert set(resolved) == relation_ids, scope
 
@@ -451,58 +453,45 @@ def _m193_relation_source_values() -> dict[CasillaId, tuple[Decimal, ...]]:
     return _M193_RELATION_SOURCE_VALUES
 
 
-_ANNUAL_SUMMARY_RELATION_CASES = (
-    pytest.param(
-        "180",
-        2022,
-        "2019-2022",
+def _annual_summary_relation_cases() -> tuple[object, ...]:
+    """Modelo 180 across its closed edition, the current one and a projected year, and Modelo 193's closed edition."""
+    envelope = filing_year_envelope()
+    m180_closed, m180_current = authored_revisions("180")[-2:]
+    assert m180_closed.valid_to is not None, "the Modelo 180 edition before the newest must be closed"
+    historical_year = m180_closed.valid_to.year
+    assert historical_year >= envelope.floor, "the closed Modelo 180 edition must reach the support floor"
+    assert str(revision_covering("180", envelope.horizon).id) == str(m180_current.id)
+    # The closed edition just before the newest Modelo 193 edition is the last whose annual totals
+    # resolve from the quarterly modelo 123 filings (its perceptor count already counts the type-2
+    # records); the newest edition also sums the type-2 records and keeps 123 as a reconciliation
+    # check. This value is ASSERTED against the law-determined pick, never injected into resolution.
+    m193_closed = authored_revisions("193")[-2]
+    m180_relations = (
         _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
         frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
         "modelo-180-115-base-anual",
         "modelo-180-115-retenciones-anual",
-        id="modelo-180-historical",
-    ),
-    pytest.param(
-        "180",
-        2026,
-        "2023-y-siguientes",
-        _m180_fixture_relation_source_values,
-        "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
-        "modelo-180-115-base-anual",
-        "modelo-180-115-retenciones-anual",
-        id="modelo-180-current",
-    ),
-    pytest.param(
-        "180",
-        2027,
-        "2023-y-siguientes",
-        _m180_fixture_relation_source_values,
-        "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
-        "modelo-180-115-base-anual",
-        "modelo-180-115-retenciones-anual",
-        id="modelo-180-future",
-    ),
-    pytest.param(
-        "193",
-        2024,
-        # The closed `2024` edition is the last whose annual totals resolve from
-        # the quarterly modelo 123 filings (its perceptor count already counts the
-        # type-2 records); from `2025-y-siguientes` the design also sums the
-        # type-2 records and keeps 123 as a reconciliation
-        # check. This value is ASSERTED against the law-determined pick, never
-        # injected into resolution.
-        "2024",
-        _m193_relation_source_values,
-        "modelo-193-perceptores-anual",
-        frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
-        "modelo-193-123-base-anual",
-        "modelo-193-123-retenciones-anual",
-        id="modelo-193-quarterly-aggregate-edition",
-    ),
-)
+    )
+    return (
+        pytest.param("180", historical_year, str(m180_closed.id), *m180_relations, id="modelo-180-historical"),
+        pytest.param("180", envelope.horizon, str(m180_current.id), *m180_relations, id="modelo-180-current"),
+        pytest.param("180", envelope.horizon + 1, str(m180_current.id), *m180_relations, id="modelo-180-future"),
+        pytest.param(
+            "193",
+            m193_closed.valid_from.year,
+            str(m193_closed.id),
+            _m193_relation_source_values,
+            "modelo-193-perceptores-anual",
+            frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
+            "modelo-193-123-base-anual",
+            "modelo-193-123-retenciones-anual",
+            id="modelo-193-quarterly-aggregate-edition",
+        ),
+    )
+
+
+_ANNUAL_SUMMARY_RELATION_CASES = _annual_summary_relation_cases()
 
 
 @pytest.mark.parametrize(
@@ -540,7 +529,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     snapshot = registry_snapshot(modelo, filing_year, "0A")
     source_values = source_values_factory()
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: source_values[requirement.source_casilla_ids[0]][period_index],
     )
@@ -560,7 +549,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": _registry_filing_date(filing_year, "0A")},
+        date_context={"filing_period": registry_filing_date(filing_year, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -577,103 +566,53 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
         assert result.values[_DECL_RETENCIONES_TOTAL_CASILLA] == fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]
 
 
-def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
+@pytest.mark.parametrize("exercise", filing_year_envelope().years)
+def test_modelo_190_declarante_totals_sum_the_declarations_own_perceptor_records(
+    exercise: int,
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    """M111 quarterly percepciones/retenciones fold into the M190 annual summary.
+    """Every supported exercise totals the Modelo 190 resumen over its own type-2 records.
 
-    WHAT IS ASSERTED, AND ON WHAT AUTHORITY. Two different claims, with two
-    different grounds:
+    WHAT IS ASSERTED, AND ON WHAT AUTHORITY. Each record design from the 2020
+    edition onward, and the 2025 instrucciones for casillas 01 to 03, define the
+    three declarante totals over the type-2 perceptor records of the same
+    declaration: the number of records, the sum of the percepciones integras and
+    valoraciones, and the sum of the retenciones and ingresos a cuenta. No
+    official text defines them from Modelo 111, so no exercise takes a Modelo
+    111 relation, and every exercise reaches the totals through the same
+    per-position row sums.
 
-    * The M190 annual totals equal the sum of the four M111 quarters. This is a
-      CONSISTENCY INVARIANT entailed by RIRPF art. 108: §1 obliges the retenedor
-      to declare, each quarter, "las cantidades retenidas y de los ingresos a
-      cuenta que correspondan por el trimestre natural inmediato anterior", and
-      §2 obliges an annual declaration of "las retenciones e ingresos a cuenta
-      efectuados". Both cover the same quantity and the four natural quarters
-      partition the year, so a truthful pair must reconcile. It is NOT a
-      computation M190 performs -- the M190 diseño defines its totals as sums
-      over its own type-2 perceptor records -- and no stated reconciliation
-      REQUIREMENT was located in the bundled corpus (a bounded negative over the
-      material held, not a claim about what AEAT requires).
-    * Everything else here is engine wiring: the ten M111->M190 relations
-      resolve, the retired per-quarter perceptor source casillas stay retired,
-      the withholding binding aggregates detail records, and the totals reach
-      their targets through the declared operand refs.
-
-    PROBE VALUES, NOT AN ORACLE. The quarterly amounts below are chosen by this
-    test, and are deliberately DISTINCT and non-round. No tax fact is asserted
-    by them and no filing is claimed: they exist to discriminate a genuine sum
-    from a max, a first-element pick, a last-write-wins, or a hardcoded
-    constant. Identical amounts cannot tell those apart, which is exactly why
-    the earlier version of this test -- which folded the fixture's uniform
-    ``1000.00`` redaction placeholder -- passed with every amount replaced by
-    an arbitrary number.
-
-    The M190 fixture is a ``parser_anchor``, so its printed amounts are
-    placeholders and are NOT used as expected values here. It is still read,
-    for the two things a parse anchor legitimately supplies: the perceptor
-    identity row and the clave G/01 classification.
+    PROBE VALUES, NOT AN ORACLE. The record amounts are chosen by this test and
+    are DISTINCT and non-round so a genuine sum is told apart from a max, a
+    first-record pick or a hardcoded constant. The M190 fixture is a
+    ``parser_anchor`` whose printed amounts are redaction placeholders, so it
+    supplies only the perceptor identity row and the clave G/01 classification.
     """
     detail_nif, detail_clave, _placeholder_percepcion, _placeholder_retencion = _m190_fixture_detail_observation()
     assert detail_clave == "G"
 
-    snapshot = registry_snapshot("190", _M190_RELATION_YEAR, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=_M190_RELATION_YEAR, period="0A")
-    observations = _observations_from_requirements(
-        requirements,
-        lambda requirement, period_index: _m190_fixture_relation_source_value(
-            requirement,
-            period_index,
-            percepciones_quarterly=_M190_PERCEPCIONES_PROBE_QUARTERS,
-            retenciones_quarterly=_M190_RETENCIONES_PROBE_QUARTERS,
-        ),
-    )
-
-    relation_values = resolve_relation_values_from_observations(
-        snapshot.revision,
-        observations,
-        filing_year=_M190_RELATION_YEAR,
-        period="0A",
-    )
-    observed_source_casillas = {requirement.source_casilla_ids[0] for requirement in requirements}
-    assert not (observed_source_casillas & _RETIRED_M190_M111_PERCEPCIONES_SOURCE_CASILLAS)
-    expected_percepciones_annual = sum(_M190_PERCEPCIONES_PROBE_QUARTERS, Decimal("0"))
-    expected_retenciones_annual = sum(_M190_RETENCIONES_PROBE_QUARTERS, Decimal("0"))
-    expected_relation_values = dict.fromkeys(_M190_EXPECTED_RELATION_IDS, Decimal("0"))
-    expected_relation_values[_M190_REL_111_ACTIVIDADES_DINERARIO] = expected_percepciones_annual
-    expected_relation_values[_M190_REL_111_RETENCIONES] = expected_retenciones_annual
-    assert relation_values == expected_relation_values
+    snapshot = registry_snapshot("190", exercise, "0A")
+    assert not relation_prefill_bindings_for_period(snapshot.revision)
+    assert not snapshot.revision.dependency_classifications
     # Three records for ONE perceptor: the clave G percepcion appears twice (as
     # it would for a professional invoicing in two different quarters) and a
     # clave A percepcion once. The binding declares
     # `aggregation = { op = "count_distinct" }` over distinct
     # (perceptor, clave, subclave) type-2 records, so the annual "numero total
-    # de percepciones" must be 2, not 3. A plain record count returns 3 here,
-    # which is precisely the per-quarter double-count the dedicated withholding
-    # binding replaced.
-    withholding_observations = (
+    # de percepciones" must be 2, not 3.
+    claves = (detail_clave, detail_clave, _M190_SECOND_CLAVE)
+    withholding_observations = tuple(
         _withholding_observation(
-            f"m190-{_M190_RELATION_YEAR}-0A-detail-1",
+            f"m190-{exercise}-0A-detail-{index}",
             detail_nif,
-            detail_clave,
-            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[0],
-            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[0],
-        ),
-        _withholding_observation(
-            f"m190-{_M190_RELATION_YEAR}-0A-detail-2",
-            detail_nif,
-            detail_clave,
-            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[1],
-            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[1],
-        ),
-        _withholding_observation(
-            f"m190-{_M190_RELATION_YEAR}-0A-detail-3",
-            detail_nif,
-            _M190_SECOND_CLAVE,
-            percibido_dinerario=_M190_PERCEPCIONES_PROBE_QUARTERS[2],
-            retencion_practicada=_M190_RETENCIONES_PROBE_QUARTERS[2],
-        ),
+            clave,
+            exercise=exercise,
+            percibido_dinerario=percepcion,
+            retencion_practicada=retencion,
+        )
+        for index, (clave, percepcion, retencion) in enumerate(
+            zip(claves, _M190_PERCEPCION_PROBES, _M190_RETENCION_PROBES, strict=True), start=1
+        )
     )
     binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
     assert binding_values[_M190_PERCEPCIONES_BINDING] == Decimal("2"), (
@@ -684,42 +623,46 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": _registry_filing_date(_M190_RELATION_YEAR, "0A")},
+        date_context={"filing_period": registry_filing_date(exercise, "0A")},
         binding_values=binding_values,
-        relation_values=relation_values,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert _M190_TOTAL_PERCEPCIONES_CASILLA not in entries
     assert result.values[_M190_TOTAL_PERCEPCIONES_CASILLA] == Decimal("2")
-    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_percepciones_annual
-    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_retenciones_annual
-    assert len(entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs) == 9
-    assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == ("modelo-190-111-retenciones-anual",)
+    assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == Decimal("7037.01")
+    assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == Decimal("1055.55")
+    assert entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs == _M190_PERCEPCIONES_ROW_SUMS
+    assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == _M190_RETENCIONES_ROW_SUMS
 
 
 def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    snapshot = registry_snapshot("100", 2025, "0A")
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observations = _observations_from_requirements(requirements, _renta_relation_observed_value)
+    snapshot = registry_snapshot("100", _M100_YEAR, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_M100_YEAR, period="0A")
+    observations = observations_from_requirements(requirements, _renta_relation_observed_value)
 
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period="0A",
     )
     result = calculate_registry_snapshot(
         snapshot,
         inputs={},
-        date_context={"filing_period": _registry_filing_date(2025, "0A")},
+        date_context={"filing_period": registry_filing_date(_M100_YEAR, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -727,13 +670,32 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            _M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            _M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING: Decimal("0"),
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.2 guarderia increment is declared year-free in every edition;
+            # neutral zero for a filer with no childcare spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
@@ -761,7 +723,7 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
 ) -> None:
     """Casilla 1577 is the member's share, which no Modelo 184 total supplies (LIRPF art. 89).
 
-    The 2025 manual's comunidad de bienes example has comunero Y declare a
+    The newest manual's comunidad de bienes example has comunero Y declare a
     rendimiento neto atribuido of 15.000, half the entity's 30.000. Modelo 184
     files the entity's type-2 attribution records for every member and income
     class, and a relation prefill sums them with no member or class filter, so a
@@ -771,18 +733,18 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     """
     member_share = Decimal("15000")
     casilla_1577 = validated_casilla_id("1577", surface="modelo-100 member attributed activity yield")
-    snapshot = registry_snapshot("100", 2025, "0A")
+    snapshot = registry_snapshot("100", _M100_YEAR, "0A")
 
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=_M100_YEAR, period="0A")
     assert all(requirement.source_modelo != "184" for requirement in requirements)
-    observations = _observations_from_requirements(requirements, _renta_relation_observed_value)
+    observations = observations_from_requirements(requirements, _renta_relation_observed_value)
     m184_entity_filing = RegistryModeloObservation(
         modelo="184",
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period="0A",
-        observations=_grounded_observations(
+        observations=grounded_observations(
             modelo="184",
-            filing_year=2025,
+            filing_year=_M100_YEAR,
             period="0A",
             casilla_values={
                 validated_casilla_id("tipo2.renta-atribuible-importe", surface="modelo-184 entity total"): Decimal(
@@ -794,14 +756,14 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2025,
+        filing_year=_M100_YEAR,
         period="0A",
     )
     assert (
         resolve_relation_values_from_observations(
             snapshot.revision,
             (*observations, m184_entity_filing),
-            filing_year=2025,
+            filing_year=_M100_YEAR,
             period="0A",
         )
         == relation_values
@@ -810,12 +772,17 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
     result = calculate_registry_snapshot(
         snapshot,
         inputs={casilla_1577: member_share},
-        date_context={"filing_period": _registry_filing_date(2025, "0A")},
+        date_context={"filing_period": registry_filing_date(_M100_YEAR, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -823,13 +790,32 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            _M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            _M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING: Decimal("0"),
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.2 guarderia increment is declared year-free in every edition;
+            # neutral zero for a filer with no childcare spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
@@ -845,7 +831,7 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
 def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_registry_results(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
-    filing_year = 2025
+    filing_year = _M100_YEAR
     modelo_130_results = {}
     # Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry, so the
     # cumulative prior-payment figure per quarter is supplied through the carry
@@ -857,10 +843,18 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         "4T": Decimal("1800"),
     }
     for period, inputs in {
-        "1T": _casilla_inputs({"01": Decimal("10000"), "02": Decimal("3000"), "06": Decimal("100")}),
-        "2T": _casilla_inputs({"01": Decimal("16000"), "02": Decimal("6000"), "06": Decimal("250")}),
-        "3T": _casilla_inputs({"01": Decimal("22000"), "02": Decimal("9000"), "06": Decimal("450")}),
-        "4T": _casilla_inputs({"01": Decimal("28000"), "02": Decimal("12000"), "06": Decimal("650")}),
+        "1T": casilla_inputs(
+            {"01": Decimal("10000"), "gastos-deducibles-previos": Decimal("3000"), "06": Decimal("100")}
+        ),
+        "2T": casilla_inputs(
+            {"01": Decimal("16000"), "gastos-deducibles-previos": Decimal("6000"), "06": Decimal("250")}
+        ),
+        "3T": casilla_inputs(
+            {"01": Decimal("22000"), "gastos-deducibles-previos": Decimal("9000"), "06": Decimal("450")}
+        ),
+        "4T": casilla_inputs(
+            {"01": Decimal("28000"), "gastos-deducibles-previos": Decimal("12000"), "06": Decimal("650")}
+        ),
     }.items():
         modelo_130_results[period] = calculate_registry_snapshot(
             registry_snapshot("130", filing_year, period),
@@ -870,12 +864,14 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
                 "modelo-130-resultados-negativos-anteriores": Decimal("0"),
                 "modelo-130-pagos-fraccionados-anteriores": casilla_05_carry[period],
             },
-            date_context={"filing_period": _registry_filing_date(filing_year, period)},
+            date_context={"filing_period": registry_filing_date(filing_year, period)},
+            # The M100 side models a normal-modality filer, so box 02 carries no art. 30.2.ª provision.
+            enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
         )
 
     snapshot = registry_snapshot("100", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: _renta_relation_observed_value_from_modelo_130_results(
             requirement,
@@ -892,12 +888,17 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
     result = calculate_registry_snapshot(
         snapshot,
         inputs={},
-        date_context={"filing_period": _registry_filing_date(filing_year, "0A")},
+        date_context={"filing_period": registry_filing_date(filing_year, "0A")},
         relation_values=relation_values,
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-income-family-excluded-capital-mobiliario": Decimal("0"),
+            "renta-profile-income-family-excluded-capital-inmobiliario": Decimal("0"),
+            **M100_NO_LET_PROPERTY_BINDINGS,
+            "renta-profile-income-family-excluded-ganancias-patrimoniales": Decimal("0"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -905,14 +906,33 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio": Decimal("0"),
+            "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
+            "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            # No ascendant rows: the mínimo por ascendientes aggregates and the Madrid count are zero.
+            _M100_MINIMO_ASCENDIENTES_ESTATAL_BINDING: Decimal("0"),
+            _M100_MINIMO_ASCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
+            _M100_MADRID_CUIDADO_ASCENDIENTES_COUNT_BINDING: Decimal("0"),
             # Maritime-worker exemption operands stay neutral: the path itself is false.
             "renta-maritime-gross-navigation-income": Decimal("0"),
             "renta-maritime-annual-salary": Decimal("0"),
             "renta-maritime-qualifying-days": Decimal("0"),
+            # The Art. 81.2 guarderia increment is declared year-free in every edition;
+            # neutral zero for a filer with no childcare spend.
+            "renta-profile-incremento-guarderia": Decimal("0"),
             # The Art. 81.1 maternidad deducción of an edition that computes casilla 0611;
             # neutral zero for a scenario with no descendants.
             **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
@@ -972,7 +992,7 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
     m131_quarterly_amounts = (Decimal("450"), Decimal("450"), Decimal("450"), Decimal("450"))
     m130_quarterly_amounts = (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))
 
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: _renta_quarterly_relation_observed_value(
             requirement,
@@ -1004,11 +1024,12 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
         "renta-modelo-131-pagos-fraccionados",
     }
 
-    # The binding for M131 must declare the correct source_modelo and source_casilla_id.
+    # The binding for M131 must declare the correct source_modelo and its result pair:
+    # casilla 15 (resultado) then casilla 14 (resultado a ingresar de las anteriores).
     binding = next(b for b in snapshot.revision.bindings if b.id == "renta-modelo-131-pagos-fraccionados")
     assert selector_as_dict(binding) == {
         "source_modelo": "131",
-        "source_casilla_id": _M131_PAGOS_FRACCIONADOS_CASILLA,
+        "source_casilla_ids": (_M131_PAGOS_FRACCIONADOS_CASILLA, "14"),
         "relation_kind": RelationKind.CROSS_MODEL_OUTPUT,
         "dependency_role": RelationDependencyRole.INSTALMENT_TO_FINAL_SETTLEMENT,
         "temporal": {
@@ -1032,7 +1053,7 @@ def test_modelo_100_m131_pagos_fraccionados_anti_tautology_proportional_change(
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
 
     def _resolve_0604_relations(m131_quarterly: Decimal) -> Decimal:
-        obs = _observations_from_requirements(
+        obs = observations_from_requirements(
             requirements,
             lambda requirement, period_index: _renta_quarterly_relation_observed_value(
                 requirement,
@@ -1063,7 +1084,7 @@ assert _SUPPORTED_YEARS is not None
         (
             _SUPPORTED_YEARS.floor + 1,
             _SUPPORTED_YEARS.floor,
-            _casilla_inputs(
+            casilla_inputs(
                 {
                     "0224": Decimal("4000"),
                     "1479": Decimal("2000"),
@@ -1076,7 +1097,7 @@ assert _SUPPORTED_YEARS is not None
         (
             _SUPPORTED_YEARS.horizon,
             _SUPPORTED_YEARS.horizon - 1,
-            _casilla_inputs(
+            casilla_inputs(
                 {
                     "0224": Decimal("5000"),
                     "1479": Decimal("2000"),
@@ -1111,7 +1132,7 @@ def test_modelo_130_resolves_previous_year_modelo_100_filed_casillas_into_bindin
                 modelo="100",
                 filing_year=source_year,
                 period="0A",
-                observations=_grounded_observations(
+                observations=grounded_observations(
                     modelo="100",
                     filing_year=source_year,
                     period="0A",
@@ -1131,11 +1152,11 @@ def test_modelo_100_source_below_the_supported_floor_cannot_be_grounded_for_carr
     support = published_supported_filing_years()
     assert support is not None
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        _grounded_observations(
+        grounded_observations(
             modelo="100",
             filing_year=support.floor - 1,
             period="0A",
-            casilla_values=_casilla_inputs({"0224": Decimal("4000")}),
+            casilla_values=casilla_inputs({"0224": Decimal("4000")}),
         )
 
 
@@ -1195,70 +1216,3 @@ def _renta_relation_observed_value_from_modelo_130_results(
     if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("0")
     return Decimal("0")
-
-
-def _registry_filing_date(filing_year: int, period: str) -> date:
-    """Resolve the calculation date context through the typed period authority.
-
-    ``calculate_registry_snapshot`` documents ``date_context["filing_period"]``
-    as the snapshot's typed calculation filing date, and defaults the key to
-    ``calculation_filing_date(snapshot.filing_period)`` when a caller omits it.
-    A test that supplies the key must therefore resolve it from the same
-    authority, or a date-aware registry bracket is selected under a temporal
-    context production would never produce.
-
-    This is deliberately NOT the deadline authority's
-    ``resolve_filing_window``. Three distinct dates exist for one Modelo 130
-    quarter and only one of them is this key's contract: the payment cutoff
-    (the 20th of the following month), the plazo voluntario close
-    (weekend-adjusted, and 30 January for 4T), and the calculation filing
-    period (the quarter end). ``date_context["filing_period"]`` is the third.
-    """
-    return calculation_filing_date(Period.from_year_and_code(filing_year, period))
-
-
-@pytest.mark.parametrize("period", ("1T", "2T", "3T", "4T"))
-def test_registry_filing_date_matches_the_engine_default_date_context(
-    period: str,
-    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
-) -> None:
-    """The date context this module supplies must equal the engine's own default.
-
-    DISCRIMINATING for all four quarters: restoring the retired
-    twentieth-of-the-following-month map fails every parametrisation
-    (2025-04-20 != 2025-03-31, and so on through 4T).
-
-    ``calculate_registry_snapshot`` defaults ``date_context["filing_period"]``
-    to ``calculation_filing_date(snapshot.filing_period)``. A test that supplies
-    the key by hand therefore has exactly one correct value — the one the engine
-    would have chosen — and any other value silently selects date-aware registry
-    brackets under a temporal context no production call can produce.
-
-    The expected value is read from the loaded snapshot, not restated here, so
-    this asserts agreement with the authority rather than a copied literal.
-    """
-    filing_year = 2025
-    snapshot = registry_snapshot("130", filing_year, period)
-    assert snapshot.filing_period is not None, "M130 snapshot must carry a typed filing period"
-
-    assert _registry_filing_date(filing_year, period) == calculation_filing_date(snapshot.filing_period)
-
-
-@pytest.mark.parametrize("period", ("1T", "2T", "3T", "4T"))
-def test_registry_filing_date_stays_inside_the_filing_year(period: str) -> None:
-    """A quarterly context must never fall in the following calendar year.
-
-    DISCRIMINATING for 4T only, and SUPPORTING for 1T/2T/3T: the retired map
-    kept those three inside the filing year and failed only on 4T, whose
-    2026-01-20 crossed into the next year. The three passing parametrisations
-    are context, not proof.
-
-    Modelo 130's 4T payment cutoff and plazo voluntario close both land in
-    January of the FOLLOWING year. Supplying either as the calculation date
-    context moves a year-keyed registry bracket onto the wrong year's law for
-    every 4T filing, which is the drift this module's date routing exists to
-    prevent.
-    """
-    filing_year = 2025
-
-    assert _registry_filing_date(filing_year, period).year == filing_year

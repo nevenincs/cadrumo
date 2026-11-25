@@ -7,7 +7,7 @@ generated output envelopes.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from enum import StrEnum
 from typing import Annotated, Final, Literal, TypeGuard
@@ -33,6 +33,11 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.type_guards import is_object_mapping
+from .autonomic_deduccion_enrolment import AutonomicDeduccionEnrolment
+from .binding_absence_attestation import AbsenceAttestationFamilyField
+from .binding_borrador_participation import BorradorParticipation, BorradorParticipationField
+from .binding_grade_cap import BindingGradeCap
+from .binding_prior_value_rules import PRIOR_VALUE_RULE_SOURCES, HeldSourceSetAsideMarks, PriorValueRuleFlag
 from .binding_provider import BindingProvider
 from .binding_temporal import (
     AllRevisionContexts,
@@ -41,8 +46,10 @@ from .binding_temporal import (
     BindingAuthorship,
 )
 from .binding_terminal_origin import TerminalOriginExpectation
-from .binding_value_contract import BindingValueChannel, BindingValueContract
+from .binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
+from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
+from .field_absence import absent_when_none, later_absent_when_empty, later_absent_when_none
 from .ids import (
     ApplicationLinkId,
     BindingId,
@@ -61,65 +68,30 @@ from .ids import (
 )
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .period_selector_match import selector_period_matches_request
+from .prevision_social_placement import PrevisionSocialPlacement
 from .schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,
     validate_review_scope,
     validate_reviewed_at_within_horizon,
 )
+from .schema_live_verification import LiveCrossReferenceDecision
 from .schema_references import (
-    RegistryExternalLink,
     RegistrySnapshotRef,
     TemporalProjectionDirection,
-    TemporalSupportEnvelope,
+    reachable_authority_grade,
 )
-from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
+from .schema_revision_validation import (
+    require_revision_family_storage_delta,
+    require_revision_keys_and_review_references,
+    union_across_expectations,
+    validate_selected_view_references,
+)
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
-    BicString as _BicString,
-)
-from .schema_scalars import (
-    CalendarDate as _CalendarDate,
-)
-from .schema_scalars import (
-    CCAACode as _CCAACode,
-)
-from .schema_scalars import (
-    CountryCode as _CountryCode,
-)
-from .schema_scalars import DecimalValue as _DecimalValue
-from .schema_scalars import (
-    IbanString as _IbanString,
-)
-from .schema_scalars import (
-    ModeloYear as _ModeloYear,
-)
-from .schema_scalars import (
-    MunicipalityCode as _MunicipalityCode,
-)
-from .schema_scalars import (
-    NifIvaString as _NifIvaString,
-)
-from .schema_scalars import (
-    NifString as _NifString,
-)
-from .schema_scalars import (
-    PeriodCode as _PeriodCode,
-)
-from .schema_scalars import (
-    PersonOrEntityName as _PersonOrEntityName,
-)
-from .schema_scalars import (
-    PostalCode as _PostalCode,
-)
-from .schema_scalars import (
-    ProvinceCode as _ProvinceCode,
-)
-from .schema_scalars import (
-    WorkbookCellRefStr as _WorkbookCellRefStr,
+    DecimalValue,
 )
 from .schema_verification import (
-    LiveCrossReferenceDecision,
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
@@ -133,20 +105,13 @@ __all__ = [
     "FormulaDefinition",
     "ModeloDefinition",
     "ModeloRevision",
-    "RegistryCatalogues",
     "RegistrySnapshot",
-    "SnapshotGlobalCatalogues",
-    "SociedadesAnnualManualCoverageCatalogue",
-    "SociedadesAnnualManualCoverageDisposition",
-    "SociedadesAnnualManualCoverageStatus",
-    "SupportedFilingYearsCatalogue",
 ]
 
 from ....core.filing_year import FilingYear
 from .casilla_structural_succession import CasillaStructuralSuccession, structural_succession_failures
 from .cleared_families import ClearedFamilyDeclaration
 from .convenio import ConvenioAuthority
-from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
 from .lineage_attestation import LineageAttestation
 from .modelo_inception import ModeloInceptionField
@@ -158,7 +123,6 @@ from .revision_contracts import (
     RegistryRevisionDeclaration,
     validate_revision_predecessors,
 )
-from .runtime_catalogues import RuntimeRegistryCatalogues
 from .schema_base import (
     CHAIN_FAMILY,
     GOVERNANCE_STAMP,
@@ -180,8 +144,7 @@ from .schema_base import (
     manifest_only_fields,
     schema_family_fields,
 )
-from .schema_deadlines import DeadlineWindowDefinition as _DeadlineWindowDefinition
-from .schema_deadlines import ModeloScheduleDefinition as _ModeloScheduleDefinition
+from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_form_layouts import FormLayoutDefinition
@@ -190,38 +153,20 @@ from .schema_formula import (
     ParameterDefinition,
 )
 from .schema_overrides import (
-    CasillaFieldOverride as _CasillaFieldOverride,
-)
-from .schema_overrides import (
-    CasillaMemberPosition as _CasillaMemberPosition,
-)
-from .schema_overrides import (
-    CasillaMemberRemoval as _CasillaMemberRemoval,
-)
-from .schema_overrides import (
-    FamilyFieldOverride as _FamilyFieldOverride,
-)
-from .schema_overrides import (
-    FamilyMemberPosition as _FamilyMemberPosition,
-)
-from .schema_overrides import (
-    FamilyMemberRemoval as _FamilyMemberRemoval,
-)
-from .schema_overrides import (
-    SchemaFamilyDispositionDeclaration as _SchemaFamilyDispositionDeclaration,
+    CasillaFieldOverride,
+    CasillaMemberPosition,
+    CasillaMemberRemoval,
+    FamilyFieldOverride,
+    FamilyMemberPosition,
+    FamilyMemberRemoval,
+    SchemaFamilyDispositionDeclaration,
 )
 from .schema_references import LegalReference, SourceReference
 from .schema_revision_members import (
-    ApplicabilityRuleDefinition as _ApplicabilityRuleDefinition,
-)
-from .schema_revision_members import (
-    ApplicationLinkDefinition as _ApplicationLinkDefinition,
-)
-from .schema_revision_members import (
-    ConstructDefinition as _ConstructDefinition,
-)
-from .schema_revision_members import (
-    DependencyClassificationDefinition as _DependencyClassificationDefinition,
+    ApplicabilityRuleDefinition,
+    ApplicationLinkDefinition,
+    ConstructDefinition,
+    DependencyClassificationDefinition,
 )
 from .schema_surfaces import (
     CalculationCompletenessManifest,
@@ -229,24 +174,10 @@ from .schema_surfaces import (
     CasillaDefinition,
     validate_family_identity_uniqueness,
 )
+from .snapshot_globals import SupportedFilingYearsCatalogue
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these
 # assignments keeps the historical ``_schema`` import surface authoritative.
-DecimalValue = _DecimalValue
-NifString = _NifString
-ModeloYear = _ModeloYear
-PeriodCode = _PeriodCode
-CountryCode = _CountryCode
-IbanString = _IbanString
-PersonOrEntityName = _PersonOrEntityName
-NifIvaString = _NifIvaString
-CCAACode = _CCAACode
-ProvinceCode = _ProvinceCode
-PostalCode = _PostalCode
-MunicipalityCode = _MunicipalityCode
-BicString = _BicString
-CalendarDate = _CalendarDate
-WorkbookCellRefStr = _WorkbookCellRefStr
 
 
 class ContinuidadValidationMode(StrEnum):
@@ -273,12 +204,16 @@ class ModeloCadence(StrEnum):
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     ANNUAL = "annual"
-    AD_HOC = "ad_hoc"
+    EVENT = "event"
     PROFILE_BASED = "profile_based"
 
 
 ModeloCadenceField = Annotated[ModeloCadence, BeforeValidator(coerce_enum_member(ModeloCadence))]
 """Registry token hydrated into a ModeloCadence member."""
+
+
+_ABSENCE_ATTESTATION_SOURCES: Final = frozenset({BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.MANUAL_INPUT})
+"""The sources whose figure is unknown, not zero, until the filer states it holds nothing."""
 
 
 class BindingDefinition(RegistryModel):
@@ -310,6 +245,28 @@ class BindingDefinition(RegistryModel):
     # direct-carry (`_binding_prefill`) tiers. The three share only the word
     # "prefill" and must not be merged.
     aeat_prefilled: bool = False
+    # Whether an admitted borrador value may supply the binding or is only
+    # compared with it. Undeclared reads as precedence; it is meaningful only
+    # beside ``aeat_prefilled`` (see :mod:`.binding_borrador_participation`).
+    borrador_participation: BorradorParticipationField | None = None
+    # Absent means the binding reaches as far as its revision's grade; a cap
+    # only narrows that reach (see :mod:`.binding_grade_cap`).
+    grade_cap: BindingGradeCap | None = None
+    # The statement a filer may make that this earlier-filing carry holds
+    # nothing; absent means the carry never takes one (see
+    # :mod:`.binding_absence_attestation`). Added after revisions saved their
+    # snapshots, so it is left out of every dump while absent (see
+    # :mod:`.field_absence`).
+    absence_attestation: AbsenceAttestationFamilyField | None = Field(default=None, exclude_if=absent_when_none)
+    # Whether only an attested zero, never a typed one, stands for this carry's
+    # earlier return, and whether an earlier period ended before the activity
+    # began leaves it unresolved rather than zero (see
+    # :mod:`.binding_prior_value_rules`). Left out of every dump while absent.
+    zero_needs_attestation: PriorValueRuleFlag | None = Field(default=None, exclude_if=later_absent_when_none)
+    before_activity_unresolved: PriorValueRuleFlag | None = Field(default=None, exclude_if=later_absent_when_none)
+    held_source_set_aside_when_marked: HeldSourceSetAsideMarks | None = Field(
+        default=None, exclude_if=later_absent_when_none
+    )
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
@@ -323,6 +280,93 @@ class BindingDefinition(RegistryModel):
         ``source`` column could.
         """
         return BindingSourceKind(self.provider.kind)
+
+    @property
+    def borrador_supplies_value(self) -> bool:
+        """Return whether the borrador tier may supply this binding's value.
+
+        A snapshot may hold an ``aeat_prefilled`` binding, but only a binding
+        that does not declare ``cross_check_only`` lets that value enter the
+        precedence ladder.
+        """
+        return self.aeat_prefilled and self.borrador_participation is not BorradorParticipation.CROSS_CHECK_ONLY
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_borrador_participation_needs_snapshot_admission(self) -> BindingDefinition:
+        """Refuse a participation declared on a binding no borrador snapshot may hold.
+
+        The participation says what an admitted borrador value does; on a
+        binding that is not ``aeat_prefilled`` there is no such value, so the
+        declaration could only mislead a reader.
+        """
+        if self.borrador_participation is not None and not self.aeat_prefilled:
+            raise RegistryValidationError(
+                f"binding {self.id!r}: borrador_participation is declared but the binding is not aeat_prefilled",
+                context={"id": self.id, "borrador_participation": self.borrador_participation.value},
+            )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_absence_attestation_reads_an_earlier_decimal(self) -> BindingDefinition:
+        """Refuse a statement of absence on a binding that is neither an earlier-filing carry nor the filer's own entry.
+
+        Only an earlier-filing carry, or a figure the filer types, is unknown rather than zero while
+        nothing supplies it; on any other binding the statement would assert a figure. Both read a decimal.
+        A row family's carry is a money column of a repeating group instead, stated row by row.
+        """
+        family = self.absence_attestation
+        if family is None:
+            return self
+        if family.row_grain:
+            fits = self.value.channel is BindingValueChannel.ROW_SET and self.value.data_type is BindingDataType.MONEY
+            shape = "a money column of a repeating group"
+        else:
+            fits = self.source in _ABSENCE_ATTESTATION_SOURCES and self.value.channel is BindingValueChannel.DECIMAL
+            shape = "a decimal binding read from an earlier filing or typed by the filer"
+        if not fits:
+            raise RegistryValidationError(
+                f"binding {self.id!r}: absence_attestation {family.value!r} needs {shape}",
+                context={
+                    "id": self.id,
+                    "absence_attestation": family.value,
+                    "source": self.source.value,
+                    "channel": self.value.channel.value,
+                },
+            )
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_prior_value_rules_read_an_earlier_decimal(self) -> BindingDefinition:
+        """Refuse a prior-value rule on a binding that is not a decimal carry read from an earlier filing.
+
+        Both rules speak of the figure that stands for an earlier return the
+        carry reads directly; on any other binding there is no such figure.
+        """
+        declared = tuple(
+            name
+            for name, flag in (
+                ("zero_needs_attestation", self.zero_needs_attestation),
+                ("before_activity_unresolved", self.before_activity_unresolved),
+                ("held_source_set_aside_when_marked", self.held_source_set_aside_when_marked),
+            )
+            if flag is not None
+        )
+        if not declared:
+            return self
+        if self.source not in PRIOR_VALUE_RULE_SOURCES or self.value.channel is not BindingValueChannel.DECIMAL:
+            raise RegistryValidationError(
+                f"binding {self.id!r}: {', '.join(declared)} needs a decimal binding read from an earlier filing",
+                context={
+                    "id": self.id,
+                    "rules": ",".join(declared),
+                    "source": self.source.value,
+                    "channel": self.value.channel.value,
+                },
+            )
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -361,6 +405,8 @@ class FormulaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+    autonomic_deduccion: AutonomicDeduccionEnrolment | None = Field(default=None, exclude_if=later_absent_when_none)
+    """The comunidad deducción this formula computes, when its box is an enrolled autonomic deducción."""
 
 
 def _frozen_index[K, V](index: Mapping[K, Sequence[V]]) -> dict[K, tuple[V, ...]]:
@@ -556,13 +602,13 @@ class ModeloRevision(RegistryRevisionDeclaration):
             "This is not a legal-continuity declaration."
         ),
     )
-    casilla_overrides: Annotated[tuple[_CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
+    casilla_overrides: Annotated[tuple[CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    casilla_removals: Annotated[tuple[_CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
+    casilla_removals: Annotated[tuple[CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    casilla_positions: Annotated[tuple[_CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
+    casilla_positions: Annotated[tuple[CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     family_storage_baseline: Annotated[RevisionId | None, MANIFEST_ONLY] = Field(
@@ -574,13 +620,13 @@ class ModeloRevision(RegistryRevisionDeclaration):
         default=(), exclude_if=lambda value: not value
     )
     scoped_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
-    family_overrides: Annotated[tuple[_FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
+    family_overrides: Annotated[tuple[FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    family_removals: Annotated[tuple[_FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
+    family_removals: Annotated[tuple[FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    family_positions: Annotated[tuple[_FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
+    family_positions: Annotated[tuple[FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
@@ -592,12 +638,16 @@ class ModeloRevision(RegistryRevisionDeclaration):
     live_cross_references: Annotated[tuple[LiveCrossReferenceDecision, ...], SCHEMA_FAMILY] = ()
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
     verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
-    application_links: Annotated[tuple[_ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
-    deadline_windows: Annotated[tuple[_DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
-    filing_schedules: Annotated[tuple[_ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
-    constructs: Annotated[tuple[_ConstructDefinition, ...], SCHEMA_FAMILY] = ()
-    dependency_classifications: Annotated[tuple[_DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
-    applicability: Annotated[tuple[_ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
+    credit_reconciliation: Annotated[tuple[CreditReconciliationEntry, ...], SCHEMA_FAMILY] = ()
+    prevision_social_placements: Annotated[tuple[PrevisionSocialPlacement, ...], SCHEMA_FAMILY] = Field(
+        default=(), exclude_if=later_absent_when_empty
+    )
+    application_links: Annotated[tuple[ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
+    deadline_windows: Annotated[tuple[DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
+    filing_schedules: Annotated[tuple[ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
+    constructs: Annotated[tuple[ConstructDefinition, ...], SCHEMA_FAMILY] = ()
+    dependency_classifications: Annotated[tuple[DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
+    applicability: Annotated[tuple[ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
@@ -613,8 +663,17 @@ class ModeloRevision(RegistryRevisionDeclaration):
         ),
     )
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
-    family_dispositions: Annotated[Mapping[str, _SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
+    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
+    )
+    family_disposition_removals: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(
+        default=(),
+        exclude_if=lambda value: not value,
+        description=(
+            "Schema families whose disposition, inherited from the declared predecessor, this edition deletes. "
+            "Omitting a disposition inherits it; only a removal here withdraws it. The family must be inherited "
+            "at this point and must not also be authored in this edition."
+        ),
     )
     restated_families: Annotated[tuple[RestatedFamilyDeclaration, ...], MANIFEST_ONLY] = Field(
         default=(),
@@ -703,11 +762,18 @@ class ModeloRevision(RegistryRevisionDeclaration):
         law does not require what the revision already declares, which is a
         contradiction the coverage projection would have to arbitrate.
         """
+        self._validate_family_disposition_removals()
         for family in self.family_dispositions:
             if family not in REVISION_SCHEMA_FAMILY_FIELDS:
                 raise RegistryValidationError(
                     f"revision {self.id!r} declares a family disposition for {family!r}, which is not a schema "
                     f"family; enrolled families are {sorted(REVISION_SCHEMA_FAMILY_FIELDS)!r}",
+                )
+            if getattr(self, family) and self.family_dispositions[family].inherited_from is not None:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} inherits a not-applicable disposition for family {family!r} from "
+                    f"{self.family_dispositions[family].inherited_from!r} but declares "
+                    f"{len(getattr(self, family))} of them; list {family!r} in family_disposition_removals",
                 )
             if getattr(self, family):
                 raise RegistryValidationError(
@@ -715,6 +781,24 @@ class ModeloRevision(RegistryRevisionDeclaration):
                     f"{len(getattr(self, family))} of them; drop the disposition or drop the content",
                 )
         return self
+
+    def _validate_family_disposition_removals(self) -> None:
+        """Refuse a removal that names no schema family, repeats one, or contradicts an authored disposition."""
+        seen: set[str] = set()
+        for family in self.family_disposition_removals:
+            if family not in REVISION_SCHEMA_FAMILY_FIELDS:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} removes a family disposition for {family!r}, which is not a schema "
+                    f"family; enrolled families are {sorted(REVISION_SCHEMA_FAMILY_FIELDS)!r}",
+                )
+            if family in seen:
+                raise RegistryValidationError(f"revision {self.id!r} removes the disposition for {family!r} twice")
+            seen.add(family)
+            held = self.family_dispositions.get(family)
+            if held is not None and held.inherited_from is None:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} both removes and authors the disposition for {family!r}",
+                )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -756,7 +840,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     @pydantic_validation_boundary
     def _validate_family_storage_delta(self) -> ModeloRevision:
         """Keep generic storage declarations on one explicit keyed-family vocabulary."""
-        _require_revision_family_storage_delta(self)
+        require_revision_family_storage_delta(self)
         return self
 
     @model_validator(mode="after")
@@ -872,38 +956,6 @@ def _context_revision_ids(modelo_id: str, info: ValidationInfo) -> frozenset[str
     return frozenset(item for item in declared if isinstance(item, str))
 
 
-def _validate_selected_view_references(
-    modelo_id: str,
-    revisions: Mapping[RevisionId, ModeloRevision],
-    revision_ids: frozenset[str],
-) -> None:
-    """Resolve a selected view's cross-revision identity references against its directory.
-
-    Invariants that compare payloads of several revisions (predecessor date
-    agreement and cycles, structural-succession lineage ownership) belong to
-    complete-modelo validation, which the directory's source modelo passed.
-    """
-    foreign = sorted(set(revisions) - revision_ids)
-    if foreign:
-        raise RegistryValidationError(
-            f"modelo {modelo_id!r} view revisions {foreign!r} are not revisions of its directory; "
-            f"declared revisions are {sorted(revision_ids)!r}"
-        )
-    for revision in revisions.values():
-        predecessor = revision.predecessor
-        if isinstance(predecessor, DeclaredPredecessor) and predecessor.revision_id not in revision_ids:
-            raise RegistryValidationError(
-                f"modelo {modelo_id!r} revision {revision.id!r} declares predecessor {predecessor.revision_id!r}, "
-                f"which is not a revision of this modelo; declared revisions are {sorted(revision_ids)!r}"
-            )
-        for relation in revision.casilla_structural_successions:
-            if relation.to_revision != revision.id or relation.from_revision not in revision_ids:
-                raise RegistryValidationError(
-                    f"structural succession {modelo_id}/{revision.id}/{relation.id}: unknown endpoint revision; "
-                    f"declared revisions are {sorted(revision_ids)!r}"
-                )
-
-
 class ModeloDefinition(RegistryModel):
     """Declare a modelo and its complete collection of revision authorities."""
 
@@ -969,267 +1021,15 @@ class ModeloDefinition(RegistryModel):
         else:
             self._directory_revision_ids = directory_revision_ids
         revision_ids = frozenset(self.revisions) if directory_revision_ids is None else directory_revision_ids
-        _require_revision_keys_and_review_references(self.revisions, revision_ids)
+        require_revision_keys_and_review_references(self.revisions, revision_ids)
         if directory_revision_ids is not None:
-            _validate_selected_view_references(self.id, self.revisions, directory_revision_ids)
+            validate_selected_view_references(self.id, self.revisions, directory_revision_ids)
             return self
         validate_revision_predecessors(self.id, self.revisions)
         failures = structural_succession_failures(self)
         if failures:
             raise RegistryValidationError("; ".join(failures))
         return self
-
-
-def _require_revision_family_storage_delta(revision: ModeloRevision) -> None:
-    from .keyed_families import KEYED_FAMILY_SPECS
-
-    keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
-    scoped = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
-    cleared = [item.family for item in revision.cleared_families]
-    named = _named_storage_delta_families(revision, cleared)
-    _require_known_storage_families(named, keyed)
-    _require_storage_delta_baseline(revision, named)
-    _require_unique_clearances_and_scopes(revision, cleared)
-    operated = _operated_storage_delta_families(revision)
-    _require_scoped_storage_operations(revision, scoped, operated)
-
-
-def _named_storage_delta_families(revision: ModeloRevision, cleared: list[str]) -> list[str]:
-    return [
-        *cleared,
-        *revision.scoped_families,
-        *(item.family for item in revision.family_overrides),
-        *(item.family for item in revision.family_removals),
-        *(item.family for item in revision.family_positions),
-    ]
-
-
-def _operated_storage_delta_families(revision: ModeloRevision) -> set[str]:
-    return {
-        *(item.family for item in revision.family_overrides),
-        *(item.family for item in revision.family_removals),
-        *(item.family for item in revision.family_positions),
-    }
-
-
-def _require_known_storage_families(named: list[str], keyed: set[str]) -> None:
-    unknown = sorted(set(named) - keyed)
-    if unknown:
-        raise RegistryValidationError(f"family storage delta names non-keyed families {unknown!r}")
-
-
-def _require_storage_delta_baseline(revision: ModeloRevision, named: list[str]) -> None:
-    if named and revision.family_storage_baseline is None and revision.predecessor is None:
-        raise RegistryValidationError("family storage delta requires family_storage_baseline or a named predecessor")
-
-
-def _require_unique_clearances_and_scopes(revision: ModeloRevision, cleared: list[str]) -> None:
-    if len(set(cleared)) != len(cleared):
-        raise RegistryValidationError(
-            "cleared families must be unique; one family carries one authored clearance, so two entries "
-            "leave the merge with two reasons for one decision and no rule for picking between them"
-        )
-    if len(set(revision.scoped_families)) != len(revision.scoped_families):
-        raise RegistryValidationError("scoped families must be unique")
-
-
-def _require_scoped_storage_operations(
-    revision: ModeloRevision,
-    scoped: set[str],
-    operated: set[str],
-) -> None:
-    invalid_scopes = sorted(set(revision.scoped_families) - scoped)
-    if invalid_scopes:
-        raise RegistryValidationError(f"family assertion scope names non-scoped families {invalid_scopes!r}")
-    missing_scopes = sorted((operated & scoped) - set(revision.scoped_families))
-    if missing_scopes:
-        raise RegistryValidationError(
-            f"scoped family storage operations require an edition-local assertion scope {missing_scopes!r}"
-        )
-
-
-def _require_revision_keys_and_review_references(
-    revisions: Mapping[RevisionId, ModeloRevision],
-    revision_ids: frozenset[str],
-) -> None:
-    for key, revision in revisions.items():
-        _require_revision_key(key, revision)
-        _require_review_reference(revision, revision_ids)
-
-
-def _require_revision_key(key: RevisionId, revision: ModeloRevision) -> None:
-    if key != revision.id:
-        raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
-
-
-def _require_review_reference(revision: ModeloRevision, revision_ids: frozenset[str]) -> None:
-    if revision.reviewed_against == revision.id:
-        raise RegistryValidationError(
-            f"revision {revision.id!r} has invalid review reference: reviewed_against cannot name itself"
-        )
-    if revision.reviewed_against is not None and revision.reviewed_against not in revision_ids:
-        raise RegistryValidationError(
-            f"revision {revision.id!r} has dangling review reference "
-            f"reviewed_against={revision.reviewed_against!r}; declared revisions are {sorted(revision_ids)!r}"
-        )
-
-
-def _union_across_expectations[T](
-    expectations: Sequence[VerificationExpectationDefinition],
-    select: Callable[[VerificationExpectationDefinition], Iterable[T]],
-) -> frozenset[T]:
-    """Union one declared set across every expectation folded into a policy.
-
-    The fold is a union rather than an intersection on purpose: an id any single
-    expectation declares is in scope for the snapshot's policy, so a second
-    expectation cannot narrow the first one's declared coverage away.
-    """
-    return frozenset(value for expectation in expectations for value in select(expectation))
-
-
-class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
-    """The registry's sole declaration of the filing years the product supports.
-
-    Authored as bounds rather than an enumeration, because the two ends of the
-    span do not carry the same force. ``floor`` is a hard gate: nothing resolves
-    below it. ``horizon`` is the last globally authored coordinate, not a gate;
-    when ``hard_ceiling`` is absent the supported range remains open above it.
-    Missing modelo editions inside that range are projected from an eligible
-    authored anchor.
-
-    The span is contiguous by construction. A product that supports 2022 and
-    2024 but not 2023 is not a state the law produces; the enumerated form could
-    express it only by accident, and nothing ever did.
-
-    :attr:`TemporalSupportEnvelope.years` still enumerates the span, derived
-    now rather than authored,
-    so a consumer asking which years are supported keeps asking the same way. It
-    is a plain property rather than a computed field on purpose: the published
-    artifact is re-validated against this model on every read, and a serialised
-    derivation would be refused there as an unexpected member.
-    """
-
-    def admits_filing_year(self, filing_year: int) -> bool:
-        """Return whether a filing year is inside the product's hard gates."""
-        return self.projection_coordinate(filing_year) is not None
-
-
-class SociedadesAnnualManualCoverageStatus(StrEnum):
-    """The independently auditable availability state of one annual manual."""
-
-    AVAILABLE = "available"
-    UNACQUIRED = "unacquired"
-    UNPUBLISHED = "unpublished"
-
-
-SociedadesAnnualManualCoverageStatusField = Annotated[
-    SociedadesAnnualManualCoverageStatus,
-    BeforeValidator(coerce_enum_member(SociedadesAnnualManualCoverageStatus)),
-]
-"""Registry token hydrated into a Sociedades annual-manual coverage status."""
-
-
-class SociedadesAnnualManualCoverageDisposition(RegistryModel):
-    """One exact-year outcome for the annual Sociedades manual corpus.
-
-    This is documentary availability only. It is intentionally separate from
-    Modelo 200 revision selection and filing capability.
-    """
-
-    year: int = Field(ge=2000, le=2099)
-    status: SociedadesAnnualManualCoverageStatusField
-    source_ref: SourceRefId | None = None
-    official_locator: RegistryExternalLink
-    observed_at: date
-    acquisition_condition_key: str | None = Field(default=None, min_length=1)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _validate_disposition(self) -> SociedadesAnnualManualCoverageDisposition:
-        if self.status is SociedadesAnnualManualCoverageStatus.AVAILABLE:
-            if self.source_ref is None:
-                raise ValueError("available Sociedades manual coverage requires source_ref")
-            if self.acquisition_condition_key is not None:
-                raise ValueError(
-                    "available Sociedades manual coverage must not declare acquisition_condition_key",
-                )
-        elif self.status is SociedadesAnnualManualCoverageStatus.UNACQUIRED:
-            if self.source_ref is not None:
-                raise ValueError("unacquired Sociedades manual coverage must not declare source_ref")
-            if self.acquisition_condition_key is None:
-                raise ValueError(
-                    "unacquired Sociedades manual coverage requires acquisition_condition_key",
-                )
-        else:
-            if self.source_ref is not None:
-                raise ValueError("unpublished Sociedades manual coverage must not declare source_ref")
-            if self.acquisition_condition_key is None:
-                raise ValueError(
-                    "unpublished Sociedades manual coverage requires acquisition_condition_key",
-                )
-        return self
-
-
-class SociedadesAnnualManualCoverageCatalogue(RegistryModel):
-    """One declarative coverage ledger for annual Sociedades manuals."""
-
-    dispositions: tuple[SociedadesAnnualManualCoverageDisposition, ...] = Field(min_length=1)
-
-    @field_validator("dispositions")
-    @classmethod
-    @pydantic_validation_boundary
-    def _years_are_unique_and_ordered(
-        cls,
-        value: tuple[SociedadesAnnualManualCoverageDisposition, ...],
-    ) -> tuple[SociedadesAnnualManualCoverageDisposition, ...]:
-        years = tuple(disposition.year for disposition in value)
-        if tuple(sorted(set(years))) != years:
-            raise RegistryValidationError(
-                "Sociedades annual manual coverage years must be unique and in ascending order",
-            )
-        return value
-
-
-class RegistryCatalogues(RegistryModel):
-    """Collect the registry-wide legal, source, fact, and support catalogues."""
-
-    legal: Annotated[Mapping[LegalRefId, LegalReference], FROZEN_MAPPING]
-    sources: Annotated[Mapping[SourceRefId, SourceReference], FROZEN_MAPPING]
-    facts: GovernedFactCatalogue = Field(default_factory=GovernedFactCatalogue)
-    convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
-        default_factory=dict[Modelo, M303AnnualOrdenAuthority],
-        validate_default=True,
-    )
-    supported_filing_years: SupportedFilingYearsCatalogue | None = None
-    sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
-    runtime: RuntimeRegistryCatalogues = Field(default_factory=RuntimeRegistryCatalogues)
-
-    def require_supported_filing_years(self) -> SupportedFilingYearsCatalogue:
-        """Return the registry's single support envelope, refusing a catalogue set without it."""
-        if self.supported_filing_years is None:
-            raise RegistryValidationError("registry catalogues declare no supported filing years")
-        return self.supported_filing_years
-
-
-class SnapshotGlobalCatalogues(RegistryModel):
-    """Small registry-wide values required while assembling a point snapshot."""
-
-    convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
-        default_factory=dict[Modelo, M303AnnualOrdenAuthority],
-        validate_default=True,
-    )
-    supported_filing_years: SupportedFilingYearsCatalogue
-
-    @classmethod
-    def from_catalogues(cls, catalogues: RegistryCatalogues) -> SnapshotGlobalCatalogues:
-        """Project only globals consumed by snapshot construction and fact resolution."""
-        return cls(
-            convenio=catalogues.convenio,
-            supplementary_ordenes=catalogues.supplementary_ordenes,
-            supported_filing_years=catalogues.require_supported_filing_years(),
-        )
 
 
 class RegistrySnapshot(RegistryModel):
@@ -1253,12 +1053,12 @@ class RegistrySnapshot(RegistryModel):
     verification_expectations: Annotated[
         Mapping[VerificationExpectationId, VerificationExpectationDefinition], FROZEN_MAPPING
     ]
-    application_links: Annotated[Mapping[ApplicationLinkId, _ApplicationLinkDefinition], FROZEN_MAPPING]
-    deadline_windows: Annotated[Mapping[DeadlineWindowId, _DeadlineWindowDefinition], FROZEN_MAPPING]
-    filing_schedules: Annotated[Mapping[str, _ModeloScheduleDefinition], FROZEN_MAPPING]
-    constructs: Annotated[Mapping[ConstructId, _ConstructDefinition], FROZEN_MAPPING]
+    application_links: Annotated[Mapping[ApplicationLinkId, ApplicationLinkDefinition], FROZEN_MAPPING]
+    deadline_windows: Annotated[Mapping[DeadlineWindowId, DeadlineWindowDefinition], FROZEN_MAPPING]
+    filing_schedules: Annotated[Mapping[str, ModeloScheduleDefinition], FROZEN_MAPPING]
+    constructs: Annotated[Mapping[ConstructId, ConstructDefinition], FROZEN_MAPPING]
     dependency_classifications: Annotated[
-        Mapping[DependencyClassificationId, _DependencyClassificationDefinition], FROZEN_MAPPING
+        Mapping[DependencyClassificationId, DependencyClassificationDefinition], FROZEN_MAPPING
     ]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
     supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
@@ -1274,6 +1074,26 @@ class RegistrySnapshot(RegistryModel):
             modelo_year=self.filing_year,
             period=self.period,
         )
+
+    @property
+    def effective_authority_grade(self) -> RegistryAuthorityGrade:
+        """Return the authority this snapshot reaches for its requested filing year.
+
+        The selected revision's declared grade, except that a year the revision
+        does not author is carried across from the nearest edition and reaches
+        calculation grade at most.
+        """
+        return reachable_authority_grade(self.revision.effective_authority_grade, self.revision_projection_direction)
+
+    @property
+    def edition_filing_year(self) -> int:
+        """Return the filing year the selected edition authors.
+
+        The temporal resolution records it; a snapshot built without one is
+        read at its default ``AUTHORED`` direction and so authors its own
+        filing year.
+        """
+        return self.filing_year if self.authored_filing_year is None else self.authored_filing_year
 
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:
@@ -1357,15 +1177,15 @@ class RegistrySnapshot(RegistryModel):
             raise RegistryValidationError("registry verification requires verification expectations")
         return RegistryVerificationPolicy(
             expectation_ids=tuple(expectation.id for expectation in expectations),
-            computed_casilla_ids=_union_across_expectations(
+            computed_casilla_ids=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.computed_casilla_ids,
             ),
-            reconcile_when_present_casilla_ids=_union_across_expectations(
+            reconcile_when_present_casilla_ids=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.reconcile_when_present_casilla_ids,
             ),
-            externally_grounded_casilla_ids=_union_across_expectations(
+            externally_grounded_casilla_ids=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.externally_grounded_casilla_ids,
             ),
@@ -1373,7 +1193,7 @@ class RegistrySnapshot(RegistryModel):
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
             rounding_codes=frozenset(expectation.rounding for expectation in expectations),
-            discrepancy_causes=_union_across_expectations(
+            discrepancy_causes=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.discrepancy_causes,
             ),

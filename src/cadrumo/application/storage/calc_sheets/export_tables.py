@@ -14,6 +14,7 @@ from typing import Final
 from ....core.decimal.formatting import format_decimal
 from .records import (
     AnySheetExportPlan,
+    RelationValue,
     SheetEvidenceContributorRow,
     SheetEvidenceManualEntry,
     SheetReviewMetadata,
@@ -132,24 +133,26 @@ def export_identity_stamps(plan: AnySheetExportPlan) -> tuple[tuple[str, str], .
     if plan.relation_provenance is None:
         return tuple(stamps)
     for relation in plan.relation_provenance.values:
-        payload = {
-            "value": str(relation.value) if relation.value is not None else "",
-            "provenance": relation.provenance,
-            "source_modelo": relation.source_modelo or "",
-            "source_filing_year": str(relation.source_filing_year) if relation.source_filing_year is not None else "",
-            "source_periods": "+".join(relation.source_periods),
-            "source_casilla_ids": "+".join(relation.source_casilla_ids),
-            "legal_refs": "+".join(relation.legal_refs),
-            "source_refs": "+".join(relation.source_refs),
-            "resolved_at": relation.resolved_at.isoformat() if relation.resolved_at is not None else "",
-        }
-        stamps.append(
-            (
-                f"{RELATION_STAMP_PREFIX}{relation.relation}",
-                "; ".join(f"{key}={value}" for key, value in payload.items() if value),
-            ),
-        )
+        stamps.append(_relation_stamp(relation))
     return tuple(stamps)
+
+
+def _relation_stamp(relation: RelationValue) -> tuple[str, str]:
+    payload = {
+        "value": str(relation.value) if relation.value is not None else "",
+        "provenance": relation.provenance,
+        "source_modelo": relation.source_modelo or "",
+        "source_filing_year": str(relation.source_filing_year) if relation.source_filing_year is not None else "",
+        "source_periods": "+".join(relation.source_periods),
+        "source_casilla_ids": "+".join(relation.source_casilla_ids),
+        "legal_refs": "+".join(relation.legal_refs),
+        "source_refs": "+".join(relation.source_refs),
+        "resolved_at": relation.resolved_at.isoformat() if relation.resolved_at is not None else "",
+    }
+    return (
+        f"{RELATION_STAMP_PREFIX}{relation.relation}",
+        "; ".join(f"{key}={value}" for key, value in payload.items() if value),
+    )
 
 
 def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[str, ...]:

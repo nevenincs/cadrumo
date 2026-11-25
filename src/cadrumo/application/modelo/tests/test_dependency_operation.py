@@ -12,13 +12,19 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, OperationAccessRequest
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...user_profile.operation_access_policy import operation_scope_refusal
 from ..dependency_operation import (
@@ -36,9 +42,11 @@ from ..dependency_read_ports import DependencyReadPortsFactory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
+
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER = UUID("6bb00000-0000-4000-8000-0000000000bb")
-_TARGET = Period.from_year_and_code(2025, "0A")
+_TARGET = Period.from_year_and_code(_YEAR, "0A")
 
 
 def _registry():
@@ -57,7 +65,7 @@ def _request(*, profile_id: UUID = _PROFILE, period: Period | None = _TARGET) ->
         subject_ref=profile_operation_subject(str(profile_id)),
         payload=ModeloDependencyRequest(
             profile_id=profile_id,
-            filing_year=2025,
+            filing_year=_YEAR,
             modelo="100" if period is not None else None,
             period=PublicPeriod.from_period(period) if period is not None else None,
         ),
@@ -182,14 +190,14 @@ def test_request_snapshot_and_explicit_public_projection_contract() -> None:
     with pytest.raises(ValidationError):
         ModeloDependencyRequest(
             profile_id=_PROFILE,
-            filing_year=2025,
+            filing_year=_YEAR,
             modelo=None,
             period=PublicPeriod.from_period(_TARGET),
         )
     private = ModeloDependencyResult(
         profile_id=_PROFILE,
         snapshot=ModeloDependencySnapshot(
-            filing_year=2025,
+            filing_year=_YEAR,
             modelo_filter=None,
             period_filter=None,
             target_modelos=(),
@@ -207,7 +215,7 @@ def test_request_snapshot_and_explicit_public_projection_contract() -> None:
         revision=1,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=datetime(2026, 3, 10, tzinfo=UTC),
+        settled_at=datetime(1980, 3, 10, tzinfo=UTC),
         result_ref="f" * 64,
     )
     public = project_modelo_dependency_result(private, receipt)

@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Final
 
+_STRONG_CHARACTER_CLASSES: Final = 3
+
 PROFILE_PASSWORD_MIN_SCALARS: Final[int] = 8
 """Minimum Unicode scalar count for a profile password."""
 
@@ -89,8 +91,16 @@ def assess_passphrase_strength(candidate: str) -> PassphraseStrength:
     if length >= LENGTH_ALONE_IS_STRONG:
         return PassphraseStrength.STRONG
     if length >= LENGTH_FAIR_FLOOR:
-        return PassphraseStrength.STRONG if _character_class_count(candidate) >= 3 else PassphraseStrength.FAIR
-    return PassphraseStrength.FAIR if _character_class_count(candidate) >= 3 else PassphraseStrength.WEAK
+        return (
+            PassphraseStrength.STRONG
+            if _character_class_count(candidate) >= _STRONG_CHARACTER_CLASSES
+            else PassphraseStrength.FAIR
+        )
+    return (
+        PassphraseStrength.FAIR
+        if _character_class_count(candidate) >= _STRONG_CHARACTER_CLASSES
+        else PassphraseStrength.WEAK
+    )
 
 
 def assess_profile_password(candidate: str) -> ProfilePasswordAssessment:

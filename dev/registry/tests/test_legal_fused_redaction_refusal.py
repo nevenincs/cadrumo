@@ -30,11 +30,15 @@ from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.corpus.text import corpus_redaction_marks, resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import build_xml_outputs
 
 from ..compiler.legal_grounding import verify_legal_reference, verify_legal_reference_grounding
 from .catalogue_verification_support import registry_tree
+
+_FLOOR = filing_year_envelope().floor
+_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -114,10 +118,10 @@ def _reference(corpus_ref: str, *, required_text: tuple[str, ...]) -> LegalRefer
         corpus_ref=corpus_ref,
         document_id="BOE-A-2007-15984",
         permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984",
-        published_at=date(2007, 9, 5),
-        effective_from=date(2008, 1, 1),
+        published_at=date(_FLOOR, 9, 5),
+        effective_from=date(_FLOOR + 1, 1, 1),
         review_status="operator_reviewed",
-        reviewed_at=date(2026, 8, 13),
+        reviewed_at=date(_YEAR, 8, 13),
         reviewed_by="operator",
         notes="Probe reference driving the fused-redaction refusal.",
         required_text=required_text,

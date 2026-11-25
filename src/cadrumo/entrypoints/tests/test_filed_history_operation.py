@@ -21,11 +21,13 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from cadrumo.core.config import load_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, DisclosureCategory
 
 from ...adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ...adapters.outbound.aeat.sede.tests.declarations_register_test_support import (
@@ -93,7 +95,6 @@ from ...application.operations.owner import OperationEventEmitter
 from ...application.operations.persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -115,6 +116,7 @@ from ...core.operations import (
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.deadlines.models import TaxpayerProfile
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -134,12 +136,6 @@ class _TestFiledHistoryComposition:
     certificate_secret_backend_factory: CertificateSecretBackendFactory
     browser_session_factory: BrowserSessionFactoryPort
     operator_scope_ports: OperatorScopePorts
-
-
-async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -> OperationPersistedSnapshot:
-    """Admit the operation and wait for the supervised task that settles it."""
-    await supervisor.start(operation_id)
-    return await supervisor.settled(operation_id)
 
 
 def _test_filed_history_composition(
@@ -235,7 +231,7 @@ def _local_pull(
             notifications_ports=notifications_ports,
             ports=ports,
             filed_data_port=filed_data_port,
-            output_root=payload.output_root,
+            output_root=payload.resolved_output_root(),
             profile=profile,
             today=payload.today,
             limit=payload.limit,
@@ -287,7 +283,7 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
                 notifications_ports=notifications_ports,
                 ports=ports,
                 filed_data_port=RoutedFiledDataCapturePort(register),
-                output_root=payload.output_root,
+                output_root=payload.resolved_output_root(),
                 profile=profile,
                 today=payload.today,
                 limit=payload.limit,
@@ -454,18 +450,12 @@ def test_supervisor_refuses_a_foreign_payload_profile_before_capture(tmp_path: P
             pull=_local_pull(_DeterministicFiledHistoryDiscovery(entered=discovery_entered)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, _, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
-            operands=operation_secure_reference_repository(objects=profile.repository),
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -479,7 +469,7 @@ def test_supervisor_refuses_a_foreign_payload_profile_before_capture(tmp_path: P
 
         async def run() -> OperationPersistedSnapshot:
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            return await _run_to_terminal(supervisor, operation_id)
+            return await run_to_terminal(supervisor, operation_id)
 
         terminal = asyncio.run(run())
         assert terminal.terminal_condition is OperationTerminalCondition.FAILED
@@ -496,7 +486,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             entered=discovery_entered,
             release=release_discovery,
         )
-        taxpayer = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+        taxpayer = TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
         pull = _local_pull(discovery)
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,
@@ -506,20 +496,12 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             profile_resolver=lambda _operation: taxpayer,
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, operands, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -533,7 +515,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="3" * 64)
-            start_task = asyncio.create_task(_run_to_terminal(supervisor, operation_id))
+            start_task = asyncio.create_task(run_to_terminal(supervisor, operation_id))
             # Admission and the executor's first phases do real journal I/O, so
             # the discovery barrier is awaited on time rather than on a count of
             # scheduler turns. A task that ends first surfaces its own failure.
@@ -606,39 +588,40 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
     assert discovery.profile is taxpayer
 
 
-def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
+@pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
+def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path, names_root: bool) -> None:
+    """A request that names no output root is composed under the configured filed-declarations directory."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
         authority_operation = stack.enter_context(bundled_indexed_authority().operation())
         repository = SyncRunRecordRepository()
         sync_namespace_before = repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
+        output_root = tmp_path / "filed" if names_root else storage_path(StorageCategory.FILED_DECLARATIONS)
+        composed_roots: list[Path] = []
+
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
+            composed_roots.append(output_root)
+            return _test_filed_history_composition(output_root, operation=operation)
+
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
-            composition_factory=_test_filed_history_composition,
+            composition_factory=composition_factory,
             browser_resources_factory=BrowserRuntimeResourceScope,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, operands, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=leases,
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
                 profile_id=UUID(profile.bucket_id),
-                output_root=tmp_path / "filed",
+                output_root=output_root if names_root else None,
                 today=date(2026, 3, 15),
                 dry_run=True,
             ),
@@ -647,7 +630,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="4" * 64)
-            snapshot = await _run_to_terminal(supervisor, operation_id)
+            snapshot = await run_to_terminal(supervisor, operation_id)
             events = (await supervisor.replay(operation_id, 0, limit=100)).events
             receipt = snapshot.terminal_receipt
             assert receipt is not None
@@ -662,6 +645,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     assert snapshot.lifecycle is OperationLifecycle.TERMINAL
     assert snapshot.effect is OperationEffect.NONE
     assert result.dry_run is True
+    assert composed_roots == [output_root]
     assert result.sync_run_ref is None
     assert sync_namespace_after == sync_namespace_before == {}
     assert result.pairs[0].walk_attempted is True
@@ -732,7 +716,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="7" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
+            terminal = await run_to_terminal(supervisor, operation_id)
             reloaded = await journal.load(operation_id)
             replay = await journal.read_after(operation_id, 0, limit=100)
             assert terminal.terminal_receipt is not None
@@ -855,7 +839,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
 
         async def run():
             operation_id = await supervisor.submit(request, operation_id="a" * 64)
-            terminal = await _run_to_terminal(supervisor, operation_id)
+            terminal = await run_to_terminal(supervisor, operation_id)
             contract = registry.lookup_public_contract(definition.definition_id)
             assert contract.result_schema is not None
             resolved = await result_service.resolve(
@@ -999,14 +983,8 @@ def test_filed_history_access_requires_whole_profile_commit_and_result_disclosur
     )
 
     def context(action: AccessAction, admitted_request=None) -> OperationAccessContext:
-        return OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=action,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-            admitted_request=admitted_request,
+        return operation_access_context(
+            registration.contract, profile_id=profile_id, action=action, admitted_request=admitted_request
         )
 
     submitted = resolve_operation_access(registry=registry, request=request, context=context(AccessAction.SUBMIT))
@@ -1043,6 +1021,55 @@ def test_filed_history_access_requires_whole_profile_commit_and_result_disclosur
     with pytest.raises(ProfileAccessRefusedError) as refusal:
         resolve_operation_access(registry=registry, request=foreign, context=context(AccessAction.SUBMIT))
     assert refusal.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+async def _assert_cleanup_failure_settles_terminal(owner, settlement):
+    terminal = await asyncio.wait_for(settlement, timeout=10)
+    assert terminal.lifecycle is OperationLifecycle.TERMINAL
+    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+    assert terminal.effect is OperationEffect.UNKNOWN
+    assert terminal.terminal_receipt is not None
+    assert owner.calls == 3
+    assert owner.released is True
+
+
+async def _assert_persistent_cleanup_failure_retains_operation(owner, settlement, supervisor, operation_id):
+    with pytest.raises(OperationUnsettledError) as unsettled:
+        await asyncio.wait_for(settlement, timeout=10)
+    retained = unsettled.value.__cause__
+    assert isinstance(retained, AsyncResourceCleanupError)
+    assert retained.resources == (owner,)
+    pending = await supervisor.inspect(operation_id)
+    assert pending.lifecycle is OperationLifecycle.RUNNING
+    assert pending.effect is OperationEffect.UNKNOWN
+    assert pending.terminal_receipt is None
+    assert owner.calls == 3
+    assert owner.released is False
+    owner.fail_settlement = False
+    await retained.retry_cleanup()
+    assert owner.calls == 4
+    assert owner.released is True
+    assert (await supervisor.inspect(operation_id)).terminal_receipt is None
+
+
+async def _assert_provider_cleanup_in_flight(
+    owner, settlement, supervisor, operation_id, failures, primary, attached_primary
+):
+    assert owner.calls == 3
+    assert owner.released is False
+    assert settlement.done() is False
+    in_flight = await supervisor.inspect(operation_id)
+    assert in_flight.lifecycle is OperationLifecycle.RUNNING
+    assert in_flight.effect is OperationEffect.UNKNOWN
+    assert in_flight.terminal_receipt is None
+    assert len(failures) == 1
+    if attached_primary:
+        assert failures[0] is primary
+        original_cleanup = primary.__dict__["async_cleanup_error"]
+    else:
+        original_cleanup = failures[0]
+    assert isinstance(original_cleanup, AsyncResourceCleanupError)
+    assert original_cleanup.resources == (owner,)
 
 
 @pytest.mark.parametrize("attached_primary", [False, True], ids=["direct-cleanup", "attached-primary"])
@@ -1116,19 +1143,12 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
             profile_resolver=lambda _operation: None,
             provider_preflight=lambda _profile_id, _operation: None,
         )
-        journal = OperationJournalRepository(storage_root=tmp_path / "operations")
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority_operation,
+        _, _, _, supervisor, _ = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority_operation,
             registry=_registered_filed_history_definition(definition),
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations"),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
         )
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -1140,7 +1160,7 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
 
         async def run() -> None:
             operation_id = await supervisor.submit(request, operation_id="5" * 64)
-            settlement = asyncio.create_task(_run_to_terminal(supervisor, operation_id))
+            settlement = asyncio.create_task(run_to_terminal(supervisor, operation_id))
             entered = asyncio.create_task(owner.retry_entered.wait())
             try:
                 await asyncio.wait({entered, settlement}, timeout=10, return_when=asyncio.FIRST_COMPLETED)
@@ -1148,21 +1168,9 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
                     if settlement.done():
                         await settlement
                     raise AssertionError("the original failed provider owner was not adopted for settlement")
-                assert owner.calls == 3
-                assert owner.released is False
-                assert settlement.done() is False
-                in_flight = await supervisor.inspect(operation_id)
-                assert in_flight.lifecycle is OperationLifecycle.RUNNING
-                assert in_flight.effect is OperationEffect.UNKNOWN
-                assert in_flight.terminal_receipt is None
-                assert len(failures) == 1
-                if attached_primary:
-                    assert failures[0] is primary
-                    original_cleanup = primary.__dict__["async_cleanup_error"]
-                else:
-                    original_cleanup = failures[0]
-                assert isinstance(original_cleanup, AsyncResourceCleanupError)
-                assert original_cleanup.resources == (owner,)
+                await _assert_provider_cleanup_in_flight(
+                    owner, settlement, supervisor, operation_id, failures, primary, attached_primary
+                )
             finally:
                 owner.allow_retry.set()
                 if not entered.done():
@@ -1170,36 +1178,15 @@ def test_supervisor_retains_filed_provider_cleanup_before_terminal_settlement(
                 await asyncio.gather(entered, return_exceptions=True)
 
             if persistent_failure:
-                with pytest.raises(OperationUnsettledError) as unsettled:
-                    await asyncio.wait_for(settlement, timeout=10)
-                retained = unsettled.value.__cause__
-                assert isinstance(retained, AsyncResourceCleanupError)
-                assert retained.resources == (owner,)
-                pending = await supervisor.inspect(operation_id)
-                assert pending.lifecycle is OperationLifecycle.RUNNING
-                assert pending.effect is OperationEffect.UNKNOWN
-                assert pending.terminal_receipt is None
-                assert owner.calls == 3
-                assert owner.released is False
-                owner.fail_settlement = False
-                await retained.retry_cleanup()
-                assert owner.calls == 4
-                assert owner.released is True
-                assert (await supervisor.inspect(operation_id)).terminal_receipt is None
+                await _assert_persistent_cleanup_failure_retains_operation(owner, settlement, supervisor, operation_id)
             else:
-                terminal = await asyncio.wait_for(settlement, timeout=10)
-                assert terminal.lifecycle is OperationLifecycle.TERMINAL
-                assert terminal.terminal_condition is OperationTerminalCondition.FAILED
-                assert terminal.effect is OperationEffect.UNKNOWN
-                assert terminal.terminal_receipt is not None
-                assert owner.calls == 3
-                assert owner.released is True
+                await _assert_cleanup_failure_settles_terminal(owner, settlement)
 
         asyncio.run(run())
 
 
-def test_canonical_composition_retains_cartesian_only_planning_refusals(tmp_path: Path) -> None:
-    """Actual planning preserves every refusal without adding discovery signals."""
+def test_canonical_composition_plans_only_the_nominated_pairs(tmp_path: Path) -> None:
+    """Capture is exact: the unnominated rectangle corners are neither read nor refused."""
     first = _composition_pair("100")
     second = FiledHistoryDiscoveryPair(
         modelo="303",
@@ -1211,11 +1198,7 @@ def test_canonical_composition_retains_cartesian_only_planning_refusals(tmp_path
     assert [(pair.modelo, pair.ejercicio) for pair in run.pairs] == [("100", 2000), ("303", 2001)]
     assert len(run.refused_pairs) == 2 and all(pair.failure_type == "LiveApplicationInputError" for pair in run.pairs)
     assert all(pair.signals == (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,) for pair in run.pairs)
-    # The same real rectangular planner refuses the two additional coordinates.
-    # Their facts must survive the discovery-only join without fabricated rows.
-    assert run.stage_failures == (
-        "filed_capture: modelo 100 ejercicio 2001: LiveApplicationInputError",
-        "filed_capture: modelo 303 ejercicio 2000: LiveApplicationInputError",
-    )
+    # No rectangular planner runs, so the two unnominated coordinates add no stage failure.
+    assert run.stage_failures == ()
     assert run.reached_count == 0 and run.captured_count == 0 and run.sync_run_ref is None
     assert settled_filed_history_effect(run) is OperationEffect.NONE

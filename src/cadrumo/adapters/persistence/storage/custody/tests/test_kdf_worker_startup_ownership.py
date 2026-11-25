@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import errno
 import os
+import stat
+import tempfile
+import threading
 import time
 from collections import Counter
 from collections.abc import Generator
@@ -12,14 +16,29 @@ from typing import Literal
 
 import pytest
 
+from ......core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures
 from ......core.config import Settings
-from .. import _kdf_worker_supervision as supervision
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from .. import kdf_worker_observation, kdf_worker_supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..kdf_supervision import ProfileKdfPrewarm
+from ..kdf_worker_supervision import SupervisedKdfWorker
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 type _FailurePoint = Literal["second_pipe", "mkdir", "temporary_directory", "launch"]
+
+
+def _still_a_pipe(descriptor: int) -> bool:
+    """Whether closing this number releases the pipe end rather than an unrelated reuse of the number.
+
+    A released number is reissued to the next open, such as the directory
+    handle of a recursive removal; closing that handle is not a second close
+    of the pipe. A number that is no longer open at all is still a double close.
+    """
+    try:
+        return stat.S_ISFIFO(os.fstat(descriptor).st_mode)
+    except OSError:
+        return True
 
 
 @pytest.fixture
@@ -36,15 +55,15 @@ def real_pipe_closes(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[list[in
         return descriptors
 
     def tracked_close(descriptor: int) -> None:
-        if descriptor in allocated:
+        if descriptor in allocated and _still_a_pipe(descriptor):
             closes[descriptor] += 1
         close(descriptor)
 
-    monkeypatch.setattr(supervision.os, "pipe", tracked_pipe)
-    monkeypatch.setattr(supervision.os, "close", tracked_close)
+    monkeypatch.setattr(kdf_worker_supervision.os, "pipe", tracked_pipe)
+    monkeypatch.setattr(kdf_worker_supervision.os, "close", tracked_close)
     # Avoid unrelated logger file opens reusing the pipe descriptor numbers.
     # Diagnostic behavior is independently exercised by test_kdf_worker_diagnostics.
-    monkeypatch.setattr(supervision, "diagnostic_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(kdf_worker_observation, "diagnostic_event", lambda *_args, **_kwargs: None)
     try:
         yield allocated, closes
     finally:
@@ -65,9 +84,7 @@ def test_partial_start_closes_every_acquired_descriptor_once(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    worker = _SupervisedKdfWorker(
-        deadline=time.monotonic() + 30, settings=Settings(cadrumo_local_storage_root=tmp_path)
-    )
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     primary = (
         KeyboardInterrupt("synthetic startup interruption") if interrupted else OSError("synthetic startup failure")
     )
@@ -94,12 +111,12 @@ def test_partial_start_closes_every_acquired_descriptor_once(
         launch_calls += 1
         raise primary
 
-    monkeypatch.setattr(supervision.os, "pipe", pipe)
+    monkeypatch.setattr(kdf_worker_supervision.os, "pipe", pipe)
     if point == "mkdir":
         monkeypatch.setattr(Path, "mkdir", root_mkdir)
     elif point == "temporary_directory":
-        monkeypatch.setattr(supervision.tempfile, "TemporaryDirectory", temporary_directory)
-    monkeypatch.setattr(supervision, "_launch_worker", launch)
+        monkeypatch.setattr(kdf_worker_supervision.tempfile, "TemporaryDirectory", temporary_directory)
+    monkeypatch.setattr(kdf_worker_supervision, "launch_worker", launch)
 
     translated = point == "launch" and not interrupted
     with pytest.raises(ProfileCustodyRefusedError if translated else type(primary)) as escaped, worker:
@@ -124,3 +141,72 @@ def test_partial_start_closes_every_acquired_descriptor_once(
     prior_closes = closes.copy()
     worker._close(failed=True)
     assert closes == prior_closes
+
+
+@pytest.mark.parametrize("prewarmed", [False, True])
+def test_failed_enter_retains_real_pipe_cleanup_until_reader_settles(
+    prewarmed: bool, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A failed context entry cannot abandon a reader or start a fallback worker."""
+    release = threading.Event()
+    started = threading.Event()
+    captured: list[tuple[SupervisedKdfWorker, int, int, Path]] = []
+
+    def start(worker: SupervisedKdfWorker) -> None:
+        request_read, worker._request_fd = os.pipe()
+        worker._result_fd, result_write = os.pipe()
+        os.close(request_read)
+        os.close(result_write)
+        worker._neutral_directory = tempfile.TemporaryDirectory(dir=tmp_path)
+        result_fd = worker._result_fd
+        assert result_fd is not None and worker._request_fd is not None
+
+        def read() -> None:
+            started.set()
+            release.wait()
+            assert os.read(result_fd, 1) == b""
+
+        reader = threading.Thread(target=read, daemon=True)
+        worker._readers.append(reader)
+        reader.start()
+        assert started.wait(5)
+        captured.append((worker, worker._request_fd, result_fd, Path(worker._neutral_directory.name)))
+
+    def no_ready(_worker: SupervisedKdfWorker) -> tuple[int, bytes]:
+        raise TimeoutError("synthetic readiness failure")
+
+    monkeypatch.setattr(SupervisedKdfWorker, "_start", start)
+    monkeypatch.setattr(SupervisedKdfWorker, "read_response_frame", no_ready)
+    settings = Settings(cadrumo_storage_root=tmp_path)
+    prewarm = ProfileKdfPrewarm(settings=settings) if prewarmed else None
+    try:
+        if prewarm is None:
+            with pytest.raises(ProfileCustodyRefusedError) as caught:
+                SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings).__enter__()
+        else:
+            prewarm._launch()
+            with pytest.raises(ProfileCustodyRefusedError) as caught:
+                prewarm.take(deadline=time.monotonic() + 30)
+            prewarm.refill()
+            assert len(captured) == 1
+        worker, request_fd, result_fd, directory = captured[0]
+        owners = async_cleanup_failures(caught.value)
+        assert len(owners) == 1 and owners[0].resources == (worker,)
+        assert worker._cleanup_pending() and directory.is_dir()
+        with pytest.raises(AsyncResourceCleanupError):
+            asyncio.run(owners[0].retry_cleanup())
+        assert worker._cleanup_pending()
+        release.set()
+        asyncio.run(owners[0].retry_cleanup())
+        assert not worker._cleanup_pending() and not directory.exists()
+        for descriptor in (request_fd, result_fd):
+            with pytest.raises(OSError):
+                os.fstat(descriptor)
+        if prewarm is not None:
+            assert prewarm.take(deadline=time.monotonic() + 30) is None
+    finally:
+        release.set()
+        if captured:
+            captured[0][0]._close(failed=True)
+        if prewarm is not None:
+            prewarm.close()

@@ -24,7 +24,7 @@ def _prepared(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Pa
     for name in ("LICENSE", "NOTICE"):
         (controls / name).write_bytes((installation.REPO_ROOT / name).read_bytes())
     monkeypatch.setattr(installation, "REPO_ROOT", controls)
-    payload, identity = payload_fixture(tmp_path, "windows-x86-64", manager=True)
+    payload, identity = payload_fixture(tmp_path, "windows-x86-64")
     build = tmp_path / "build"
     build.mkdir()
     paths = {f"installation_{name}": f"installation/{name}" for name in ("stage", "metadata", "work", "receipts")}
@@ -61,7 +61,7 @@ def _forbid_materialization(monkeypatch: pytest.MonkeyPatch) -> None:
     def forbidden(*args: object, **kwargs: object) -> None:
         raise AssertionError("An unchanged or refused stage must not copy or construct a candidate")
 
-    monkeypatch.setattr(installation, "_prepare_fresh", forbidden)
+    monkeypatch.setattr(installation, "prepare_fresh", forbidden)
     monkeypatch.setattr(installation.shutil, "copytree", forbidden)
     monkeypatch.setattr(installation.shutil, "copy2", forbidden)
     monkeypatch.setattr(distribution_prepare, "public_directory", forbidden)

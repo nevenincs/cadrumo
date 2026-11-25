@@ -74,13 +74,7 @@ def _require_invoice_intake_effect(
             raise ValueError("invoice intake success has no wizard result")
         expected = OperationEffect.NONE if projection.result.already_existed else OperationEffect.UPDATED
     else:
-        expected = (
-            OperationEffect.NONE
-            if projection.created == 0
-            else OperationEffect.PARTIAL
-            if projection.refused
-            else OperationEffect.UPDATED
-        )
+        expected = projection.settled_effect
     if receipt.effect is not expected:
         raise ValueError("invoice intake row facts differ from its mutation effect")
 

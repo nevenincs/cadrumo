@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
     ChannelWake,
@@ -88,7 +89,7 @@ class _Listener:
     def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
         if self.accepted:
             self.stop.set()
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         self.accepted = True
         if self.reject_on_accept:
             self.stop.set()
@@ -125,8 +126,12 @@ def test_idle_peer_close_is_completion_but_other_refusals_propagate(
     with caplog.at_level(logging.DEBUG):
         if reason is RefusalCode.CONNECTION_CLOSED:
             server._serve_connection_requests(channel, context, NativeWake())
-            assert "runtime_connection_closed" in caplog.text
-            assert "runtime_connection_refused" not in caplog.text
+            messages = [
+                record.getMessage()
+                for record in delivered_records(caplog, "cadrumo_runtime.adapters.server_connection_handling")
+            ]
+            assert any("runtime_connection_closed" in message for message in messages), messages
+            assert not any("runtime_connection_refused" in message for message in messages), messages
         else:
             with pytest.raises(RefusalError) as caught:
                 server._serve_connection_requests(channel, context, NativeWake())
@@ -447,7 +452,7 @@ def test_cleanup_owner_lock_uses_remaining_absolute_drain_budget() -> None:
             assert entered.wait(2)
             with pytest.raises(RefusalError) as caught:
                 owner.close_now(deadline=time.monotonic() + 0.05)
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
             assert not owner.released and not channel.closed.is_set()
         finally:
             release.set()

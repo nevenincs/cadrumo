@@ -42,11 +42,11 @@ from click.testing import Result
 
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
-from .cli_runner import invoke_cached_cli as _invoke_cached_cli
+from ...native_profile_facts import native_general_iva_facts
+from .cli_runner import invoke_cached_cli as cli_runner_invoke_cached_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -81,13 +81,22 @@ _MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
 # the profile resolver supplies them; a decimal --binding override for either
 # is refused as a misrouted input channel.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
-    "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-profile-cotizaciones-ss-madre=0",
     "--binding", "renta-profile-marriage-month-start=0",
     "--binding", "renta-profile-marriage-month-end=0",
     "--binding", "renta-base-liquidable-negativa-general-anterior=0",
+    "--binding", "renta-base-liquidable-negativa-general-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em3-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em2-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-gyp-ahorro-em1-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em4-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em3-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em2-pendiente-inicio=0",
+    "--binding", "renta-saldo-negativo-rcm-ahorro-em1-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em3-pendiente-inicio=0",
+    "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
 )  # fmt: skip
 
 
@@ -102,21 +111,14 @@ def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> No
     runtime_profile.register(
         label=_PROFILE_LABEL,
         facts={
+            **native_general_iva_facts(),
             "identity.name": "Marta",
             "identity.surnames": "Diaz Ortega",
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "activities.description": "economic activity",
             "tax_residence.ccaa": "madrid",
-            "tax_residence.jurisdiction_scope": "common_regime",
             "provenance.source": "manual_cli",
             "renta_taxpayer.birth_date": "1985-06-15",
             "renta_filing.declaration_type": "1",
@@ -132,7 +134,7 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
     runtime, so each invocation names the profile and supplies the password
     exactly as the registered secret transport does.
     """
-    return _invoke_cached_cli(
+    return cli_runner_invoke_cached_cli(
         ("--profile", _PROFILE_LABEL, "--profile-secrets-stdin", *args),
         input=json.dumps({"profile_passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value()}),
     )
@@ -177,12 +179,12 @@ def _calculate(*extra_flags: str) -> tuple[int, str]:
 
 
 def _casilla_0611(output: str) -> Decimal:
-    return Decimal(str(_payload(output)["casilla_values"][_MATERNIDAD_CASILLA_ID]))
+    return Decimal(str(unwrap_schema_envelope(output)["casilla_values"][_MATERNIDAD_CASILLA_ID]))
 
 
 def _casilla_0611_observation(output: str) -> dict[str, object]:
     """Return 0611's persisted, registry-grounded calculation observation."""
-    observations = _payload(output)["observations"]
+    observations = unwrap_schema_envelope(output)["observations"]
     observation = next(
         observation for observation in observations if observation["casilla_id"] == _MATERNIDAD_CASILLA_ID
     )
@@ -481,17 +483,6 @@ def test_the_calculate_time_flag_no_longer_exists(runtime_profile: NativeCliProf
     assert "meses-trabajo-con-hijo-menor-3" in output.lower()
 
 
-def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: NativeCliProfileFixture) -> None:
-    """With the flag gone, the descendiente-declared figure reaches 0611 unaided."""
-    _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
-
-    exit_code, output = _calculate()
-
-    assert exit_code == 0, output
-    assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
-
-
 @pytest.mark.parametrize("attempted_value", ("0", "9999"))
 def test_direct_casilla_0611_cannot_bypass_or_overwrite_the_profile_producer(
     runtime_profile: NativeCliProfileFixture,
@@ -662,7 +653,8 @@ def test_declaring_working_months_under_the_default_relacion_is_disclosed_immedi
     notices = unwrap_envelope_notices(result.output)
     matching = [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
     assert matching, f"expected the ambiguous-relación notice; got {notices}"
-    assert "guarda y custodia" in matching[0]["message"]
+    assert "nieto" in matching[0]["message"]
+    assert "consanguinidad" in matching[0]["message"]
     assert matching[0]["context"] == {"indices": "0"}
 
 

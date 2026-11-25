@@ -23,13 +23,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.requirement import Requirement
 from .completeness import (
-    IVA_REGIME_PATH,
     conditional_profile_required_paths,
-    iva_regime_required,
     profile_value_is_present,
+    schema_requirement_applies,
 )
 from .profile_key import ProfileKey
 from .profile_keys import optional_profile_keys, profile_keys
@@ -41,7 +40,7 @@ if TYPE_CHECKING:
 class ProfileValidationResult(BaseModel):
     """Typed result of :func:`validate_profile_values`."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     valid: bool
     missing_required: tuple[str, ...] = ()
@@ -108,10 +107,10 @@ def _required_profile_keys(
 
 
 def _profile_entry_is_required(values: Mapping[str, str], entry: ProfileKey) -> bool:
-    """Apply the catalogue requirement and IVA-regime conditional policy."""
-    return (entry.requirement is Requirement.REQUIRED or _conditional_requirement_applies(values, entry)) and (
-        entry.key != IVA_REGIME_PATH or iva_regime_required(values)
-    )
+    """Apply the catalogue requirement, owed only where the shared requirement rule applies."""
+    return (
+        entry.requirement is Requirement.REQUIRED or _conditional_requirement_applies(values, entry)
+    ) and schema_requirement_applies(entry.key, values)
 
 
 def _present_profile_keys(values: Mapping[str, str], keys: Iterable[str]) -> tuple[str, ...]:

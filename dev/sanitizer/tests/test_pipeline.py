@@ -1,4 +1,4 @@
-"""End-to-end tests for :mod:`dev.sanitizer._pipeline`.
+"""End-to-end tests for :mod:`dev.sanitizer.pipeline`.
 
 These tests exercise the orchestrator on synthesised PDFs and
 assert:
@@ -21,11 +21,13 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.tests.inventory import FIXTURES_DIR
+from cadrumo.tests.log_records import delivered_records
 
 from .. import fixtures
-from .._pipeline import sanitize_pdf
-from .._records import NameReplacement, NifReplacement, TokenMap
 from ..errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
+from ..pipeline import sanitize_pdf
+from ..records import NameReplacement, NifReplacement, TokenMap
+from ..residual_identity import decompressed_streams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
@@ -50,33 +52,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("p
 # clean against the manifest this pipeline emitted. That is the seam no test
 # covered before: every other proof supplies a hand-written sidecar.
 _SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
-_REAL_NIE_CANARY = "Y1234567X"
+_REAL_NIE_CANARY = "Y0001500L"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
-_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 _SENSITIVE_SOURCE_BASENAME = "12345678Z-sanitizer-source.pdf"
-
-
-def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
-    """Returns the concatenated decompressed content streams of every page.
-
-    pikepdf round-trips the source through FlateDecode by default,
-    so cleartext lives in the *decompressed* stream — the
-    representation an attacker running ``pdftotext`` / ``pdfgrep``
-    sees. The adversarial-absence test must operate on this view.
-    """
-    pdf = pikepdf.Pdf.open(io.BytesIO(pdf_bytes))
-    chunks: list[bytes] = []
-    for page in pdf.pages:
-        contents = page.obj.get("/Contents")
-        if contents is None:
-            continue
-        if isinstance(contents, pikepdf.Array):
-            for index in range(len(contents)):
-                chunks.append(bytes(contents[index].read_bytes()))
-        else:
-            chunks.append(bytes(contents.read_bytes()))
-    return b"\n".join(chunks)
 
 
 def _build_real_world_like_pdf() -> bytes:
@@ -92,7 +72,7 @@ def _build_real_world_like_pdf() -> bytes:
     pdf = pikepdf.Pdf.new()
     pdf.add_blank_page(page_size=(612, 792))
     pdf.pages[0].contents_add(
-        b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\nBT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
+        b"BT /F1 12 Tf 100 700 Td (Y0001500L) Tj ET\nBT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
     )
     pdf.docinfo["/Title"] = pikepdf.String(f"Justificante AEAT {_REAL_NIE_CANARY}")
     pdf.docinfo["/Author"] = pikepdf.String(_REAL_NAME_CANARY)
@@ -140,7 +120,7 @@ class TestSanitizePdfHappyPath:
         # The cleartext does not leak into the decompressed content
         # streams (the view a ``pdftotext`` / ``pdfgrep`` attacker
         # sees) and the synthetic landed in its place.
-        decompressed = _decompressed_content_bytes(result_a.output_bytes)
+        decompressed = decompressed_streams(result_a.output_bytes)
         assert _REAL_NIE_CANARY.encode("utf-8") not in decompressed
         assert _REAL_NAME_CANARY.encode("utf-8") not in decompressed
         assert _SYNTHETIC_NIE.encode("utf-8") in decompressed
@@ -170,7 +150,7 @@ class TestSanitizePdfHappyPath:
 
         # Replacement rows reference the cleartext via SHA only.
         assert all(row.real_sha256 != "" for row in result_a.replacements_applied)
-        assert any(row.synthetic == "Y0000001S" for row in result_a.replacements_applied)
+        assert any(row.synthetic == "Y0001006P" for row in result_a.replacements_applied)
 
         # The output round-trips through pikepdf.
         re_opened = pikepdf.Pdf.open(io.BytesIO(result_a.output_bytes))
@@ -220,7 +200,7 @@ class TestSourceParseErrorHygiene:
             # ``getMessage()``: ``exc_info`` carries the parser traceback - and
             # the unredacted source path inside it - past a message-only window.
             formatter = logging.Formatter()
-            log_text = "\n".join(formatter.format(record) for record in caplog.records)
+            log_text = "\n".join(formatter.format(record) for record in delivered_records(caplog))
             for fragment in forbidden_fragments:
                 assert fragment not in log_text, case_id
             assert "source=<input-pdf>" in log_text, case_id
@@ -320,8 +300,8 @@ class TestRefuseIfAlreadySanitized:
 
     def test_the_public_symbols_are_importable_from_the_modules_that_define_them(self) -> None:
         """What the retired test was actually protecting, asked of the real homes."""
-        from .._pipeline import sanitize_pdf
         from ..errors import AlreadySanitizedError, SanitizationError
+        from ..pipeline import sanitize_pdf
         from ..residual_identity import ResidualKind, scan_for_residual_identities
 
         for symbol in (

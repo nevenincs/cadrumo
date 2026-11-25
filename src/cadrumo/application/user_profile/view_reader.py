@@ -13,10 +13,15 @@ from pydantic import ValidationError
 
 from ...core.config import override_settings
 from ...core.identity.digest import ContentDigest
+from ...core.json_contract import Notice, ResolvedNoticeAction
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.calculations.registry.cnae_classification import cnae_classification_names
+from ...domain.calculations.registry.renta_codes_catalogue import ue_eea_country_codes
+from ...domain.iva.establishment import catalogued_country_codes
+from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileSchemaDefinition
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ..modelo.export_m202_profile import PRINCIPAL_CNAE_CLASSIFICATION_PATH
 from ..modelo.profile_readiness_gate import (
     modelo_work_profile_baseline_missing_paths,
     modelo_work_profile_baseline_validation_issues,
@@ -26,8 +31,12 @@ from ..wizard.persistence import project_answers
 from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from .commands import ProfileValidationIssue, ProfileValidationReport
-from .overview import build_profile_overview
+from .family_question import family_question_items
+from .family_rows import family_draft_item, family_row_items
+from .overview import ProfileFieldChoice, ProfileOverview, build_profile_overview
+from .password_kdf_notice import profile_kdf_floor_notice
 from .profile_record_repository import ProfileRecordRepository
+from .profile_repository import CommittedProfileRepository
 from .projections import record_to_path_values
 from .question_view import profile_question_items
 from .validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
@@ -35,10 +44,12 @@ from .view_operation import (
     PROFILE_VIEW_MAX_RESULT_BYTES,
     ProfileViewFactItem,
     ProfileViewFieldItem,
+    ProfileViewHeadingItem,
     ProfileViewHealth,
     ProfileViewIssueItem,
     ProfileViewItem,
     ProfileViewMissingItem,
+    ProfileViewNoticeAction,
     ProfileViewNoticeContextEntry,
     ProfileViewNoticeItem,
     ProfileViewOperationRequest,
@@ -53,7 +64,9 @@ from .view_operation import (
 _STATUS_FACT_PATHS = frozenset({"identity.tax_id", "activities.description", "iva.regime", "tax_residence.ccaa"})
 
 
-class _ProfileViewCommon(TypedDict):
+class ProfileViewCommon(TypedDict):
+    """The fields shared by every profile view page result."""
+
     profile_id: UUID
     page_kind: ProfileViewPageKind
     record_revision: int
@@ -65,7 +78,7 @@ class _ProfileViewCommon(TypedDict):
 
 
 def _refused_page(
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     refusal_code: ProfileViewRefusalCode,
     *,
     total_items: int = 0,
@@ -181,7 +194,7 @@ def _build_status_source(
     request: ProfileViewOperationRequest,
     record: UserProfileRecord,
     authority_operation: PinnedAuthorityOperation,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     committed = read_profile_bucket_by_id(str(request.profile_id))
     if committed is None or committed.bucket_id != str(request.profile_id):
@@ -204,15 +217,33 @@ def _build_status_source(
     return (status_item,)
 
 
-def _build_overview_source(
-    record: UserProfileRecord,
-    common: _ProfileViewCommon,
-    schema: ProfileSchemaDefinition,
-) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
-    overview = build_profile_overview(record, schema=schema)
-    if any(notice.action is not None for notice in overview.notices):
-        return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
-    section_items = tuple(
+def _overview_notice_item(notice: Notice) -> ProfileViewNoticeItem:
+    """Project one overview notice, with its success action, onto the page item."""
+    action = notice.action
+    return ProfileViewNoticeItem(
+        severity=notice.severity,
+        code=notice.code,
+        message=notice.message,
+        context=(
+            None
+            if notice.context is None
+            else tuple(
+                ProfileViewNoticeContextEntry(key=key, value=value) for key, value in sorted(notice.context.items())
+            )
+        ),
+        action=(
+            ProfileViewNoticeAction(
+                action_id=action.action.action_id, target_command_key=action.action.target_command_key
+            )
+            if isinstance(action, ResolvedNoticeAction)
+            else None
+        ),
+    )
+
+
+def _overview_section_items(overview: ProfileOverview) -> tuple[ProfileViewItem, ...]:
+    """Flatten each overview section into its heading item followed by its field items."""
+    return tuple(
         item
         for section in overview.sections
         for item in (
@@ -225,23 +256,72 @@ def _build_overview_source(
             *(ProfileViewFieldItem(section_key=section.key, field=field) for field in section.fields),
         )
     )
-    missing_items = tuple(ProfileViewMissingItem(path=path) for path in overview.missing_required)
-    notice_items = tuple(
-        ProfileViewNoticeItem(
-            severity=notice.severity,
-            code=notice.code,
-            message=notice.message,
-            context=(
-                None
-                if notice.context is None
-                else tuple(
-                    ProfileViewNoticeContextEntry(key=key, value=value) for key, value in sorted(notice.context.items())
-                )
+
+
+def _build_overview_source(
+    record: UserProfileRecord,
+    common: ProfileViewCommon,
+    schema: ProfileSchemaDefinition,
+    authority_operation: PinnedAuthorityOperation,
+) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
+    overview = build_profile_overview(
+        record,
+        label=CommittedProfileRepository().load(record.profile_id).label,
+        schema=schema,
+        flow=build_setup_flow(authority_operation),
+        code_lists={
+            ProfileFieldCodeList.COUNTRIES: tuple(sorted(catalogued_country_codes(operation=authority_operation))),
+            ProfileFieldCodeList.EU_EEA_COUNTRIES: tuple(sorted(ue_eea_country_codes(authority=authority_operation))),
+        },
+        registry_choices={
+            PRINCIPAL_CNAE_CLASSIFICATION_PATH: tuple(
+                ProfileFieldChoice(value=identifier, label=name)
+                for identifier, name in cnae_classification_names(authority=authority_operation).items()
             ),
-        )
-        for notice in overview.notices
+        },
     )
-    return (*section_items, *missing_items, *notice_items)
+    notices = overview.notices
+    custody_notice = profile_kdf_floor_notice(UUID(str(record.profile_id)))
+    # A page item carries only a success action; a precondition action has no wire shape here.
+    if any(notice.action is not None and not isinstance(notice.action, ResolvedNoticeAction) for notice in notices):
+        return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
+    missing_items = tuple(ProfileViewMissingItem(path=path) for path in overview.missing_required)
+    notice_items = (
+        *(_overview_notice_item(notice) for notice in notices),
+        *(() if custody_notice is None else (custody_notice,)),
+    )
+    return (
+        ProfileViewHeadingItem(name=overview.heading_name),
+        *_overview_section_items(overview),
+        *missing_items,
+        *notice_items,
+    )
+
+
+def _build_family_source(
+    request: ProfileViewOperationRequest,
+    record: UserProfileRecord,
+    authority_operation: PinnedAuthorityOperation,
+    common: ProfileViewCommon,
+    schema: ProfileSchemaDefinition,
+) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
+    """The stored household, or the asks of one unsaved row when the request carries a draft."""
+    draft = request.household_draft
+    if draft is not None:
+        answers = {fact.leaf: fact.value for fact in draft.facts}
+        item = (
+            family_draft_item(draft.group, answers, operation=authority_operation)
+            if len(answers) == len(draft.facts)
+            else None
+        )
+        if item is None:
+            return _refused_page(common, ProfileViewRefusalCode.INVALID_HOUSEHOLD_DRAFT)
+        return (item,)
+    values = record_to_path_values(record)
+    return (
+        *family_row_items(values, schema=schema, operation=authority_operation),
+        *family_question_items(values, operation=authority_operation),
+    )
 
 
 def _build_page_source(
@@ -249,7 +329,7 @@ def _build_page_source(
     record: UserProfileRecord,
     report: ProfileValidationReport,
     authority_operation: PinnedAuthorityOperation,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     schema: ProfileSchemaDefinition,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
     if request.page_kind is ProfileViewPageKind.FACTS:
@@ -259,18 +339,21 @@ def _build_page_source(
         return () if value is None else (ProfileViewFactItem(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=value),)
     if request.page_kind is ProfileViewPageKind.QUESTIONS:
         return profile_question_items(build_setup_flow(authority_operation), record_to_path_values(record))
+    if request.page_kind is ProfileViewPageKind.FAMILY_ROWS:
+        return _build_family_source(request, record, authority_operation, common, schema)
     if request.page_kind in {ProfileViewPageKind.ISSUES, ProfileViewPageKind.READINESS_ISSUES}:
         return _build_issue_source(request, record, report)
     if request.page_kind is ProfileViewPageKind.STATUS:
         return _build_status_source(request, record, authority_operation, common)
-    return _build_overview_source(record, common, schema)
+    return _build_overview_source(record, common, schema, authority_operation)
 
 
-def _paginate_source(
+def paginate_source(
     request: ProfileViewOperationRequest,
-    common: _ProfileViewCommon,
+    common: ProfileViewCommon,
     source: tuple[ProfileViewItem, ...],
 ) -> ProfileViewOperationResult:
+    """Return one page of the profile view items, refusing a cursor past the end."""
     if request.cursor > len(source):
         # An out-of-range cursor cannot masquerade as a completed page.
         return _refused_page(common, ProfileViewRefusalCode.STALE_REVISION, total_items=len(source))
@@ -321,7 +404,7 @@ def read_profile_view_page(
     with override_settings(cadrumo_output_language=request.output_language.value):
         report = ProfileValidationService(schema=profile_decode_context.schema).validate_record(record)
         valid = _is_profile_view_valid(record, report)
-        common: _ProfileViewCommon = {
+        common: ProfileViewCommon = {
             "profile_id": request.profile_id,
             "page_kind": request.page_kind,
             "record_revision": record.record_revision,
@@ -346,4 +429,4 @@ def read_profile_view_page(
         )
         if isinstance(source, ProfileViewOperationResult):
             return source
-        return _paginate_source(request, common, source)
+        return paginate_source(request, common, source)

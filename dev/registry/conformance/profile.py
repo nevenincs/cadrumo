@@ -94,106 +94,86 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from pathlib import Path
-from typing import Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import Field, NonNegativeInt
 
-from cadrumo.core.casilla_id import CasillaId as _CasillaId
-from cadrumo.core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
-from cadrumo.core.filing_year import FilingYear
-from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from cadrumo.core.resources.bundled_data import bundled_path as _bundled_path
-from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
-from cadrumo.core.revision_review import RevisionReviewStatus as _RevisionReviewStatus
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError as _RegistryValidationError
-from cadrumo.domain.calculations.registry.export import (
-    derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
-)
-from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries as _xml_dictionary_entries
-from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority as _CandidateFactAuthority
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import (
-    validating_governed_facts as _validating_governed_facts,
+    CandidateFactAuthority,
+    validating_governed_facts,
 )
-from cadrumo.domain.calculations.registry.ids import BindingId as _BindingId
-from cadrumo.domain.calculations.registry.ids import FormulaId as _FormulaId
-from cadrumo.domain.calculations.registry.ids import LegalRefId as _LegalRefId
-from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
-from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
-from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
-from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
+from cadrumo.domain.calculations.registry.ids import (
+    BindingId,
+    FormulaId,
+    LegalRefId,
+    ModeloId,
+    RelationId,
+    RevisionId,
+    SourceRefId,
+)
 from cadrumo.domain.calculations.registry.modelo_obligation_scope import (
-    resolve_modelo_obligation_scope as _resolve_modelo_obligation_scope,
+    resolve_modelo_obligation_scope,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
-from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
-from cadrumo.domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTierField as _EvidenceTierField
-from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition as _ExportLayoutDefinition
-from cadrumo.domain.calculations.registry.schema_input_kind import InputKind as _InputKind
-from cadrumo.domain.calculations.registry.schema_references import SourceReference as _SourceReference
-from cadrumo.domain.calculations.registry.support_matrix import ModeloEntry as _ModeloEntry
-from cadrumo.domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
-from cadrumo.domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
-from dev.registry.compiler.producer_inventory import CasillaProducerKind as _CasillaProducerKind
-from dev.registry.compiler.producer_inventory import producer_inventory
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, EvidenceTierField
+from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.support_matrix import (
+    ModeloEntry,
+    build_support_matrix,
+    revision_capability_probe,
+)
+from dev.registry.compiler.producer_inventory import CasillaProducerKind, producer_inventory
 
-from ..compiler.authority import compile_validated_authority as _compile_validated_authority
-from ..compiler.fact_providers import compile_authored_fact_catalogue as _compile_authored_fact_catalogue
-from ..compiler.identity import resolve_registry_identity as _resolve_registry_identity
+from ..compiler.authority import compile_validated_authority
+from ..compiler.fact_providers import compile_authored_fact_catalogue
+from ..compiler.identity import resolve_registry_identity
 from ..compiler.loader import (
-    load_registry_tree as _load_registry_tree,
+    load_registry_tree,
+    load_shared_catalogues,
 )
-from ..compiler.loader import load_shared_catalogues as _load_shared_catalogues
 from ..compiler.loader_fingerprints import (
-    collect_registry_tree_fingerprints as _collect_registry_tree_fingerprints,
+    collect_registry_tree_fingerprints,
 )
 from ..compiler.registry_scope import (
-    validate_registry_scope as _validate_registry_scope,
+    validate_registry_scope,
 )
-from ..maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
 from ..maintenance_support import (
-    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
-)
-from .coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
-from .coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
-from .coverage import ConstructEvidenceRow as _ConstructEvidenceRow
-from .coverage import CoverageAuthorityScope, ledger_is_filing_eligible
-from .coverage import EvidenceTierCoverageGate as _EvidenceTierCoverageGate
-from .coverage import ModelLawCoverageLedger as _ModelLawCoverageLedger
-from .coverage import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
-from .coverage import RegistryCoverageAudit as _RegistryCoverageAudit
-from .coverage import RequiredCoverageTier as _RequiredCoverageTier
-from .coverage import (
-    audit_registry_construct_evidence as _audit_registry_construct_evidence,
+    UnattributedOraclePayload,
+    load_bundled_external_oracle_inventory,
 )
 from .coverage import (
-    audit_registry_model_law_coverage as _audit_registry_model_law_coverage,
+    REQUIRED_COVERAGE_TIERS,
+    ConstructEvidenceLedger,
+    ConstructEvidenceRow,
+    CoverageAuthorityScope,
+    EvidenceTierCoverageGate,
+    ModelLawCoverageLedger,
+    RegistryConstructEvidenceAudit,
+    RegistryCoverageAudit,
+    RequiredCoverageTier,
+    audit_registry_construct_evidence,
+    audit_registry_model_law_coverage,
+    ledger_is_filing_eligible,
 )
 from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 from .external_grounding import (
-    RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit,
+    RegistryExternalGroundingAudit,
+    RevisionExternalGroundingRow,
+    build_external_grounding_audit,
 )
-from .external_grounding import (
-    RevisionExternalGroundingRow as _RevisionExternalGroundingRow,
-)
-from .external_grounding import (
-    build_external_grounding_audit as _build_external_grounding_audit,
-)
-from .registry_classification_coherence import DeclaredAxisUsage as _DeclaredAxisUsage
-from .registry_classification_coherence import ModeloClassificationRow as _ModeloClassificationRow
+from .model import ConformanceModel
 from .registry_classification_coherence import (
-    RegistryClassificationAudit as _RegistryClassificationAudit,
-)
-from .registry_classification_coherence import (
-    build_classification_coherence_audit as _build_classification_coherence_audit,
+    DeclaredAxisUsage,
+    ModeloClassificationRow,
+    RegistryClassificationAudit,
+    build_classification_coherence_audit,
 )
 
 __all__ = [
-    "AnnualCasillaPopulationComparison",
-    "DictionaryLayoutCasillaComparison",
     "LatestRevisionSupportProbe",
     "RegistryConformanceProfile",
     "RevisionCapabilityFacts",
@@ -204,18 +184,8 @@ __all__ = [
     "RevisionModelLawCoverage",
     "audit_bundled_registry_conformance",
     "build_registry_conformance_profile",
-    "compare_annual_casilla_population",
-    "compare_annual_casilla_population_for_revision",
 ]
 
-
-class ConformanceModel(BaseModel):
-    """Strict frozen base for composed conformance facts."""
-
-    model_config = _STRICT_FROZEN_CONFIG
-
-
-type _MeasurementStatus = Literal["measured", "unsupported", "unmeasured"]
 
 # The coverage audit can inspect every revision without giving every revision
 # filing authority.  Keep that distinction on the application projection so a
@@ -227,321 +197,6 @@ type _MeasurementStatus = Literal["measured", "unsupported", "unmeasured"]
 #: and the eligibility predicate then had to compare with ``==`` instead of
 #: ``is``. One alias, one vocabulary, one comparison.
 type RevisionCoverageAuthorityScope = CoverageAuthorityScope
-
-_XML_DICTIONARY_PARSER_ATTRIBUTES = ("field_id", "path", "data_type", "casilla_id")
-_UNMEASURED_DICTIONARY_ATTRIBUTES = ("label", "data_type", "number", "segmento")
-
-
-class DictionaryLayoutCasillaComparison(ConformanceModel):
-    """One year-specific comparison against one declared export layout.
-
-    The measured population is the set of non-internal registry casilla
-    identities versus the set of non-null ``casilla_id`` values returned by
-    :func:`xml_dictionary_entries`.  It is deliberately named a dictionary
-    comparison: those identities are not asserted to be the printed-form
-    population.
-
-    ``unsupported`` means the source kind is known but this bounded
-    comparator has no parser for it. ``unmeasured`` means the source contract
-    was not available to run (for example, an unresolved source or omitted
-    source root). Neither status is a zero or a clean result.
-    """
-
-    layout_id: str
-    layout_format: str
-    identity_measurement: _MeasurementStatus
-    registry_casilla_count: NonNegativeInt
-    registry_internal_only_count: NonNegativeInt
-    printed_form_membership: _MeasurementStatus
-    xsd_only_attributes: _MeasurementStatus
-    dictionary_source_ref: str | None = None
-    dictionary_entry_count: int | None = Field(default=None, ge=0)
-    dictionary_casilla_count: int | None = Field(default=None, ge=0)
-    missing_casilla_ids: tuple[str, ...] = ()
-    extra_casilla_ids: tuple[str, ...] = ()
-    parser_exposed_attributes: tuple[str, ...] = ()
-    unmeasured_attributes: tuple[str, ...] = ()
-    diagnostic: str | None = None
-
-    @property
-    def identity_divergence_count(self) -> int:
-        """Number of missing or extra identities for this layout."""
-        return len(self.missing_casilla_ids) + len(self.extra_casilla_ids)
-
-
-class AnnualCasillaPopulationComparison(ConformanceModel):
-    """Year-specific casilla/layout evidence for one authority-selected read.
-
-    The caller supplies a filing :class:`RegistrySnapshot`, or -- from a static
-    compiler consumer, whose non-filing revision projection must not reach this
-    boundary -- the coordinate and compiled revision as explicit values.  This
-    function never selects a latest or largest revision and never compares two
-    annual revisions to one another.
-
-    ``printed_form_membership`` is intentionally not derived from dictionary
-    identities.  A declared BOE/form source is visible as ``unsupported``
-    until an existing form parser contract can measure it.  Likewise,
-    ``xsd_only_attributes`` stays ``unsupported`` when an XSD source is
-    declared because the XML dictionary parser exposes no XSD-attribute
-    mapping contract.
-    """
-
-    modelo: _ModeloId
-    filing_year: FilingYear
-    period: str
-    law_selected_revision: _RevisionId
-    identity_measurement: _MeasurementStatus
-    printed_form_membership: _MeasurementStatus
-    xsd_only_attributes: _MeasurementStatus
-    layout_comparisons: tuple[DictionaryLayoutCasillaComparison, ...]
-    printed_form_source_refs: tuple[str, ...] = ()
-    xsd_source_refs: tuple[str, ...] = ()
-    authority_scope: CoverageAuthorityScope = CoverageAuthorityScope.FILING
-
-    @property
-    def missing_casilla_ids(self) -> tuple[str, ...]:
-        """Union of missing identities across the measured layouts."""
-        return tuple(
-            sorted(
-                {casilla_id for comparison in self.layout_comparisons for casilla_id in comparison.missing_casilla_ids},
-            ),
-        )
-
-    @property
-    def extra_casilla_ids(self) -> tuple[str, ...]:
-        """Union of extra identities across the measured layouts."""
-        return tuple(
-            sorted(
-                {casilla_id for comparison in self.layout_comparisons for casilla_id in comparison.extra_casilla_ids},
-            ),
-        )
-
-    @property
-    def identity_divergence_count(self) -> int:
-        """Total per-layout missing/extra identity findings."""
-        return sum(comparison.identity_divergence_count for comparison in self.layout_comparisons)
-
-
-@dataclass(frozen=True)
-class _AnnualPopulationContext:
-    """Selected revision facts shared by filing and inspection comparisons."""
-
-    revision: _ModeloRevision
-    layouts: tuple[_ExportLayoutDefinition, ...]
-    modelo: _ModeloId
-    filing_year: int
-    period: str
-    sources: Mapping[str, _SourceReference]
-    authority_scope: CoverageAuthorityScope
-
-
-def compare_annual_casilla_population(
-    snapshot: _RegistrySnapshot,
-    *,
-    source_root: Path | None = None,
-) -> AnnualCasillaPopulationComparison:
-    """Compare one law-selected filing snapshot to its declared XML dictionaries.
-
-    A filing snapshot carries its temporal boundary, its selected revision and
-    its declared export layouts directly, so nothing else need be supplied.
-
-    Static compiler consumers, which read through a non-filing revision
-    projection rather than a snapshot, call
-    :func:`compare_annual_casilla_population_for_revision` and pass that
-    projection's facts explicitly. That split is deliberate: inspection
-    authority is static-only and must not reach an application boundary, so
-    this module names no inspection type and the dependency direction is
-    inverted rather than the boundary census being widened to admit one.
-
-    The identity comparison delegates source reading to the existing
-    :func:`xml_dictionary_entries` parser.  It compares unique non-null
-    dictionary ``casilla_id`` values with non-internal registry casilla ids;
-    dictionary rows without an id and duplicate field rows remain reflected
-    by ``dictionary_entry_count`` but are not fabricated into identities.
-
-    Args:
-        snapshot: Validated filing snapshot for one ``modelo``/year/period.
-        source_root: Repository root containing the bundled official source
-            corpus.  Omitting it leaves dictionary measurement explicitly
-            ``unmeasured`` because the parser cannot resolve its source.
-    """
-    return _compare_annual_population(
-        _AnnualPopulationContext(
-            revision=snapshot.revision,
-            layouts=snapshot.revision.export_layouts,
-            modelo=snapshot.modelo.id,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
-            sources=snapshot.sources,
-            authority_scope=CoverageAuthorityScope.FILING,
-        ),
-        source_root=source_root,
-    )
-
-
-def compare_annual_casilla_population_for_revision(
-    *,
-    modelo: _ModeloId,
-    revision: _ModeloRevision,
-    filing_year: int,
-    period: str,
-    sources: Mapping[str, _SourceReference],
-    source_root: Path | None = None,
-) -> AnnualCasillaPopulationComparison:
-    """Compare an explicitly-supplied revision read to its XML dictionaries.
-
-    The entry point for static compiler consumers. Their revision projection
-    retains no filing context and exposes no export layouts, so the coordinate
-    and the already-selected compiled revision arrive as values from the same
-    ``ValidatedRegistryAuthority``. Layouts are projected from the revision's
-    bindings; no second selector or snapshot is constructed here.
-    """
-    return _compare_annual_population(
-        _AnnualPopulationContext(
-            revision=revision,
-            layouts=_derive_export_layouts_from_bindings(revision),
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            sources=sources,
-            authority_scope=CoverageAuthorityScope.INSPECTION_ONLY,
-        ),
-        source_root=source_root,
-    )
-
-
-def _compare_annual_population(
-    selected: _AnnualPopulationContext,
-    *,
-    source_root: Path | None,
-) -> AnnualCasillaPopulationComparison:
-
-    registry_casillas = tuple(casilla for casilla in selected.revision.casillas if not casilla.internal_only)
-    registry_ids = frozenset(str(casilla.id) for casilla in registry_casillas)
-    form_source_refs = _source_refs_of_kind(selected.revision.source_refs, selected.sources, "form_spec")
-    xsd_source_refs = _source_refs_of_kind(selected.revision.source_refs, selected.sources, "xsd")
-    printed_form_status = _source_status(form_source_refs)
-    xsd_status = _source_status(xsd_source_refs)
-
-    comparisons = tuple(
-        _compare_dictionary_layout(
-            layout,
-            registry_ids=registry_ids,
-            registry_internal_only_count=len(selected.revision.casillas) - len(registry_casillas),
-            printed_form_status=printed_form_status,
-            xsd_status=xsd_status,
-            sources=selected.sources,
-            source_root=source_root,
-        )
-        for layout in selected.layouts
-    )
-    return AnnualCasillaPopulationComparison(
-        modelo=selected.modelo,
-        filing_year=selected.filing_year,
-        period=selected.period,
-        law_selected_revision=selected.revision.id,
-        identity_measurement=_fold_measurement_status(
-            tuple(comparison.identity_measurement for comparison in comparisons),
-        ),
-        printed_form_membership=printed_form_status,
-        xsd_only_attributes=xsd_status,
-        layout_comparisons=comparisons,
-        printed_form_source_refs=form_source_refs,
-        xsd_source_refs=xsd_source_refs,
-        authority_scope=selected.authority_scope,
-    )
-
-
-def _compare_dictionary_layout(
-    layout: _ExportLayoutDefinition,
-    *,
-    registry_ids: frozenset[str],
-    registry_internal_only_count: int,
-    printed_form_status: _MeasurementStatus,
-    xsd_status: _MeasurementStatus,
-    sources: Mapping[str, _SourceReference],
-    source_root: Path | None,
-) -> DictionaryLayoutCasillaComparison:
-    """Measure one layout, keeping unsupported and unavailable sources visible."""
-    source_ref = None if layout.dictionary_source_ref is None else str(layout.dictionary_source_ref)
-    base: dict[str, object] = {
-        "layout_id": str(layout.id),
-        "layout_format": layout.format.value,
-        "registry_casilla_count": len(registry_ids),
-        "registry_internal_only_count": registry_internal_only_count,
-        "printed_form_membership": printed_form_status,
-        "xsd_only_attributes": xsd_status,
-        "dictionary_source_ref": source_ref,
-    }
-
-    def measured(**fields: object) -> DictionaryLayoutCasillaComparison:
-        return DictionaryLayoutCasillaComparison.model_validate({**base, **fields})
-
-    if layout.format is not _ExportLayoutFormat.XML_DICTIONARY:
-        return measured(
-            identity_measurement="unsupported",
-            diagnostic="dictionary comparator supports only xml_dictionary layouts",
-        )
-    if layout.dictionary_source_ref is None:
-        return measured(
-            identity_measurement="unmeasured",
-            diagnostic="xml_dictionary layout has no dictionary source reference",
-        )
-    try:
-        entries = _xml_dictionary_entries(
-            layout,
-            sources=sources,
-            source_payloads=(
-                None
-                if source_root is None
-                else {str(source.id): (source_root / source.corpus_path).read_bytes() for source in sources.values()}
-            ),
-        )
-    except (_RegistryValidationError, OSError) as exc:
-        return measured(
-            identity_measurement="unmeasured",
-            parser_exposed_attributes=_XML_DICTIONARY_PARSER_ATTRIBUTES,
-            unmeasured_attributes=_UNMEASURED_DICTIONARY_ATTRIBUTES,
-            diagnostic=f"{type(exc).__name__}: {exc}",
-        )
-
-    dictionary_ids = frozenset(str(entry.casilla_id) for entry in entries if entry.casilla_id is not None)
-    return measured(
-        identity_measurement="measured",
-        dictionary_entry_count=len(entries),
-        dictionary_casilla_count=len(dictionary_ids),
-        missing_casilla_ids=tuple(sorted(registry_ids - dictionary_ids)),
-        extra_casilla_ids=tuple(sorted(dictionary_ids - registry_ids)),
-        parser_exposed_attributes=_XML_DICTIONARY_PARSER_ATTRIBUTES,
-        unmeasured_attributes=_UNMEASURED_DICTIONARY_ATTRIBUTES,
-    )
-
-
-def _source_refs_of_kind(
-    source_refs: Sequence[str],
-    sources: Mapping[str, _SourceReference],
-    kind: str,
-) -> tuple[str, ...]:
-    """Return resolved source ids of one declared kind in declaration order."""
-    return tuple(
-        source_ref
-        for source_ref in (str(item) for item in source_refs)
-        if (source := sources.get(source_ref)) is not None and source.kind == kind
-    )
-
-
-def _source_status(source_refs: Sequence[str]) -> _MeasurementStatus:
-    """Classify a declared-but-unparsed official surface explicitly."""
-    return "unsupported" if source_refs else "unmeasured"
-
-
-def _fold_measurement_status(statuses: Sequence[_MeasurementStatus]) -> _MeasurementStatus:
-    """Fold per-layout status without treating an empty set as measured."""
-    if "measured" in statuses:
-        return "measured"
-    if "unsupported" in statuses:
-        return "unsupported"
-    return "unmeasured"
 
 
 class RevisionGovernanceStamp(ConformanceModel):
@@ -565,16 +220,16 @@ class RevisionGovernanceStamp(ConformanceModel):
             a review of the complete materialised edition.
     """
 
-    review_status: _RevisionReviewStatus
+    review_status: RevisionReviewStatus
     engineered_by: str | None = None
     reviewed_by: str | None = None
     reviewed_at: date | None = None
-    reviewed_against: _RevisionId | None = None
+    reviewed_against: RevisionId | None = None
 
     @property
     def is_reviewed(self) -> bool:
         """Whether the revision asserts a completed review of any kind."""
-        return self.review_status in _REVIEWED_REVISION_REVIEW_STATUSES
+        return self.review_status in REVIEWED_REVISION_REVIEW_STATUSES
 
     @property
     def declares_engineer(self) -> bool:
@@ -648,7 +303,7 @@ class LatestRevisionSupportProbe(ConformanceModel):
         portal_compatibility_ref_count: Declared AEAT-portal cross-references.
     """
 
-    probed_revision: _RevisionId
+    probed_revision: RevisionId
     describes_this_revision: bool
     calc_grade: bool
     has_completeness_manifest: bool
@@ -681,9 +336,9 @@ class RevisionModelLawCoverage(ConformanceModel):
             from a non-filing inspection projection.
     """
 
-    satisfied_tiers: tuple[_EvidenceTierField, ...]
-    gap_tiers: tuple[_EvidenceTierField, ...]
-    required_tier_gaps: tuple[_RequiredCoverageTier, ...]
+    satisfied_tiers: tuple[EvidenceTierField, ...]
+    gap_tiers: tuple[EvidenceTierField, ...]
+    required_tier_gaps: tuple[RequiredCoverageTier, ...]
     authority_scope: RevisionCoverageAuthorityScope = CoverageAuthorityScope.FILING
     coordinates: tuple[tuple[int, str], ...] = Field(min_length=1)
 
@@ -707,7 +362,7 @@ class RevisionConstructEvidence(ConformanceModel):
     the complete measured population visible.
     """
 
-    ledger: _ConstructEvidenceLedger
+    ledger: ConstructEvidenceLedger
 
     @property
     def authority_scope(self) -> RevisionCoverageAuthorityScope:
@@ -720,12 +375,12 @@ class RevisionConstructEvidence(ConformanceModel):
         return self.ledger.filing_eligible
 
     @property
-    def rows(self) -> tuple[_ConstructEvidenceRow, ...]:
+    def rows(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return the exact formula/parameter/binding/selector rows."""
         return self.ledger.rows
 
     @property
-    def gaps(self) -> tuple[_ConstructEvidenceRow, ...]:
+    def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return every unresolved or unmeasured construct row.
 
         This intentionally includes inspection-only rows.  Use
@@ -734,12 +389,12 @@ class RevisionConstructEvidence(ConformanceModel):
         return self.ledger.gaps
 
     @property
-    def filing_gaps(self) -> tuple[_ConstructEvidenceRow, ...]:
+    def filing_gaps(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return construct gaps from filing-scope ledgers only."""
         return self.ledger.filing_gaps
 
     @property
-    def inspection_gaps(self) -> tuple[_ConstructEvidenceRow, ...]:
+    def inspection_gaps(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return incomplete construct rows retained for inspection only."""
         return self.ledger.gaps if not self.filing_eligible else ()
 
@@ -747,17 +402,17 @@ class RevisionConstructEvidence(ConformanceModel):
 class RevisionCasillaProducerTrace(ConformanceModel):
     """Compact per-casilla producer trace projected from the validated schema."""
 
-    casilla_id: _CasillaId
-    input_kind: _InputKind
-    producer_kind: _CasillaProducerKind
+    casilla_id: CasillaId
+    input_kind: InputKind
+    producer_kind: CasillaProducerKind
     reason: str = Field(min_length=1, max_length=1024)
-    formula_id: _FormulaId | None = None
-    binding_id: _BindingId | None = None
-    relation_id: _RelationId | None = None
-    casilla_legal_refs: tuple[_LegalRefId, ...]
-    casilla_source_refs: tuple[_SourceRefId, ...]
-    producer_legal_refs: tuple[_LegalRefId, ...]
-    producer_source_refs: tuple[_SourceRefId, ...]
+    formula_id: FormulaId | None = None
+    binding_id: BindingId | None = None
+    relation_id: RelationId | None = None
+    casilla_legal_refs: tuple[LegalRefId, ...]
+    casilla_source_refs: tuple[SourceRefId, ...]
+    producer_legal_refs: tuple[LegalRefId, ...]
+    producer_source_refs: tuple[SourceRefId, ...]
 
 
 class RevisionConformanceRow(ConformanceModel):
@@ -791,8 +446,8 @@ class RevisionConformanceRow(ConformanceModel):
             modelo and revision.
     """
 
-    modelo: _ModeloId
-    revision: _RevisionId
+    modelo: ModeloId
+    revision: RevisionId
     registry_validated: bool
     governance: RevisionGovernanceStamp
     capabilities: RevisionCapabilityFacts
@@ -800,8 +455,8 @@ class RevisionConformanceRow(ConformanceModel):
     model_law_coverage: RevisionModelLawCoverage | None = None
     construct_evidence: RevisionConstructEvidence | None = None
     casilla_provenance: tuple[RevisionCasillaProducerTrace, ...] = ()
-    external_grounding: _RevisionExternalGroundingRow
-    modelo_classification: _ModeloClassificationRow
+    external_grounding: RevisionExternalGroundingRow
+    modelo_classification: ModeloClassificationRow
     scope_diagnostics: tuple[str, ...] = ()
 
     @property
@@ -877,9 +532,9 @@ class RegistryConformanceProfile(ConformanceModel):
     registry_validated: bool
     scope_diagnostics: tuple[str, ...] = ()
     unattributed_scope_diagnostics: tuple[str, ...] = ()
-    declared_axis_usage: tuple[_DeclaredAxisUsage, ...] = ()
-    unattributed_oracle_payloads: tuple[_UnattributedOraclePayload, ...] = ()
-    unmatched_oracle_evidence: tuple[_UnattributedOraclePayload, ...] = ()
+    declared_axis_usage: tuple[DeclaredAxisUsage, ...] = ()
+    unattributed_oracle_payloads: tuple[UnattributedOraclePayload, ...] = ()
+    unmatched_oracle_evidence: tuple[UnattributedOraclePayload, ...] = ()
 
     @property
     def composed_revision_count(self) -> int:
@@ -896,14 +551,14 @@ class RegistryConformanceProfile(ConformanceModel):
         """Distinct modelos represented in :attr:`rows`."""
         return len({row.modelo for row in self.rows})
 
-    def review_status_census(self) -> Mapping[_RevisionReviewStatus, int]:
+    def review_status_census(self) -> Mapping[RevisionReviewStatus, int]:
         """Count rows by declared review status, including statuses nothing declares.
 
         Every member is present with an explicit count so a status no revision
         holds reads as a real zero rather than as an absent key a renderer would
         silently omit.
         """
-        counts: dict[_RevisionReviewStatus, int] = {status: 0 for status in _RevisionReviewStatus}
+        counts: dict[RevisionReviewStatus, int] = {status: 0 for status in RevisionReviewStatus}
         for row in self.rows:
             counts[row.governance.review_status] += 1
         return counts
@@ -996,21 +651,21 @@ class _AxisIndex:
     accessors, which refuse instead of returning ``None``.
     """
 
-    grounding_rows: Mapping[tuple[_ModeloId, _RevisionId], _RevisionExternalGroundingRow]
-    classification_rows: Mapping[_ModeloId, _ModeloClassificationRow]
-    coverage_ledgers: Mapping[tuple[_ModeloId, _RevisionId], tuple[_ModelLawCoverageLedger, ...]]
-    construct_evidence_ledgers: Mapping[tuple[_ModeloId, _RevisionId], _ConstructEvidenceLedger]
-    support_entries: Mapping[_ModeloId, _ModeloEntry]
+    grounding_rows: Mapping[tuple[ModeloId, RevisionId], RevisionExternalGroundingRow]
+    classification_rows: Mapping[ModeloId, ModeloClassificationRow]
+    coverage_ledgers: Mapping[tuple[ModeloId, RevisionId], tuple[ModelLawCoverageLedger, ...]]
+    construct_evidence_ledgers: Mapping[tuple[ModeloId, RevisionId], ConstructEvidenceLedger]
+    support_entries: Mapping[ModeloId, ModeloEntry]
 
     @classmethod
     def build(
         cls,
         *,
-        external_grounding: _RegistryExternalGroundingAudit,
-        classification: _RegistryClassificationAudit,
-        model_law_coverage: _RegistryCoverageAudit | None,
-        construct_evidence: _RegistryConstructEvidenceAudit | None,
-        support_matrix: Sequence[_ModeloEntry] | None,
+        external_grounding: RegistryExternalGroundingAudit,
+        classification: RegistryClassificationAudit,
+        model_law_coverage: RegistryCoverageAudit | None,
+        construct_evidence: RegistryConstructEvidenceAudit | None,
+        support_matrix: Sequence[ModeloEntry] | None,
     ) -> _AxisIndex:
         """Key each supplied axis by the identity the row fold joins on."""
         return cls(
@@ -1025,7 +680,7 @@ class _AxisIndex:
             support_entries={} if support_matrix is None else {entry.modelo_id: entry for entry in support_matrix},
         )
 
-    def require_classification_row(self, modelo_id: _ModeloId) -> _ModeloClassificationRow:
+    def require_classification_row(self, modelo_id: ModeloId) -> ModeloClassificationRow:
         """Return the modelo's classification row, refusing when the axis omits it.
 
         Raises:
@@ -1046,9 +701,9 @@ class _AxisIndex:
 
     def require_grounding_row(
         self,
-        modelo_id: _ModeloId,
-        revision_id: _RevisionId,
-    ) -> _RevisionExternalGroundingRow:
+        modelo_id: ModeloId,
+        revision_id: RevisionId,
+    ) -> RevisionExternalGroundingRow:
         """Return the revision's external-grounding row, refusing when absent.
 
         Raises:
@@ -1072,15 +727,15 @@ class _AxisIndex:
 
 
 def _revision_conformance_row(
-    revision: _ModeloRevision,
+    revision: ModeloRevision,
     *,
-    modelo_id: _ModeloId,
+    modelo_id: ModeloId,
     index: _AxisIndex,
-    classification_row: _ModeloClassificationRow,
-    support_entry: _ModeloEntry | None,
+    classification_row: ModeloClassificationRow,
+    support_entry: ModeloEntry | None,
     registry_validated: bool,
     scope_diagnostics: Sequence[str],
-    construct_evidence_ledgers: Mapping[tuple[_ModeloId, _RevisionId], _ConstructEvidenceLedger],
+    construct_evidence_ledgers: Mapping[tuple[ModeloId, RevisionId], ConstructEvidenceLedger],
 ) -> RevisionConformanceRow:
     """Compose one revision's row from every axis.
 
@@ -1112,15 +767,15 @@ def _revision_conformance_row(
 
 
 def build_registry_conformance_profile(
-    modelos: Iterable[_ModeloDefinition],
+    modelos: Iterable[ModeloDefinition],
     *,
-    external_grounding: _RegistryExternalGroundingAudit,
-    classification: _RegistryClassificationAudit,
+    external_grounding: RegistryExternalGroundingAudit,
+    classification: RegistryClassificationAudit,
     scope_diagnostics: Sequence[str],
     registry_validated: bool,
-    model_law_coverage: _RegistryCoverageAudit | None = None,
-    construct_evidence: _RegistryConstructEvidenceAudit | None = None,
-    support_matrix: Sequence[_ModeloEntry] | None = None,
+    model_law_coverage: RegistryCoverageAudit | None = None,
+    construct_evidence: RegistryConstructEvidenceAudit | None = None,
+    support_matrix: Sequence[ModeloEntry] | None = None,
 ) -> RegistryConformanceProfile:
     """Join every conformance axis into one row per modelo revision.
 
@@ -1219,70 +874,70 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
             verdict — a validated read that reports rather than hides that is
             the intended behaviour, and ``validate=False`` is the way past it.
     """
-    registry_root = _bundled_path("registry", "aeat")
-    inventory = _load_bundled_external_oracle_inventory()
+    registry_root = bundled_path("registry", "aeat")
+    inventory = load_bundled_external_oracle_inventory()
     if not validate:
-        authored_catalogues = _load_shared_catalogues(registry_root)
-        authored_facts = _CandidateFactAuthority(
-            _compile_authored_fact_catalogue(registry_root),
+        authored_catalogues = load_shared_catalogues(registry_root)
+        authored_facts = CandidateFactAuthority(
+            compile_authored_fact_catalogue(registry_root),
             authored_catalogues.require_supported_filing_years(),
         )
-        with _validating_governed_facts(authored_facts):
-            modelos, catalogues = _load_registry_tree(registry_root)
+        with validating_governed_facts(authored_facts):
+            modelos, catalogues = load_registry_tree(registry_root)
         known_codes = frozenset(modelo.id for modelo in modelos)
-        facts = _CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
-        with _validating_governed_facts(facts):
-            non_registry_codes = frozenset(item.value for item in _resolve_modelo_obligation_scope(authority=facts)[1])
+        facts = CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+        with validating_governed_facts(facts):
+            non_registry_codes = frozenset(item.value for item in resolve_modelo_obligation_scope(authority=facts)[1])
             return build_registry_conformance_profile(
                 modelos,
-                external_grounding=_build_external_grounding_audit(
+                external_grounding=build_external_grounding_audit(
                     modelos,
                     inventory=inventory,
                     registry_validated=False,
                 ),
-                classification=_build_classification_coherence_audit(
+                classification=build_classification_coherence_audit(
                     modelos,
                     non_registry_modelo_codes=non_registry_codes,
                     known_modelo_codes=known_codes,
                     registry_validated=False,
                 ),
-                scope_diagnostics=_validate_registry_scope(modelos),
+                scope_diagnostics=validate_registry_scope(modelos),
                 registry_validated=False,
             )
 
-    authority = _compile_validated_authority(
+    authority = compile_validated_authority(
         registry_root,
-        _bundled_path(),
-        identity=_resolve_registry_identity(
+        bundled_path(),
+        identity=resolve_registry_identity(
             registry_root,
-            collect_fingerprints=_collect_registry_tree_fingerprints,
+            collect_fingerprints=collect_registry_tree_fingerprints,
         ),
     )
-    with _validating_governed_facts(authority):
-        non_registry_codes = frozenset(item.value for item in _resolve_modelo_obligation_scope(authority=authority)[1])
+    with validating_governed_facts(authority):
+        non_registry_codes = frozenset(item.value for item in resolve_modelo_obligation_scope(authority=authority)[1])
         known_codes = frozenset(modelo.id for modelo in authority.modelos)
         return build_registry_conformance_profile(
             authority.modelos,
-            external_grounding=_build_external_grounding_audit(
+            external_grounding=build_external_grounding_audit(
                 authority.modelos,
                 inventory=inventory,
                 registry_validated=True,
             ),
-            classification=_build_classification_coherence_audit(
+            classification=build_classification_coherence_audit(
                 authority.modelos,
                 non_registry_modelo_codes=non_registry_codes,
                 known_modelo_codes=known_codes,
                 registry_validated=True,
             ),
-            scope_diagnostics=_validate_registry_scope(authority.modelos),
+            scope_diagnostics=validate_registry_scope(authority.modelos),
             registry_validated=True,
-            model_law_coverage=_audit_registry_model_law_coverage(authority),
-            construct_evidence=_audit_registry_construct_evidence(authority),
-            support_matrix=_build_support_matrix(authority),
+            model_law_coverage=audit_registry_model_law_coverage(authority),
+            construct_evidence=audit_registry_construct_evidence(authority),
+            support_matrix=build_support_matrix(authority),
         )
 
 
-def _governance_stamp(revision: _ModeloRevision) -> RevisionGovernanceStamp:
+def _governance_stamp(revision: ModeloRevision) -> RevisionGovernanceStamp:
     """Project the revision's declared governance scalars."""
     return RevisionGovernanceStamp(
         review_status=revision.review_status,
@@ -1293,7 +948,7 @@ def _governance_stamp(revision: _ModeloRevision) -> RevisionGovernanceStamp:
     )
 
 
-def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionCapabilityFacts:
+def _capability_facts(revision: ModeloRevision, *, modelo_id: str) -> RevisionCapabilityFacts:
     """Fold what THIS revision declares, through the support authority's own probe.
 
     The capability predicates come from
@@ -1302,7 +957,7 @@ def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionC
     cannot disagree about the same revision. Only the declaration counts below
     are conformance-local.
     """
-    capabilities = _revision_capability_probe(revision, modelo_id=modelo_id)
+    capabilities = revision_capability_probe(revision, modelo_id=modelo_id)
     return RevisionCapabilityFacts(
         calc_grade=capabilities.calc_grade,
         has_completeness_manifest=capabilities.has_completeness_manifest,
@@ -1318,7 +973,7 @@ def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionC
     )
 
 
-def _support_probe(entry: _ModeloEntry, *, revision_id: _RevisionId) -> LatestRevisionSupportProbe:
+def _support_probe(entry: ModeloEntry, *, revision_id: RevisionId) -> LatestRevisionSupportProbe:
     """Project the modelo-level support entry, naming the revision it probed."""
     return LatestRevisionSupportProbe(
         probed_revision=entry.latest_revision_id,
@@ -1333,7 +988,7 @@ def _support_probe(entry: _ModeloEntry, *, revision_id: _RevisionId) -> LatestRe
     )
 
 
-def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasillaProducerTrace, ...]:
+def _casilla_producer_traces(revision: ModeloRevision) -> tuple[RevisionCasillaProducerTrace, ...]:
     """Project the revision's typed producer inventory without flattening traces."""
     inventory = producer_inventory(revision)
     projected: list[RevisionCasillaProducerTrace] = []
@@ -1364,32 +1019,32 @@ def _casilla_producer_traces(revision: _ModeloRevision) -> tuple[RevisionCasilla
 
 
 def _coverage_gates_by_tier(
-    ledgers: tuple[_ModelLawCoverageLedger, ...],
-) -> dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]]:
+    ledgers: tuple[ModelLawCoverageLedger, ...],
+) -> dict[EvidenceTier, tuple[EvidenceTierCoverageGate, ...]]:
     """Group the first matching gate from every coordinate by evidence tier."""
     return {
         tier: tuple(next(gate for gate in ledger.gates if gate.tier == tier) for ledger in ledgers)
-        for tier in (*_REQUIRED_COVERAGE_TIERS, _EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
+        for tier in (*REQUIRED_COVERAGE_TIERS, EvidenceTier.EXECUTABLE_PARITY_EVIDENCE)
     }
 
 
 def _satisfied_coverage_tiers(
-    gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]],
-) -> tuple[_EvidenceTier, ...]:
+    gates_by_tier: dict[EvidenceTier, tuple[EvidenceTierCoverageGate, ...]],
+) -> tuple[EvidenceTier, ...]:
     """Return tiers satisfied at every selector coordinate."""
     return tuple(tier for tier, gates in gates_by_tier.items() if all(gate.status == "satisfied" for gate in gates))
 
 
 def _gapped_coverage_tiers(
-    gates_by_tier: dict[_EvidenceTier, tuple[_EvidenceTierCoverageGate, ...]],
-) -> tuple[_EvidenceTier, ...]:
+    gates_by_tier: dict[EvidenceTier, tuple[EvidenceTierCoverageGate, ...]],
+) -> tuple[EvidenceTier, ...]:
     """Return tiers with at least one gap across selector coordinates."""
     return tuple(tier for tier, gates in gates_by_tier.items() if any(gate.status == "gap" for gate in gates))
 
 
 def _has_filing_eligible_gap(
-    ledgers: tuple[_ModelLawCoverageLedger, ...],
-    tier: _RequiredCoverageTier,
+    ledgers: tuple[ModelLawCoverageLedger, ...],
+    tier: RequiredCoverageTier,
 ) -> bool:
     """Whether a mandatory evidence tier is missing at a filing-scope coordinate."""
     return any(
@@ -1399,21 +1054,21 @@ def _has_filing_eligible_gap(
 
 
 def _required_coverage_gaps(
-    ledgers: tuple[_ModelLawCoverageLedger, ...],
-) -> tuple[_RequiredCoverageTier, ...]:
+    ledgers: tuple[ModelLawCoverageLedger, ...],
+) -> tuple[RequiredCoverageTier, ...]:
     """Return only mandatory gaps carried by filing-eligible ledgers."""
-    return tuple(tier for tier in _REQUIRED_COVERAGE_TIERS if _has_filing_eligible_gap(ledgers, tier))
+    return tuple(tier for tier in REQUIRED_COVERAGE_TIERS if _has_filing_eligible_gap(ledgers, tier))
 
 
 def _coverage_authority_scope(
-    ledgers: tuple[_ModelLawCoverageLedger, ...],
+    ledgers: tuple[ModelLawCoverageLedger, ...],
 ) -> RevisionCoverageAuthorityScope:
     """Return the shared scope or the mixed scope for a multi-origin matrix."""
     scopes: set[RevisionCoverageAuthorityScope] = {ledger.authority_scope for ledger in ledgers}
     return next(iter(scopes)) if len(scopes) == 1 else CoverageAuthorityScope.MIXED
 
 
-def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> RevisionModelLawCoverage:
+def _model_law_coverage(ledgers: tuple[ModelLawCoverageLedger, ...]) -> RevisionModelLawCoverage:
     """Aggregate every coverage cell into one visible revision projection.
 
     The three locals are annotated because a generator comprehension widens the
@@ -1426,11 +1081,11 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
     a non-filing inspection read into a filing-grade defect.
     """
     if not ledgers:
-        raise _RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
+        raise RegistryValidationError("revision model-law coverage requires at least one selector coordinate")
     gates_by_tier = _coverage_gates_by_tier(ledgers)
-    satisfied: tuple[_EvidenceTier, ...] = _satisfied_coverage_tiers(gates_by_tier)
-    gaps: tuple[_EvidenceTier, ...] = _gapped_coverage_tiers(gates_by_tier)
-    required_gaps: tuple[_RequiredCoverageTier, ...] = _required_coverage_gaps(ledgers)
+    satisfied: tuple[EvidenceTier, ...] = _satisfied_coverage_tiers(gates_by_tier)
+    gaps: tuple[EvidenceTier, ...] = _gapped_coverage_tiers(gates_by_tier)
+    required_gaps: tuple[RequiredCoverageTier, ...] = _required_coverage_gaps(ledgers)
     authority_scope = _coverage_authority_scope(ledgers)
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,

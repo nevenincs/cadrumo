@@ -4,7 +4,7 @@ This is the local-filing sibling of the live-AEAT-capture persistence path
 (:func:`~cadrumo.application.live.filed_observation_persistence.persist_filed_calculation_observation`). It does
 NOT introduce a parallel write path: it is an additional projection of the
 single-writer filing transition
-(:func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`),
+(:func:`~cadrumo.application.modelo.filing_revision_persistence.persist_filed_revision`),
 co-emitted with ``MODELO_FILED``, that records the filed
 :class:`~CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
@@ -33,7 +33,7 @@ Modelo 303 filings, and persists a
 :class:`~cadrumo.domain.calculations.registry.bindings.RegistryModeloObservation` record.
 
 See Also:
-    :func:`~cadrumo.application.modelo.revision_persistence.persist_filed_revision`:
+    :func:`~cadrumo.application.modelo.filing_revision_persistence.persist_filed_revision`:
         Calls this projection after the filing catalogue write and
         ``MODELO_FILED`` event succeed.
     :func:`~cadrumo.domain.calculations.registry.bindings_previous_filing.resolve_previous_filing_binding_values`:
@@ -53,13 +53,15 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.modelo import Modelo
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_amendment import filing_declaration_kind_for_amendment
+from ...domain.modelos.filing_kind_evidence import observed_filing_kind_for_local_revision
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.iva_compensation_history import iva_compensation_state_from_observation_envelope
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -71,7 +73,8 @@ from ..calculations.observations_repository import (
     ResultDispositionProjection,
     observation_key,
 )
-from .action_errors import ModeloLocalObservationError
+from .filing_import_refusal_profiles import FilingImportRefusalCause
+from .filing_import_refusals import local_observation_refusal
 
 
 def _history_repository_in_observation_context(
@@ -100,7 +103,8 @@ def _history_repository_in_observation_context(
     override_url = getattr(getattr(override_context, "engine", None), "url", None)
     context_url = getattr(getattr(context, "engine", None), "url", None)
     if override_url is None or context_url is None or override_url != context_url:
-        raise ModeloLocalObservationError(
+        raise local_observation_refusal(
+            FilingImportRefusalCause.OBSERVATION_STORAGE,
             translated_message="application.modelo.errors.filed_observation_split_storage_context",
             context={
                 "history_backend": str(override_url),
@@ -130,8 +134,9 @@ def require_filing_result_disposition(
     copies of the condition would be two authorities on when a filing is
     under-declared, and they would drift.
     """
-    if work_unit.modelo == Modelo("303").value and result_disposition is None:
-        raise ModeloLocalObservationError(
+    if work_unit.modelo == form_for_role("iva.periodic") and result_disposition is None:
+        raise local_observation_refusal(
+            FilingImportRefusalCause.RESULT_DISPOSITION,
             translated_message="errors.error.error_modelos",
             context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
         )
@@ -177,7 +182,7 @@ def prepare_filed_revision_observation(
     )
     key = observation_key(work_unit.modelo, work_unit.period)
     projects_iva_history = (
-        work_unit.modelo == Modelo("303").value and taxpayer_nif is not None and bool(taxpayer_nif.strip())
+        work_unit.modelo == form_for_role("iva.periodic") and taxpayer_nif is not None and bool(taxpayer_nif.strip())
     )
     # Resolve the history repository BEFORE the carry write: both rows describe
     # the one filed period, so a mismatched pair must refuse with neither
@@ -191,14 +196,21 @@ def prepare_filed_revision_observation(
         else None
     )
     require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
+    local_filing_locator = f"local-filing:{filing_record_id or key}"
     disposition_projection = (
         ResultDispositionProjection(
             disposition=result_disposition,
             provenance_kind="app_filing",
-            provenance_locator=f"local-filing:{filing_record_id or key}",
+            provenance_locator=local_filing_locator,
         )
         if result_disposition is not None
         else None
+    )
+    # The revision's own amendment identity decides its kind: Cadrumo filed it
+    # and its export renders the complementaria marker from the same identity.
+    filing_kind = observed_filing_kind_for_local_revision(
+        filing_declaration_kind_for_amendment(revision.amendment_identity),
+        source_locator=local_filing_locator,
     )
     payload = repository.prepare_observation_envelope(
         observation,
@@ -207,6 +219,7 @@ def prepare_filed_revision_observation(
         stamped_revision_id=work_unit.revision_id,
         result_disposition=disposition_projection,
         prior_domiciliation_election=prior_domiciliation_election,
+        filing_kind=filing_kind,
     )
     state = None
     if history_repo is not None and taxpayer_nif is not None:

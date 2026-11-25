@@ -257,8 +257,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f022"
-kind = "casilla"
-casilla_id = "decl.numero-referencia"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -317,8 +316,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f027"
-kind = "casilla"
-casilla_id = "representante.domicilio-codigo-via"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -437,8 +435,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f037"
-kind = "header"
-producer_key = "m840.representante.municipio"
+kind = "casilla"
+casilla_id = "representante.domicilio-municipio-nombre"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -449,8 +447,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f038"
-kind = "casilla"
-casilla_id = "representante.domicilio-codigo-municipio"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -461,8 +458,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f039"
-kind = "casilla"
-casilla_id = "representante.domicilio-codigo-provincia"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -532,8 +528,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f045"
-kind = "casilla"
-casilla_id = "act.descripcion"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -592,8 +587,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f050"
-kind = "casilla"
-casilla_id = "act.codigo-municipio"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -604,8 +598,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f051"
-kind = "casilla"
-casilla_id = "act.codigo-provincia"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -652,8 +645,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f055"
-kind = "casilla"
-casilla_id = "act.domicilio-codigo-via"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -761,7 +753,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f064"
 kind = "casilla"
-casilla_id = "act.nota-agrupacion-1"
+casilla_id = "act.nota-agrupacion-2"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -773,7 +765,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f065"
 kind = "casilla"
-casilla_id = "act.nota-agrupacion-1"
+casilla_id = "act.nota-agrupacion-3"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -797,7 +789,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f067"
 kind = "casilla"
-casilla_id = "act.nota-grupo-1"
+casilla_id = "act.nota-grupo-2"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -809,7 +801,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f068"
 kind = "casilla"
-casilla_id = "act.nota-grupo-1"
+casilla_id = "act.nota-grupo-3"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -833,7 +825,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f070"
 kind = "casilla"
-casilla_id = "act.nota-epigrafe-1"
+casilla_id = "act.nota-epigrafe-2"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -845,7 +837,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f071"
 kind = "casilla"
-casilla_id = "act.nota-epigrafe-1"
+casilla_id = "act.nota-epigrafe-3"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -856,7 +848,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f072"
-kind = "filler"
+kind = "casilla"
+casilla_id = "act.campamento-turistico"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -867,7 +860,8 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f073"
-kind = "filler"
+kind = "casilla"
+casilla_id = "act.recepcion-loterias"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -890,8 +884,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f075"
-kind = "casilla"
-casilla_id = "act.seccion"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -987,7 +980,7 @@ record_identity = "Pág. 1"
 [[entries]]
 export_field_id = "m840-2003.pagina01.f083"
 kind = "casilla"
-casilla_id = "act.causa-baja"
+casilla_id = "act.causa-variacion"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1106,8 +1099,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f093"
-kind = "casilla"
-casilla_id = "local-indirecto.codigo-municipio"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1118,8 +1110,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f094"
-kind = "casilla"
-casilla_id = "local-indirecto.codigo-provincia"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1154,8 +1145,7 @@ record_identity = "Pág. 1"
 
 [[entries]]
 export_field_id = "m840-2003.pagina01.f097"
-kind = "casilla"
-casilla_id = "local-indirecto.codigo-via"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]

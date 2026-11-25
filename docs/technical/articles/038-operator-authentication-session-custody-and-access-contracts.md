@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-038` · **Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
+**Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
 
 <!-- preserved:article -->
 ## Scope

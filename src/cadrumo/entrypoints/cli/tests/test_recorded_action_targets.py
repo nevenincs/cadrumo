@@ -8,11 +8,27 @@ line uses.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from cadrumo_client.contracts.command_program import CommandProgram
 
-from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry
+from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
+from ....application.modelo.action_errors import ModeloProfileReadinessError
+from ....application.modelo.calculation_notes import note_record_verdict
+from ....application.modelo.calculation_preparation import ledger_preflight_precondition
+from ....application.modelo.iva_wallet_refusal import (
+    ModeloIvaWalletReconciliationBlockedError,
+    raise_iva_wallet_precondition,
+)
+from ....application.modelo.iva_wallet_refusal_profiles import (
+    IVA_WALLET_OPENING_BALANCE_SCENARIOS,
+    IVA_WALLET_OVERRIDE_SCENARIOS,
+)
+from ....application.modelo.profile_readiness_gate import require_existing_profile_baseline_ready_for_modelo_work
+from ....application.modelo.work_profile import ModeloWorkProfile
+from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogueEntry, lookup_action
 from ....application.operator_actions.models import (
     ActionArgumentBinding,
     ActionReference,
@@ -26,7 +42,19 @@ from ....application.operator_surface.action_targets import (
     resolve_recorded_precondition_action,
 )
 from ....application.operator_surface.manifest import ReconciledOperatorLeaf
+from ....application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.form_codes import form_for_role
+from ....domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
+from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ..common import resolve_cli_precondition_action
 from ..operator_surface_reconciliation import operator_surface_target_reconciliation
 
@@ -130,6 +158,255 @@ def test_the_recorded_resolver_prints_the_action_the_command_line_prints_for_eve
             entry.action_id
         )
         assert recorded.action.target_command_key == entry.target_command_key
+
+
+def test_the_opening_balance_action_resolves_to_the_live_leaf_with_its_required_inputs() -> None:
+    entry = lookup_action("operator.modelo.iva_wallet.seed")
+    served = resolve_recorded_precondition_action(_verdict(entry))
+    (leaf,) = operator_surface_target_reconciliation(entry.target_command_key).leaves
+
+    assert served.action is not None
+    assert served.action.target_command_key == "modelo.iva_wallet.seed"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    assert leaf.input_schema is not None
+    assert set(served.missing_argument_names) == set(leaf.input_schema.required_input_names)
+
+
+def _refused_wallet_verdict(reason_code: str, carry_period: Period) -> PreconditionVerdict:
+    """Raise the real 303 wallet gate refusal for ``reason_code`` and return the verdict it records."""
+    with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as refused:
+        raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code=reason_code,
+            translated_message="application.modelo.errors.iva_wallet_not_seeded",
+            evidence_values={"reason": reason_code},
+            carry_period=carry_period,
+            carry_revision=published_snapshot(
+                form_for_role("iva.periodic"),
+                filing_year=carry_period.filing_year,
+                period=carry_period.registry_token,
+            ).revision,
+        )
+    return refused.value.precondition_failure.verdict
+
+
+def test_each_real_opening_balance_refusal_records_an_action_that_resolves_to_the_live_leaf(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    carry_period = Period.from_year_and_code(envelope.horizon, "1T")
+
+    for reason_code in sorted(IVA_WALLET_OPENING_BALANCE_SCENARIOS):
+        served = resolve_recorded_precondition_action(_refused_wallet_verdict(reason_code, carry_period))
+        (leaf,) = operator_surface_target_reconciliation("modelo.iva_wallet.seed").leaves
+
+        assert served.action is not None, reason_code
+        assert served.action.action_id == "operator.modelo.iva_wallet.seed", reason_code
+        assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+        bound = {item.argument_name: item for item in served.argument_bindings}
+        # The balance a first quarter carries is the previous year's fourth quarter's closing one.
+        assert bound["filing_year"].value == carry_period.filing_year - 1
+        assert bound["period"].value == "4T"
+        assert bound["amount"].status is ActionArgumentStatus.MISSING
+        assert served.missing_argument_names == ("amount",)
+        assert leaf.input_schema is not None
+        assert set(bound) == set(leaf.input_schema.required_input_names)
+
+
+def test_each_real_override_refusal_records_an_action_prefilled_with_the_period_and_local_amount(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    carry_period = Period.from_year_and_code(envelope.horizon, "4T")
+    local_amount = Decimal("325.50")
+
+    for reason_code in sorted(IVA_WALLET_OVERRIDE_SCENARIOS):
+        with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as refused:
+            raise_iva_wallet_precondition(
+                subject_leaf_key="modelo.work.calculate",
+                reason_code=reason_code,
+                translated_message=f"application.iva_wallet.decision_reason.{reason_code}",
+                evidence_values={"reason": reason_code},
+                carry_period=carry_period,
+                local_amount=local_amount,
+            )
+        served = resolve_recorded_precondition_action(refused.value.precondition_failure.verdict)
+        (leaf,) = operator_surface_target_reconciliation("modelo.iva_wallet.override").leaves
+
+        assert served.action is not None, reason_code
+        assert served.action.action_id == "operator.modelo.iva_wallet.override", reason_code
+        assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+        bound = {item.argument_name: item for item in served.argument_bindings}
+        assert bound["filing_year"].value == carry_period.filing_year
+        assert bound["period"].value == carry_period.registry_token
+        assert bound["amount"].value == local_amount
+        assert bound["reason"].status is ActionArgumentStatus.MISSING
+        assert bound["evidence_locator"].status is ActionArgumentStatus.MISSING
+        assert set(served.missing_argument_names) == {"reason", "evidence_locator"}
+        assert leaf.input_schema is not None
+        assert set(bound) == set(leaf.input_schema.required_input_names)
+
+
+def test_an_override_refusal_without_a_local_amount_leaves_the_amount_to_supply() -> None:
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    carry_period = Period.from_year_and_code(envelope.horizon, "4T")
+    with pytest.raises(ModeloIvaWalletReconciliationBlockedError) as refused:
+        raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="local_recurrence_requires_override",
+            translated_message="application.iva_wallet.decision_reason.local_recurrence_requires_override",
+            evidence_values={"reason": "local_recurrence_requires_override"},
+            carry_period=carry_period,
+        )
+    verdict = refused.value.precondition_failure.verdict
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.modelo.iva_wallet.override"
+    assert set(verdict.missing_argument_names) == {"amount", "reason", "evidence_locator"}
+
+
+def test_an_override_refusal_without_its_period_is_an_invariant_breach() -> None:
+    with pytest.raises(InternalInvariantError):
+        raise_iva_wallet_precondition(
+            subject_leaf_key="modelo.work.calculate",
+            reason_code="local_recurrence_requires_override",
+            translated_message="application.iva_wallet.decision_reason.local_recurrence_requires_override",
+            evidence_values={"reason": "local_recurrence_requires_override"},
+            local_amount=Decimal("325.50"),
+        )
+
+
+def test_an_unclassified_m349_invoice_note_opens_the_live_invoice_update_with_the_invoice_named(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    invoice_id = "inv-0001"
+    diagnostic = CalculationSourceDiagnostic(
+        reason="m349_operation_unclassified",
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
+        resolver_id="invoice_catalogue",
+        source_ref=f"invoice:{invoice_id}",
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.M349_OPERATION_UNCLASSIFIED,
+            rows=(invoice_id,),
+            invoice="DE-1",
+            party="EU Counterparty GmbH (DE123456789)",
+        ),
+        message="invoice 'DE-1' states no Modelo 349 operation",
+        remedy="Set the invoice's operation type, then calculate again.",
+    )
+    verdict = note_record_verdict(diagnostic.reason, diagnostic.fact)
+    assert verdict is not None
+
+    served = resolve_recorded_precondition_action(verdict)
+    (leaf,) = operator_surface_target_reconciliation("ledger.invoice.update").leaves
+
+    assert served.action is not None
+    assert served.action.action_id == "operator.ledger.invoice.update.operation_type"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    bound = {item.argument_name: item for item in served.argument_bindings}
+    assert bound["invoice_id"].value == invoice_id
+    assert bound["operation_type"].status is ActionArgumentStatus.MISSING
+    assert served.missing_argument_names == ("operation_type",)
+    assert leaf.input_schema is not None
+    assert set(leaf.input_schema.required_input_names) <= set(bound)
+
+
+def test_a_ledger_hold_naming_a_movement_opens_its_reclassification_with_the_movement_named(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    period = Period.from_year_and_code(envelope.horizon, "1T")
+    held = ledger_preflight_precondition(
+        work_unit_id="wu-0001",
+        modelo="303",
+        period=period,
+        transaction_id="tx-0001",
+        reason="inadmissible_deduction_classification",
+        names_movement=True,
+    )
+
+    served = resolve_recorded_precondition_action(held.verdict)
+    (leaf,) = operator_surface_target_reconciliation("ledger.classify").leaves
+
+    assert served.action is not None
+    assert served.action.action_id == "operator.ledger.classify.movement"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    bound = {item.argument_name: item for item in served.argument_bindings}
+    assert bound["transaction_id"].status is ActionArgumentStatus.RESOLVED
+    assert bound["transaction_id"].value == "tx-0001"
+    assert served.missing_argument_names == ()
+    assert leaf.input_schema is not None
+    assert set(leaf.input_schema.required_input_names) <= set(bound)
+
+
+def test_a_ledger_hold_over_the_whole_period_rechecks_that_period(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    assert operation is not None
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    period = Period.from_year_and_code(envelope.horizon, "2T")
+    held = ledger_preflight_precondition(
+        work_unit_id="wu-0001",
+        modelo="303",
+        period=period,
+        transaction_id="__period__",
+        reason="missing_prorrata",
+        names_movement=False,
+    )
+
+    served = resolve_recorded_precondition_action(held.verdict)
+    (leaf,) = operator_surface_target_reconciliation("ledger.preflight").leaves
+
+    assert served.action is not None
+    assert served.action.action_id == "operator.ledger.preflight"
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    bound = {item.argument_name: item.value for item in served.argument_bindings}
+    assert bound == {"period": period.registry_token, "year": period.filing_year}
+    assert served.missing_argument_names == ()
+    assert "transaction_id" not in bound
+
+
+def test_a_real_missing_profile_facts_refusal_records_an_action_that_resolves_to_the_live_leaf(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    profile_id = "44444444-4444-4444-8444-444444444444"
+    record = create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=profile_id,
+        setup_state=ProfileSetupState.COMPLETE,
+        facts=persona_facts_beneath(without=("activities.",)),
+    )
+    period = Period.from_year_and_code(operation.supported_filing_years().horizon, "1T")
+    with pytest.raises(ModeloProfileReadinessError) as refused:
+        require_existing_profile_baseline_ready_for_modelo_work(
+            bucket_id=profile_id,
+            modelo="303",
+            filing_year=period.filing_year,
+            period=period,
+            enforce_applicability=False,
+            profile_decode_context=operation.profile_decode_context(),
+            operation=operation,
+            profile=ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context()),
+        )
+    verdict = refused.value.terminal_precondition_verdict
+    assert verdict is not None
+
+    served = resolve_recorded_precondition_action(verdict)
+
+    assert served.action is not None, "the refusal names no action"
+    assert served.action.action_id == "operator.profile.edit"
+    assert served.conditionality is ActionConditionality.REQUIRES_ARGUMENTS
+    (leaf,) = operator_surface_target_reconciliation(served.action.target_command_key).leaves
+    assert served.action.cli_path == (leaf.live_leaf.program.executable_name, *leaf.live_leaf.canonical_cli_path)
+    assert served == resolve_cli_precondition_action(verdict)
 
 
 def test_the_record_refuses_a_command_no_catalogue_action_targets() -> None:

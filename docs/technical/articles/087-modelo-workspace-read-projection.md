@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-087` · **Topic:** [Modelo work and revision lifecycle, part 2: verification, workbench and workspace](../topics/modelo-work-and-revision-lifecycle-part-2.md)
+**Topic:** [Modelo work and revision lifecycle: verification, workbench and workspace](../topics/modelo-work-verification-and-workspace.md)
 
 <!-- preserved:article -->
 **Scope:** Three files under `src/cadrumo/application/modelo`: `workspace.py` (2,486 lines), `workspace_manifest.py` (1,001), and `workspace_models.py` (1,157), totaling 4,644 lines, 200,678 bytes, and 41,444 measured `o200k_base` proxy tokens. All eight bounded-reader pages were read in sequence. This is static inspection only; no application execution or tests were run.

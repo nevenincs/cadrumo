@@ -6,9 +6,9 @@ box-equals-source predicates apply to every design from the one covering the
 registry's support floor: each of those boxes is printed there with the meaning later designs
 repeat. They are authored once at that edition and inherited forward. Boxes a
 later design introduces stay out of every edition whose own design omits them.
-The rate-row cuotas [03], [06] and [09] are not among them: their meaning follows
-the paired Tipo % field, which the floor design leaves free, and
-``test_modelo_303_record_projection_year_parity`` pins where they are derived.
+The rate-row cuotas [03], [06] and [09] are among them: the floor design adds
+them into [27] and its rate rows take their base from the same ledger
+population, so the row's cuota is derived there as it is in later designs.
 """
 
 from __future__ import annotations
@@ -28,19 +28,25 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
 from .authored_edition_support import authored_revisions, revision_covering, source_reference
-from .ledger_iva_aggregation_support import _calculate_303_from_observations, _observation
+from .ledger_iva_aggregation_support import calculate_303_from_observations, ledger_iva_aggregation_observation
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 # Official box -> the semantic carrier its single-source projection copies.
 _PROJECTED_BOXES = {
+    "03": "iva.cuota-devengada.super-reducido",
+    "06": "iva.cuota-devengada.reducido",
+    "09": "iva.cuota-devengada.general",
     "10": "iva.autorepercutido.intracomunitaria.devengado.base",
     "11": "iva.autorepercutido.intracomunitaria.devengado",
     "13": "iva.autorepercutido.interior.devengado",
     "27": "iva.cuota-devengada-total",
 }
 _EQUALS_PREDICATES = {
+    "equals:dr303-03-equals-iva-cuota-devengada-super-reducido",
+    "equals:dr303-06-equals-iva-cuota-devengada-reducido",
+    "equals:dr303-09-equals-iva-cuota-devengada-general",
     "equals:dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado",
     "equals:dr303-13-equals-iva-autorepercutido-interior-devengado",
     "equals:dr303-27-equals-iva-cuota-devengada-total",
@@ -172,9 +178,8 @@ def test_resultado_chain_hydrates_in_every_edition() -> None:
     assert not failures, "\n".join(failures)
 
 
-def test_informativa_boxes_120_and_122_are_bound_in_every_edition() -> None:
+def test_informativa_box_122_is_bound_in_every_edition() -> None:
     expected = {
-        "120": "modelo-303-casilla-120-no-sujetas-localizacion-base",
         "122": "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
     }
     for revision in authored_revisions("303"):
@@ -227,7 +232,7 @@ def test_design_scoped_boxes_are_declared_exactly_where_their_design_prints_them
 
 def _domestic_sales(exercise: int) -> tuple[IvaLedgerObservation, ...]:
     def sale(ledger_id: str, category: str, rate_kind: str, rate: str, base: str, iva: str) -> IvaLedgerObservation:
-        return _observation(
+        return ledger_iva_aggregation_observation(
             ledger_id=ledger_id,
             txn_date=date(exercise, 5, 15),
             category=IvaCategory(category),
@@ -251,17 +256,37 @@ def test_floor_exercise_carries_its_sales_to_the_printed_result() -> None:
     The expected figures are the three sales' own cuotas and the design's box
     arithmetic ([27] = [03] + [06] + [09] with no other devengado, [46] = [27] -
     [45] with nothing deductible, [64] = [46], [66] = [64] at a 100 % State
-    share and [69] = [66]), not the registry's formulas. The floor design leaves
-    the rate rows' Tipo % free, so the rows themselves stay operator input there.
+    share and [69] = [66]), not the registry's formulas. Each rate row's cuota is
+    the cuota of the sale charged at that row's rate: 4 % of 100,00, 10 % of
+    200,00 and 21 % of 1000,00 (LIVA arts. 91.Dos, 91.Uno and 90.Uno).
     """
     exercise = committed_supported_filing_years().floor
-    result = _calculate_303_from_observations(filing_year=exercise, period="2T", observations=_domestic_sales(exercise))
+    result = calculate_303_from_observations(filing_year=exercise, period="2T", observations=_domestic_sales(exercise))
     values = result.values
 
     def box(casilla_id: str) -> Decimal:
         return values[validated_casilla_id(casilla_id)]
 
+    assert box("03") == Decimal("4.00")
+    assert box("06") == Decimal("20.00")
+    assert box("09") == Decimal("210.00")
     assert box("27") == Decimal("234.00")
     assert box("64") == Decimal("234.00")
     assert box("66") == Decimal("234.00")
     assert box("iva.resultado") == Decimal("234.00")
+
+
+def test_box_59_collects_goods_and_service_intracommunity_supplies_in_every_edition() -> None:
+    """LIVA art. 25 goods and art. 69.Uno.1 services supplied to an EU businessman share one box."""
+    for revision in authored_revisions("303"):
+        binding = next(
+            item
+            for item in revision.bindings
+            if str(item.id) == "modelo-303-casilla-59-entregas-intracomunitarias-base"
+        )
+        categories = {str(category) for category in binding.model_dump(mode="json")["provider"]["categories"]}
+
+        assert categories == {"intra_community_supply", "intra_community_service_supply"}, revision.id
+        assert str(_casilla(revision, "59").binding) == str(binding.id), revision.id
+        assert "[59]" in _design(revision), revision.id
+        assert _casilla(revision, "120").input_kind is not InputKind.BOUND, revision.id

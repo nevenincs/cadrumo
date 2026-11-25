@@ -31,11 +31,8 @@ from cadrumo.application.calculations.tests.cross_period_verdict_support import 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from ..cross_period_clean_state import (
-    _qualifies_for_first_year_fractional_suppression,
-    _suppressed_first_year_fractional_evidence,
-    _suppressed_pre_activity_evidence,
-)
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -43,10 +40,15 @@ from ..cross_period_models import (
     CrossPeriodDependencyRequirement,
     NoPriorObligationProvenanceKind,
 )
+from ..cross_period_suppressed_evidence import (
+    qualifies_for_first_year_fractional_suppression,
+    suppressed_first_year_fractional_evidence,
+    suppressed_pre_activity_evidence,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
-_TARGET_YEAR = 2026
+_TARGET_YEAR = filing_year_envelope().horizon
 _M202_SOURCE_CASILLA_03: CasillaId = validated_casilla_id("03", surface="_M202_SOURCE_CASILLA_03")
 _M202_REQUIREMENT_LEGAL_REFS = ("ley-27-2014:art-40",)
 _M202_REQUIREMENT_SOURCE_REFS = ("aeat-modelo-202-instructions",)
@@ -92,7 +94,9 @@ def _verdict(*dependencies: CrossPeriodDependencyEvidence) -> CrossPeriodCleanSt
     )
 
 
-def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression() -> None:
+def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """(a) First IS year + ART_40_2_OPTIONAL -> the Modelo 202 dependency is suppressed.
 
     The evidence row is clean (no blockers), carries the first-year fractional
@@ -100,15 +104,15 @@ def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression() 
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=date(_TARGET_YEAR, 3, 1),
-            target_filing_year=_TARGET_YEAR,
+            operation=authority_operation,
         )
         is True
     )
-    evidence = _suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
+    evidence = suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
     assert evidence.clean is True
     assert evidence.blockers == ()
     assert evidence.suppressed_first_year_fractional is True
@@ -125,7 +129,9 @@ def test_first_year_modalidad_cuota_m202_dependency_qualifies_for_suppression() 
     assert suppressed_first_year_fractional(verdict) == (evidence,)
 
 
-def test_mandatory_modalidad_base_m202_dependency_is_not_suppressed() -> None:
+def test_mandatory_modalidad_base_m202_dependency_is_not_suppressed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """(b) ART_40_3_MANDATORY -> NOT suppressed; the Modelo 202 dependency stays in scope.
 
     Under modalidad base (art. 40.3, INCN > 6.000.000 EUR) the pago fraccionado is
@@ -134,17 +140,19 @@ def test_mandatory_modalidad_base_m202_dependency_is_not_suppressed() -> None:
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_3_MANDATORY,
             activity_start_date=date(_TARGET_YEAR, 3, 1),
-            target_filing_year=_TARGET_YEAR,
+            operation=authority_operation,
         )
         is False
     )
 
 
-def test_incomplete_and_none_modality_m202_dependency_is_not_suppressed() -> None:
+def test_incomplete_and_none_modality_m202_dependency_is_not_suppressed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """(c) INCOMPLETE / None modality -> NOT suppressed (fail-closed).
 
     A modality that could not be derived (not a legal entity, or INCN undeclared,
@@ -153,36 +161,57 @@ def test_incomplete_and_none_modality_m202_dependency_is_not_suppressed() -> Non
     requirement = _requirement("202")
     for modality in (Modelo202Modality.INCOMPLETE, None):
         assert (
-            _qualifies_for_first_year_fractional_suppression(
+            qualifies_for_first_year_fractional_suppression(
                 requirement,
                 modelo_202_modality=modality,
                 activity_start_date=date(_TARGET_YEAR, 3, 1),
-                target_filing_year=_TARGET_YEAR,
+                operation=authority_operation,
             )
             is False
         )
 
 
-def test_non_first_year_m202_dependency_is_not_suppressed() -> None:
-    """(d) Activity start before the target year -> NOT suppressed.
+def test_second_year_first_instalment_has_no_base_and_is_suppressed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The second IS year's 1P is scoped out; its 2P and 3P stay in scope.
 
-    When the declared activity-start year is strictly before the target filing
-    year, a prior IS return exists to provide the art. 40.2 cuota basis, so the
-    Modelo 202 dependency stays in scope and keeps demanding evidence.
+    The base binding reads 1P from the Modelo 200 two filing years back and 2P
+    and 3P from the one a year back. With the activity started in the year before
+    the target, the 1P source period ended before that start, so no earlier
+    return holds a base; the 2P and 3P source is the first IS year, which exists.
     """
-    requirement = _requirement("202")
-    assert (
-        _qualifies_for_first_year_fractional_suppression(
-            requirement,
+    started = date(_TARGET_YEAR - 1, 11, 1)
+    outcomes = {
+        code: qualifies_for_first_year_fractional_suppression(
+            _requirement("202", period_code=code),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
-            activity_start_date=date(_TARGET_YEAR - 1, 11, 1),
-            target_filing_year=_TARGET_YEAR,
+            activity_start_date=started,
+            operation=authority_operation,
         )
-        is False
-    )
+        for code in ("1P", "2P", "3P")
+    }
+    assert outcomes == {"1P": True, "2P": False, "3P": False}
 
 
-def test_missing_activity_start_date_m202_dependency_is_not_suppressed() -> None:
+def test_third_year_m202_dependency_is_not_suppressed(authority_operation: PinnedAuthorityOperation) -> None:
+    """With two full years of activity before the target, every instalment has an earlier return."""
+    started = date(_TARGET_YEAR - 2, 1, 1)
+    for code in ("1P", "2P", "3P"):
+        assert (
+            qualifies_for_first_year_fractional_suppression(
+                _requirement("202", period_code=code),
+                modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
+                activity_start_date=started,
+                operation=authority_operation,
+            )
+            is False
+        ), code
+
+
+def test_missing_activity_start_date_m202_dependency_is_not_suppressed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """No recorded activity-start date -> NOT suppressed (fail-closed).
 
     Without the declared first-year proof the gate cannot assert this is the first
@@ -190,17 +219,19 @@ def test_missing_activity_start_date_m202_dependency_is_not_suppressed() -> None
     """
     requirement = _requirement("202")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=None,
-            target_filing_year=_TARGET_YEAR,
+            operation=authority_operation,
         )
         is False
     )
 
 
-def test_non_m202_dependency_is_never_first_year_fractional_suppressed() -> None:
+def test_non_m202_dependency_is_never_first_year_fractional_suppressed(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A non-202 source modelo never qualifies for first-year fractional suppression.
 
     The suppression is Modelo-202-specific; a Modelo 303 (or any non-202)
@@ -208,11 +239,11 @@ def test_non_m202_dependency_is_never_first_year_fractional_suppressed() -> None
     """
     requirement = _requirement("303")
     assert (
-        _qualifies_for_first_year_fractional_suppression(
+        qualifies_for_first_year_fractional_suppression(
             requirement,
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
             activity_start_date=date(_TARGET_YEAR, 3, 1),
-            target_filing_year=_TARGET_YEAR,
+            operation=authority_operation,
         )
         is False
     )
@@ -228,8 +259,8 @@ def test_first_year_fractional_facet_is_distinct_from_pre_activity_facet() -> No
     suppressions are independent and their advisory channels never collide.
     """
     requirement = _requirement("202")
-    pre_activity = _suppressed_pre_activity_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
-    first_year = _suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
+    pre_activity = suppressed_pre_activity_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
+    first_year = suppressed_first_year_fractional_evidence(requirement, activity_start_date=date(_TARGET_YEAR, 3, 1))
 
     # Pre-activity facet behaves exactly as before and never reads as first-year.
     assert pre_activity.suppressed_pre_activity is True

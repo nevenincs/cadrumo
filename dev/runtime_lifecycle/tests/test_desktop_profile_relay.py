@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.session_hold_operations import OperationRelay
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime
@@ -97,7 +97,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
                 "expected_revision": before["record_revision"],
                 "expected_content_digest": before["content_digest"],
                 "path": "identity.tax_id",
-                "value": "X1234567L",
+                "value": "X0001500M",
             }
             started = time.perf_counter()
             saved = await asyncio.to_thread(run, "user-profile.field-mutation", payload)
@@ -109,7 +109,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
             assert any(
                 item.get("kind") == "field"
                 and item["field"]["path"] == "identity.tax_id"
-                and item["field"]["value"] == "X1234567L"
+                and item["field"]["value"] == "X0001500M"
                 for item in items
             )
             started = time.perf_counter()
@@ -127,8 +127,13 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
             prepare_ms = (time.perf_counter() - started) * 1000
             assert prepared["operation_request"]["baseline"]["profile_id"] == profile
             assert prepared["operation_request"]["baseline"]["record_revision"] == after["record_revision"]
-            assert len(prepared["effective_fields"]) == 3
-            stale = await asyncio.to_thread(run, "user-profile.field-mutation", {**payload, "value": "Y1234567X"})
+            # One effective field per path the prepared review intends to settle,
+            # in the review's own order: the served contract, not a count.
+            assert [item["path"] for item in prepared["effective_fields"]] == [
+                intent["path"] for intent in prepared["operation_request"]["field_intents"]
+            ]
+            assert prepared["effective_fields"]
+            stale = await asyncio.to_thread(run, "user-profile.field-mutation", {**payload, "value": "Y0001500L"})
             assert stale.get("refused") in {"refused", "failed"}, stale
             # The existing executor conservatively settles exceptions after its
             # effect fence as unknown. The desktop must preserve that outcome;
@@ -139,7 +144,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
             assert any(
                 item.get("kind") == "field"
                 and item["field"]["path"] == "identity.tax_id"
-                and item["field"]["value"] == "X1234567L"
+                and item["field"]["value"] == "X0001500M"
                 for item in checked_items
             )
             print(

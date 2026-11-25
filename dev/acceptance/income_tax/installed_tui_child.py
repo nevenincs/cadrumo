@@ -21,7 +21,10 @@ import sys
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Final, cast, overload
+from typing import TYPE_CHECKING, Any, Final, cast, overload
+
+if TYPE_CHECKING:
+    from textual.pilot import Pilot
 
 from cadrumo.core.hashing import sha256_file
 from dev.product_environment import clean_product_env
@@ -218,23 +221,28 @@ _ROOT_DIAGNOSTIC_FLAGS = (
 )
 
 
-def _public_root_diagnostic(pilot: Any) -> dict[str, object]:
-    """Distinguish a pending Home read from its public, value-free refusal."""
+def _account_session_diagnostic(session: object) -> dict[str, object]:
+    """Project public account posture and expiry without retaining session contents."""
+    from cadrumo.application.overview.home import HomeAccountSession
+    from cadrumo.core.time.clock import now
+
+    result: dict[str, object] = {}
+    if isinstance(session, HomeAccountSession):
+        result["account_session_posture"] = session.posture.value
+        result["account_session_has_expiry"] = session.expires_at is not None
+        if session.expires_at is not None and session.expires_at.tzinfo is not None:
+            result["account_session_expired"] = session.expires_at <= now()
+    return result
+
+
+def _public_control_diagnostic[T](pilot: Pilot[T]) -> dict[str, object]:
+    """Read only visible public root refusal controls."""
     from textual.css.query import NoMatches
     from textual.widgets import Static
 
-    from cadrumo.application.overview.home import HomeAccountSession
     from cadrumo.core.i18n.render import tr
-    from cadrumo.core.time.clock import now
 
     diagnostic: dict[str, object] = {}
-    if not any(hasattr(pilot.app, field) for field in ("home_refresh_refusal_code", "workbench_search_refusal_code")):
-        return diagnostic
-    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
-        if hasattr(pilot.app, field):
-            code = getattr(pilot.app, field)
-            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
-                diagnostic[field] = code
     controls = (
         ("#root-updating", "root_updating_visible", None),
         ("#root-account-refusal", "root_account_refusal_shown", "tui.root.account.unavailable"),
@@ -246,14 +254,24 @@ def _public_root_diagnostic(pilot: Any) -> dict[str, object]:
         except (AttributeError, NoMatches):
             continue
         diagnostic[field] = control.display if translation is None else str(control.render()).strip() == tr(translation)
+    return diagnostic
+
+
+def _public_root_diagnostic(pilot: Any) -> dict[str, object]:
+    """Distinguish a pending Home read from its public, value-free refusal."""
+    diagnostic: dict[str, object] = {}
+    if not any(hasattr(pilot.app, field) for field in ("home_refresh_refusal_code", "workbench_search_refusal_code")):
+        return diagnostic
+    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
+        if hasattr(pilot.app, field):
+            code = getattr(pilot.app, field)
+            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
+                diagnostic[field] = code
+    diagnostic.update(_public_control_diagnostic(pilot))
     if hasattr(pilot.app, "account_session"):
         session = pilot.app.account_session
         diagnostic["account_session_present"] = session is not None
-        if isinstance(session, HomeAccountSession):
-            diagnostic["account_session_posture"] = session.posture.value
-            diagnostic["account_session_has_expiry"] = session.expires_at is not None
-            if session.expires_at is not None and session.expires_at.tzinfo is not None:
-                diagnostic["account_session_expired"] = session.expires_at <= now()
+        diagnostic.update(_account_session_diagnostic(session))
     return diagnostic
 
 
@@ -361,6 +379,27 @@ async def _submit_visible_runtime_login(
     await wait_for(received_handoff)
 
 
+async def _settle_admission_workers[T](pilot: Pilot[T]) -> None:
+    """Wait for initial root and login workers in their existing admission order."""
+    # CPU-idle polling can finish before the launcher's finite native read.
+    await pilot.pause()
+    opening_workers = [worker for worker in pilot.app.workers if worker.group == "root-open"]
+    if opening_workers:
+        await pilot.app.workers.wait_for_complete(opening_workers)
+    await pilot.pause()
+    login_workers = [worker for worker in pilot.app.workers if worker.group == "tui-runtime-login"]
+    if login_workers:
+        await pilot.app.workers.wait_for_complete(login_workers)
+
+
+async def _pause_admission[T](pilot: Pilot[T], deadline: float | None) -> None:
+    if deadline is None:
+        await pilot.pause()
+    else:
+        # A screen-idle wait can outlive the caller's absolute deadline.
+        await asyncio.sleep(min(0.2, max(0.0, deadline - asyncio.get_running_loop().time())))
+
+
 async def admit_installed_session(
     *, pilot: Any, passphrase: str, polls: int = 180, deadline: float | None = None
 ) -> bool:
@@ -383,7 +422,7 @@ async def admit_installed_session(
             if deadline is not None and loop.time() >= deadline:
                 break
             remaining -= 1
-            await pilot.pause(0.2 if deadline is not None else None)
+            await _pause_admission(pilot, deadline)
         raise InstalledTuiChildError(
             "installed runtime admission did not settle",
             diagnostic=public_surface_diagnostic(pilot),
@@ -404,15 +443,7 @@ async def admit_installed_session(
 
     try:
         async with asyncio.timeout_at(deadline):
-            # CPU-idle polling can finish before the launcher's finite native read.
-            await pilot.pause()
-            opening_workers = [worker for worker in pilot.app.workers if worker.group == "root-open"]
-            if opening_workers:
-                await pilot.app.workers.wait_for_complete(opening_workers)
-            await pilot.pause()
-            login_workers = [worker for worker in pilot.app.workers if worker.group == "tui-runtime-login"]
-            if login_workers:
-                await pilot.app.workers.wait_for_complete(login_workers)
+            await _settle_admission_workers(pilot)
             await wait_for(locate_surface)
             if surface == "#runtime-login-credential":
                 await _submit_visible_runtime_login(pilot, passphrase, wait_for)
@@ -687,6 +718,25 @@ def reportable_child_failure_reason(receipt: Path) -> str | None:
     return None
 
 
+def _copy_public_refusal_codes(diagnostic: dict[str, object], sanitized: dict[str, object]) -> None:
+    """Copy only absent or allowlisted public root refusal codes."""
+    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
+        if field in diagnostic:
+            code = diagnostic[field]
+            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
+                sanitized[field] = code
+
+
+def _copy_public_account_flags(diagnostic: dict[str, object], sanitized: dict[str, object]) -> None:
+    """Keep only boolean session flags and allowlisted public account posture."""
+    for field in _ROOT_DIAGNOSTIC_FLAGS:
+        if isinstance(value := diagnostic.get(field), bool):
+            sanitized[field] = value
+    posture = diagnostic.get("account_session_posture")
+    if isinstance(posture, str) and posture in _ACCOUNT_POSTURES:
+        sanitized["account_session_posture"] = posture
+
+
 def _sanitized_public_diagnostic(diagnostic: dict[str, object]) -> dict[str, object]:
     """Keep a durable failure diagnostic to public screen identity only."""
     sanitized: dict[str, object] = {}
@@ -699,17 +749,8 @@ def _sanitized_public_diagnostic(diagnostic: dict[str, object]) -> dict[str, obj
     widget_ids = diagnostic.get("mounted_widget_ids")
     if isinstance(widget_ids, list) and all(isinstance(item, str) for item in widget_ids):
         sanitized["mounted_widget_ids"] = sorted(set(widget_ids))
-    for field in ("home_refresh_refusal_code", "workbench_search_refusal_code"):
-        if field in diagnostic:
-            code = diagnostic[field]
-            if code is None or (isinstance(code, str) and code in _ROOT_REFUSAL_CODES):
-                sanitized[field] = code
-    for field in _ROOT_DIAGNOSTIC_FLAGS:
-        if isinstance(value := diagnostic.get(field), bool):
-            sanitized[field] = value
-    posture = diagnostic.get("account_session_posture")
-    if isinstance(posture, str) and posture in _ACCOUNT_POSTURES:
-        sanitized["account_session_posture"] = posture
+    _copy_public_refusal_codes(diagnostic, sanitized)
+    _copy_public_account_flags(diagnostic, sanitized)
     return sanitized
 
 
@@ -723,7 +764,6 @@ def run_installed_tui_child_process(
     receipt_path: Path,
     passphrase: str,
     authority_root: Path | None = None,
-    runtime_socket_dir: Path | None = None,
     timeout_seconds: int = 240,
 ) -> InstalledTuiChildProcessEvidence:
     """Run a development child against an installed product interpreter.
@@ -748,16 +788,13 @@ def run_installed_tui_child_process(
     environment = clean_product_env()
     environment.update(
         {
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(store),
+            "CADRUMO_STORAGE_ROOT": str(store),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "PYTHONIOENCODING": "utf-8",
         }
     )
     if authority_root is not None:
         environment["CADRUMO_AUTHORITY_ROOT"] = str(authority_root.resolve(strict=True))
-    if runtime_socket_dir is not None:
-        environment["CADRUMO_STORAGE_ROOT"] = str(store)
-        environment["CADRUMO_RUNTIME_SOCKET_DIR"] = str(runtime_socket_dir.resolve(strict=True))
     completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
         [str(executable), "-m", child_module, *child_args],
         check=False,

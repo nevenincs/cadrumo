@@ -8,9 +8,10 @@ from typing import Final, cast
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
-from .legal_catalogue_fields import _record_from_table, _validate_authored_text
+from .legal_catalogue_fields import record_from_table, validate_authored_text
+from .legal_note_languages import apply_legal_note_languages
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
 #: The legal catalogue tree, relative to the repository root.  The leading
@@ -33,6 +34,11 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     the same rows, and each was re-parsing the whole catalogue for itself. A
     caller reading a DIFFERENT root (a temporary catalogue) keys its own entry.
     """
+    return read_legal_provisions(repo_root)
+
+
+def read_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
+    """Read a fresh catalogue generation for proof-sensitive consumers."""
     catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
     if not catalogue.is_dir():
         raise LegalReferenceError(f"legal catalogue directory does not exist: {catalogue}")
@@ -42,14 +48,17 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     for fragment in scan_directory(catalogue, pattern="*.toml"):
         _read_legal_fragment(fragment, records, seen_ids)
 
-    return tuple(
-        sorted(
-            records,
-            key=lambda record: (
-                record.document_id,
-                record.article or "",
-                record.section or "",
-                record.legal_id,
+    return apply_legal_note_languages(
+        repo_root,
+        tuple(
+            sorted(
+                records,
+                key=lambda record: (
+                    record.document_id,
+                    record.article or "",
+                    record.section or "",
+                    record.legal_id,
+                ),
             ),
         ),
     )
@@ -70,11 +79,11 @@ def _read_legal_fragment(fragment: Path, records: list[LegalProvisionRecord], se
         if not isinstance(raw_id, str) or not raw_id.strip():
             raise LegalReferenceError(f"{fragment}: legal provision id must be a non-empty string")
         legal_id = raw_id
-        _validate_authored_text(legal_id, path=fragment, legal_id=legal_id, field="legal id")
+        validate_authored_text(legal_id, path=fragment, legal_id=legal_id, field="legal id")
         previous = seen_ids.get(legal_id)
         if previous is not None:
             raise LegalReferenceError(
                 f"duplicate legal provision id {legal_id!r} in {fragment} and {previous}; refusing to merge authority",
             )
         seen_ids[legal_id] = fragment
-        records.append(_record_from_table(fragment, legal_id, body))
+        records.append(record_from_table(fragment, legal_id, body))

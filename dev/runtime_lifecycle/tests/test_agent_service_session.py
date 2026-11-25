@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
-from threading import Event
+from threading import Event, Lock
 from types import SimpleNamespace
 from typing import Any
 from uuid import UUID, uuid4
@@ -15,10 +16,16 @@ from uuid import UUID, uuid4
 import pytest
 
 import dev.runtime_lifecycle.agent_service_session as session_module
+import dev.runtime_lifecycle.service_admin_channel as process_module
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.host.bounded_read import BoundedRead
+from cadrumo_agent_service.providers.application.tests.served_catalog_documents import served_catalog
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.service_access import ServiceConnected, ServiceLease
-from dev.runtime_lifecycle.caller_owned_root import Programs
+from dev.runtime_lifecycle.caller_owned_root import COMMAND_SECONDS, Programs
+from dev.runtime_lifecycle.packaged_service_process import PackagedServiceProcess
 from dev.runtime_lifecycle.proof_support import Profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -34,14 +41,14 @@ def test_ready_event_uses_the_services_integer_hosting_contract(contract: object
         "workspace_root": "synthetic-workspace",
     }
     if type(contract) is int and contract == 1:
-        session_module._validate_agent_event(event)
+        session_module.validate_agent_event(event)
     else:
         with pytest.raises(session_module.AcceptanceError, match="hosting contract"):
-            session_module._validate_agent_event(event)
+            session_module.validate_agent_event(event)
 
 
 def test_service_shutdown_drains_pending_events_before_the_stop_acknowledgement() -> None:
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._closed = False
     process._stdin = BytesIO()
     process._stdout = process._stderr = None
@@ -163,8 +170,8 @@ class _Service:
             raise session_module.AcceptanceError("controlled event failure")
         return {"event": "refused", "code": "agent_provider_credential_missing"}
 
-    def admin(self, port: int, action: str) -> dict[str, Any]:
-        self.steps.append(f"service.admin.{action}")
+    def admin(self, port: int, action: str, *, within: float) -> dict[str, Any]:
+        self.steps.append(f"service.admin.{action}.within={within}")
         assert port == 45678
         return {"kind": action, "rows": []}
 
@@ -197,7 +204,7 @@ def _install_lifecycle(
     monkeypatch.setattr(
         session_module,
         "consumer_environment",
-        lambda root, secrets: {"CADRUMO_LOCAL_STORAGE_ROOT": str(root), "CADRUMO_SECRET_STORE_DIR": str(secrets)},
+        lambda root: {"CADRUMO_STORAGE_ROOT": str(root)},
     )
     monkeypatch.setattr(session_module, "create_profile", lambda *_args: steps.append("profile.create") or profile)
     monkeypatch.setattr(
@@ -224,7 +231,7 @@ def _install_lifecycle(
 
     monkeypatch.setattr(session_module, "caller_owned_runtime", fake_runtime)
     monkeypatch.setattr(session_module, "WindowsRuntimeSessionHolder", FakeHolder)
-    monkeypatch.setattr(session_module, "_PackagedServiceProcess", FakeService)
+    monkeypatch.setattr(session_module, "PackagedServiceProcess", FakeService)
     monkeypatch.setattr(session_module, "run_cli", lambda *args, **kwargs: (0, {"status": "success"}))
     return steps
 
@@ -265,24 +272,16 @@ def test_shared_session_starts_runtime_first_and_reuses_one_profile_holder_and_s
         }
         assert shared.catalog() == {"kind": "catalog", "rows": []}
         assert shared.status() == {"kind": "status", "rows": []}
+        assert f"service.admin.catalog.within={process_module.ADMIN_EXCHANGE_SECONDS}" in steps
+        assert f"service.admin.status.within={process_module.ADMIN_EXCHANGE_SECONDS}" in steps
 
-        calls: list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]] = []
-
-        def cli(
-            _programs: Programs,
-            environment: Mapping[str, str],
-            *arguments: str,
-            secret: Mapping[str, str] | None,
-        ) -> tuple[int, dict[str, Any]]:
-            calls.append((arguments, environment, secret))
-            return 0, {"status": "success"}
-
-        monkeypatch.setattr(session_module, "run_cli", cli)
+        calls, timeouts = _record_cli_calls(monkeypatch, (0, {"status": "success"}))
         assert shared.cli_read("app", "ledger", "list", reveal_identifiers=True) == (0, {"status": "success"})
         arguments, environment, secret = calls[0]
         assert arguments[0] == "--profile-secrets-stdin"
         assert environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] == "true"
         assert secret == {"profile_passphrase": "test-profile-password"}
+        assert timeouts == [COMMAND_SECONDS]
 
         shared.cli_read("app", "ledger", "list", reveal_identifiers=False)
         assert calls[1][0][0] == "--profile-secrets-stdin"
@@ -360,7 +359,7 @@ def test_admin_uses_the_actual_typed_service_request_and_bounded_wire(tmp_path: 
 
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(AdminTarget(), bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         result = process.admin(server.port, "status")
@@ -375,6 +374,8 @@ def test_admin_uses_the_actual_typed_service_request_and_bounded_wire(tmp_path: 
 @pytest.mark.parametrize("action", ["catalog", "status"])
 def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: AdminAction) -> None:
     expected_action = action
+    # The wire relays a catalogue only as the agent's pinned schema states it.
+    answer: dict[str, Any] = served_catalog() if action == "catalog" else {"providers": []}
 
     class DelayedRead:
         def __init__(self) -> None:
@@ -386,7 +387,7 @@ def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: Admi
         def compute(self) -> dict[str, Any]:
             self.computations += 1
             assert self.release.wait(timeout=5)
-            return {"providers": []}
+            return answer
 
         def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
             assert action == expected_action
@@ -399,10 +400,10 @@ def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: Admi
     target = DelayedRead()
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(target, bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
-        assert process.admin(server.port, action) == {"providers": []}
+        assert process.admin(server.port, action) == answer
         assert target.requests >= 2
         assert target.computations == 1
     finally:
@@ -423,7 +424,7 @@ def test_admin_does_not_replay_other_refusals(code: str) -> None:
     target = RefusedRead()
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(target, bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         assert process.admin(server.port, "status") == {"kind": "refused", "code": code}
@@ -438,10 +439,10 @@ def test_admin_never_extends_its_budget_for_a_busy_read(monkeypatch: pytest.Monk
         def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
             return {"kind": "refused", "code": "busy"}
 
-    monkeypatch.setattr(session_module, "_ADMIN_EXCHANGE_SECONDS", 0.15)
+    monkeypatch.setattr(process_module, "ADMIN_EXCHANGE_SECONDS", 0.15)
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(BusyRead(), bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         with pytest.raises(session_module.AcceptanceError, match="exceeded its bound"):
@@ -478,7 +479,7 @@ def test_service_lease_mismatch_is_rejected_before_exposing_session() -> None:
     ).model_dump(mode="json")
 
     with pytest.raises(session_module.AcceptanceError, match="service lease connection differs"):
-        session_module._validate_service_lease(
+        session_module.validate_service_lease(
             reply,
             holder,
             {"connection_id": str(_SERVICE_CONNECTION_ID)},
@@ -487,7 +488,7 @@ def test_service_lease_mismatch_is_rejected_before_exposing_session() -> None:
 
 
 def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._stderr = BytesIO(
         b"private-prefix password=password-value: agent launch refused by the native host exit=125 "
         b'native_refusal=launch_value_malformed subject=PACKAGE_SLOT | {"token":"bearer-value"} private-suffix\n'
@@ -505,7 +506,7 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
         + b"agent launch refused by the native host exit=125 native_refusal=launch_value_missing subject=SLOT\n"
     )
     process._stderr_machine_codes = []
-    process._stderr_machine_codes_lock = session_module.Lock()
+    process._stderr_machine_codes_lock = Lock()
     process._stderr_diagnostics_ready = Event()
 
     process._drain_stderr()
@@ -526,32 +527,176 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
     assert "private-stage-token" not in repr(process.stderr_machine_codes)
 
 
-@pytest.mark.parametrize("persisted", [True, False], ids=["stored-sign-in", "profile-input"])
-def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
-    monkeypatch: pytest.MonkeyPatch, persisted: bool
-) -> None:
-    session = object.__new__(session_module.AgentServiceSession)
-    session.programs = Programs(Path("aeat"), Path("runtime"), Path("mcp"))
-    session.environment = {"CADRUMO_LOCAL_STORAGE_ROOT": "synthetic-root"}
-    session.profile = Profile("session-profile", "test-profile-password", _PROFILE_ID)
-    session.login_session_persisted = persisted
+def _record_cli_calls(
+    monkeypatch: pytest.MonkeyPatch, reply: tuple[int, dict[str, Any]]
+) -> tuple[list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]], list[float]]:
+    """Replace the session's CLI runner with one that records each call and its bound, and answers ``reply``."""
     calls: list[tuple[tuple[str, ...], Mapping[str, str], Mapping[str, str] | None]] = []
+    timeouts: list[float] = []
 
     def cli(
         _programs: Programs,
         environment: Mapping[str, str],
         *arguments: str,
         secret: Mapping[str, str] | None,
+        timeout: float,
     ) -> tuple[int, dict[str, Any]]:
         calls.append((arguments, environment, secret))
-        return 1, {"status": "refused", "code": "sign_in_required"}
+        timeouts.append(timeout)
+        return reply
 
     monkeypatch.setattr(session_module, "run_cli", cli)
-    result = session.cli_read("app", "ledger", "list", reveal_identifiers=True)
+    return calls, timeouts
+
+
+@pytest.mark.parametrize("persisted", [True, False], ids=["stored-sign-in", "profile-input"])
+def test_cli_read_uses_exactly_one_authority_for_person_owned_read(
+    monkeypatch: pytest.MonkeyPatch, persisted: bool
+) -> None:
+    session = object.__new__(session_module.AgentServiceSession)
+    session.programs = Programs(Path("aeat"), Path("runtime"), Path("mcp"))
+    session.environment = {"CADRUMO_STORAGE_ROOT": "synthetic-root"}
+    session.profile = Profile("session-profile", "test-profile-password", _PROFILE_ID)
+    session.login_session_persisted = persisted
+    calls, timeouts = _record_cli_calls(monkeypatch, (1, {"status": "refused", "code": "sign_in_required"}))
+    result = session.cli_read("app", "ledger", "list", reveal_identifiers=True, timeout=600)
 
     assert result == (1, {"status": "refused", "code": "sign_in_required"})
     assert len(calls) == 1
+    assert timeouts == [600]
     arguments, environment, secret = calls[0]
     assert ("--profile-secrets-stdin" in arguments) is (not persisted)
     assert secret == ({"profile_passphrase": "test-profile-password"} if not persisted else None)
     assert environment["CADRUMO_CLI_REVEAL_IDENTIFIERS"] == "true"
+
+
+# --- signing in again once the person's sign-in runs out ----------------------------------------------
+
+
+def _held_status(expires_at: datetime) -> dict[str, Any]:
+    """The held session's status reply, built through the runtime's own contracts."""
+    status = ProfileStatus(
+        request_id=uuid4(),
+        runtime_boot_id=_BOOT_ID,
+        connection_id=_HOLDER_CONNECTION_ID,
+        status=ProfileAccessStatus(
+            connected=True,
+            credential_authenticated=True,
+            profile_id=_PROFILE_ID,
+            session_id=_SESSION_ID,
+            session_expires_at=expires_at,
+            grant_state=AuthorityState.ACTIVE,
+            grant_expires_at=expires_at,
+            grant_valid=True,
+            profile_bound=True,
+            storage=Availability.AVAILABLE,
+            automation_custody=Availability.AVAILABLE,
+            published_authority=Availability.AVAILABLE,
+            provider=Availability.NOT_REQUIRED,
+            effective_scope=EffectiveScopeSummary.summarize(
+                AccessScope(
+                    operations=frozenset(),
+                    actions=frozenset(),
+                    disclosures=frozenset(),
+                    periods=None,
+                    allow_period_independent=True,
+                    allow_delegation=False,
+                )
+            ),
+            denial=None,
+        ),
+    )
+    return status.model_dump(mode="json")
+
+
+def test_signing_in_again_replaces_the_held_session_and_service_and_keeps_the_cleanup_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    steps = _install_lifecycle(monkeypatch, tmp_path, login_persisted=True)
+    original_close = _Holder.close
+    closes: list[_Holder] = []
+
+    def retired_close(holder: _Holder) -> None:
+        # The first held session has already ended, as it has once the idle window passed.
+        original_close(holder)
+        closes.append(holder)
+        if len(closes) == 1:
+            raise session_module.AcceptanceError("the original human holder retired or refused the command")
+
+    monkeypatch.setattr(_Holder, "close", retired_close)
+    monkeypatch.setattr(
+        session_module,
+        "run_cli",
+        lambda _programs, _environment, *arguments, secret=None: (
+            steps.append("profile.logout") or (0, {"status": "success"})
+        ),
+    )
+
+    with session_module.agent_service_session(tmp_path / "package", tmp_path / "owned-run") as shared:
+        first_holder, first_service = shared._holder, shared._service
+        renewal = shared.sign_in_again()
+        renewed_at = len(steps)
+        assert shared._holder is not first_holder and shared._service is not first_service
+        assert shared.sign_ins == 2
+        assert renewal["previous_close_failures"] == ["AcceptanceError"]
+        assert renewal["agent_event"] == "refused"
+        assert shared.setup_counts["profile_login"] == 2
+        assert shared.setup_counts["holder_start"] == shared.setup_counts["service_start"] == 2
+        assert shared.setup_counts["service_admission"] == 2
+
+    renewal_steps = steps[steps.index("holder.service_admission") + 1 : renewed_at]
+    assert renewal_steps.index("service.close") < renewal_steps.index("holder.close")
+    assert renewal_steps.index("holder.close") < renewal_steps.index("profile.login")
+    assert renewal_steps.index("profile.login") < renewal_steps.index("holder.start")
+    assert renewal_steps.index("holder.start") < renewal_steps.index("holder.service_admission")
+    teardown = steps[renewed_at:]
+    # Only the renewed generation is closed at the end, then the stored sign-in, then the runtime.
+    # The held session's close command, then its process.
+    assert teardown == [
+        "service.close",
+        "holder.close",
+        "holder.close",
+        "profile.logout",
+        "runtime.stop",
+        "runtime.exit",
+    ]
+
+
+def test_the_sign_in_deadline_is_the_earlier_end_and_a_retired_holder_has_none_left(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_lifecycle(monkeypatch, tmp_path, login_persisted=True)
+    stored_end = datetime.now(UTC) + timedelta(minutes=4)
+    held_end = datetime.now(UTC) + timedelta(minutes=9)
+    reads: list[tuple[str, ...]] = []
+
+    def sign_in_status(_programs: Programs, _environment: Mapping[str, str], *arguments: str) -> tuple[int, Any]:
+        reads.append(arguments)
+        status = {
+            "presence": "present",
+            "idle_deadline": stored_end.isoformat(),
+            "absolute_deadline": (stored_end + timedelta(hours=3)).isoformat(),
+        }
+        return 0, {"status": "success", "result": {"profile_id": str(_PROFILE_ID), "status": status}}
+
+    monkeypatch.setattr(session_module, "run_runtime_cli", sign_in_status)
+    monkeypatch.setattr(session_module, "run_cli", lambda *_args, **_kwargs: (0, {"status": "success"}))
+    original_command = _Holder.command
+    retired = [False]
+
+    def command(holder: _Holder, action: str, **fields: Any) -> dict[str, Any]:
+        if action != "status":
+            return original_command(holder, action, **fields)
+        if retired[0]:
+            raise session_module.AcceptanceError("the original human holder retired or refused the command")
+        return _held_status(held_end)
+
+    monkeypatch.setattr(_Holder, "command", command)
+
+    with session_module.agent_service_session(tmp_path / "package", tmp_path / "owned-run") as shared:
+        assert shared.sign_in_deadline() == stored_end
+        assert reads == [("config", "sign-in-status")]
+        retired[0] = True
+        before = datetime.now(UTC)
+        ended = shared.sign_in_deadline()
+        assert ended is not None and before <= ended <= datetime.now(UTC)

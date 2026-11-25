@@ -1,7 +1,8 @@
 import { userEvent } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
-import type { AgentQuestion } from "../../shell/agentSession";
+import type { ClarificationQuestion } from "../../shell/agentGatewayContract";
+import { answersStayInView } from "@/dev/catalogue/plays";
 import { APPEARANCE_NOTE, NOOP } from "./Composer.stories";
 import { QuestionsPrompt } from "./QuestionsPrompt";
 
@@ -10,7 +11,7 @@ import { QuestionsPrompt } from "./QuestionsPrompt";
 
 type Args = ComponentProps<typeof QuestionsPrompt>;
 
-export const QUESTIONS: AgentQuestion[] = [
+export const QUESTIONS: ClarificationQuestion[] = [
   {
     id: "q-trimestre",
     prompt: "¿Qué trimestre preparo?",
@@ -70,6 +71,7 @@ export const FourQuestions: Story = {
       },
     ],
   },
+  play: ({ canvasElement }) => answersStayInView(canvasElement),
 };
 
 export const LongestQuestion: Story = {

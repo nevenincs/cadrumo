@@ -16,17 +16,14 @@ import asyncio
 import sys
 import time
 from collections.abc import Callable
+from importlib import import_module
 from logging import DEBUG, ERROR
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationRegistry
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language
 from cadrumo.application.user_profile.login_interaction import (
@@ -40,11 +37,14 @@ from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_even
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language, profile_output_language_precedence, tr
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -54,7 +54,7 @@ from cadrumo_client.transport.profile_language import read_profile_language
 from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
-from .secret.runtime_login_contracts import RuntimeLoginMethod
+from .secret.runtime_login_contracts import AUTOMATION_LOGIN_METHODS
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -103,7 +103,7 @@ class _ProfileSetWatch:
         return InstallationScreen(on_records_changed=changed, locale=locale)
 
 
-def _run_installation_area(reason_code: str) -> bool:
+def run_installation_area(reason_code: str) -> bool:
     """Offer the installation area alone when the profiles cannot be listed.
 
     Repairing an installation is most needed exactly when its profiles cannot
@@ -116,7 +116,7 @@ def _run_installation_area(reason_code: str) -> bool:
     return watch.changed
 
 
-def _run_registration_screen() -> bool:
+def run_registration_screen() -> bool:
     """Create the first profile, finish recovery, then release bootstrap custody.
 
     Returns whether the profiles should be read again: a profile was created
@@ -154,8 +154,9 @@ def _run_registration_screen() -> bool:
         _release_bootstrap_custody()
 
 
-async def _open_client(profile_id: UUID) -> FrontendClient:
-    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+async def open_client(profile_id: UUID, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+    """Open an installed runtime client for the profile as the TUI frontend."""
+    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout)
 
 
 async def _open_credential_client(
@@ -190,13 +191,13 @@ async def _run_runtime_session(
             profile_id=profile_id,
             contracts=operation_contracts(),
             secrets_store=installed_automation_secret_store(),
-            open_client=_open_client,
+            open_client=open_client,
         )
 
     watch = _ProfileSetWatch()
     async with runtime_login_session(
         choices=inventory.choices,
-        open_client=_open_client,
+        open_client=open_client,
         open_credential_client=_open_credential_client,
         requester_factory=requester_for_login,
         installation_factory=watch.installation_area,
@@ -209,7 +210,7 @@ async def _run_runtime_session(
             # The sign-in screen closed itself because its profile list may be
             # out of date: the choice is made again from a fresh reading.
             return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER) if watch.changed else None
-        if handoff.method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}:
+        if handoff.method in AUTOMATION_LOGIN_METHODS:
             from .runtime_session import RuntimeRestrictedSessionApp
 
             def requester_for_api(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
@@ -244,8 +245,8 @@ async def _run_runtime_session(
             )
             return await app.run_async(headless=headless, auto_pilot=auto_pilot)
 
-        async def open_recovery_client() -> FrontendClient:
-            return await _open_client(handoff.profile_id)
+        async def open_recovery_client(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+            return await open_client(handoff.profile_id, timeout=timeout)
 
         def requester_for_human(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
             if client is not handoff.client:
@@ -254,13 +255,20 @@ async def _run_runtime_session(
                 profile_id=handoff.profile_id,
                 contracts=operation_contracts(),
                 secrets_store=installed_automation_secret_store(),
-                open_client=_open_client,
+                open_client=open_client,
                 reviewer_client=client,
             )
 
         from .runtime_initial_root import RuntimeInitialRoot
 
-        preference = await asyncio.to_thread(read_profile_language, handoff.client)
+        # The language read waits on the runtime while the workbench graph Home
+        # needs imports here. The initial root's graph above already holds every
+        # module the read imports, so no import runs beside another.
+        reading = asyncio.ensure_future(asyncio.to_thread(read_profile_language, handoff.client))
+        try:
+            import_module("cadrumo_runtime.host.frontend.tui.runtime_workbench")
+        finally:
+            preference = await reading
         adopt_profile_output_language(preference.language)
         root = RuntimeInitialRoot(
             handoff.client,
@@ -282,15 +290,16 @@ def _unavailable_inventory(inventory: ProfileLoginInventoryV1) -> int | None:
         fields={"outcome": "refused", "reason_code": inventory.reason_code},
         level=ERROR,
     )
-    sys.stderr.write(f"{inventory.reason_code}\n")
+    sys.stderr.write(encode_terminal_text(f"{inventory.reason_code}") + "\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
 
 def _registration_completed(headless: bool) -> bool:
-    return False if headless else _run_registration_screen()
+    return False if headless else run_registration_screen()
 
 
-def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
+def runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
+    """Convert a runtime session refusal to a numeric status, re-raising unsettled cleanup."""
     if any(
         isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
         for name in ("async_cleanup_error", "cleanup_error")
@@ -305,13 +314,13 @@ def _runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
         level=ERROR,
         primary_error=error,
     )
-    sys.stderr.write(f"{reason}\n")
+    sys.stderr.write(f"{encode_terminal_text(reason)}\n")
     if (remedy := connection_unavailable_remedy(reason)) is not None and remedy:
-        sys.stderr.write(f"{remedy}\n")
+        sys.stderr.write(f"{encode_terminal_text(remedy)}\n")
     return SESSION_INVENTORY_UNAVAILABLE
 
 
-def _attempt_runtime_session(
+def attempt_runtime_session(
     inventory: ProfileLoginInventoryV1,
     operation_registry: Callable[[], OperationRegistry],
     choose_profile: bool,
@@ -319,6 +328,7 @@ def _attempt_runtime_session(
     auto_pilot: AutopilotCallbackType | None,
     auto_resume: bool = True,
 ) -> AccountRecomposeRequiredV1 | int | None:
+    """Attempt to establish a runtime session for the profile from its login inventory."""
     try:
         return asyncio.run(
             _run_runtime_session(
@@ -331,7 +341,34 @@ def _attempt_runtime_session(
             )
         )
     except (FrontendRefusedError, RefusalError) as error:
-        return _runtime_session_refusal(error)
+        return runtime_session_refusal(error)
+
+
+def _inventory_disposition(
+    inventory: ProfileLoginInventoryV1, *, headless: bool, auto_pilot: AutopilotCallbackType | None
+) -> int | Literal["retry"] | None:
+    """Handle installation and first-registration choices before starting a session."""
+    if (
+        not headless
+        and inventory.state in _UNLISTED_STATES
+        and run_installation_area(inventory.reason_code or inventory.state.value)
+    ):
+        return "retry"
+    unavailable = _unavailable_inventory(inventory)
+    if unavailable is not None:
+        return unavailable
+    if inventory.state is ProfileLoginInventoryState.EMPTY:
+        if not _registration_completed(headless):
+            return SESSION_COMPLETED
+        diagnostic_event(
+            _LOGGER,
+            "tui_registration_runtime_admission_pending",
+            fields={"profile_persisted": True, "stage": "runtime_admission"},
+        )
+        return "retry"
+    if headless and auto_pilot is None:
+        return SESSION_COMPLETED
+    return None
 
 
 def run_installed_workbench_session(
@@ -372,28 +409,13 @@ def run_installed_workbench_session(
                 fields={"inventory_state": inventory.state.value, "profile_count": len(inventory.choices)},
                 level=DEBUG,
             )
-            if (
-                not headless
-                and inventory.state in _UNLISTED_STATES
-                and _run_installation_area(inventory.reason_code or inventory.state.value)
-            ):
+            disposition = _inventory_disposition(inventory, headless=headless, auto_pilot=auto_pilot)
+            if disposition == "retry":
                 continue
-            unavailable = _unavailable_inventory(inventory)
-            if unavailable is not None:
-                return unavailable
-            if inventory.state is ProfileLoginInventoryState.EMPTY:
-                if not _registration_completed(headless):
-                    return SESSION_COMPLETED
-                diagnostic_event(
-                    _LOGGER,
-                    "tui_registration_runtime_admission_pending",
-                    fields={"profile_persisted": True, "stage": "runtime_admission"},
-                )
-                continue
-            if headless and auto_pilot is None:
-                return SESSION_COMPLETED
+            if disposition is not None:
+                return disposition
             started = time.monotonic()
-            recompose = _attempt_runtime_session(
+            recompose = attempt_runtime_session(
                 inventory,
                 operation_registry,
                 choose_profile,

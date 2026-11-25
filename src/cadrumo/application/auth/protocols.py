@@ -132,6 +132,22 @@ class BrowserSessionFactoryPort(Protocol):
 
 
 @runtime_checkable
+class ViewLoginSessionFactoryPort(BrowserSessionFactoryPort, Protocol):
+    """Browser sessions that lend a provider's login the person's open Sede view.
+
+    Its sessions create no browser and no context: each context they return is
+    the view's own, already built with the provider's credential, and closing it
+    leaves the view open. A provider's pages then appear in the person's panel,
+    so a login that needs a person to see it runs headless there.
+    """
+
+    @property
+    def lends_view(self) -> bool:
+        """Always ``True``: the login runs inside the view the person watches."""
+        ...
+
+
+@runtime_checkable
 class PersistedSessionDataProtocol(Protocol):
     """Minimal surface the application layer reads from a persisted session record."""
 
@@ -172,6 +188,14 @@ class SessionStoreProtocol(Protocol):
 
     def defer_writes(self) -> AbstractContextManager[SessionWriteStage]:
         """Stage provider writes until an authorized caller publishes them."""
+        ...
+
+    def storage_state_sha256(self, storage_state: Mapping[str, object]) -> str:
+        """Return the canonical digest the store records for ``storage_state``."""
+        ...
+
+    def durable_storage_state_sha256(self, path: Path) -> str | None:
+        """Return the digest held in durable custody at ``path``, ignoring staged writes."""
         ...
 
 
@@ -220,6 +244,7 @@ __all__ = [
     "PersistedSessionDataProtocol",
     "SessionStoreProtocol",
     "SessionWriteStage",
+    "ViewLoginSessionFactoryPort",
     "bind_session_store",
     "session_store",
 ]

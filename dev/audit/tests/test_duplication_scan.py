@@ -17,10 +17,13 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
+from .. import report
 from ..duplication import (
     DuplicationOutcome,
+    DuplicationResult,
+    ceiling_verdict,
     run_duplication_scan,
 )
 from ..report import Status, audit_duplication
@@ -56,20 +59,12 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
     assert result.files_analyzed > 0, "a green verdict must prove files were analysed"
 
 
-def test_real_bad_source_path_is_unavailable_not_green() -> None:
-    """A real scan of a path that matches nothing must refuse to claim cleanliness."""
-    _require_npx()
-    result = run_duplication_scan(REPO_ROOT, source_roots=(Path("src/cadrumo/no-such-directory"),))
-
-    assert result.outcome is DuplicationOutcome.UNAVAILABLE
-    assert result.is_green is False
-
-
 def test_a_missing_root_beside_a_real_one_is_unavailable_not_a_smaller_scope() -> None:
     """One lost package must not let the surviving roots pose as the whole scope.
 
     The real root alone observes zero (see above), so the unavailable verdict
-    here is attributable to the missing root alone.
+    here is attributable to the missing root alone. A scan whose every root is
+    missing fails through the same non-zero exit, so this one proof covers it.
     """
     _require_npx()
     result = run_duplication_scan(
@@ -98,17 +93,8 @@ def test_real_nonzero_exit_is_unavailable_not_green() -> None:
     ``run_duplication_scan`` really launches ``<python> --yes jscpd@4.2.0 ...``,
     which the interpreter rejects and exits non-zero. A genuinely failing
     process is what is under test -- the parser is untouched.
-    """
-    result = run_duplication_scan(REPO_ROOT, which=lambda _name: sys.executable)
 
-    assert result.outcome is DuplicationOutcome.UNAVAILABLE
-    assert result.is_green is False
-    assert "exited" in result.reason
-
-
-def test_real_failure_diagnostic_reaches_the_reason() -> None:
-    """The failed process's own diagnostic must survive into the reason.
-
+    The failed process's own diagnostic must also survive into the reason.
     ``run_duplication_scan`` builds the unavailable reason from the failed
     process's stderr, falling back to stdout and then to a fixed
     ``no diagnostic output`` sentinel. Asserting only that the reason says
@@ -116,12 +102,15 @@ def test_real_failure_diagnostic_reaches_the_reason() -> None:
     reason still reads ``jscpd exited 2: no diagnostic output``, so the amber
     verdict stays correct while the evidence explaining it silently vanishes.
 
-    This pins the evidence rather than the verdict. The tail is a real
-    interpreter's own error text, which varies by version and locale, so the
-    assertion is structural -- a non-empty tail that is not the fallback
-    sentinel -- never the literal message.
+    The tail is a real interpreter's own error text, which varies by version
+    and locale, so that assertion is structural -- a non-empty tail that is not
+    the fallback sentinel -- never the literal message.
     """
     result = run_duplication_scan(REPO_ROOT, which=lambda _name: sys.executable)
+
+    assert result.outcome is DuplicationOutcome.UNAVAILABLE
+    assert result.is_green is False
+    assert "exited" in result.reason
 
     _, _, tail = result.reason.partition(": ")
 
@@ -131,7 +120,7 @@ def test_real_failure_diagnostic_reaches_the_reason() -> None:
     )
 
 
-def test_health_report_duplication_dimension_reflects_the_live_scan() -> None:
+def test_health_report_duplication_dimension_reflects_the_live_scan(monkeypatch: pytest.MonkeyPatch) -> None:
     """The D2 dimension must map the live scan's own outcome, never a fixed verdict.
 
     Deliberately NOT an assertion that the product tree is clone-free. That
@@ -147,7 +136,19 @@ def test_health_report_duplication_dimension_reflects_the_live_scan() -> None:
     """
     _require_npx()
     result = run_duplication_scan(REPO_ROOT)
+    # The dimension delegates the measurement to this same runner; hand it the
+    # scan just taken rather than launching a second identical whole-tree jscpd
+    # run, and record that the delegation really asked for this tree.
+    delegated: list[Path] = []
+
+    def scanned(repo_root: Path) -> DuplicationResult:
+        delegated.append(repo_root)
+        return result
+
+    monkeypatch.setattr(report, "run_duplication_scan", scanned)
     dimension = audit_duplication(REPO_ROOT)
+
+    assert delegated == [REPO_ROOT]
 
     assert result.outcome is not DuplicationOutcome.UNAVAILABLE, result.reason
     assert result.files_analyzed > 0, "neither verdict is honest without proof of inspection"
@@ -159,3 +160,47 @@ def test_health_report_duplication_dimension_reflects_the_live_scan() -> None:
         assert dimension.status is Status.AMBER
         assert str(result.clone_count) in dimension.headline
         assert "no clones found" not in dimension.headline
+
+
+def _plant_test_tree(root: Path, *, copies: int) -> Path:
+    tests = root / "pkg" / "tests"
+    tests.mkdir(parents=True)
+    body = "".join(
+        f"    value_{i} = compute_{i}(argument) + offset_{i}\n    check(value_{i}, {i})\n" for i in range(20)
+    )
+    for index in range(copies):
+        tests.joinpath(f"test_copy_{index}.py").write_text(f"def test_case(argument):\n{body}", encoding="utf-8")
+    return root / "pkg"
+
+
+def test_the_test_surface_scan_fails_a_planted_duplicate_over_the_ceiling(tmp_path: Path) -> None:
+    """Copy-pasted test bodies exceed the ceiling and the verdict names it."""
+    _require_npx()
+    package = _plant_test_tree(tmp_path, copies=2)
+
+    result = run_duplication_scan(tmp_path, source_roots=(package.relative_to(tmp_path),), tests=True)
+
+    verdict = ceiling_verdict(result)
+    assert result.outcome is DuplicationOutcome.CLONES, result.headline()
+    assert verdict is not None
+    assert "exceeds" in verdict
+
+
+def test_the_test_surface_scan_passes_clean_tests_and_ignores_production_clones(tmp_path: Path) -> None:
+    """A single test copy passes, and cloned production modules are outside the test scope."""
+    _require_npx()
+    package = _plant_test_tree(tmp_path, copies=1)
+    source = package.joinpath("tests", "test_copy_0.py").read_text(encoding="utf-8")
+    for name in ("one.py", "two.py"):
+        package.joinpath(name).write_text(source, encoding="utf-8")
+
+    result = run_duplication_scan(tmp_path, source_roots=(package.relative_to(tmp_path),), tests=True)
+
+    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO, result.headline()
+    assert result.files_analyzed == 1
+    assert ceiling_verdict(result) is None
+
+
+def test_an_unmeasured_test_surface_breaks_the_ceiling() -> None:
+    """An unavailable scan cannot prove the percentage, so it fails the ceiling check."""
+    assert ceiling_verdict(DuplicationResult.unavailable("npx was not found on PATH")) is not None

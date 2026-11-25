@@ -33,7 +33,6 @@ import re
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
 from typing import Annotated, Literal, NoReturn
 
 from pydantic import (
@@ -46,14 +45,17 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.country_code import COUNTRY_CODE_LENGTH
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.filing_year import is_four_digit_year
 from ...core.irnr import M210PayerMode
-from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.time.clock import today_madrid
 from ...core.unit_proportion import UnitProportion
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.form_codes import form_codes_in_scope, require_form_width
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.nif_iva_catalogue import nif_iva_format_for_country
 from ..calculations.registry.schema_base import DateAxis
@@ -64,11 +66,14 @@ from .m156_rows import Modelo156AfiliadoRow
 # Shared type aliases
 # ---------------------------------------------------------------------------
 
-_NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=20)]
-_NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]
-_RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-_IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
-_M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
+_NifStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
+_NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=256)]
+_RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+_IsoCountryCode = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=COUNTRY_CODE_LENGTH, max_length=COUNTRY_CODE_LENGTH),
+]
+_M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=16)]
 
 
 def _registry_detail_catalogue(
@@ -170,21 +175,24 @@ def resolve_detail_bearing_modelos(*, effective_date: date) -> frozenset[str]:
 # ---------------------------------------------------------------------------
 
 
-type M184Clave = Literal["A", "C", "D", "E", "F", "G", "I", "J", "K"]
-type M184Subclave = Literal["01", "02", "03", "04", "05", "06"]
-type M184NaturalezaInmueble = Literal["1", "2"]
-type M184SituacionInmueble = Literal["1", "2", "3", "4", "5"]
-type M184ClaveDeclarado = Literal["N", "T", "U", "O"]
+_M184_FORM_CODES_FACT = "modelo-184-member-form-codes"
+#: Each coded row field and the fact key declaring its codes.
+_M184_CODED_FIELDS = {
+    "clave": "clave.codes",
+    "subclave": "subclave.codes",
+    "naturaleza_inmueble": "naturaleza_inmueble.codes",
+    "situacion_inmueble": "situacion_inmueble.codes",
+    "clave_declarado": "clave_declarado.codes",
+}
 
 
 class Modelo184MemberRow(BaseModel):
     """One (member, clave, subclave) atribución row for Modelo 184.
 
     The socio record's own diseño repeats per clave or subclave with an
-    importe declared, not per member alone (see the accepted row-shape ADR),
-    so this row's identity is ``(nif, clave, subclave)`` rather than ``nif``
-    alone -- the same shape 349's ``operador`` row already carries via its
-    ``clave_operacion`` axis.
+    importe declared, not per member alone, so this row's identity is
+    ``(nif, clave, subclave)`` rather than ``nif`` alone -- the same shape 349's
+    ``operador`` row already carries via its ``clave_operacion`` axis.
 
     Fields mirror the per-record Tipo-2 layout declared in the M184
     ``bindings/0001-bindings.toml`` atribucion_member source block.
@@ -201,11 +209,10 @@ class Modelo184MemberRow(BaseModel):
     * every clave/subclave-conditional field below mirrors its own
       ``modelo-184-member-row-<field>`` binding.
 
-    Deliberately excluded (see the accepted row-shape ADR): the clave-A
-    reducción (its governing article is unresolved), provisiones-gastos-
-    dificil-justificacion (computed from the entity's own régimen fact, not
-    an operator-declared value), and any clave-E eligibility fact (a tracked
-    gap, no representation in this tree yet).
+    Deliberately excluded: the clave-A reducción (its governing article is
+    unresolved), provisiones-gastos-dificil-justificacion (computed from the
+    entity's own régimen fact, not an operator-declared value), and any clave-E
+    eligibility fact (a tracked gap, with no representation in this tree).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -214,8 +221,8 @@ class Modelo184MemberRow(BaseModel):
     nif: _NifStr
     nombre: _NameStr = Field(default="")
     # Optional, and deliberately not defaulted to Spain. A default is an
-    # INFERENCE about a fact nobody stated, and it inferred the one value that
-    # makes the member domestic -- a foreign member silently declared as
+    # INFERENCE about a fact nobody stated, and the inferred value would be the
+    # one that makes the member domestic -- a foreign member silently declared as
     # Spanish is the direction AEAT reconciles against what that member itself
     # declared.
     #
@@ -223,8 +230,7 @@ class Modelo184MemberRow(BaseModel):
     # country to supply: the atribucion socio facts carry nif, name, share and
     # base and no territory at all. Demanding one here would refuse every
     # profile-resolved row while naming a fact no surface records, which is a
-    # refusal nobody can answer. Recording the socio's country on the profile
-    # is the fix that would let this be required.
+    # refusal nobody can answer.
     pais: _IsoCountryCode | None = None
     porcentaje: Decimal = Field(description="Share percentage in the entity [0, 100]")
     importe: Decimal = Field(description="Attributed income/base imponible in EUR")
@@ -232,30 +238,37 @@ class Modelo184MemberRow(BaseModel):
     # (member, clave, subclave) repetition axis. clave is required -- the
     # socio record's own diseño has no row without one; subclave is optional
     # because claves C and E carry no subclave table at all.
-    clave: M184Clave
-    subclave: M184Subclave | None = None
+    clave: str = Field(min_length=1)
+    subclave: str | None = None
 
     # Always-present-per-row facts, independent of clave.
-    codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=2)] | None = None
+    codigo_provincia: Annotated[str, StringConstraints(strip_whitespace=True, max_length=16)] | None = None
     miembro_a_31_diciembre: bool | None = None
-    dias_miembro: int | None = Field(default=None, ge=0, le=366)
-    domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)] | None = None
+    dias_miembro: int | None = Field(default=None, ge=0)
+    domicilio_fiscal: Annotated[str, StringConstraints(strip_whitespace=True, max_length=64)] | None = None
 
     # Clave-C inmueble sub-block.
-    naturaleza_inmueble: M184NaturalezaInmueble | None = None
-    situacion_inmueble: M184SituacionInmueble | None = None
-    referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=20)] | None = None
-    clave_declarado: M184ClaveDeclarado | None = None
+    naturaleza_inmueble: str | None = None
+    situacion_inmueble: str | None = None
+    referencia_catastral: Annotated[str, StringConstraints(strip_whitespace=True, max_length=32)] | None = None
+    clave_declarado: str | None = None
     porcentaje_titularidad_inmueble: Decimal | None = None
-    dias_arrendamiento: int | None = Field(default=None, ge=0, le=366)
+    dias_arrendamiento: int | None = Field(default=None, ge=0)
 
-    # Shared clave-C/clave-D reducción field (diseño positions 109-119); the
-    # clave-A branch of this same physical field is deliberately excluded.
+    # The reducción field (diseño positions 109-119); the registry declares which
+    # claves and subclaves bear it.
     reduccion: Decimal | None = None
 
     # Clave-D subclave 03/04 rendimiento-neto fields (estimación objetiva).
     rendimiento_neto_previo_eo: Decimal | None = None
     rendimiento_neto_minorado_agricola_eo: Decimal | None = None
+
+    @field_validator("dias_miembro", "dias_arrendamiento")
+    @classmethod
+    def _days_fit_a_leap_year(cls, value: int | None) -> int | None:
+        if value is not None and value > 366:
+            raise ValueError("a day count cannot exceed the days of a leap year")
+        return value
 
     @field_validator("pais")
     @classmethod
@@ -263,9 +276,7 @@ class Modelo184MemberRow(BaseModel):
         # ``pais`` is optional on THIS row for the reason recorded on the field
         # above: the profile-driven producer has no country to supply, so a
         # missing one is a declared state rather than a malformed value. The
-        # shape check therefore applies to a present value only -- calling
-        # ``.upper()`` on the absent case raised AttributeError instead of
-        # validating anything, which is a crash rather than a refusal.
+        # shape check therefore applies to a present value only.
         if value is None:
             return value
         if value != value.upper() or not value.replace(" ", "").isalpha():
@@ -294,31 +305,41 @@ class Modelo184MemberRow(BaseModel):
         return value.upper()
 
     @model_validator(mode="after")
+    def _declared_form_codes(self) -> Modelo184MemberRow:
+        codes = form_codes_in_scope(_M184_FORM_CODES_FACT)
+        if codes is None:
+            return self
+        for name, key in _M184_CODED_FIELDS.items():
+            value = getattr(self, name)
+            if value is not None and value not in codes.codes(key):
+                raise ValueError(f"{name} is not a code the Modelo 184 record design declares")
+        return self
+
+    @model_validator(mode="after")
     def _subclave_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
-        if self.subclave is not None and self.clave not in {"A", "D", "F", "G", "I", "J", "K"}:
+        codes = form_codes_in_scope(_M184_FORM_CODES_FACT)
+        if codes is None:
+            return self
+        if self.subclave is not None and self.clave not in codes.codes("subclave.bearing_claves"):
             raise ValueError(f"clave {self.clave!r} carries no subclave table; leave subclave unset")
         return self
 
     @model_validator(mode="after")
-    def _clave_a_reduccion_stays_blocked(self) -> Modelo184MemberRow:
-        """Refuse a populated reducción on a clave-A row.
-
-        The shared diseño field (positions 109-119) also serves claves C and
-        D, whose reductions are grounded (LIRPF arts. 23 and 32.1). The
-        clave-A branch is explicitly BLOCKED by the accepted row-shape ADR:
-        the diseño's own citation (LIRPF art. 24.2) does not exist as such,
-        and art. 26.2 is only a strong, unconfirmed candidate. Modelling
-        reducción as one field (matching the diseño's own physical layout)
-        makes it reachable under clave A unless refused here explicitly, so
-        the block lives on the row rather than only in prose.
-        """
-        if self.clave == "A" and self.reduccion is not None:
-            raise ValueError(
-                "clave A reducción is blocked pending confirmation of its governing provision "
-                "(the diseño's own LIRPF art. 24.2 citation does not exist; see the accepted "
-                "row-shape ADR) -- leave reduccion unset for a clave-A row",
-            )
+    def _reduccion_only_where_the_diseno_declares_one(self) -> Modelo184MemberRow:
+        """Refuse a reducción on a row the shared diseño field (positions 109-119) gives none."""
+        codes = form_codes_in_scope(_M184_FORM_CODES_FACT)
+        if codes is None:
+            return self
+        bearing = codes.codes("reduccion.bearing")
+        if self.reduccion is not None and not {self.clave, f"{self.clave}:{self.subclave}"} & bearing:
+            raise ValueError(f"clave {self.clave!r} subclave {self.subclave!r} carries no reducción")
         return self
+
+    @field_validator("codigo_provincia")
+    @classmethod
+    @pydantic_validation_boundary
+    def _provincia_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m184.row.provincia_digits")
 
 
 # ---------------------------------------------------------------------------
@@ -329,29 +350,22 @@ class Modelo184MemberRow(BaseModel):
 # One row per related-party transaction group.
 # ---------------------------------------------------------------------------
 
-# The three coded fields' value sets are AEAT's published Tablas A, C and B
-# of the diseño de registro DR23200. They are declared once in ``core`` --
-# see :class:`~core.modelo_232_codigos.TipoVinculacion`, :class:`~core.modelo_232_codigos.TipoOperacionVinculada`
-# and :class:`~core.modelo_232_codigos.MetodoValoracion` -- because the registry's own
-# related-party observation is typed with the same sets.
+# The three coded fields' value sets are AEAT's published Tablas A, C and B of
+# the record design, held by the registry. A blank is the design's own state: the
+# whole block is conditional, and a default code would declare a relationship the
+# taxpayer never stated.
 
 
-def _hydrate_m232_codigo[EnumT: StrEnum](*, field_name: str, value: object, code_set: type[EnumT]) -> EnumT | object:
-    """Hydrate the operator's text into its typed DR23200 code set.
-
-    The CLI delivers `--row vinculada k=v` as plain strings and the model is
-    strict, so this is the boundary that turns a token into a member. An
-    off-catalogue token is refused here rather than by the strict-instance
-    check, so the message can name the codes AEAT actually publishes instead
-    of only reporting the wrong type.
-    """
+def _hydrate_m232_codigo(*, field_name: str, value: object, key: str) -> object:
+    """Normalise the operator's token and refuse one the scope's record design does not publish."""
     if not isinstance(value, str):
         return value
-    try:
-        return code_set(value.upper())
-    except ValueError:
-        accepted = ", ".join(repr(str(member)) for member in code_set)
-        raise ValueError(f"{field_name} must be one of {accepted}; got {value!r}") from None
+    token = value.upper()
+    codes = form_codes_in_scope()
+    if token and codes is not None and token not in codes.codes(key):
+        accepted = ", ".join(sorted(codes.codes(key)))
+        raise ValueError(f"{field_name} must be blank or one of {accepted}; got {value!r}")
+    return token
 
 
 class Modelo232VinculadaRow(BaseModel):
@@ -374,27 +388,29 @@ class Modelo232VinculadaRow(BaseModel):
     nombre: _NameStr = Field(default="")
     # Required, and deliberately not defaulted to Spain. The row is built from
     # operator-supplied key-value pairs, so a default is an INFERENCE about a
-    # fact the operator did not state -- and it inferred the one value that
-    # makes the row domestic. A foreign member or a cross-border related-party
+    # fact the operator did not state -- and the inferred value would be the one
+    # that makes the row domestic. A foreign member or a cross-border related-party
     # operation silently declared as Spanish is the direction AEAT reconciles
     # against what the counterparty itself declared.
     pais: _IsoCountryCode
     tipo_vinculacion: Annotated[
-        TipoVinculacion | str,
+        str,
         BeforeValidator(
-            lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion),
+            lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, key="m232.tipo_vinculacion.codes"),
         ),
-    ] = TipoVinculacion.NO_DECLARADO
+    ] = ""
     tipo_operacion: Annotated[
-        TipoOperacionVinculada | str,
+        str,
         BeforeValidator(
-            lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, code_set=TipoOperacionVinculada),
+            lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, key="m232.tipo_operacion.codes"),
         ),
-    ] = TipoOperacionVinculada.NO_DECLARADO
+    ] = ""
     metodo: Annotated[
-        MetodoValoracion | str,
-        BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, code_set=MetodoValoracion)),
-    ] = MetodoValoracion.NO_DECLARADO
+        str,
+        BeforeValidator(
+            lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, key="m232.metodo_valoracion.codes")
+        ),
+    ] = ""
     importe: Decimal
 
     @field_validator("pais")
@@ -440,8 +456,14 @@ class Modelo349CountryPrefixContextError(CadrumoError):
         filing_year: int,
         period: str,
         reason: str,
+        no_recovery_outcome: Literal[NoRecoveryOutcome.OPERATOR_DECISION],
     ) -> None:
-        """Record the prefix, the operation and the period that made it invalid."""
+        """Record the prefix, the operation and the period that made it invalid.
+
+        The filer stated the row, and a different prefix or operation key would be admitted,
+        so the refusal asks for the filer's decision; ``no_recovery_outcome`` states that.
+        """
+        self.no_recovery_outcome = no_recovery_outcome
         self.country_code = country_code
         self.clave_operacion = clave_operacion
         self.filing_year = filing_year
@@ -481,7 +503,12 @@ class Modelo349OperadorRow(BaseModel):
     row_type: Literal["operador"] = "operador"
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
-    razon_social: _RequiredNameStr
+    razon_social: _RequiredNameStr | None
+    """The name the operador is filed under; ``None`` while its party has no declared filing name.
+
+    A row without it is still the calculated row: its export refuses until the
+    person declares the name.
+    """
     clave_operacion: Modelo349ClaveOperacionValue
     importe: Decimal = Field(description="Base imponible o importe de la operacion en EUR")
 
@@ -511,9 +538,14 @@ class Modelo349RectificacionRow(BaseModel):
     row_type: Literal["rectificacion"] = "rectificacion"
     codigo_pais: _IsoCountryCode
     nif_comunitario: _NifStr
-    razon_social: _RequiredNameStr
+    razon_social: _RequiredNameStr | None
+    """The name the operador is filed under; ``None`` while its party has no declared filing name.
+
+    A row without it is still the calculated row: its export refuses until the
+    person declares the name.
+    """
     clave_operacion: Modelo349ClaveOperacionValue
-    ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
+    ejercicio: Annotated[str, StringConstraints(strip_whitespace=True)]
     periodo: str
     base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
     base_anterior: Decimal = Field(description="Base imponible declarada anteriormente en EUR")
@@ -553,7 +585,7 @@ class Modelo349RectificacionRow(BaseModel):
     @field_validator("ejercicio")
     @classmethod
     def _ejercicio_four_digit_year(cls, value: str) -> str:
-        if not value.isdigit():
+        if not (value.isdigit() and is_four_digit_year(int(value))):
             raise ValueError("ejercicio must be a four-digit year")
         return value
 
@@ -663,6 +695,7 @@ def _refuse_m349_country_prefix_context(
         filing_year=filing_year,
         period=period,
         reason=reason,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
     )
 
 
@@ -859,11 +892,17 @@ class Modelo210AgrupacionRentaRow(BaseModel):
             raise ValueError("bien_derecho_id is only valid when deriva_de_bien_derecho is true")
         return self
 
+    @field_validator("tipo_renta_code")
+    @classmethod
+    @pydantic_validation_boundary
+    def _tipo_renta_has_the_declared_width(cls, value: str | None) -> str | None:
+        return require_form_width(value, "m210.tipo_renta_digits")
+
 
 class Modelo210AgrupacionRentaRowsError(CadrumoError):
     """A Modelo 210 annual grouped-renta set violates row compatibility."""
 
-    def __init__(self, *, reason: str, detail: str) -> None:
+    def __init__(self, *, reason: str = "unspecified", detail: str = "") -> None:
         """Record which row compatibility rule the row set broke."""
         self.reason = reason
         self.detail = detail
@@ -1025,8 +1064,15 @@ ModeloDetailRow = (
 class Modelo184ShareSumError(CadrumoError):
     """Modelo 184 member share percentages do not sum to exactly 100%."""
 
-    def __init__(self, *, total: Decimal, count: int) -> None:
-        """Record the share total the miembro rows reached, and over how many rows."""
+    def __init__(
+        self, *, total: Decimal, count: int, no_recovery_outcome: Literal[NoRecoveryOutcome.OPERATOR_DECISION]
+    ) -> None:
+        """Record the share total the miembro rows reached, and over how many rows.
+
+        The filer stated the shares and a set that totals 100 would be admitted, so the
+        refusal asks for the filer's decision; ``no_recovery_outcome`` states that.
+        """
+        self.no_recovery_outcome = no_recovery_outcome
         self.total = total
         self.count = count
         super().__init__(
@@ -1046,15 +1092,12 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
         return
     total = sum((row.porcentaje for row in rows), Decimal("0"))
     if total != Decimal("100"):
-        raise Modelo184ShareSumError(total=total, count=len(rows))
+        raise Modelo184ShareSumError(
+            total=total, count=len(rows), no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION
+        )
 
 
 __all__ = [
-    "M184Clave",
-    "M184ClaveDeclarado",
-    "M184NaturalezaInmueble",
-    "M184SituacionInmueble",
-    "M184Subclave",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
     "Modelo210AgrupacionRentaRow",

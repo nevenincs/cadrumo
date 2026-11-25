@@ -73,7 +73,18 @@ def _folded(node: nodes.Element) -> str:
     A block wrapped across source lines carries the break into its text, where
     the description it stands in is one line.
     """
-    return " ".join(str(node.astext()).split())
+    from docutils import nodes
+
+    # Inline HTML, such as a procedure name's language span, is a raw
+    # descendant of the paragraph. Its astext() is the markup itself, not
+    # reader-facing text. Apply the same exclusion as _blocks does for a raw
+    # block without changing the doctree the HTML writer will render.
+    text = node
+    if any(node.findall(nodes.raw)):
+        text = node.deepcopy()
+        for raw in tuple(text.findall(nodes.raw)):
+            raw.parent.remove(raw)
+    return " ".join(str(text.astext()).split())
 
 
 def _blocks(doctree: nodes.document, titles: Collection[str]) -> Iterator[str]:

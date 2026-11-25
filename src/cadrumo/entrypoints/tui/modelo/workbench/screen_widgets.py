@@ -11,7 +11,7 @@ from textual.widgets import Static
 
 from .keys import describe_bindings
 from .screen_constants import (
-    _SCROLL_LOCALE_KEY,
+    SCROLL_LOCALE_KEY,
 )
 
 
@@ -32,4 +32,4 @@ class SymbolsPanel(VerticalScroll):
 
     def describe_keys(self) -> None:
         """Name the scroll key in the language now on screen."""
-        describe_bindings(self._bindings.key_to_bindings, {"up": _SCROLL_LOCALE_KEY})
+        describe_bindings(self._bindings.key_to_bindings, {"up": SCROLL_LOCALE_KEY})

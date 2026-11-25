@@ -8,17 +8,19 @@ operator saw its preview instead of importing something they never reviewed.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 from cadrumo.application.ledger.actions_import import plan_ledger_import_sources
 from cadrumo.application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
+    LedgerImportFileRefusal,
     LedgerImportRequest,
     LedgerImportResultProjection,
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.entrypoints.tui.ledger.models import (
     LedgerImportDoorV1,
@@ -34,6 +36,16 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from .operations.runtime_profile_session import RuntimeProfileSession
 
 
+def _import_sources_match(result: LedgerImportResultProjection, request: LedgerImportRequest) -> bool:
+    """Match the complete submitted file set and its unique source indexes."""
+    indexes = [item.file_index for item in result.source_digests]
+    return (
+        len(result.validations) + len(result.refused_files) == len(request.files)
+        and len(indexes) == len(set(indexes))
+        and all(index < len(request.files) for index in indexes)
+    )
+
+
 def _result_matches(
     result: LedgerImportResultProjection,
     request: LedgerImportRequest,
@@ -41,17 +53,14 @@ def _result_matches(
     terminal: OperationPublicProjectionV1,
 ) -> bool:
     """Whether the result answers exactly the submitted files under its settled receipt."""
-    expected_effect = OperationEffect.UPDATED if not request.dry_run and result.imported > 0 else OperationEffect.NONE
-    indexes = [item.file_index for item in result.source_digests]
+    expected_effect = result.settled_effect
     return (
         condition is OperationTerminalCondition.SUCCEEDED
         and terminal.refusal_ref is None
         and terminal.effect is expected_effect
         and result.profile_id == request.profile_id
         and result.dry_run is request.dry_run
-        and len(result.validations) + len(result.refused_files) == len(request.files)
-        and len(indexes) == len(set(indexes))
-        and all(index < len(request.files) for index in indexes)
+        and _import_sources_match(result, request)
     )
 
 
@@ -66,17 +75,18 @@ def _outcome(result: LedgerImportResultProjection, files: tuple[Path, ...]) -> L
         skipped=result.skipped,
         likely_duplicates=result.likely_duplicates,
         diagnostics=tuple(tr(item.message) for item in result.diagnostics),
-        refused_files=tuple(
-            LedgerImportFileRefusalV1(
-                file_name=item.file_name,
-                reason=tr(f"tui.ledger.import.refusal.{item.reason_code}"),
-            )
-            for item in result.refused_files
-        ),
+        refused_files=tuple(_refused_file(item) for item in result.refused_files),
         sources=tuple(
             LedgerImportSourceBindingV1(path=files[item.file_index], sha256=item.sha256)
             for item in result.source_digests
         ),
+    )
+
+
+def _refused_file(item: LedgerImportFileRefusal) -> LedgerImportFileRefusalV1:
+    """Word one refused file by the reason code the import recorded."""
+    return LedgerImportFileRefusalV1(
+        file_name=item.file_name, reason=tr(f"tui.ledger.import.refusal.{item.reason_code}")
     )
 
 
@@ -90,7 +100,8 @@ class RuntimeLedgerImportTuiDoorV1:
     async def preview(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
         """Read the planned files without writing and report what applying them would do."""
         _require_bank_statement(request)
-        files = tuple(path.absolute() for path in plan_ledger_import_sources(request.path))
+        # Planning lists the named folder on disk; it never runs on the event loop.
+        files = await asyncio.to_thread(_planned_files, request.path)
         return await self._run(request, files=files, expected=None, dry_run=True)
 
     async def apply(self, request: LedgerImportRequestV1) -> LedgerImportOutcomeV1:
@@ -138,6 +149,11 @@ class RuntimeLedgerImportTuiDoorV1:
             explain_failure=True,
         )
         return _outcome(result, files)
+
+
+def _planned_files(path: Path) -> tuple[Path, ...]:
+    """The files an import of ``path`` reads, each named absolutely."""
+    return tuple(planned.absolute() for planned in plan_ledger_import_sources(path))
 
 
 def _require_bank_statement(request: LedgerImportRequestV1) -> None:

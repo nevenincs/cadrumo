@@ -1,11 +1,9 @@
 """Census of the registry load closure: what a load imports, what it runs, and who runs the rest.
 
-Answers one question the campaign left open -- *of everything a sanctioned
-registry load reaches, what actually executes, and for the remainder, which
-entry point owns it?* Two prior design reviews each missed a registry module a
-keyword search did not surface, so the denominator here is derived from the
-import graph and the package directory rather than from whichever modules a
-search returned.
+Answers one question -- *of everything a sanctioned registry load reaches, what
+actually executes, and for the remainder, which entry point owns it?* The
+denominator here is derived from the import graph and the package directory
+rather than from whichever modules a keyword search returned.
 
 Three measurements, kept separate because they answer different questions:
 
@@ -55,20 +53,29 @@ import ast
 import json
 import sys
 import tempfile
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final, TypeGuard
 
 import grimp
 
+import dev.first_party_source
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import REPO_ROOT
 from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE, is_test_module_name, is_test_source
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
+from dev.quality.shared_scan import (
+    SourceSnapshot,
+    scanner_identity,
+    shared_scan_result,
+    shared_snapshot_scan_result,
+    take_snapshot,
+)
 from dev.quality.unread_inputs import report_unread
+from dev.temporary_output import prepare_temp_root
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
 ROOT_PACKAGE: Final[str] = "cadrumo"
@@ -107,28 +114,111 @@ class LoadCensusError(RuntimeError):
     """Raised when the census cannot be computed from the tree as it stands."""
 
 
-def build_runtime_graph() -> grimp.ImportGraph:
+@dataclass(frozen=True)
+class RuntimeImportGraph:
+    """The first-party runtime import graph, read-only: who imports whom, directly.
+
+    Answers the three questions the census asks of an import graph, with
+    :mod:`grimp`'s meaning, from a value that can be shared between every
+    process of a run and changed by none of them.
+    """
+
+    imports: Mapping[str, frozenset[str]]
+    importers: Mapping[str, frozenset[str]]
+
+    @classmethod
+    def from_grimp(cls, graph: grimp.ImportGraph) -> RuntimeImportGraph:
+        """Project a built :class:`grimp.ImportGraph` onto its direct edges.
+
+        Returns:
+            The projection, with every edge indexed in both directions.
+        """
+        imports = {module: frozenset(graph.find_modules_directly_imported_by(module)) for module in graph.modules}
+        importers: dict[str, set[str]] = {module: set() for module in imports}
+        for module, targets in imports.items():
+            for target in targets:
+                importers.setdefault(target, set()).add(module)
+        return cls(
+            imports=MappingProxyType(imports),
+            importers=MappingProxyType({module: frozenset(sources) for module, sources in importers.items()}),
+        )
+
+    @property
+    def modules(self) -> Mapping[str, frozenset[str]]:
+        """Every module in the graph, as a read-only mapping supporting ``in``."""
+        return self.imports
+
+    def find_upstream_modules(self, module: str) -> frozenset[str]:
+        """Return every module ``module`` imports, transitively, excluding ``module`` itself.
+
+        Returns:
+            The transitive import closure of ``module``.
+        """
+        seen: set[str] = set()
+        pending = [module]
+        while pending:
+            for target in self.imports.get(pending.pop(), frozenset[str]()):
+                if target not in seen:
+                    seen.add(target)
+                    pending.append(target)
+        seen.discard(module)
+        return frozenset(seen)
+
+    def find_modules_that_directly_import(self, module: str) -> frozenset[str]:
+        """Return the modules with a direct runtime import of ``module``.
+
+        Returns:
+            The direct importers, empty for a module nobody imports.
+        """
+        return self.importers.get(module, frozenset[str]())
+
+
+def build_runtime_graph() -> RuntimeImportGraph:
     """Build the first-party import graph as it exists at RUNTIME.
 
     ``TYPE_CHECKING``-guarded imports are excluded so the graph describes what a
     running interpreter imports, matching the project's import-linter contract.
 
+    The graph is a pure function of the package's source files and of the code
+    that reads them, so a run builds it once for each distinct content of those
+    files and every process reads that one result.
+
     Returns:
-        The :class:`grimp.ImportGraph` for the ``cadrumo`` root package.
+        The read-only graph for the ``cadrumo`` root package.
     """
-    # Caching is off deliberately: grimp keys its cache on file mtimes and does not
-    # evict a module whose file was deleted, so after any relocation the cached graph
-    # still carries the retired module and the closure gate reds on a ghost. A census
-    # of what a running interpreter imports has to be read from the tree, not a cache.
-    return grimp.build_graph(
-        ROOT_PACKAGE,
-        include_external_packages=False,
-        exclude_type_checking_imports=True,
-        cache_dir=None,
+    return shared_scan_result(
+        "registry-load-census-import-graph",
+        root=REPO_ROOT,
+        inputs=_runtime_graph_inputs,
+        scanner=scanner_identity(sys.modules[__name__], grimp),
+        compute=_build_runtime_graph_from_tree,
     )
 
 
-def static_load_closure(graph: grimp.ImportGraph) -> frozenset[str]:
+def _runtime_graph_inputs() -> tuple[Path, ...]:
+    """Every source file grimp reads to build the ``cadrumo`` graph."""
+    return tuple(
+        scan_directory(SOURCE_ROOT / ROOT_PACKAGE, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+    )
+
+
+def _build_runtime_graph_from_tree() -> RuntimeImportGraph:
+    # grimp's own cache stays off: it keys on file mtimes and does not evict a
+    # module whose file was deleted, so after any relocation the cached graph still
+    # carries the retired module and the closure gate reds on a ghost. The shared
+    # result above is keyed on the CONTENT of the whole enumerated file set, so a
+    # deleted or moved module changes its key.
+    return RuntimeImportGraph.from_grimp(
+        grimp.build_graph(
+            ROOT_PACKAGE,
+            include_external_packages=False,
+            exclude_type_checking_imports=True,
+            cache_dir=None,
+        )
+    )
+
+
+def static_load_closure(graph: RuntimeImportGraph) -> frozenset[str]:
     """Return every module a sanctioned registry load imports, transitively.
 
     Args:
@@ -245,7 +335,7 @@ def registry_package_modules() -> frozenset[str]:
     return frozenset(modules)
 
 
-def dynamic_reach(graph: grimp.ImportGraph, closure: frozenset[str]) -> frozenset[str]:
+def dynamic_reach(graph: RuntimeImportGraph, closure: frozenset[str]) -> frozenset[str]:
     """Return modules the closure reaches only through a resolved dynamic import.
 
     An AST import graph cannot represent ``import_module(name)``, so a module
@@ -274,7 +364,7 @@ def dynamic_reach(graph: grimp.ImportGraph, closure: frozenset[str]) -> frozense
     return frozenset(reached - closure)
 
 
-def census_universe(graph: grimp.ImportGraph) -> frozenset[str]:
+def census_universe(graph: RuntimeImportGraph) -> frozenset[str]:
     """Return every module this census must classify.
 
     The union of three terms: the static load closure, what the closure reaches
@@ -301,9 +391,8 @@ def _with_ancestor_packages(modules: Iterable[str]) -> frozenset[str]:
     loads that parent all the same, and every ancestor above it, so a closure
     built from edges alone omits packages a running load certainly holds.
 
-    Measured before this was added: five modules a real load has in
-    ``sys.modules`` were absent from the universe, four of them packages, and
-    rules naming them were reported stale for naming something real.
+    Without them, a rule naming such a package would be reported stale for
+    naming something real.
 
     Args:
         modules: The modules whose ancestors are wanted, included in the result.
@@ -358,16 +447,16 @@ def _iter_source_files() -> Iterable[Path]:
         yield from scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
 
 
-def _parse(path: Path) -> ast.Module:
+def _parse(source: str) -> ast.Module:
     """Parse one source file. Raises on any read, decode, or syntax failure.
 
-    Unlike the earlier swallowing form, the failure is not absorbed here: both
-    callers scan a REFERENCE_SCAN_ROOTS file that resolved to an in-scope
-    module name, and a file they cannot parse must be announced the same way
-    :func:`module_level_importers` announces an unreadable registry module,
-    not silently subtracted from the population they report.
+    The failure is not absorbed here: both callers scan a REFERENCE_SCAN_ROOTS
+    file that resolved to an in-scope module name, and a file they cannot parse
+    must be announced the same way :func:`module_level_importers` announces an
+    unreadable registry module, not silently subtracted from the population they
+    report.
     """
-    return ast.parse(path.read_text(encoding="utf-8"))
+    return ast.parse(source)
 
 
 def _absolute(target: str, package: str | None) -> str | None:
@@ -489,12 +578,8 @@ def _loop_resolved_targets(
     Reading the tuple recovers targets an argument-only scan reports as
     unknowable, and the cross-domain snapshot checks are exactly this shape.
 
-    The tuple's CONSTRUCTION is deliberately not parsed. It was a literal when
-    this was written and is now built from another module's mapping values, and
-    a scan taught to read that shape would go blind again at the next one - the
-    failure this census already suffered once, silently, until the resolver
-    stopped following the snapshot checks and the loss surfaced as classification
-    rules that appeared stale. Unreadable constructions are handed to the
+    The tuple's CONSTRUCTION is deliberately not parsed, because a scan taught
+    one spelling goes blind at the next. Unreadable constructions are handed to the
     evaluating fallback, which asks the module what the name holds instead of
     deducing it from syntax.
     """
@@ -559,12 +644,34 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
     Returns:
         One record per resolved target, or one per unresolved call site.
     """
+    kind = f"registry-load-census-dynamic-imports-{'production' if production_only else 'all'}"
+    sites, unread = _scan_sources(
+        kind, REFERENCE_SCAN_ROOTS, lambda snapshot: _harvest_dynamic_imports(snapshot, production_only=production_only)
+    )
+    report_unread(
+        "registry load census dynamic import harvest",
+        "an import_module call site in one of them would be missing from the census",
+        unread,
+    )
+    return sites
+
+
+def _harvest_dynamic_imports(
+    snapshot: SourceSnapshot, *, production_only: bool
+) -> tuple[tuple[DynamicImportSite, ...], tuple[str, ...]]:
+    """Return every dynamic-import site in the snapshot, and the inputs that could not be read."""
     sites: list[DynamicImportSite] = []
     unread: list[str] = []
-    for path in _iter_source_files():
+    for path in snapshot.paths:
         module = _module_name_for(path)
         try:
-            tree = _parse(path)
+            text = snapshot.read_text(path)
+            # A file that never spells the callee has no call site to lose, so a
+            # syntax error in it cannot hide one; skipping its parse is the
+            # bulk of this scan's cost.
+            if "import_module" not in text:
+                continue
+            tree = ast.parse(text)
         except (OSError, SyntaxError, UnicodeDecodeError) as error:
             if module is not None:
                 unread.append(f"{path}: {type(error).__name__}: {error}")
@@ -572,22 +679,20 @@ def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImport
         if module is None or (production_only and is_test_module_name(module)):
             continue
         sites.extend(_dynamic_imports_in_file(path, module, tree))
-    report_unread(
-        "registry load census dynamic import harvest",
-        "an import_module call site in one of them would be missing from the census",
-        unread,
-    )
-    return tuple(sites)
+    return tuple(sites), tuple(sorted(unread))
 
 
 def _dynamic_imports_in_file(path: Path, module: str, tree: ast.Module) -> tuple[DynamicImportSite, ...]:
     """Resolve the dynamic-import call sites in one parsed source module."""
     package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
+    calls = [node for node in ast.walk(tree) if _is_import_module_call(node)]
+    if not calls:
+        # Loop resolution only annotates import_module call lines, so a module
+        # with none needs neither the constants scan nor the loop walk.
+        return ()
     loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
     sites: list[DynamicImportSite] = []
-    for node in ast.walk(tree):
-        if not _is_import_module_call(node):
-            continue
+    for node in calls:
         members = loop_targets.get(node.lineno)
         if members is None:
             sites.append(DynamicImportSite(module, node.lineno, _literal_dynamic_target(node, package)))
@@ -614,8 +719,8 @@ def _registry_import_targets(
         module: The dotted name of the module containing it.
         defining_modules: The registry package's modules, read once by the
             caller for its whole scan; rescanning the package directory per
-            import statement made the reference map several times slower
-            than parsing every file it reads.
+            import statement would make the reference map several times
+            slower than parsing every file it reads.
 
     Returns:
         Canonical registry module names, possibly empty.
@@ -658,8 +763,8 @@ def _canonical_registry_targets(
 class ReferenceMap:
     """Canonical defining-module consumers, split by surface."""
 
-    production: Mapping[str, frozenset[str]] = field(default_factory=dict)
-    tests: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    production: Mapping[str, frozenset[str]] = field(default_factory=lambda: MappingProxyType({}))
+    tests: Mapping[str, frozenset[str]] = field(default_factory=lambda: MappingProxyType({}))
 
     def consumers(self, module: str) -> frozenset[str]:
         """Return every module importing canonical defining module ``module``.
@@ -680,33 +785,71 @@ def build_reference_map() -> ReferenceMap:
         The reference map, with production and test consumers kept apart so a
         module reachable only from a quality gate is visible as such.
     """
-    return _reference_map_for(REFERENCE_SCAN_ROOTS)
+    return reference_map_for(REFERENCE_SCAN_ROOTS)
 
 
 @lru_cache(maxsize=8)
-def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
+def reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
     """Build the map for one set of scan roots, once per process.
 
-    The scan reads and AST-parses every source file under the roots -- 7,251
-    files, 77.3 MB, measured at 154s -- and the census asks for the map twice,
-    once directly and once inside :func:`run_census`, so a gate file paid for
-    two identical walks of an unchanged tree.
+    The scan reads and AST-parses every source file under the roots, and the
+    census asks for the map twice, once directly and once inside
+    :func:`run_census`, so the same tree would otherwise be walked twice.
 
     Keyed on the ROOTS rather than cached outright: the scan is a pure function
     of the tree they name, and the tests that redirect ``REFERENCE_SCAN_ROOTS``
     at a synthetic tree must still get their own scan. An unkeyed cache would
     serve them the real map and quietly make them vacuous.
 
-    In-process only, like every memo here. Nothing persists across processes, so
-    an edited tree is read afresh by the next run.
+    Roots inside the repository are also shared across the run: the scan is
+    published once per distinct content of the files it reads and of this
+    scanner, and every other process reads that result. A synthetic tree
+    elsewhere is scanned in place, since nothing else in the run could reuse it.
     """
+    reference_map, unread = _scan_sources("registry-load-census-reference-map", roots, _scan_reference_map)
+    report_unread(
+        "registry load census reference map",
+        "a registry consumer named only in one of them would be missing from the reference map, "
+        "and its module could be misclassified dead",
+        unread,
+    )
+    return reference_map
+
+
+def _scan_sources[T](kind: str, roots: tuple[Path, ...], scan: Callable[[SourceSnapshot], T]) -> T:
+    """Run ``scan`` over one snapshot of the files under ``roots``, shared across the run when it can be.
+
+    Roots inside the repository are shared: the scan is published once per
+    distinct content of the files it reads and of this scanner, and every other
+    process reads that result. A synthetic tree is scanned in place, since
+    nothing else in the run could reuse it, and publishing one would only crowd
+    the real tree's entry out of the bounded cache.
+    """
+    if all(_is_repository_tree(root.resolve()) for root in roots):
+        return shared_snapshot_scan_result(
+            kind,
+            root=REPO_ROOT,
+            inputs=_iter_source_files,
+            scanner=scanner_identity(sys.modules[__name__], dev.first_party_source),
+            compute=scan,
+        )
+    return scan(take_snapshot(_iter_source_files()))
+
+
+def _is_repository_tree(root: Path) -> bool:
+    """Whether ``root`` is part of this checkout's source, not scratch planted under its temporary root."""
+    return root.is_relative_to(REPO_ROOT) and not root.is_relative_to(REPO_ROOT / ".tmp")
+
+
+def _scan_reference_map(snapshot: SourceSnapshot) -> tuple[ReferenceMap, tuple[str, ...]]:
+    """Read every file under the scan roots; return the map and the inputs that could not be read."""
     production: dict[str, set[str]] = {}
     tests: dict[str, set[str]] = {}
     unread: list[str] = []
     defining_modules = registry_package_modules()
-    for path in _iter_source_files():
+    for path in snapshot.paths:
         module = _module_name_for(path)
-        tree = _reference_tree(path, module, unread)
+        tree = _reference_tree(path, module, unread, snapshot)
         if module is None or tree is None:
             continue
         # The package's own production modules are already represented by graph
@@ -716,22 +859,17 @@ def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
             continue
         bucket = tests if is_test_module_name(module) else production
         _record_registry_imports(tree, module, defining_modules, bucket)
-    report_unread(
-        "registry load census reference map",
-        "a registry consumer named only in one of them would be missing from the reference map, "
-        "and its module could be misclassified dead",
-        unread,
+    reference_map = ReferenceMap(
+        production=MappingProxyType({k: frozenset(v) for k, v in production.items()}),
+        tests=MappingProxyType({k: frozenset(v) for k, v in tests.items()}),
     )
-    return ReferenceMap(
-        production={k: frozenset(v) for k, v in production.items()},
-        tests={k: frozenset(v) for k, v in tests.items()},
-    )
+    return reference_map, tuple(sorted(unread))
 
 
-def _reference_tree(path: Path, module: str | None, unread: list[str]) -> ast.Module | None:
+def _reference_tree(path: Path, module: str | None, unread: list[str], snapshot: SourceSnapshot) -> ast.Module | None:
     """Parse a source file while retaining unreadable in-scope evidence."""
     try:
-        return _parse(path)
+        return _parse(snapshot.read_text(path))
     except (OSError, SyntaxError, UnicodeDecodeError) as error:
         if module is not None:
             unread.append(f"{path}: {type(error).__name__}: {error}")
@@ -752,7 +890,7 @@ def _record_registry_imports(
             bucket.setdefault(owner, set()).add(module)
 
 
-def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) -> frozenset[str]:
+def unreferenced_modules(graph: RuntimeImportGraph, reference_map: ReferenceMap) -> frozenset[str]:
     """Return registry modules with no observed canonical defining-module consumer.
 
     A module qualifies only when three independent signals agree: no production
@@ -778,7 +916,7 @@ def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) 
     return frozenset(candidates)
 
 
-def _is_unreferenced_module(module: str, graph: grimp.ImportGraph, reference_map: ReferenceMap) -> bool:
+def _is_unreferenced_module(module: str, graph: RuntimeImportGraph, reference_map: ReferenceMap) -> bool:
     """Apply the three independent consumer checks to one registry module."""
     importers = graph.find_modules_that_directly_import(module)
     in_package = {i for i in importers if i.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(i)}
@@ -786,7 +924,8 @@ def _is_unreferenced_module(module: str, graph: grimp.ImportGraph, reference_map
     return not in_package and not direct_tests and not reference_map.consumers(module)
 
 
-def _trace_script(regime: str) -> str:
+def trace_script(regime: str) -> str:
+    """Return the Python script that traces module loads for a registry regime."""
     snapshot_block = ""
     if regime == "inspection_snapshot":
         snapshot_block = """
@@ -799,7 +938,7 @@ def _trace_script(regime: str) -> str:
                         modelo,
                         authority.catalogues,
                         source_root=source_root,
-                        filing_year=FILING_YEAR,
+                        filing_year=authority.supported_filing_years().horizon,
                         period=period,
                     )
                 except Exception:
@@ -814,7 +953,6 @@ from pathlib import Path
 SOURCE = Path({str(SOURCE_ROOT)!r}).resolve()
 TOOL = sys.monitoring
 TOOL_ID = TOOL.PROFILER_ID
-FILING_YEAR = 2024
 
 
 def module_for(filename):
@@ -881,11 +1019,11 @@ def trace_regime(regime: str) -> frozenset[str]:
     """
     if regime not in TRACE_REGIMES:
         raise LoadCensusError(f"unknown trace regime {regime!r}; expected one of {TRACE_REGIMES}")
-    with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as workspace:
+    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as workspace:
         area = Path(workspace)
         output = area / "executed.json"
         script = area / "trace.py"
-        script.write_text(_trace_script(regime), encoding="utf-8", newline="\n")
+        script.write_text(trace_script(regime), encoding="utf-8", newline="\n")
         environment = None
         if regime == "cold":
             import os
@@ -1004,4 +1142,9 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Under ``-m`` this module is ``__main__``, so the shared graph would pickle as
+    # ``__main__.RuntimeImportGraph``, which the shared-scan reader refuses. Run the
+    # importable copy so its types carry their real module path.
+    from importlib import import_module
+
+    raise SystemExit(import_module("dev.registry.analysis.load_census").main())

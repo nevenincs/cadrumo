@@ -9,8 +9,8 @@ This module is the application facade over the accepted addressing policy:
 operators address the active bucket/profile plus modelo, filing year, and period;
 raw ids remain advanced exact-addressing escape hatches. Ambiguous visible
 targets, contradictory exact-id plus natural-key flags, and discarded natural-key
-matches are handled by the captured-catalogue operation in this defining module
-rather than by CLI-local string logic.
+matches are handled by the captured-catalogue selection contract rather than by
+CLI-local string logic.
 
 Creation flows validate the law-determined registry revision before delegating
 to :func:`~cadrumo.application.modelo.work_lifecycle.create_work_unit`; an explicit
@@ -29,15 +29,13 @@ See Also:
 
 from __future__ import annotations
 
-import os
+import re
 from dataclasses import dataclass
-from secrets import token_bytes
-from threading import RLock
 from typing import TYPE_CHECKING
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.filing_year import FilingYear
-from ...core.hashing import content_hash_hex
+from ...core.hex import HEX_PATTERN_12
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
@@ -51,16 +49,22 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionState,
 )
 from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
+from ..operator_actions.models import PreconditionVerdict
+from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .lifecycle_view_refusal_doors import (
+    modelo_describe_verdict,
+    unit_revisions_verdict,
+    work_address_absent_verdict,
+    work_list_verdict,
+)
 from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
     build_modelo_work_file_unverified_revision_failure,
 )
+from .refusal_door_verdicts import caller_defect_verdict, operator_choice_verdict
 from .registry_discovery import declared_modelo_period_tokens
 from .selectors import (
     ModeloCalculationRevisionDefault,
@@ -70,6 +74,14 @@ from .selectors import (
     ModeloCalculationRevisionSelectorStateError,
     resolve_modelo_calculation_revision_pick,
 )
+from .work_address_errors import (
+    ModeloRevisionPickError,
+    ModeloWorkAddressNotFoundError,
+    ModeloWorkPeriodTokenError,
+    ModeloWorkRegistryYearMismatchError,
+    ModeloWorkSelectorContradictionError,
+    ModeloWorkUnitNotFoundError,
+)
 from .work_lifecycle import (
     RevisionParentOperation,
     create_work_unit,
@@ -78,64 +90,18 @@ from .work_lifecycle import (
     require_revision_parent_active,
 )
 from .work_lifecycle_ports import WorkLifecyclePorts
+from .work_lifecycle_refusal_failures import selector_incoherent_failure
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectionMode,
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
-    ModeloWorkUnitCandidate,
-    resolve_modelo_work_bucket,
     select_modelo_work_resolution,
 )
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .work_profile import ModeloWorkProfile
-
-
-class ModeloWorkSelectorError(ModeloError):
-    """Base error for Modelo work-selection refusals."""
-
-
-class ModeloWorkNoActiveBucketError(ModeloWorkSelectorError):
-    """Raised when an implicit selector cannot capture an active bucket."""
-
-
-class ModeloWorkUnitNotFoundError(ModeloWorkSelectorError):
-    """Raised when an exact work identifier resolves no all-state unit."""
-
-
-class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError):
-    """Raised when an exact selector contradicts supplied coordinates."""
-
-
-class ModeloWorkVisibleTargetAmbiguousError(ModeloWorkSelectorError):
-    """Raised after the deterministic complete candidate set has cardinality > 1."""
-
-    def __init__(self, candidates: tuple[ModeloWorkUnitCandidate, ...], *, selector: str | None = None) -> None:
-        """Retain the full candidate set and optional exact-id token."""
-        self.candidates = candidates
-        self.selector = selector
-        message = (
-            "modelo work target is ambiguous; choose a registry revision or exact work_unit_id"
-            if selector is None
-            else f"modelo work id selector {selector!r} is ambiguous; use the full 64-character work_unit_id"
-        )
-        super().__init__(message)
-
-
-class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
-    """Raised only after a singleton natural candidate fails its revision assertion."""
-
-    def __init__(self, *, requested_revision_id: RevisionId, existing: ModeloWorkUnitCandidate) -> None:
-        """Retain the failed revision assertion and existing work candidate."""
-        self.requested_revision_id = requested_revision_id
-        self.existing = existing
-        super().__init__("modelo work target already has a work unit for a different registry revision")
-
-
-class ModeloRevisionPickError(ModeloError):
-    """Raised when a calculation-revision selector is internally inconsistent."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,12 +167,14 @@ class ModeloRevisionPick:
                 raise ModeloRevisionPickError(
                     "explicit revision picks require calculation_revision_id",
                     translated_message="application.modelo.errors.revision_pick_explicit_id_required",
+                    precondition_verdict=caller_defect_verdict("revision_pick_explicit_id_required"),
                 )
             return
         if self.calculation_revision_id is not None:
             raise ModeloRevisionPickError(
                 "calculation_revision_id is only valid with the explicit revision selector",
                 translated_message="application.modelo.errors.revision_pick_id_requires_explicit_selector",
+                precondition_verdict=caller_defect_verdict("revision_pick_id_requires_explicit_selector"),
             )
 
     @classmethod
@@ -328,44 +296,6 @@ type ModeloWorkTarget = ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget | 
 """Supported work-target shapes for centralized modelo addressing."""
 
 
-class ModeloWorkAddressNotFoundError(ModeloPreconditionErrorMixin, ModeloError):
-    """Raised when a natural modelo work address resolves no work unit."""
-
-
-class ModeloWorkRegistryYearMismatchError(ModeloError):
-    """Raised when an explicit revision diverges from the law-determined one."""
-
-
-class ModeloWorkPeriodTokenError(ModeloError):
-    """Raised when an operator-facing period token cannot be normalized."""
-
-    def __init__(
-        self,
-        *,
-        year: int,
-        token: str,
-        modelo: str | None,
-        declared_tokens: tuple[str, ...],
-    ) -> None:
-        """Record the rejected token and the declared alternatives for its target."""
-        context = {
-            "year": year,
-            "token": token,
-            "modelo": modelo or "",
-            "tokens": ", ".join(declared_tokens),
-        }
-        if declared_tokens:
-            super().__init__(
-                context=context,
-                translated_message="application.modelo.errors.work_period_token_invalid",
-            )
-            return
-        super().__init__(
-            context=context,
-            translated_message="application.modelo.errors.work_period_token_unrecognised",
-        )
-
-
 @dataclass(frozen=True, slots=True)
 class ModeloWorkEnsureResult:
     """Result of resolving or creating a visible-target work unit."""
@@ -398,6 +328,11 @@ def _modelo_work_period_from_core(
             token=str(period),
             modelo=modelo,
             declared_tokens=declared,
+            precondition_verdict=(
+                modelo_describe_verdict("work_period_token", modelo)
+                if modelo is not None
+                else work_list_verdict("work_period_token")
+            ),
         )
     return period
 
@@ -424,10 +359,13 @@ def modelo_work_address_from_operator_target(
     elif work_unit_id is None:
         raise ModeloWorkAddressNotFoundError(
             "pass an exact work-unit id, or address the filing with modelo, year, and period",
+            precondition_verdict=work_list_verdict("work_address_absent"),
         )
     normalized_work_unit_id = work_unit_id.strip().lower() if work_unit_id is not None else None
     operator_work_unit_id = (
-        normalized_work_unit_id if normalized_work_unit_id is not None and len(normalized_work_unit_id) == 12 else None
+        normalized_work_unit_id
+        if normalized_work_unit_id is not None and re.fullmatch(HEX_PATTERN_12, normalized_work_unit_id)
+        else None
     )
     return ModeloWorkAddress(
         work_unit_id=None if operator_work_unit_id is not None else normalized_work_unit_id,
@@ -598,6 +536,7 @@ def _addressed_obligation(address: ModeloWorkAddress) -> tuple[ModeloCode, Filin
         raise ModeloWorkSelectorContradictionError(
             "natural work address passed the addressed screen without a complete "
             "modelo/ejercicio/period coordinate set",
+            precondition_failure=selector_incoherent_failure(),
         )
     return ModeloCode(address.modelo), address.filing_year, address.period
 
@@ -611,6 +550,7 @@ def _selected_work_unit(resolution: ModeloWorkResolution) -> WorkUnit:
     if resolution.work_unit is None:
         raise ModeloWorkSelectorContradictionError(
             "work selection resolved without naming a work unit",
+            precondition_failure=selector_incoherent_failure(),
         )
     return resolution.work_unit
 
@@ -772,12 +712,9 @@ def assert_work_target_revision(
                 period=projection.period,
             )
         raise ModeloWorkRegistryYearMismatchError(
-            f"{axis} registry revision {asserted!r} is not the law-determined revision "
-            f"for this filing target. The law-determined revision is {law_revision_id!r}. "
-            f"The period-to-revision binding is fixed by law (AEAT orden ministerial); "
-            f"you cannot override it. Re-create the work unit without --revision to use "
-            f"the correct revision, or omit --revision to accept the law-determined default.",
+            translated_message="application.modelo.errors.work_registry_revision_not_law_selected",
             context=context,
+            precondition_verdict=operator_choice_verdict("registry_revision_assertion"),
         )
     return law_revision_id
 
@@ -814,208 +751,6 @@ def law_selected_revision_for_work_target(
         capture,
         requested_revision_id=requested_revision_id,
         stored_revision_id=stored_revision_id,
-    )
-
-
-_WORK_CAPTURE_MAX_ATTEMPTS = 8
-_work_capture_process_pid = os.getpid()
-_work_capture_process_nonce = token_bytes(32)
-_work_capture_domains: set[str] = set()
-_work_capture_lock = RLock()
-_work_capture_generations: dict[str, tuple[tuple[str, ...], int]] = {}
-_work_capture_generation = 0
-
-
-class ModeloWorkCaptureError(ModeloWorkSelectorError):
-    """Raised when a work capture cannot reach one uncontended observation."""
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloWorkCapture:
-    """One isolated work resolution and its currentness coordinate.
-
-    The capture carries the strict frozen :class:`ModeloWorkResolution` selected
-    over exactly one catalogue read, plus an opaque comparison domain and a
-    generation. The physical storage root, bucket, namespace and object key that
-    produced it are folded into the domain digest and are never exposed.
-    """
-
-    resolution: ModeloWorkResolution
-    comparison_domain: str
-    generation: int
-
-    def require_current(self, current: ModeloWorkCurrentCoordinate) -> ModeloWorkCapture:
-        """Refuse a currentness comparison outside this physical process domain."""
-        _require_work_capture_process_domain(self.comparison_domain)
-        current.require_current(self)
-        return self
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloWorkCurrentCoordinate:
-    """Opaque same-process coordinate for one work catalogue owner scope."""
-
-    comparison_domain: str
-    generation: int
-
-    def require_current(self, captured: ModeloWorkCapture) -> ModeloWorkCurrentCoordinate:
-        """Require a capture from this exact scope and process incarnation."""
-        _require_work_capture_process_domain(self.comparison_domain)
-        _require_work_capture_process_domain(captured.comparison_domain)
-        if self.comparison_domain != captured.comparison_domain:
-            raise ModeloWorkCaptureError(
-                translated_message="errors.refused.modelo_work_capture_not_current",
-                context={"reason": "distinct_owner_scope"},
-            )
-        if self.generation != captured.generation:
-            raise ModeloWorkCaptureError(
-                translated_message="errors.refused.modelo_work_capture_not_current",
-                context={"reason": "capture_superseded"},
-            )
-        return self
-
-
-def _require_work_capture_process_domain(domain: str) -> None:
-    """Refuse a coordinate domain not minted in this process incarnation."""
-    if _work_capture_process_pid != os.getpid():
-        raise ModeloWorkCaptureError(
-            translated_message="errors.refused.modelo_work_capture_not_current",
-            context={"reason": "forked_process"},
-        )
-    with _work_capture_lock:
-        known = domain in _work_capture_domains
-    if not known:
-        raise ModeloWorkCaptureError(
-            translated_message="errors.refused.modelo_work_capture_not_current",
-            context={"reason": "foreign_process_incarnation"},
-        )
-
-
-def _work_capture_comparison_domain(*, bucket_id: str, implicit: bool) -> str:
-    """Mint the non-persisted coordinate domain for one owner scope."""
-    from ...core.config import load_settings
-
-    domain = content_hash_hex(
-        {
-            "owner": "application.modelo.work_addressing",
-            "storage_root": str(load_settings().cadrumo_local_storage_root),
-            "namespace": "modelo.work_unit_catalogue",
-            "bucket_id": bucket_id,
-            "implicit_pointer_limb": implicit,
-            "process_incarnation": _work_capture_process_nonce.hex(),
-        }
-    )
-    with _work_capture_lock:
-        _work_capture_domains.add(domain)
-    return domain
-
-
-def _work_pointer_limb() -> str:
-    """Return the implicit pointer limb coordinate for the active storage root."""
-    from ...core.bucket_pointer import pointer_path
-    from ...core.config import load_settings
-    from ...core.paths import path_stat_fingerprint
-
-    target = pointer_path(load_settings().cadrumo_local_storage_root)
-    try:
-        return content_hash_hex(path_stat_fingerprint(target))
-    except OSError:
-        return "absent"
-
-
-def _work_capture_generation_for(domain: str, observation: tuple[str, ...]) -> int:
-    """Assign one injective, order-preserving generation per distinct observation."""
-    global _work_capture_generation
-    with _work_capture_lock:
-        recorded = _work_capture_generations.get(domain)
-        if recorded is not None and recorded[0] == observation:
-            return recorded[1]
-        _work_capture_generation += 1
-        _work_capture_generations[domain] = (observation, _work_capture_generation)
-        return _work_capture_generation
-
-
-def _work_capture_observation(
-    request: ModeloWorkSelectorRequest,
-    *,
-    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
-) -> tuple[str, WorkUnitCatalogue, tuple[str, ...], bool]:
-    """Read the pointer and one catalogue record until the two limbs agree."""
-    implicit = request.bucket_id is None
-    for _attempt in range(_WORK_CAPTURE_MAX_ATTEMPTS):
-        limb_before = _work_pointer_limb() if implicit else None
-        bucket_id = resolve_modelo_work_bucket(request)
-        catalogue, revision_id = catalogue_repository.load_revisioned()
-        if implicit and _work_pointer_limb() != limb_before:
-            continue
-        observation: tuple[str, ...]
-        if implicit:
-            if limb_before is None:
-                raise ModeloWorkSelectorContradictionError(
-                    "implicit pointer observation requires the limb the pointer held before",
-                )
-            observation = (limb_before, revision_id)
-        else:
-            observation = (revision_id,)
-        return bucket_id, catalogue, observation, implicit
-    raise ModeloWorkCaptureError(
-        translated_message="errors.refused.modelo_work_capture_not_current",
-        context={"attempts": _WORK_CAPTURE_MAX_ATTEMPTS},
-    )
-
-
-def capture_modelo_work_resolution(
-    request: ModeloWorkSelectorRequest,
-    *,
-    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
-    mode: ModeloWorkSelectionMode = ModeloWorkSelectionMode.VISIBLE_OR_EXACT,
-) -> ModeloWorkCapture:
-    """Atomically capture one work resolution over a single catalogue read.
-
-    The implicit pointer limb and the one-record catalogue coordinate are read
-    so that a pointer replacement interleaved with the catalogue read is retried
-    rather than composed, which is what defeats a pointer/catalogue ABA. An
-    explicit ``bucket_id`` excludes the pointer limb entirely while still
-    carrying the catalogue generation. No registry is consulted and the
-    catalogue is read exactly once per successful attempt.
-    """
-    bucket_id, catalogue, observation, implicit = _work_capture_observation(
-        request,
-        catalogue_repository=catalogue_repository,
-    )
-    resolution = select_modelo_work_resolution(
-        request,
-        catalogue=catalogue,
-        bucket_id=bucket_id,
-        mode=mode,
-    )
-    domain = _work_capture_comparison_domain(bucket_id=bucket_id, implicit=implicit)
-    return ModeloWorkCapture(
-        resolution=resolution,
-        comparison_domain=domain,
-        generation=_work_capture_generation_for(domain, observation),
-    )
-
-
-def read_modelo_work_current_coordinate(
-    request: ModeloWorkSelectorRequest,
-    *,
-    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
-) -> ModeloWorkCurrentCoordinate:
-    """Read the coordinate a later pass compares a work capture against.
-
-    The same pointer and catalogue limbs :func:`capture_modelo_work_resolution`
-    observes, in the same owner domain, so a catalogue write since the capture
-    yields a different generation.
-    """
-    bucket_id, _catalogue, observation, implicit = _work_capture_observation(
-        request,
-        catalogue_repository=catalogue_repository,
-    )
-    domain = _work_capture_comparison_domain(bucket_id=bucket_id, implicit=implicit)
-    return ModeloWorkCurrentCoordinate(
-        comparison_domain=domain,
-        generation=_work_capture_generation_for(domain, observation),
     )
 
 
@@ -1105,6 +840,15 @@ def ensure_modelo_work_unit_for_active_target(
     return ModeloWorkEnsureResult(work_unit=unit, reused=False)
 
 
+def _address_absent_verdict(address: ModeloWorkAddress) -> PreconditionVerdict:
+    """Open creation for a stated declaration with no work unit, otherwise the work list."""
+    return work_address_absent_verdict(
+        modelo=address.modelo,
+        filing_year=address.filing_year,
+        unit_id_stated=address.work_unit_id is not None or address.operator_work_unit_id is not None,
+    )
+
+
 def resolve_modelo_work_address(
     address: ModeloWorkAddress,
     *,
@@ -1117,6 +861,7 @@ def resolve_modelo_work_address(
         raise ModeloWorkAddressNotFoundError(
             translated_message="errors.error.modelo_work_address_not_found",
             context={"work_unit_present": False},
+            precondition_verdict=_address_absent_verdict(address),
         )
     return resolution
 
@@ -1226,7 +971,6 @@ def _resolve_modelo_calculation_revision_address(
         )
         if recovery_error is error:
             raise
-        raise recovery_error from error
     except ModeloWorkAddressNotFoundError as error:
         precondition_error = _natural_target_absent_precondition_error(
             error=error,
@@ -1245,6 +989,10 @@ def _resolve_modelo_calculation_revision_address(
         if precondition_error is error:
             raise
         raise precondition_error from error
+    # Raised outside the handler: the recovery replaces the selector refusal,
+    # whose own door would otherwise stand beside it in the exception chain and
+    # make the one verdict the CLI boundary reads ambiguous.
+    raise recovery_error
 
 
 def _resolve_exact_calculation_revision_or_current_work_unit_revision(
@@ -1290,16 +1038,24 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
             raise missing from None
     require_calculation_revision_coordinates_current(revision, operation=operation)
     work_unit = catalogue.get(revision.work_unit_id)
-    if (
-        work_unit is None
-        or work_unit.bucket_id != resolved_bucket_id
-        or (calculation_repository.bucket_id is not None and work_unit.bucket_id != calculation_repository.bucket_id)
-    ):
+    if not _revision_parent_matches_bucket(work_unit, resolved_bucket_id, calculation_repository.bucket_id):
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": revision.calculation_revision_id},
         )
     return revision
+
+
+def _revision_parent_matches_bucket(
+    work_unit: WorkUnit | None,
+    resolved_bucket_id: str,
+    repository_bucket_id: str | None,
+) -> bool:
+    return (
+        work_unit is not None
+        and work_unit.bucket_id == resolved_bucket_id
+        and (repository_bucket_id is None or work_unit.bucket_id == repository_bucket_id)
+    )
 
 
 def _require_revision_parent_admitted_for_operation(
@@ -1386,6 +1142,7 @@ def _require_revision_state(
         raise ModeloCalculationRevisionSelectorStateError(
             f"selected revision {revision.calculation_revision_id!r} is in state "
             f"{revision.state.value!r}; {purpose} requires {allowed_values}",
+            precondition_verdict=unit_revisions_verdict("revision_state", revision.work_unit_id),
         )
     return revision
 
@@ -1399,31 +1156,16 @@ __all__ = [
     "ModeloResolvedRevisionProjection",
     "ModeloResolvedWorkProjection",
     "ModeloRevisionPick",
-    "ModeloRevisionPickError",
     "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
-    "ModeloWorkAddressNotFoundError",
-    "ModeloWorkCapture",
-    "ModeloWorkCaptureError",
-    "ModeloWorkCurrentCoordinate",
     "ModeloWorkEnsureResult",
-    "ModeloWorkNoActiveBucketError",
-    "ModeloWorkPeriodTokenError",
-    "ModeloWorkRegistryYearMismatchError",
-    "ModeloWorkRevisionConflictError",
-    "ModeloWorkSelectorContradictionError",
-    "ModeloWorkSelectorError",
     "ModeloWorkTarget",
-    "ModeloWorkUnitNotFoundError",
-    "ModeloWorkVisibleTargetAmbiguousError",
     "assert_work_target_revision",
     "calculation_revision_work_unit_target_error",
-    "capture_modelo_work_resolution",
     "ensure_modelo_work_unit_for_active_target",
     "law_selected_revision_for_work_target",
     "modelo_work_address_from_operator_target",
     "project_modelo_work_unit",
-    "read_modelo_work_current_coordinate",
     "resolve_modelo_revision_pick",
     "resolve_modelo_work_address",
     "resolve_modelo_work_address_unit",

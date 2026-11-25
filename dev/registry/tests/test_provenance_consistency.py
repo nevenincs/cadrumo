@@ -9,110 +9,64 @@ field's resolved coordinates as its id.
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY, CasillaDataType
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
-)
+from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions, open_ended_revision
 
 from ..analysis.provenance_consistency import provenance_findings
 from ..compiler.authority import compiled_bundled_authority
+from .single_casilla_export_layout_support import (
+    CASILLA_01,
+    LEGAL_REF,
+    SOURCE_REF,
+    revision_with,
+    single_casilla_export_layout,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_LEGAL_REF = "ley-35-2006:art-test"
 _EXTRA_LEGAL_REF = "ley-37-1992:art-extra"
-_SOURCE_REF = "aeat-test-source-001"
 _EXTRA_SOURCE_REF = "aeat-test-source-002"
-_CASILLA_01 = validated_casilla_id("01", surface="_CASILLA_01")
 
 
 def _casilla(*, legal_refs: tuple[str, ...]) -> CasillaDefinition:
     return CasillaDefinition(
-        id=_CASILLA_01,
+        id=CASILLA_01,
         number="01",
         localization_keys=("test.schema.casilla.label",),
         section=("totales",),
         input_kind=InputKind.MANUAL,
         legal_refs=legal_refs,
-        source_refs=(_SOURCE_REF,),
-    )
-
-
-def _layout(*, field_source_refs: tuple[str, ...]) -> ExportLayoutDefinition:
-    field = ExportFieldDefinition(
-        id="importe",
-        offset=1,
-        length=10,
-        kind=CasillaFieldKind.CASILLA,
-        casilla_id=_CASILLA_01,
-        data_type=CasillaDataType.MONEY,
-        required=False,
-        padding="left_zero",
-        justification="right",
-        signed=False,
-        legal_refs=(_LEGAL_REF,),
-        source_refs=field_source_refs,
-    )
-    record = ExportRecordDefinition(
-        id="declaracion",
-        record_type="declaracion",
-        order=1,
-        encoding=ExportEncoding.ASCII,
-        line_ending="none",
-        fields=(field,),
-    )
-    return ExportLayoutDefinition(id="layout", legal_refs=(_LEGAL_REF,), source_refs=(_SOURCE_REF,), records=(record,))
-
-
-def _revision(
-    *, casillas: tuple[CasillaDefinition, ...], layouts: tuple[ExportLayoutDefinition, ...]
-) -> ModeloRevision:
-    return ModeloRevision(
-        id="test-revision",
-        localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
-        legal_refs=(_LEGAL_REF,),
-        source_refs=(_SOURCE_REF,),
-        casillas=casillas,
-        export_layouts=layouts,
+        source_refs=(SOURCE_REF,),
     )
 
 
 def test_child_inside_manifest_is_clean() -> None:
-    revision = _revision(
-        casillas=(_casilla(legal_refs=(_LEGAL_REF,)),), layouts=(_layout(field_source_refs=(_SOURCE_REF,)),)
+    revision = revision_with(
+        casillas=(_casilla(legal_refs=(LEGAL_REF,)),),
+        layouts=(single_casilla_export_layout(field_source_refs=(SOURCE_REF,)),),
     )
 
     assert provenance_findings(revision, modelo_id="000") == ()
 
 
 def test_casilla_citing_outside_legal_ref_is_reported_with_the_ref() -> None:
-    revision = _revision(casillas=(_casilla(legal_refs=(_LEGAL_REF, _EXTRA_LEGAL_REF)),), layouts=())
+    revision = revision_with(casillas=(_casilla(legal_refs=(LEGAL_REF, _EXTRA_LEGAL_REF)),), layouts=())
 
     (finding,) = provenance_findings(revision, modelo_id="000")
 
-    assert (finding.child_kind, finding.child_id, finding.ref_kind) == ("casillas", str(_CASILLA_01), "legal")
+    assert (finding.child_kind, finding.child_id, finding.ref_kind) == ("casillas", str(CASILLA_01), "legal")
     assert finding.outside == (_EXTRA_LEGAL_REF,)
 
 
 def test_resolved_export_field_citing_outside_source_is_reported() -> None:
-    revision = _revision(
-        casillas=(_casilla(legal_refs=(_LEGAL_REF,)),),
-        layouts=(_layout(field_source_refs=(_SOURCE_REF, _EXTRA_SOURCE_REF)),),
+    revision = revision_with(
+        casillas=(_casilla(legal_refs=(LEGAL_REF,)),),
+        layouts=(single_casilla_export_layout(field_source_refs=(SOURCE_REF, _EXTRA_SOURCE_REF)),),
     )
 
     (finding,) = provenance_findings(revision, modelo_id="000")
@@ -135,14 +89,15 @@ def test_a_reference_absent_from_every_revision_is_distinguished_from_partial_dr
     """
     from ..analysis.provenance_consistency import outside_reference_scope
 
+    older, newer = (str(year) for year in newest_authored_editions("100", 2))
     index = {
-        ("100", "2023", "legal", "ley-1:art-1"): 5,
-        ("100", "2024", "legal", "ley-1:art-1"): 7,
-        ("100", "2023", "legal", "ley-2:art-2"): 3,
+        ("100", older, "legal", "ley-1:art-1"): 5,
+        ("100", newer, "legal", "ley-1:art-1"): 7,
+        ("100", older, "legal", "ley-2:art-2"): 3,
     }
     scopes = {item.reference: item for item in outside_reference_scope(index, {"100": 2})}
     assert scopes["ley-1:art-1"].spans_every_revision is True
-    assert scopes["ley-1:art-1"].revisions == ("2023", "2024")
+    assert scopes["ley-1:art-1"].revisions == (older, newer)
     assert scopes["ley-1:art-1"].sites == 12
     assert scopes["ley-2:art-2"].spans_every_revision is False
 
@@ -215,8 +170,6 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     added by the screen rather than by the walk.
     """
 
-    from cadrumo.domain.calculations.registry.schema import ModeloRevision
-
     from ..analysis.provenance_consistency import citing_children
 
     annotated = {
@@ -226,7 +179,7 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     }
     assert annotated, "the schema annotates no family, so this proves nothing"
 
-    revision = compiled_bundled_authority().modelo("303").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("303").revisions[str(open_ended_revision("303").id)]
     walked = {kind for kind, _ in citing_children(revision)}
     # Every walked family is one the schema declares. The reverse does not hold:
     # a family this revision leaves empty, or that carries no citations at all,
@@ -248,7 +201,7 @@ def test_both_provenance_screens_walk_the_same_families() -> None:
     from ..analysis.provenance_consistency import citing_children
 
     authority = compiled_bundled_authority()
-    revision = authority.modelo("303").revisions["2025"]
+    revision = authority.modelo("303").revisions[str(open_ended_revision("303").id)]
     walked = {kind for kind, items in citing_children(revision) if items}
     assert "deadline_windows" in walked, "the family that motivated this is not walked"
 

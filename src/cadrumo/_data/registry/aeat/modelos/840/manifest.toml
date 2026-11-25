@@ -1,7 +1,7 @@
 [modelo]
 id = "840"
 tax_domain = "iae"
-cadence = "ad_hoc"
+cadence = "event"
 jurisdiction = "ES-AEAT"
 calculation_class = "informative"
 output_sensitivity = "identity"

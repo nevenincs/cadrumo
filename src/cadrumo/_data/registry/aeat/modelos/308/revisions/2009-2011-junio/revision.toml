@@ -8,7 +8,7 @@ reviewed_at = 2026-08-26
 id = "2009-2011-junio"
 valid_from = 2009-01-01
 valid_to = 2011-06-30
-period_selector = { year_from = 2009, year_to = 2011, periods = ["AD-HOC"] }
+period_selector = { year_from = 2009, year_to = 2011, periods = ["1T", "2T", "3T", "4T"], period_overrides = [{ year = 2011, periods = ["1T", "2T"] }] }
 orden_aplicabilidad = ["orden-eha-3786-2008:art-2"]
 legal_refs = [
     "ley-37-1992:art-21",

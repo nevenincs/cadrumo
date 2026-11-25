@@ -41,6 +41,7 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -61,7 +62,7 @@ from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRep
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveApplicationInputError
 from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
-from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, resolve_discovery_profile
 from .filed_history_events import (
     FILED_HISTORY_PHASE_DECLARATION_CAPTURE,
     FILED_HISTORY_PHASE_DISCOVERY,
@@ -72,12 +73,11 @@ from .filed_history_events import (
     FILED_HISTORY_PHASE_PERSISTENCE,
     FILED_HISTORY_PHASE_PROVENANCE,
     FILED_HISTORY_PHASE_REGISTER_ACCESS,
-    FiledHistoryEventSink,
 )
 from .filed_history_pull import pull_filed_history
 from .filed_observation_ports import FiledObservationPersistencePorts
 from .iva_remote_state_ports import IvaRemoteStatePort
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .notification_ports import NotificationsPorts
 from .session import LiveSessionWriteReceipt, SessionWriteReporter
 
@@ -131,7 +131,7 @@ def require_capture_output_root(output_root: Path) -> None:
     if refusal is None:
         settings = load_settings()
         configured = (
-            Path(settings.cadrumo_local_storage_root),
+            Path(settings.cadrumo_storage_root),
             *(storage_path(category, settings=settings) for category in _CAPTURE_ROOT_CATEGORIES),
         )
         containing = [root for root in configured if output_root.is_relative_to(root)]
@@ -145,16 +145,42 @@ def require_capture_output_root(output_root: Path) -> None:
         )
 
 
+def resolve_capture_output_root(output_root: Path | None, default_category: StorageCategory) -> Path:
+    """Return the root a capture reports under, refusing one it cannot take.
+
+    A request that names no root gets the configured directory of
+    ``default_category``, the same directory the command line has always
+    defaulted to. The result is checked exactly as a named root is.
+
+    Raises:
+        LiveApplicationInputError: With the reason only, never the path.
+    """
+    resolved = output_root if output_root is not None else storage_path(default_category)
+    require_capture_output_root(resolved)
+    return resolved
+
+
 class FiledHistoryOperationRequest(BaseModel):
     """Immutable scope submitted to one recorded filed-history pull."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     profile_id: UUID
-    output_root: Path
+    output_root: Path | None = None
     today: date | None = None
     limit: int | None = Field(default=None, ge=1)
     dry_run: bool = False
+
+    def resolved_output_root(self) -> Path:
+        """Return the root the executor resolved into this request before the pull.
+
+        Raises:
+            ValueError: When the request still has no root, which only a pull
+                called without the executor can cause.
+        """
+        if self.output_root is None:
+            raise ValueError("a filed-history pull needs the output root its operation resolved")
+        return self.output_root
 
 
 class FiledHistoryComposition(Protocol):
@@ -216,80 +242,6 @@ type FiledHistoryPull = Callable[
 ]
 
 
-class SharedFiledHistoryPull(Protocol):
-    """Positional contract of a composition-owned filed-history pull callback.
-
-    The composing entrypoint supplies its shared pull through this contract and
-    :func:`bind_shared_filed_history_pull` adapts it to :data:`FiledHistoryPull`,
-    so the entrypoint never depends on the executor-owned emitter contract.
-    """
-
-    def __call__(
-        self,
-        payload: FiledHistoryOperationRequest,
-        profile: TaxpayerProfile | None,
-        repository: SyncRunRecordRepositoryProtocol | None,
-        events: FiledHistoryEventSink | None,
-        ports: FiledObservationPersistencePorts,
-        filed_data_port: FiledDataCapturePort,
-        iva_remote_state_port: IvaRemoteStatePort,
-        notifications_ports: NotificationsPorts,
-        certificate_secret_backend_factory: CertificateSecretBackendFactory,
-        browser_session_factory: BrowserSessionFactoryPort,
-        operator_scope_ports: OperatorScopePorts,
-        effect_guard: FiledEffectGuard,
-        on_session_write: SessionWriteReporter,
-        /,
-    ) -> Awaitable[object]:
-        """Run one filed-history pull with the supplied composed dependencies."""
-        ...
-
-
-def bind_shared_filed_history_pull(shared_pull: SharedFiledHistoryPull) -> FiledHistoryPull:
-    """Adapt a shared composition callback to the operation's typed pull contract.
-
-    The submitted request already carries the payload fields the shared pull
-    reads, so it is forwarded unchanged; a result other than the canonical
-    :class:`FiledHistoryOnboardingRun` is refused rather than settled.
-    """
-
-    async def pull(
-        payload: FiledHistoryOperationRequest,
-        profile: TaxpayerProfile | None,
-        repository: SyncRunRecordRepositoryProtocol,
-        events: OperationEventEmitter,
-        ports: FiledObservationPersistencePorts,
-        filed_data_port: FiledDataCapturePort,
-        iva_remote_state_port: IvaRemoteStatePort,
-        notifications_ports: NotificationsPorts,
-        certificate_secret_backend_factory: CertificateSecretBackendFactory,
-        browser_session_factory: BrowserSessionFactoryPort,
-        operator_scope_ports: OperatorScopePorts,
-        effect_guard: FiledEffectGuard,
-        on_session_write: SessionWriteReporter,
-    ) -> FiledHistoryOnboardingRun:
-        result = await shared_pull(
-            payload,
-            profile,
-            repository,
-            events,
-            ports,
-            filed_data_port,
-            iva_remote_state_port,
-            notifications_ports,
-            certificate_secret_backend_factory,
-            browser_session_factory,
-            operator_scope_ports,
-            effect_guard,
-            on_session_write,
-        )
-        if not isinstance(result, FiledHistoryOnboardingRun):
-            raise TypeError("shared filed-history composition returned an invalid result")
-        return result
-
-    return pull
-
-
 type FiledHistoryProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
 type FiledHistorySyncRunRepositoryFactory = Callable[[], SyncRunRecordRepositoryProtocol]
 
@@ -325,19 +277,6 @@ def _unconfigured_provider_preflight(profile_id: UUID, operation: PinnedAuthorit
     raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
 
-def _resolve_active_filed_history_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
-    """Load the selected profile through its canonical internal projection."""
-    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow.persistence import workflow_state_repository
-
-    try:
-        return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
-    except WizardStatusError:
-        # Filed history still has a truthful AEAT register-options path when the
-        # active profile has not declared sufficient taxpayer facts yet.
-        return None
-
-
 async def _pull_recorded_filed_history(
     payload: FiledHistoryOperationRequest,
     profile: TaxpayerProfile | None,
@@ -362,7 +301,7 @@ async def _pull_recorded_filed_history(
         iva_remote_state_port=iva_remote_state_port,
         notifications_ports=notifications_ports,
         ports=ports,
-        output_root=payload.output_root,
+        output_root=payload.resolved_output_root(),
         profile=profile,
         today=payload.today,
         limit=payload.limit,
@@ -386,9 +325,7 @@ def settled_filed_history_effect(run: FiledHistoryOnboardingRun) -> OperationEff
         or run.iva_wallet_status == "reconciled"
         or run.notificaciones_status == "captured"
     )
-    if committed:
-        return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
-    return OperationEffect.NONE
+    return OperationEffect.of_confirmed_writes(wrote=committed, incomplete=failures)
 
 
 async def _settlement_reference(
@@ -448,7 +385,7 @@ class FiledHistoryPairOutcomePublicV1(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
-    modelo: str = Field(min_length=1, max_length=8)
+    modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear
     signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
     walk_attempted: bool
@@ -544,7 +481,7 @@ class FiledHistoryOperationExecutor:
         composition_factory: FiledHistoryCompositionFactory,
         browser_resources_factory: FiledHistoryBrowserResourcesFactory,
         pull: FiledHistoryPull = _pull_recorded_filed_history,
-        profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+        profile_resolver: FiledHistoryProfileResolver = resolve_discovery_profile,
         provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
     ) -> None:
         """Initialize this public contract."""
@@ -564,7 +501,8 @@ class FiledHistoryOperationExecutor:
         profile_id = canonical_profile_bucket_id(request.payload.profile_id)
         if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
             raise ValueError("filed-history operation subject must identify the active profile")
-        require_capture_output_root(request.payload.output_root)
+        output_root = resolve_capture_output_root(request.payload.output_root, StorageCategory.FILED_DECLARATIONS)
+        payload = request.payload.model_copy(update={"output_root": output_root})
         await context.events.phase(FILED_HISTORY_PHASE_PREFLIGHT)
         self._provider_preflight(request.payload.profile_id, context.authority_operation)
         profile = self._profile_resolver(context.authority_operation)
@@ -574,7 +512,7 @@ class FiledHistoryOperationExecutor:
         # whether none or some of those writes committed.
         if not request.payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
-        composition = self._composition_factory(request.payload.output_root, operation=context.authority_operation)
+        composition = self._composition_factory(output_root, operation=context.authority_operation)
         browser_resources = self._browser_resources_factory()
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
@@ -583,7 +521,7 @@ class FiledHistoryOperationExecutor:
             browser_resources.activate(),
         ):
             run = await self._pull(
-                request.payload,
+                payload,
                 profile,
                 self._sync_run_repository,
                 context.events,
@@ -610,7 +548,7 @@ def build_filed_history_operation_definition(
     composition_factory: FiledHistoryCompositionFactory,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     pull: FiledHistoryPull = _pull_recorded_filed_history,
-    profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+    profile_resolver: FiledHistoryProfileResolver = resolve_discovery_profile,
     provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
 ) -> OperationDefinition:
     """Bind entrypoint-owned persistence to the canonical operation contract."""
@@ -666,11 +604,11 @@ def resolve_filed_history_access(
     Provider readiness is checked by the bound worker before browser I/O; the
     runtime's access policy cannot infer it from an automation request.
     """
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
-        payload_type=FiledHistoryOperationRequest,
+        request_type=FiledHistoryOperationRequest,
     )
 
 
@@ -708,10 +646,9 @@ __all__ = [
     "FiledHistoryPublicResultV1",
     "FiledHistoryPull",
     "FiledHistorySyncRunRepositoryFactory",
-    "SharedFiledHistoryPull",
-    "bind_shared_filed_history_pull",
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
     "require_capture_output_root",
+    "resolve_capture_output_root",
     "resolve_filed_history_access",
 ]

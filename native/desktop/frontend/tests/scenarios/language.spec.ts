@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 async function settings(page: Page) {
   await page
@@ -107,7 +108,7 @@ test("a refused write keeps the canonical language and reports the failure", asy
   await page.evaluate(() => window.__scenarioLanguage!.refuseNextSet());
   await choice.selectOption("hu");
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }),
+    label("desktop.messages.failed"),
   );
   await expect(page.getByRole("alert")).not.toContainText(
     "language_change_failed",
@@ -150,7 +151,7 @@ test("a cached previous profile observation is refused and a fresh current profi
     window.__scenarioLanguage!.switchAccount("Other profile", "ca");
   });
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }),
+    label("desktop.messages.failed"),
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(
@@ -177,7 +178,7 @@ test("a cached previous profile observation is refused and a fresh current profi
     })
     .selectOption("es");
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }, "ca"),
+    label("desktop.messages.failed", {}, "ca"),
   );
   await page.evaluate(() => {
     const controls = window.__scenarioLanguage!;
@@ -202,7 +203,7 @@ test("a cached previous profile observation is refused and a fresh current profi
   });
   await settleRendering(page);
   await expect(page.getByRole("alert")).toHaveText(
-    label("desktop.messages.failed", { code: "language_change_failed" }, "ca"),
+    label("desktop.messages.failed", {}, "ca"),
   );
   await expect(page.locator("html")).toHaveAttribute("lang", "ca");
   await page.evaluate(() =>
@@ -255,12 +256,19 @@ test("settings, palette and docs share the language without restarting terminals
   });
   await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  const terminalStarts = await page.evaluate(
-    () =>
-      (window.__scenarioHostCalls ?? []).filter((call) =>
-        call.startsWith("openTerminal tui"),
-      ).length,
-  );
+  // No launch starts a terminal: the TUI is opened, once.
+  await showTui(page);
+  const tuiStarts = () =>
+    page.evaluate(
+      () =>
+        (window.__scenarioHostCalls ?? []).filter((call) =>
+          call.startsWith("openTerminal tui"),
+        ).length,
+    );
+  // The TUI starts once the terminal font is loaded, after the first draw:
+  // the count is taken once that start is in.
+  const terminalStarts = 1;
+  await expect.poll(tuiStarts).toBe(terminalStarts);
   await expect
     .poll(() =>
       page.evaluate(() => {

@@ -34,7 +34,7 @@ NAMESPACED_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 
 NamespacedId = Annotated[
     str,
-    StringConstraints(pattern=NAMESPACED_ID_PATTERN, min_length=3, max_length=160),
+    StringConstraints(pattern=NAMESPACED_ID_PATTERN, min_length=1, max_length=256),
 ]
 """A dotted namespaced identifier -- a condition, action, scenario or leaf key."""
 

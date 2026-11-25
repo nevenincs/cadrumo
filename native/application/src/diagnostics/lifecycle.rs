@@ -26,6 +26,42 @@ pub enum InspectionRefusal {
     UnsupportedPlatform,
 }
 
+/// The local AI engine a manager was asked to run the server of.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalAiEngine {
+    Ollama,
+    LlamaCpp,
+    /// No engine: the person's selection could not be read, so none was chosen to run.
+    Unselected,
+}
+
+/// Why a manager runs no local AI server for the selected engine.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalAiUnavailable {
+    Platform,
+    OllamaNotPinned,
+    LlamaServerNotPackaged,
+    LlamaServerInvalid,
+    Address,
+    Supervision,
+    /// The record of the person's engine selection exists and cannot be read.
+    SelectionUnreadable,
+}
+
+/// A start or stop of the local AI server, by its cause.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LocalAiServerChange {
+    /// A live demand started the server, or started it again after it ended.
+    StartedOnDemand,
+    /// The last demand lapsed, so the running server was stopped.
+    IdleStopped,
+    /// The server ended while no demand was live, so it was not started again.
+    EndedWithoutDemand,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum WaitReason {
@@ -57,6 +93,7 @@ pub enum ForeignReason {
 pub enum StandDownReason {
     RootMismatch,
     ElevatedTokenRefused,
+    LaunchRefused,
     VersionMismatch,
 }
 
@@ -75,6 +112,7 @@ pub enum RestartClass {
 pub enum StopCause {
     Defect,
     Hang,
+    Timeout,
     IdleRequested,
     Requested,
     SessionEnd,
@@ -262,5 +300,13 @@ pub enum LifecycleFact {
     SessionEndCancelled {},
     EventsDropped {
         count: u64,
+    },
+    LocalAiUnavailable {
+        engine: LocalAiEngine,
+        reason: LocalAiUnavailable,
+    },
+    LocalAiServer {
+        engine: LocalAiEngine,
+        change: LocalAiServerChange,
     },
 }

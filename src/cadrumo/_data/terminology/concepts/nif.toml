@@ -14,8 +14,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El Numero de Identificacion Fiscal, el identificador tributario de toda persona o entidad ante la AEAT."
-definition = "Codigo que identifica de forma unica a cada obligado tributario ante la AEAT. Para las personas fisicas espanolas el NIF coincide con el numero del Documento Nacional de Identidad (DNI); para las personas fisicas extranjeras es el Numero de Identidad de Extranjero (NIE). Las personas juridicas y demas entidades disponen igualmente de un NIF; en registros antiguos el identificador de empresa podia denominarse Codigo de Identificacion Fiscal (CIF). El DNI y el NIE por si solos son documentos de identidad."
+short_description = "El Numero de Identificación Fiscal, el identificador tributario de toda persona o entidad ante la AEAT."
+definition = "Código que identifica de forma única a cada obligado tributario ante la AEAT. Para las personas físicas españolas el NIF coincide con el numero del Documento Nacional de Identidad (DNI); para las personas físicas extranjeras es el Numero de Identidad de Extranjero (NIE). Las personas jurídicas y demás entidades disponen igualmente de un NIF; en registros antiguos el identificador de empresa podía denominarse Código de Identificación Fiscal (CIF). El DNI y el NIE por si solos son documentos de identidad."
 
 [language.es.source]
 citation = "Real Decreto 1065/2007, Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria, Titulo II (numero de identificacion fiscal)."

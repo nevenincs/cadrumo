@@ -10,20 +10,16 @@ import sys
 import types
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..application_environment import (
-    DECLARATION,
-    ApplicationEnvironmentError,
-    LaunchRefusedError,
-    compile_section,
-    load_for_build,
-    parse,
-    reference_select,
-)
+from ..application_environment import load_for_build, parse
+from ..environment_compile import compile_section
+from ..environment_declaration_primitives import DECLARATION, ApplicationEnvironmentError
+from ..environment_reference import LaunchRefusedError, reference_select
 from ..generate import generate
 from ..layout import bundled_image_files, bundled_images, load_layout
 
@@ -95,10 +91,25 @@ _INVOCATIONS = [
         ],
     ),
     ("agent-providers", _literals(*_MODULE, "providers", "--declared", "--json")),
-    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json")),
+    ("agent-auth", _literals(*_MODULE, "auth", "status", "--json", "--causes")),
     (
         "agent-auth",
         [*_literals(*_MODULE, "auth", "login", "--provider"), {"slot": "provider", "kind": "identifier", "minimum": 0}],
+    ),
+    (
+        "agent-auth",
+        [
+            *_literals(*_MODULE, "auth", "login", "--provider"),
+            {"slot": "provider", "kind": "identifier", "minimum": 0},
+            *_literals("--device"),
+        ],
+    ),
+    (
+        "agent-auth",
+        [
+            *_literals(*_MODULE, "auth", "logout", "--provider"),
+            {"slot": "provider", "kind": "identifier", "minimum": 0},
+        ],
     ),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--json")),
     ("agent-providers", _literals(*_MODULE, "auth", "providers", "--interface", "gui", "--json")),
@@ -108,10 +119,10 @@ _INVOCATIONS = [
             [
                 *_literals(*_MODULE, "auth", "connect", "--provider"),
                 {"slot": "provider", "kind": "identifier", "minimum": 0},
-                *_literals("--method", method, "--timeout", "300"),
+                *_literals("--method", method, "--timeout", "300", "--causes"),
             ],
         )
-        for method in ("browser", "device")
+        for method in ("browser", "device", "browser-code")
     ],
 ]
 
@@ -183,9 +194,11 @@ def test_the_contract_compiles_exactly_the_declared_invocations_of_the_agent_ima
         assert retired not in section["names"]
 
 
-def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile() -> None:
-    declaration = load_for_build(REPO_ROOT)
-    section = compile_section(declaration, load_layout("windows-x86-64"))
+def _profile(section: dict[str, Any], name: str) -> dict[str, Any]:
+    return next(profile for profile in section["profiles"] if profile["name"] == name)
+
+
+def _assert_agent_names_are_admitted_by_prefix_only(section: dict[str, Any]) -> None:
     by_prefix = {profile["name"] for profile in section["profiles"] if profile["prefix"]}
     assert by_prefix == {"agent-gateway", "agent-worker"}
     for profile in section["profiles"]:
@@ -203,13 +216,11 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
         assert profile["prefix"] in {"", "CADRUMO_AGENT_"}, profile["name"]
     # The worker's IPC token travels on its standard input; the file names no credential to admit or refuse.
     assert not [name for name in section["names"] if name.endswith("_TOKEN")]
-    providers = next(profile for profile in section["profiles"] if profile["name"] == "agent-providers")
-    assert (providers["slots"], providers["pins"], providers["prefix"], providers["fixed"]) == ([], [], "", [])
-    assert providers["base"] == list(declaration.base["windows"]["system"])
-    assert providers["package_path"]
-    gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
+
+
+def _assert_gateway_and_worker_slots(gateway: dict[str, Any], worker: dict[str, Any]) -> None:
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
-        "CADRUMO_LOCAL_STORAGE_ROOT": "directory",
+        "CADRUMO_STORAGE_ROOT": "directory",
         "CADRUMO_PROFILE_ROOT": "directory",
         "CADRUMO_AGENT_HOSTED_ROOT": "directory",
         "CADRUMO_AGENT_PORT": "port",
@@ -218,15 +229,24 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
     # The gateway and its worker each receive their parent's storage root as an optional slot
     # they do not pin, which the agent forwards to the programs it starts. A slot is admitted
     # by its kind alone: whoever the caller is, the compiled slot names no parent.
-    worker = next(profile for profile in section["profiles"] if profile["name"] == "agent-worker")
     for profile in (gateway, worker):
-        root_slot = next(slot for slot in profile["slots"] if slot["name"] == "CADRUMO_LOCAL_STORAGE_ROOT")
-        assert root_slot == {"name": "CADRUMO_LOCAL_STORAGE_ROOT", "kind": "directory", "required": False}
+        root_slot = next(slot for slot in profile["slots"] if slot["name"] == "CADRUMO_STORAGE_ROOT")
+        assert root_slot == {"name": "CADRUMO_STORAGE_ROOT", "kind": "directory", "required": False}
         assert all(set(slot) == {"name", "kind", "required"} for slot in profile["slots"])
         assert "root" not in profile["pins"]
-    runtime = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-runtime")
-    assert runtime["fixed"] == []
-    service = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-agent-service")
+
+
+def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile() -> None:
+    declaration = load_for_build(REPO_ROOT)
+    section = compile_section(declaration, load_layout("windows-x86-64"))
+    _assert_agent_names_are_admitted_by_prefix_only(section)
+    providers = _profile(section, "agent-providers")
+    assert (providers["slots"], providers["pins"], providers["prefix"], providers["fixed"]) == ([], [], "", [])
+    assert providers["base"] == list(declaration.base["windows"]["system"])
+    assert providers["package_path"]
+    _assert_gateway_and_worker_slots(_profile(section, "agent-gateway"), _profile(section, "agent-worker"))
+    assert _profile(section, "cadrumo-runtime")["fixed"] == []
+    service = _profile(section, "cadrumo-agent-service")
     assert {(value["name"], value["value"]) for value in service["fixed"]} == {
         ("CADRUMO_PACKAGE_AGENT_EXECUTABLE", _AGENT),
         ("CADRUMO_PACKAGE_RELAY_EXECUTABLE", "cadrumo-mcp"),
@@ -327,10 +347,8 @@ def test_only_the_service_pins_the_agent_location_and_generic_hosts_take_no_agen
     assert profiles["cadrumo-runtime"]["slots"] == []
     assert profiles["python"]["slots"] == [{"name": "CADRUMO_PROFILE_ROOT", "kind": "directory", "required": False}]
     # The image that fixes a package fact cannot also take it from its parent.
-    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\n'
-    planted = _SOURCE.replace(
-        relay, relay + 'slots = [{ name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false }]\n', 1
-    )
+    relay = '  { name = "CADRUMO_PACKAGE_PYTHON_EXECUTABLE", image = "python" },\n]\nslots = [\n'
+    planted = _SOURCE.replace(relay, relay + '  { name = "CADRUMO_PACKAGE_AGENT_EXECUTABLE", required = false },\n', 1)
     assert planted != _SOURCE
     with pytest.raises(ApplicationEnvironmentError, match="slot"):
         parse(planted)
@@ -380,13 +398,14 @@ def test_the_agent_image_keeps_itself_as_the_interpreter_and_is_never_frozen() -
         # Nothing sets sys.frozen: no assignment and no PySys_SetObject("frozen", ...).
         assert not re.search(r'"frozen"|\bfrozen\s*=(?!=)', source.read_text(encoding="utf-8")), source
     assert re.search(r'"frozen"|\bfrozen\s*=(?!=)', 'PySys_SetObject("frozen", Py_True);')
-    # The Windows host selects the bundled branch from its role at run time; POSIX by definition.
-    for host, start, end, branches in (
-        (interpreter / "windows/host.c", "} else if (role->bundled) {\n", "} else if", 2),
-        (interpreter / "posix/host.c", "defined(CADRUMO_BUNDLED_IMAGE)\n", "#else", 3),
-    ):
-        parts = host.read_text(encoding="utf-8").split(start)
-        assert len(parts) == branches, host
-        bundled = parts[-1].split(end, 1)[0]
+    # Both hosts select the bundled behaviour from the role's bundled flag at run time.
+    for host in (interpreter / "windows/host.c", interpreter / "posix/host.c"):
+        text = host.read_text(encoding="utf-8")
+        branches = re.findall(r"else if \(role->bundled\) \{\n(.*?)\n    \} else", text, re.DOTALL)
+        assert len(branches) == 1, host
         # The bundled image runs its own arguments with its own path; only an entrypoint swaps paths[2].
-        assert "run(argc, argv," in bundled and "paths[2]" not in bundled
+        assert re.search(r"\brun\(argc, argv,", branches[0]) and "paths[2]" not in branches[0], host
+    # Only the bundled-image build constructs a bundled role.
+    posix = (interpreter / "posix/host.c").read_text(encoding="utf-8")
+    roles = re.findall(r"#(?:el)?if (defined\([^\n]*)\n\s*static const host_role role = \{[^}]*, (\d)\};", posix)
+    assert {(cond, flag) for cond, flag in roles if flag == "1"} == {("defined(CADRUMO_BUNDLED_IMAGE)", "1")}

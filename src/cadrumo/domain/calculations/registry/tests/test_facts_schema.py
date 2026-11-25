@@ -9,6 +9,8 @@ from ..facts.schema import GovernedFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_VALID_FROM = date(1980, 1, 1)
+
 
 def _scalar_fact() -> dict[str, object]:
     return {
@@ -16,9 +18,9 @@ def _scalar_fact() -> dict[str, object]:
         "family": "scalar",
         "variants": (
             {
-                "variant_id": "m347.threshold:2011",
+                "variant_id": f"m347.threshold:{_VALID_FROM.year}",
                 "date_axis": "filing_period",
-                "valid_from": date(2011, 1, 1),
+                "valid_from": _VALID_FROM,
                 "payload": {"kind": "scalar", "value": "3005.06", "unit": "EUR"},
                 "legal_refs": ("ley-37-1992",),
                 "source_refs": ("aeat-m347-instructions",),

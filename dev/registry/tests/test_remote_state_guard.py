@@ -16,9 +16,10 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
@@ -34,7 +35,7 @@ from cadrumo.tests.aeat_literal_fixtures import (
     configured_path,
 )
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
+from ..conformance.registry_schema_support import committed_registry_tree
 from ..maintenance_support import LiveParityCatalogue, OracleEnvironment
 from ..parity.renta_web_open_oracle import RentaWebOpenOracle
 from .aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
@@ -48,7 +49,7 @@ _WWW6_HOST = aeat_host("www6")
 _AEAT_APEX_HOST = aeat_host("aeat_gob")
 _CLAVE_HOST = aeat_host("clave")
 _PLANNED_OPERATION_EXPECTED_FIXTURES = {
-    GROI_ORACLE_ID: {"A28015865": "valid"},
+    GROI_ORACLE_ID: {"A00015016": "valid"},
     ORACLE_ID: {"DE111222333": "valid"},
     "modelo-100-renta-web-open": {"0180": object()},
 }
@@ -213,7 +214,7 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
     policy = remote_state_policy_from_cross_reference(decision)
 
     assert "check-nif-*" in policy.allowed_browser_action_patterns
-    assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="check-nif-A28015865"))
+    assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="check-nif-A00015016"))
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
         assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="unreviewed-click"))
 
@@ -782,7 +783,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
 
 
 def test_committed_static_cross_references_reject_remote_state_operations() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
 
     policies = [
         remote_state_policy_from_cross_reference(cross_reference)
@@ -814,7 +815,7 @@ def test_committed_static_cross_references_reject_remote_state_operations() -> N
 
 
 def test_committed_oracle_planned_operations_conform_to_bound_guard_policies() -> None:
-    modelos, catalogues = _committed_registry_tree()
+    modelos, catalogues = committed_registry_tree()
     oracle_catalogue = _production_oracle_catalogue()
     covered_oracle_ids: set[str] = set()
 

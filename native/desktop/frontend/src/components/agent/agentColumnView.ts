@@ -1,0 +1,65 @@
+import type { ContextFit, SelectionChangeFacts } from "../../errors";
+import type { ConversationCarry } from "../../shell/agentGatewayContract";
+import type { AgentSendRequest, AgentSession } from "../../shell/agentSession";
+import type { AgentSelection } from "./types";
+import type { AgentDocumentReference } from "../../shell/agentSnapshotContract";
+
+/** What the agent column shows beside its conversation. */
+export type Panel = "none" | "history" | "settings" | "documents";
+
+/** A message sent and not yet in the conversation's history. */
+export type PendingSend = {
+  id: string;
+  conversationId: string | null;
+  replyId: string | null;
+  text: string;
+  attachments: AgentDocumentReference[];
+  skills: string[];
+  previousReplies: string[];
+};
+
+/** What the agent column is showing, which belongs to the profile it was
+ * shown for. */
+export type AgentColumnView = {
+  reader: string | null;
+  panel: Panel;
+  archived: boolean;
+  conversationId: string | null;
+  chosen: AgentSelection | null;
+  // While no conversation is open: the conversation the next first message
+  // continues from on another lane, its newest turns carried into the new one.
+  carryFrom: string | null;
+  // What the last carried message took over, for the conversation it began.
+  carried: { conversationId: string; carry: ConversationCarry } | null;
+  // A message the agent held back because it changes the conversation's
+  // model, with what the change gives the new model, until the person
+  // confirms or withdraws it.
+  changeAsk: {
+    request: AgentSendRequest;
+    submission: PendingSend;
+    facts: SelectionChangeFacts;
+  } | null;
+  sending: boolean;
+  interactionId: string | null;
+  pending: PendingSend | null;
+  sendFailure: string | null;
+  // The context sizes the last send's refusal stated, read only with its
+  // code: a model too small for the conversation says by how much.
+  sendFit: ContextFit | null;
+  // Why the history's last action was refused.
+  archiveFailure: string | null;
+  historyBusy: boolean;
+  // The composer is drawn anew with this draft when a send is given back.
+  draft: { key: number; text: string };
+  // Counts the messages sent and the replies finished, each a reason to
+  // read the conversations again.
+  revision: number;
+};
+
+/** Whose a prompt's answer is: the profile, the conversation and the
+ * session it was asked in. */
+export type PromptOwner = {
+  reader: string | null;
+  conversationId: string | null;
+  session: AgentSession | undefined;
+};

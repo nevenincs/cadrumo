@@ -16,7 +16,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from .._modelo_rendering import (
+from ..modelo_rendering import (
     work_unit_lines,
     work_unit_list_lines,
     work_unit_payload,

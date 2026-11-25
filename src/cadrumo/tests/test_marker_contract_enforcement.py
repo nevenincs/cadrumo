@@ -27,14 +27,12 @@ See Also:
 
 from __future__ import annotations
 
-import subprocess
-import sys
 import textwrap
 from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
+from cadrumo.tests.nested_pytest_support import nested_pytest_over_generated_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -90,32 +88,6 @@ def test_two_execution_markers():
 _VIOLATION_NODE = "test_generated.py::test_two_execution_markers"
 
 
-def _nested_pytest(package: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    """Run a real nested pytest over ``package`` with the shared hook installed."""
-    return ensure_text_completed_process(
-        run_audited_process(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                "-p",
-                "no:cacheprovider",
-                "-c",
-                str(package / "pytest.ini"),
-                "-v",
-                *args,
-                str(package / "test_generated.py"),
-            ],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=None,
-            check=False,
-        )
-    )
-
-
 @pytest.fixture
 def mis_marked_package(tmp_path: Path) -> Path:
     """Materialise a package whose second test carries two execution markers."""
@@ -127,7 +99,7 @@ def mis_marked_package(tmp_path: Path) -> Path:
 
 def test_a_mis_marked_test_is_named_without_workers(mis_marked_package: Path) -> None:
     """At ``-n0`` the contract still raises, naming the node and both markers."""
-    completed = _nested_pytest(mis_marked_package, "-n0")
+    completed = nested_pytest_over_generated_module(mis_marked_package, "-n0")
     output = completed.stdout + completed.stderr
 
     assert completed.returncode == int(pytest.ExitCode.USAGE_ERROR), output
@@ -138,7 +110,7 @@ def test_a_mis_marked_test_is_named_without_workers(mis_marked_package: Path) ->
 
 def test_a_mis_marked_test_is_reported_under_real_xdist_workers(mis_marked_package: Path) -> None:
     """Under real workers the violation reports instead of crashing the worker."""
-    completed = _nested_pytest(mis_marked_package, "-n2", "--dist=loadfile")
+    completed = nested_pytest_over_generated_module(mis_marked_package, "-n2", "--dist=loadfile")
     output = completed.stdout + completed.stderr
 
     assert "INTERNALERROR" not in output, f"a mis-marked test must not kill the worker:\n{output}"
