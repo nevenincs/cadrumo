@@ -41,6 +41,7 @@ if TYPE_CHECKING:
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
 _RELATION_ID_ADAPTER: TypeAdapter[RelationId] = TypeAdapter(RelationId)
+_OBJECT_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[object, object])
 
 
 def _validated_casilla_id(value: object, *, surface: str) -> CasillaId:
@@ -191,7 +192,7 @@ def canonical_row_binding_values(
                 no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
                 record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
-        typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
+        typed_rows = _OBJECT_MAPPING_ADAPTER.validate_python(raw_rows)
         rows = index_unique_row_coordinates(
             (
                 (

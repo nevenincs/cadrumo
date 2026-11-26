@@ -43,7 +43,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import TypedDict, override
+from typing import Final, TypedDict, override
 
 from pydantic import (
     BaseModel,
@@ -173,6 +173,20 @@ handed to an accountant as current" (see
 :mod:`application.modelo.review_package`)."""
 
 
+# Built once: a revision is validated field by field and row by row, and building an adapter costs more than using it.
+_CONTEXT_ADAPTER: Final = TypeAdapter(Mapping[str, object])
+_OBJECT_TUPLE_ADAPTER: Final = TypeAdapter(tuple[object, ...])
+_OBJECT_MAPPING_ADAPTER: Final = TypeAdapter(dict[object, object])
+_ROW_IDENTITIES_ADAPTER: Final = TypeAdapter(dict[RowBindingKey, RowSourceIdentity])
+_BINDING_ROW_ADAPTER: Final = TypeAdapter(tuple[BindingId, int])
+_WIRE_ROWS_ADAPTER: Final = TypeAdapter(tuple[dict[str, object], ...])
+_ROW_VALUES_ADAPTER: Final = TypeAdapter(dict[RowCasillaKey, Decimal])
+_CASILLA_ROW_ADAPTER: Final = TypeAdapter(tuple[CasillaId, int])
+_DECIMAL_ADAPTER: Final = TypeAdapter(Decimal)
+_ROW_PROVENANCE_ADAPTER: Final = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance])
+_STRING_MAPPING_ADAPTER: Final = TypeAdapter(dict[str, object])
+
+
 def _string_keyed_context(context: object) -> Mapping[str, object] | None:
     """Narrow a pydantic ``ValidationInfo``/serializer ``context`` to a string-keyed mapping.
 
@@ -182,7 +196,7 @@ def _string_keyed_context(context: object) -> Mapping[str, object] | None:
     """
     if not isinstance(context, Mapping):
         return None
-    return TypeAdapter(Mapping[str, object]).validate_python(context)
+    return _CONTEXT_ADAPTER.validate_python(context)
 
 
 def empty_row_source_identities() -> dict[RowBindingKey, RowSourceIdentity]:
@@ -694,7 +708,7 @@ class CalculationRevision(BaseModel):
                 record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
         normalized: list[str] = []
-        for item in TypeAdapter(tuple[object, ...]).validate_python(value):
+        for item in _OBJECT_TUPLE_ADAPTER.validate_python(value):
             if not isinstance(item, str):
                 raise ModeloValidationError(
                     "source_transaction_ids must contain strings",
@@ -745,7 +759,7 @@ class CalculationRevision(BaseModel):
                 no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
                 record=ModeloValidatedRecord.CALCULATION_REVISION,
             )
-        raw_mapping = TypeAdapter(dict[object, object]).validate_python(value)
+        raw_mapping = _OBJECT_MAPPING_ADAPTER.validate_python(value)
         return canonical_row_binding_values(
             raw_mapping,
             surface="row_binding_values",
@@ -772,14 +786,12 @@ class CalculationRevision(BaseModel):
             )
         typed: dict[RowBindingKey, RowSourceIdentity]
         if isinstance(value, Mapping):
-            typed = TypeAdapter(dict[RowBindingKey, RowSourceIdentity]).validate_python(value)
+            typed = _ROW_IDENTITIES_ADAPTER.validate_python(value)
         elif isinstance(value, (list, tuple)):
             typed = index_unique_row_coordinates(
                 (
                     (
-                        TypeAdapter(tuple[BindingId, int]).validate_python(
-                            (raw.get("binding_id"), raw.get("row_index"))
-                        ),
+                        _BINDING_ROW_ADAPTER.validate_python((raw.get("binding_id"), raw.get("row_index"))),
                         RowSourceIdentity.model_validate(
                             {
                                 "source_kind": raw.get("source_kind"),
@@ -789,7 +801,7 @@ class CalculationRevision(BaseModel):
                             },
                         ),
                     )
-                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                    for raw in _WIRE_ROWS_ADAPTER.validate_python(value)
                 ),
                 duplicate=lambda _coordinate: ModeloValidationError(
                     "row source identities contain a duplicate coordinate",
@@ -828,17 +840,15 @@ class CalculationRevision(BaseModel):
             )
         typed: dict[RowCasillaKey, Decimal]
         if isinstance(value, Mapping):
-            typed = TypeAdapter(dict[RowCasillaKey, Decimal]).validate_python(value)
+            typed = _ROW_VALUES_ADAPTER.validate_python(value)
         elif isinstance(value, list):
             typed = index_unique_row_coordinates(
                 (
                     (
-                        TypeAdapter(tuple[CasillaId, int]).validate_python(
-                            (raw.get("casilla_id"), raw.get("row_index"))
-                        ),
-                        TypeAdapter(Decimal).validate_python(raw.get("value")),
+                        _CASILLA_ROW_ADAPTER.validate_python((raw.get("casilla_id"), raw.get("row_index"))),
+                        _DECIMAL_ADAPTER.validate_python(raw.get("value")),
                     )
-                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                    for raw in _WIRE_ROWS_ADAPTER.validate_python(value)
                 ),
                 duplicate=lambda _coordinate: ModeloValidationError(
                     "row casilla values contain a duplicate coordinate",
@@ -879,14 +889,12 @@ class CalculationRevision(BaseModel):
             )
         typed: dict[RowCasillaKey, DirectRowMaterializationProvenance]
         if isinstance(value, Mapping):
-            typed = TypeAdapter(dict[RowCasillaKey, DirectRowMaterializationProvenance]).validate_python(value)
+            typed = _ROW_PROVENANCE_ADAPTER.validate_python(value)
         elif isinstance(value, list):
             typed = index_unique_row_coordinates(
                 (
                     (
-                        TypeAdapter(tuple[CasillaId, int]).validate_python(
-                            (raw.get("casilla_id"), raw.get("row_index"))
-                        ),
+                        _CASILLA_ROW_ADAPTER.validate_python((raw.get("casilla_id"), raw.get("row_index"))),
                         DirectRowMaterializationProvenance.model_validate(
                             {
                                 "source_binding_id": raw.get("source_binding_id"),
@@ -897,7 +905,7 @@ class CalculationRevision(BaseModel):
                             }
                         ),
                     )
-                    for raw in TypeAdapter(tuple[dict[str, object], ...]).validate_python(value)
+                    for raw in _WIRE_ROWS_ADAPTER.validate_python(value)
                 ),
                 duplicate=lambda _coordinate: ModeloValidationError(
                     "row casilla provenance contains a duplicate coordinate",
@@ -934,7 +942,7 @@ class CalculationRevision(BaseModel):
         handled = handler(self)
         if not isinstance(handled, dict):
             return handled
-        payload = TypeAdapter(dict[str, object]).validate_python(handled)
+        payload = _STRING_MAPPING_ADAPTER.validate_python(handled)
         if self.rendering_snapshot is None:
             payload.pop("rendering_snapshot", None)
         if self.invoice_fingerprint is None:
