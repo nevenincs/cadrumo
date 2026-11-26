@@ -37,7 +37,6 @@ __all__ = [
     "FormProjectionPair",
     "FormSectionPair",
     "form_identities",
-    "form_projection_identity",
     "form_projection_is_immutable",
 ]
 
@@ -268,21 +267,6 @@ class _Snapshot:
         return self.value(value)
 
 
-def form_projection_identity(value: BaseModel, public_type: type[BaseModel]) -> Hashable | None:
-    """Copy exact immutable values and current schemas, or decline reuse.
-
-    This is an eligibility check, not validation. Pair retention uses the same
-    checks without allocating another value key; misses run the original validators.
-    """
-    try:
-        canonical_schema, canonical_types = _schemas(ModeloWorkFormLoadV1)
-        public_schema, public_types = _schemas(public_type)
-        snapshot = _Snapshot(canonical_types | public_types)
-        return (canonical_schema, public_schema, snapshot.value(value))
-    except _NotReusableError:
-        return None
-
-
 def form_projection_is_immutable(
     value: BaseModel, public_type: type[BaseModel], *, settled: Iterable[object] = ()
 ) -> bool:
@@ -322,8 +306,8 @@ class FormIdentities:
 def form_identities(load: ModeloWorkFormLoadV1, public_type: type[BaseModel]) -> FormIdentities | None:
     """Copy the form's and each section's exact values in one walk; ``None`` declines reuse.
 
-    ``form`` is what :func:`form_projection_identity` answers. A section's
-    identity is the same kind of copy, so two sections share one only when
+    ``form`` copies exact immutable values and the current schemas; this is an eligibility check,
+    not validation. A section's identity is the same kind of copy, so two sections share one only when
     every value in them, its type and its decimal representation are the same.
     """
     try:
