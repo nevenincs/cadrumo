@@ -383,7 +383,7 @@ def _log_form_memo_read(kept: WorkbenchFormReadKey | None, key: WorkbenchFormRea
     )
 
 
-_REFRESH_START_QUIET_SECONDS: Final = 1.5
+_REFRESH_START_QUIET_SECONDS: Final = 0.5
 """How long requests must stay quiet, beyond the worker's own quiet window, before a form refresh starts."""
 
 
@@ -513,7 +513,8 @@ class _FormRead:
 
     def _refreshed(self, memo: WorkbenchCaptureMemory, spent: dict[str, int]) -> bool | None:
         """Build and keep the form; ``None`` when the refresh never started."""
-        # The frontend's own reads after an export follow it within a second or two; they go first.
+        # The frontend's own reads after an export follow it within a second; they go first. A longer wait
+        # never ends while a window keeps reading, and the return to the form then builds it all itself.
         if not memo.yield_to_requests(unless=lambda: False, quiet_for=_REFRESH_START_QUIET_SECONDS):
             return None
         bucket_id = _bucket_id(self.payload.profile_id)
