@@ -532,6 +532,26 @@ def test_a_changed_catalogue_validates_only_the_revisions_whose_json_changed(
     assert unchanged == warm
 
 
+def test_a_work_unit_written_between_reads_leaves_the_unchanged_revisions_validated(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with _converted_fixture(tmp_path) as (profile, operation, _digests_stored):
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        warm, _revision_id = reader.load_revisioned(operation=operation)
+        assert all(revision.amendment_identity is None for revision in warm)
+        # Every calculation and every edit writes its work unit, which the validation's authorities include.
+        work_units = WorkUnitCatalogueRepository(objects=profile.repository)
+        renamed = tuple(unit.model_copy(update={"name": f"{unit.name} again"}) for unit in work_units.load())
+        work_units.save(build_work_unit_catalogue(renamed))
+        _rewrite_stored_catalogue(profile, lambda _stored: None)
+        with _validated_payloads(monkeypatch) as validated:
+            unchanged, _unchanged_revision_id = reader.load_revisioned(operation=operation)
+
+    assert len(warm) > 1
+    assert [payload["payload"]["revisions"] for payload in validated] == [{}]
+    assert unchanged == warm
+
+
 def test_a_changed_revision_is_validated_again_and_refused_when_invalid(tmp_path: Path) -> None:
     with _converted_fixture(tmp_path) as (profile, operation, _digests_stored):
         reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
