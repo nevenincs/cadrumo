@@ -51,7 +51,7 @@ The manager supervises the packaged runtime host. It starts `bin/cadrumo-runtime
 - **No launch-context refusal on start:** elevation, Session 0 and a missing desktop do not stop the manager. The tray and the startup-failure dialog appear only when a desktop is available. Recovery follows the process lifetime rather than the session's connection state.
 - **Platforms:** only Windows has a run path. Elsewhere `main` writes `manager_platform_unavailable` and exits with the startup-failure code. These are source-level controls; containment and race behaviour need OS-level testing.
 
-[launch](../../../../native/manager/src/supervision/launch.rs), [non-Windows exit](../../../../native/manager/src/main.rs#L78), [supervisor](../../../../native/manager/src/supervision/supervisor.rs#L40), [restart policy](../../../../native/manager/src/supervision/restart.rs#L38), [ownership](../../../../native/CONTRACT.md#L1925), [startup contract](../../../../native/CONTRACT.md#L1983), [peer check](../../../../native/manager/src/ipc/windows.rs#L172).
+[launch](../../../../native/manager/src/supervision/launch.rs), [non-Windows exit](../../../../native/manager/src/main.rs#L78), [supervisor](../../../../native/manager/src/supervision/supervisor.rs#L40), [restart policy](../../../../native/manager/src/supervision/restart.rs#L38), [ownership](../../../../native/CONTRACT.md#L2124), [startup contract](../../../../native/CONTRACT.md#L2174), [peer check](../../../../native/manager/src/ipc/windows.rs#L172).
 
 The installer runner reads a verified plan and drives an MSI transaction.
 
@@ -64,7 +64,7 @@ The launch guard takes the package's removal lease before CPython loads, and gra
 
 The C hosts refuse `LD_*`/`DYLD_*` on POSIX and restrict DLL search on Windows. They load the pinned CPython and the bridge, then call `cadrumo_python_main`. That function refuses any CPython other than the generated pin before an isolated start and Python bootstrap.
 
-[runner](../../../../native/installer/src/runner.rs), [Restart Manager](../../../../native/installer/src/windows.rs#L1564), [launch guard](../../../../native/launch_guard/src/lib.rs#L14), [POSIX host](../../../../native/interpreter/posix/host.c#L52), [Windows host](../../../../native/interpreter/windows/host.c#L123), [bridge](../../../../native/interpreter/python.c#L33).
+[runner](../../../../native/installer/src/runner.rs), [Restart Manager](../../../../native/installer/src/windows/restart_manager.rs#L33), [launch guard](../../../../native/launch_guard/src/lib.rs#L14), [POSIX host](../../../../native/interpreter/posix/host.c#L52), [Windows host](../../../../native/interpreter/windows/host.c#L123), [bridge](../../../../native/interpreter/python.c#L33).
 
 Scoped observations needing a check against current code:
 
@@ -77,8 +77,8 @@ Scoped observations needing a check against current code:
 
 ## Working notes
 
-- Path, storage-root, launch-profile and environment policy lives only in `native/platform`, driven by `native/application-environment.toml`. The `contract.*` files are generated, never hand-authored. [declaration](../../../../native/CONTRACT.md#L116), [generated](../../../../native/CONTRACT.md)
-- The application `.rlib` is not a runtime file. `fixture-test-mode` is refused in release builds. [statement](../../../../native/CONTRACT.md#L149), [guard](../../../../native/manager/src/lib.rs#L5)
+- Path, storage-root, launch-profile and environment policy lives only in `native/platform`, driven by `native/application-environment.toml`. The `contract.*` files are generated, never hand-authored. [declaration](../../../../native/CONTRACT.md#L323), [generated](../../../../native/CONTRACT.md)
+- The application `.rlib` is not a runtime file. `fixture-test-mode` is refused in release builds. [statement](../../../../native/CONTRACT.md#L169), [guard](../../../../native/manager/src/lib.rs#L5)
 - Gated tests:
   - `supervision.rs` is Windows-only.
   - `custody_conformance` needs `CADRUMO_TEST_PYTHON`.
@@ -86,5 +86,5 @@ Scoped observations needing a check against current code:
   - Window smoke needs an interactive logon.
   - `live-package-tests` runs as `application.package`, while `live-python-tests` has no CMake wiring.
 
-  [supervision](../../../../native/manager/tests/supervision.rs#L6), [custody](../../../../native/manager/tests/custody_conformance.rs#L118), [package test](../../../../native/application/CMakeLists.txt#L59), [smoke](../../../../native/CONTRACT.md#L1809)
-- Login start: MSI authoring writes a per-scope `Run` value that launches the manager with `--sign-in`. Linux and macOS packaging add no services or automatic launch. [Run](../../../../dev/packaging/native/windows_msi.py#L228), [no services](../../../../native/CONTRACT.md#L2300)
+  [supervision](../../../../native/manager/tests/supervision.rs#L6), [custody](../../../../native/manager/tests/custody_conformance.rs#L118), [package test](../../../../native/application/CMakeLists.txt#L59), [smoke](../../../../native/CONTRACT.md#L1988)
+- Login start: MSI authoring writes a per-scope `Run` value that launches the manager with `--sign-in`. Linux and macOS packaging add no services or automatic launch. [Run](../../../../dev/packaging/native/windows_msi_components.py#L186), [no services](../../../../native/CONTRACT.md#L2524)
