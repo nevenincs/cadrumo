@@ -90,6 +90,7 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
     CalculationRevisionAggregateContext,
 )
+from ....domain.modelos.calculation_revision_invariants import revision_is_validated_against_its_aggregate
 from ....domain.modelos.calculation_revision_rendering import (
     SAVED_RENDERING_BODIES_CONTEXT,
     SAVED_RENDERING_REFERENCE_SERIALIZATION,
@@ -215,22 +216,29 @@ class _ValidatedCatalogue:
         """The validated revisions ``stored`` may reuse because their stored JSON is unchanged.
 
         A revision is reused only under the same pinned operation, governed
-        facts, day and aggregate context, and only when the body of its
-        rendering was itself reused rather than read again.
+        facts and day, and only when the body of its rendering was itself
+        reused rather than read again. A revision whose validation reads the
+        aggregate context, a rectificativa, is reused only under an equal one:
+        every write of a work unit moves that context, and the other revisions
+        validate the same under any.
         """
         held = self.inputs
         if (
             held.operation is not inputs.operation
             or held.governed_facts is not inputs.governed_facts
             or held.validated_on != inputs.validated_on
-            or held.aggregate_context != inputs.aggregate_context
         ):
             return {}
+        same_aggregate = held.aggregate_context == inputs.aggregate_context
         reusable: dict[str, CalculationRevision] = {}
         for revision_id, fingerprint in stored.fingerprints.items():
             unchanged = self.revision_fingerprints.get(revision_id) == fingerprint
             revision = self.catalogue.revisions.get(revision_id) if unchanged else None
-            if revision is not None and _rendering_was_reused(revision, rendering_bodies):
+            if (
+                revision is not None
+                and (same_aggregate or not revision_is_validated_against_its_aggregate(revision))
+                and _rendering_was_reused(revision, rendering_bodies)
+            ):
                 reusable[revision_id] = revision
         return reusable
 

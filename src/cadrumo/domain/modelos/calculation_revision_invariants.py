@@ -344,6 +344,16 @@ def _aggregate_context_from_validation_context(
     return typed_context.get(CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY)
 
 
+def revision_is_validated_against_its_aggregate(revision: CalculationRevision) -> bool:
+    """Whether validating ``revision`` reads the aggregate context: only a rectificativa's does.
+
+    Every other revision validates the same under any work units, filing
+    records and justificantes, so a change of those leaves its validation standing.
+    """
+    identity = revision.amendment_identity
+    return identity is not None and identity.kind is FilingDeclarationKind.RECTIFICATIVA
+
+
 def validate_rectificativa_aggregate_context(
     revision: CalculationRevision,
     validation_context: Mapping[str, object] | None,
@@ -352,10 +362,7 @@ def validate_rectificativa_aggregate_context(
 
     ``revision`` is the :class:`CalculationRevision`, the saved calculation revision.
     """
-    if (
-        revision.amendment_identity is None
-        or revision.amendment_identity.kind is not FilingDeclarationKind.RECTIFICATIVA
-    ):
+    if not revision_is_validated_against_its_aggregate(revision):
         return
     from .calculation_revision_aggregate import (
         CalculationRevisionAggregateContext,
