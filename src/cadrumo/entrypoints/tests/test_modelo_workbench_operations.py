@@ -102,7 +102,8 @@ from ...application.modelo.workbench_projection import (
 from ...application.modelo.workbench_projection_memory import (
     FormProjectionContext,
     FormProjectionPair,
-    form_projection_identity,
+    form_identities,
+    form_projection_is_immutable,
 )
 from ...application.modelo.workbench_read import ModeloWorkbenchReadPorts, read_modelo_workbench_form
 from ...application.operations.financial_operand_contract import (
@@ -176,8 +177,8 @@ def _assert_steady_pair_has_fresh_admission(
     first: ModeloWorkbenchFormProjectionV1, second: ModeloWorkbenchFormProjectionV1
 ) -> None:
     assert first.form == second.form
-    assert form_projection_identity(first.form, type(first.form)) is not None, "public eligibility"
-    assert form_projection_identity(restore_modelo_workbench_form(first).load, type(first.form)) is not None, (
+    assert form_projection_is_immutable(first.form, type(first.form)), "public eligibility"
+    assert form_identities(restore_modelo_workbench_form(first).load, type(first.form)) is not None, (
         "inverse eligibility"
     )
     assert first.form is second.form, "an exact steady form must not reconstruct its validated graph"
@@ -200,8 +201,9 @@ def _assert_poisoned_pair_is_cleared(work: SeededOperatorWork, projection: Model
         OutputLanguage.EN,
     )
     poisoned = WorkbenchCaptureMemoryOwner().for_profile(str(_profile_id(work))).form_projection
-    identity = form_projection_identity(canonical.load, type(projection.form))
-    assert identity is not None
+    identities = form_identities(canonical.load, type(projection.form))
+    assert identities is not None
+    identity = identities.form
     wrong = FormProjectionPair(
         projection.form, canonical.load.model_copy(update={"verified": not canonical.load.verified})
     )

@@ -1,5 +1,6 @@
 """Projection reuse has exact typed values and live schemas, not coordinate-only identity."""
 
+from collections.abc import Hashable
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta, timezone, tzinfo
 from decimal import Decimal
@@ -14,7 +15,7 @@ from pydantic_core import TzInfo
 
 from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from ....domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -22,11 +23,12 @@ from ....domain.modelos.verification_report import (
 )
 from ...workbench_capture_memory import WorkbenchCaptureMemory
 from ..work_form_declaration_facts import ModeloFormExport
+from ..work_form_findings import ModeloFormIssue
 from ..work_form_service import ModeloWorkFormLoadV1, modelo_work_form_load
 from ..workbench_projection import PublicModeloFormField, PublicModeloWorkFormLoadV1
 from ..workbench_projection_memory import (
     FormProjectionContext,
-    form_projection_identity,
+    form_identities,
     form_projection_is_immutable,
 )
 from .work_form_fixture import built_form
@@ -48,15 +50,38 @@ class _UnreviewedZone(tzinfo):
         return "test"
 
 
-def test_a_json_restored_export_keeps_its_fixed_offset_timezone_eligible() -> None:
+@pytest.fixture
+def small_load(authority_operation: PinnedAuthorityOperation) -> ModeloWorkFormLoadV1:
+    """A real, small form load; the first identity taken in a process settles deferred schemas."""
+    form = built_form(authority_operation, "130", filing_year_envelope().horizon, "1T")
+    load = modelo_work_form_load(form, verified=False, filed=False)
+    form_identities(load, PublicModeloWorkFormLoadV1)
+    return load
+
+
+def _form_identity(load: ModeloWorkFormLoadV1) -> Hashable | None:
+    identities = form_identities(load, PublicModeloWorkFormLoadV1)
+    return None if identities is None else identities.form
+
+
+def _with_export(load: ModeloWorkFormLoadV1, export: ModeloFormExport) -> ModeloWorkFormLoadV1:
+    return load.model_copy(update={"form": load.form.model_copy(update={"last_export": export})})
+
+
+def _with_finding(load: ModeloWorkFormLoadV1, finding: ModeloVerificationFinding) -> ModeloWorkFormLoadV1:
+    issue = ModeloFormIssue(finding=_finding(1)).model_copy(update={"finding": finding})
+    return load.model_copy(update={"form": load.form.model_copy(update={"issues": (issue,)})})
+
+
+def test_a_json_restored_export_keeps_its_fixed_offset_timezone_eligible(small_load: ModeloWorkFormLoadV1) -> None:
     export = ModeloFormExport(exported_at=datetime.now(UTC), calculation_revision_id="synthetic-revision", current=True)
     restored = ModeloFormExport.model_validate_json(export.model_dump_json())
     assert type(restored.exported_at.tzinfo) is TzInfo
-    assert form_projection_identity(restored, PublicModeloWorkFormLoadV1) is not None
+    assert _form_identity(_with_export(small_load, restored)) is not None
     assert form_projection_is_immutable(restored, PublicModeloWorkFormLoadV1)
 
 
-def test_timezone_identity_distinguishes_same_timestamp_representations() -> None:
+def test_timezone_identity_distinguishes_same_timestamp_representations(small_load: ModeloWorkFormLoadV1) -> None:
     export = ModeloFormExport(exported_at=datetime.now(UTC), calculation_revision_id="synthetic-revision", current=True)
     restored = ModeloFormExport.model_validate_json(export.model_dump_json())
     variants = (
@@ -69,22 +94,22 @@ def test_timezone_identity_distinguishes_same_timestamp_representations() -> Non
         ),
     )
     assert len({item.exported_at.isoformat() for item in variants}) == 1
-    identities = {form_projection_identity(item, PublicModeloWorkFormLoadV1) for item in variants}
+    identities = {_form_identity(_with_export(small_load, item)) for item in variants}
     assert None not in identities
     assert len(identities) == len(variants), "timezone class and zone key remain distinct even at the same offset"
 
 
-def test_unreviewed_and_anonymous_timezones_decline_reuse() -> None:
+def test_unreviewed_and_anonymous_timezones_decline_reuse(small_load: ModeloWorkFormLoadV1) -> None:
     restored = ModeloFormExport(
         exported_at=datetime.now(UTC), calculation_revision_id="synthetic-revision", current=True
     )
     unproved = restored.model_copy(update={"exported_at": restored.exported_at.replace(tzinfo=_UnreviewedZone())})
-    assert form_projection_identity(unproved, PublicModeloWorkFormLoadV1) is None
+    assert _form_identity(_with_export(small_load, unproved)) is None
     assert not form_projection_is_immutable(unproved, PublicModeloWorkFormLoadV1)
     with files("tzdata.zoneinfo").joinpath("UTC").open("rb") as zone_file:
         anonymous = ZoneInfo.from_file(zone_file)
     unproved = restored.model_copy(update={"exported_at": restored.exported_at.replace(tzinfo=anonymous)})
-    assert form_projection_identity(unproved, PublicModeloWorkFormLoadV1) is None
+    assert _form_identity(_with_export(small_load, unproved)) is None
     assert not form_projection_is_immutable(unproved, PublicModeloWorkFormLoadV1)
 
 
@@ -98,9 +123,11 @@ def _finding(value: str | int | bool | Decimal) -> ModeloVerificationFinding:
     )
 
 
-def test_value_identity_preserves_types_decimal_scale_and_declines_mutable_values() -> None:
+def test_value_identity_preserves_types_decimal_scale_and_declines_mutable_values(
+    small_load: ModeloWorkFormLoadV1,
+) -> None:
     values = (1, True, "1", Decimal("1"), Decimal("1.0"), Decimal("-0"), Decimal("0"))
-    identities = {form_projection_identity(_finding(value), PublicModeloWorkFormLoadV1) for value in values}
+    identities = {_form_identity(_with_finding(small_load, _finding(value))) for value in values}
     assert None not in identities
     assert len(identities) == len(values)
     finding = _finding(Decimal("1"))
@@ -113,11 +140,13 @@ def test_value_identity_preserves_types_decimal_scale_and_declines_mutable_value
         datetime.now(UTC).replace(tzinfo=_UnreviewedZone()),
     ):
         unproved = finding.model_copy(update={"message_locale_key": value})
-        assert form_projection_identity(unproved, PublicModeloWorkFormLoadV1) is None
+        assert _form_identity(_with_finding(small_load, unproved)) is None
         assert not form_projection_is_immutable(unproved, PublicModeloWorkFormLoadV1)
 
 
-def test_only_owner_frozen_facts_are_enrolled_and_the_key_does_not_alias_their_backing_map() -> None:
+def test_only_owner_frozen_facts_are_enrolled_and_the_key_does_not_alias_their_backing_map(
+    small_load: ModeloWorkFormLoadV1,
+) -> None:
     backing = {"amount": Decimal("1.00")}
     finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
@@ -126,18 +155,18 @@ def test_only_owner_frozen_facts_are_enrolled_and_the_key_does_not_alias_their_b
         legal_refs=("test:projection",),
         message_facts=backing,
     )
-    original = form_projection_identity(finding, PublicModeloWorkFormLoadV1)
+    original = _form_identity(_with_finding(small_load, finding))
     assert original is not None
     assert form_projection_is_immutable(finding, PublicModeloWorkFormLoadV1)
     backing["amount"] = Decimal("2.00")
-    assert form_projection_identity(finding, PublicModeloWorkFormLoadV1) == original
+    assert _form_identity(_with_finding(small_load, finding)) == original
     alias = finding.model_copy(update={"message_facts": MappingProxyType(backing)})
-    before = form_projection_identity(alias, PublicModeloWorkFormLoadV1)
+    before = _form_identity(_with_finding(small_load, alias))
     assert before is not None
     backing["amount"] = Decimal("3.00")
-    assert form_projection_identity(alias, PublicModeloWorkFormLoadV1) != before
+    assert _form_identity(_with_finding(small_load, alias)) != before
     mutable = finding.model_copy(update={"message_facts": backing})
-    assert form_projection_identity(mutable, PublicModeloWorkFormLoadV1) is None
+    assert _form_identity(_with_finding(small_load, mutable)) is None
     assert not form_projection_is_immutable(mutable, PublicModeloWorkFormLoadV1)
 
 
@@ -170,21 +199,17 @@ def test_real_form_identity_changes_for_lifecycle_same_coordinate_copy_and_live_
 ) -> None:
     form = built_form(authority_operation, "100", newest_authored_edition("100"), "0A")
     load = modelo_work_form_load(form, verified=False, filed=False)
-    original = form_projection_identity(load, PublicModeloWorkFormLoadV1)
+    original = _form_identity(load)
     assert original is not None
-    assert original == form_projection_identity(load.model_copy(deep=True), PublicModeloWorkFormLoadV1)
-    assert original != form_projection_identity(load.model_copy(update={"verified": True}), PublicModeloWorkFormLoadV1)
-    assert original != form_projection_identity(load.model_copy(update={"filed": True}), PublicModeloWorkFormLoadV1)
-    assert original != form_projection_identity(
-        load.model_copy(update={"form": form.model_copy(update={"blocks": ()})}), PublicModeloWorkFormLoadV1
-    )
-    assert form_projection_identity(load.model_copy(update={"form": []}), PublicModeloWorkFormLoadV1) is None
+    assert original == _form_identity(load.model_copy(deep=True))
+    assert original != _form_identity(load.model_copy(update={"verified": True}))
+    assert original != _form_identity(load.model_copy(update={"filed": True}))
+    assert original != _form_identity(load.model_copy(update={"form": form.model_copy(update={"blocks": ()})}))
+    assert not form_projection_is_immutable(load.model_copy(update={"form": []}), PublicModeloWorkFormLoadV1)
 
     class UnreviewedLoad(ModeloWorkFormLoadV1):
         pass
 
-    assert (
-        form_projection_identity(UnreviewedLoad.model_validate(load.model_dump()), PublicModeloWorkFormLoadV1) is None
-    )
+    assert _form_identity(UnreviewedLoad.model_validate(load.model_dump())) is None
     PublicModeloFormField.model_rebuild(force=True)
-    assert original != form_projection_identity(load, PublicModeloWorkFormLoadV1)
+    assert original != _form_identity(load)
