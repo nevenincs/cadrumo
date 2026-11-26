@@ -10,11 +10,27 @@ If you are starting or working on this kind of project, context, efficiency, and
 
 Read these files if the actual task is relevant to you.
 
-Use the reference indexes to select the files relevant to the actual task: the numbered references cover the Python application, the build references cover CMake, Rust, the Tauri desktop shell, the frontend and the Python build, and three cross-cutting references cover the external agent integration, the process environment contract, and the test lanes and local gate. Do not preload the entire collection. Follow code-source links only when needed to resolve the task's ownership, implementation or verification questions. Scoped findings describe static inspection and require checking against current code before treating them as current defects.
+Use the reference indexes to select the files relevant to the actual task: the development workflow references cover how to change, test, regenerate and build; the numbered references cover the Python application; the build references cover CMake, Rust, the Tauri desktop shell, the frontend and the Python build; and two cross-cutting references cover the external agent integration and the process environment contract. Do not preload the entire collection. Follow code-source links only when needed to resolve the task's ownership, implementation or verification questions. Scoped findings describe static inspection and require checking against current code before treating them as current defects.
 
 All rules must be respected when working. Selective reading limits session context; it does not exempt work from applicable rules.
 
 General developer and agent scratch, temporary files, captures and disposable reports belong only under the owning worktree's `.tmp/`, which must be vacated after use. Never create alternate artifact roots or home/other-drive workspaces. Native build artifacts and native build scratch belong only under the selected CMake `build/<preset>/` tree, never under `native/`; see the canonical `worktree-temporary-output` rule.
+
+## Route by task
+
+Pick the row that matches what you are about to do and read that reference before starting. Most tasks need one development workflow reference and one numbered or build reference.
+
+| You are about to | Read first |
+|---|---|
+| Make any change to the Python backend and prove it | [dev-change-workflow](references/dev-change-workflow.md) |
+| Decide which tests to run, write or place a test, read a red lane, or run the full gate | [dev-testing-lanes-and-gate](references/dev-testing-lanes-and-gate.md) |
+| Touch registry data, personas or fixture producers, or see tests fail on a missing or stale authority or projection | [dev-authority-and-fixture-staleness](references/dev-authority-and-fixture-staleness.md) |
+| Add, move or remove a module, change an operation or a model the frontend mirrors, add a string, or meet a check that says "stale" | [dev-generated-artefacts](references/dev-generated-artefacts.md) |
+| Build or run the native application, the frontend or the distributions | [dev-build-loop](references/dev-build-loop.md) |
+| Understand which layer owns a behaviour | the numbered references under "Task-relevant references" |
+| Change the build systems themselves | the build references under "Build systems" |
+
+The order of work is always narrow to wide: focused test file, owning lane, change-scoped gate, full gate. Derived inputs come first: a stale published authority or stale fixture projections make every later result meaningless.
 
 ## Architecture
 
@@ -87,15 +103,16 @@ The diagram shows build hand-offs, not runtime authority. At run time the deskto
 
 Build entry points:
 
-- Environment: `just setup` converges the uv environment; `just init` also installs browsers and search and publishes the registry authority.
+- Environment: `just setup` converges Python, tooling, `env/.env`, the published registry authority, the frontend packages and the fixture projections; `just setup-checkout` does only Python, tooling and `env/.env`; `just init` adds browsers and search.
 - Native package: configure needs the cache variable `CADRUMO_PACKAGE_AGENT_SOURCE_DIR` naming a local cadrumo-agent project folder (the environment is not read). `just build-native [Release|Debug] [TARGET]` (default target `bundle`), `just test-native-bundle`, `just build-native-package`, `just test-native-package`, `just test-native-release`. Each maps the host to a root preset and builds in `build/<preset>`; other binary directory names are refused.
-- Rust: `just check-rust` builds the native tree and runs the CTest label `rust_quality` (rustfmt, clippy and cargo-deny per crate; the gate set is still being extended). Build one crate target through CMake, for example `just build-native Release rust_manager`. Crates include generated contract sources, so a bare `cargo` invocation does not compile them.
+- Rust: `just check-rust` builds the generated contract and metadata targets and runs the CTest label `rust_quality` (rustfmt, clippy and cargo-deny per crate; the gate set is still being extended). Build one crate target through CMake, for example `just build-native Release rust_manager`. Crates include generated contract sources, so a bare `cargo` invocation does not compile them.
 - Desktop shell: it builds inside the repository build, never a tree of its own. Configure `cmake --preset windows-x64` at the repository root, then build targets such as `desktop-host-build`, `desktop-host-test`, `desktop-host-clippy`, `desktop-frontend-test` and `desktop-run` with `cmake --build --preset debug --target <name>`. Packaged-window tests need an interactive desktop session.
-- Frontend: `just dev` republishes the registry authority when stale, then serves the frontend in a browser on fixed ports and compiles no Rust. In `native/desktop/frontend`, `npm run check` then `npm test`.
+- Frontend: `just dev` republishes the registry authority when stale, installs the frontend packages, seeds the fixture projections, then serves the frontend with a simulated host on fixed ports. It compiles no Rust but needs the host preset configured. In `native/desktop/frontend`, `npm run check` then `npm test`.
 - Python distributions and docs: `just build-distributions`, `just test-packaging-preflight`, `just docs-build`, `just docs-check`.
 - Python gates before finishing: `just check-code`, `just check-registry-gate`, `just test-gate`.
-- Tests while developing: run the focused file first (`uv run --no-sync pytest <file> -n 0`), then the narrowest lane recipe that owns it (`just test-cli`, `test-tui`, `test-calculations`, `test-registry`, `test-test-policy`, `test-repository-contracts`). Lanes are chosen by path and recipe, never by runtime; parallel and serial passes are separate verdicts.
+- Tests while developing: run the focused file first (`uv run --no-sync pytest <file> -n 0`, with `-m integration` for an integration file, which the default selection deselects), then the narrowest lane recipe that owns it (`just test-cli`, `test-tui`, `test-calculations`, `test-registry`, `test-test-policy`, `test-repository-contracts`). Lanes are chosen by path, marker and recipe, never by runtime; parallel and serial passes are separate verdicts.
 - Full local gate: `just gate-local <head label>` runs every lane and static check once as a graph of concurrent steps under one worker budget and writes a record under `var/gate-runs/`. It needs a quiet machine and a still tree (a source change during the run invalidates it), takes about an hour, and runs in the background. `just gate-local-sequential` is the earlier one-after-another form.
+- Regeneration after a change: `just generate-import-load-targets` (module added, moved or removed), `just generate-operation-contract-manifest` (operation schema), `just registry-publish-authority-if-authority-stale` then `just fixtures-seed` (registry data, personas, producers); `just fixtures-status` shows what is stale. The full list is in the generated-artefacts reference.
 
 Minimum tool versions are declared in [native/toolchain.json](../../../native/toolchain.json); configure refuses anything older and admits newer releases. A local build, package or export is a file on disk: it is not a published release, an installed and working product, or a submission to a tax authority.
 
@@ -108,11 +125,10 @@ Minimum tool versions are declared in [native/toolchain.json](../../../native/to
 | `pyproject.toml`, `justfile`, wheel and wheelhouse packaging, Python build actions, docs build, CI and release | [build-python-packaging-and-release](references/build-python-packaging-and-release.md) |
 | Packaging the separate agent service and cadrumo-agent; verified desktop/service admission, hosting frame, provider credentials, encrypted stores and separate MCP adapter | [agent-integration](references/agent-integration.md) |
 | Process environment: `native/application-environment.toml`, launch profiles and invocations, storage-root precedence, build and development variables | [environment-contract](references/environment-contract.md) |
-| Choosing which tests to run, how lanes and markers select tests, the local gate graph, its budget, record and reuse of clean results | [testing-lanes-and-gate](references/testing-lanes-and-gate.md) |
 
 `src/cadrumo` implements the deterministic tax/profile product; `src/cadrumo_runtime` owns generic login/custody/session authority and `src/cadrumo_client` owns neutral client contracts and transport. The sibling `src/cadrumo_agent_service` owns provider catalog consumption, credential interpretation, agent process/store lifecycle and conversation policy, supervises the separately implemented cadrumo-agent, and receives exact-profile opaque custody through verified runtime admission. Native desktop supervises this service. `src/cadrumo_mcp` owns the deterministic `cadrumo-mcp` service and its protocol; it carries no persona, rule or skill content, which belongs to cadrumo-agent. The Textual TUI is `cadrumo.entrypoints.tui` in the tax product, and `cadrumo_runtime` only launches it. Import contracts keep the service a runtime client: `cadrumo_agent_service` imports neither `cadrumo_runtime` nor `cadrumo.entrypoints`, `cadrumo_client` and `cadrumo_mcp` do not import it, and the Windows Job Object launcher they share is `cadrumo_client.transport.windows_process`. Runtime exports no DEK, contains no agent orchestration and grants no authority from declared IDs or JSON PIDs. Tax-domain model extraction remains under its existing consent policy.
 
-The build and testing references are orientation written from reading the build and test sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
+The build and development workflow references are orientation written from reading the build, test and tooling sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
 
 ## Task-relevant references
 
