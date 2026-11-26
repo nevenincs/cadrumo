@@ -38,6 +38,8 @@ _LIFECYCLE_FIELDS = tuple(
             "heap_frozen",
             "projection_ms",
             "projection_pair_reused",
+            "projection_sections",
+            "projection_sections_reused",
             "queued_ms",
             "recheck_ms",
             "refresh_kept",

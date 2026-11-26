@@ -10,7 +10,7 @@ additional miss rather than reusing a proof under a different schema identity.
 
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass, is_dataclass
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -31,7 +31,15 @@ from ..operations.dataclass_fields import dataclass_instance_fields, dataclass_t
 from ..operations.public_mirror import bare_annotation
 from .work_form_service import ModeloWorkFormLoadV1
 
-__all__ = ["FormProjectionContext", "FormProjectionPair", "form_projection_identity", "form_projection_is_immutable"]
+__all__ = [
+    "FormIdentities",
+    "FormProjectionContext",
+    "FormProjectionPair",
+    "FormSectionPair",
+    "form_identities",
+    "form_projection_identity",
+    "form_projection_is_immutable",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -270,12 +278,55 @@ def form_projection_identity(value: BaseModel, public_type: type[BaseModel]) -> 
         return None
 
 
-def form_projection_is_immutable(value: BaseModel, public_type: type[BaseModel]) -> bool:
-    """Check retained values without allocating a second, unused value-key tree."""
+def form_projection_is_immutable(
+    value: BaseModel, public_type: type[BaseModel], *, settled: Iterable[object] = ()
+) -> bool:
+    """Check retained values without allocating a second, unused value-key tree.
+
+    ``settled`` are parts of ``value`` this check already passed, the very
+    objects and not copies of them; they are not walked again.
+    """
     try:
         _, canonical_types = _schemas(ModeloWorkFormLoadV1)
         _, public_types = _schemas(public_type)
-        _Snapshot(canonical_types | public_types, capture=False).value(value)
+        snapshot = _Snapshot(canonical_types | public_types, capture=False)
+        snapshot.memo.update((id(part), None) for part in settled)
+        snapshot.value(value)
     except _NotReusableError:
         return False
     return True
+
+
+@dataclass(frozen=True, slots=True)
+class FormSectionPair:
+    """One section's public mirror and the canonical section its strict restoration gave."""
+
+    public: BaseModel
+    canonical: BaseModel
+
+
+@dataclass(frozen=True, slots=True)
+class FormIdentities:
+    """One form's exact identity and, page by page, each section's, under the schemas they were read with."""
+
+    schemas: Hashable
+    form: Hashable
+    sections: tuple[tuple[Hashable, ...], ...]
+
+
+def form_identities(load: ModeloWorkFormLoadV1, public_type: type[BaseModel]) -> FormIdentities | None:
+    """Copy the form's and each section's exact values in one walk; ``None`` declines reuse.
+
+    ``form`` is what :func:`form_projection_identity` answers. A section's
+    identity is the same kind of copy, so two sections share one only when
+    every value in them, its type and its decimal representation are the same.
+    """
+    try:
+        canonical_schema, canonical_types = _schemas(ModeloWorkFormLoadV1)
+        public_schema, public_types = _schemas(public_type)
+        snapshot = _Snapshot(canonical_types | public_types)
+        sections = tuple(tuple(snapshot.value(section) for section in page.sections) for page in load.form.pages)
+        form = (canonical_schema, public_schema, snapshot.value(load))
+    except _NotReusableError:
+        return None
+    return FormIdentities(schemas=(canonical_schema, public_schema), form=form, sections=sections)

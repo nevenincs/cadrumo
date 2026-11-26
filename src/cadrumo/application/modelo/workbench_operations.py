@@ -565,6 +565,7 @@ class _FormRead:
             payload.work_unit_id,
             form,
             memory=self.held.form_projection if self.held is not None else None,
+            sections=self.held.form_sections if self.held is not None else None,
             context=self._projection_context(form.admission),
             spent=spent,
         )

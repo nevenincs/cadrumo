@@ -253,6 +253,7 @@ def project_public_mirror(
     *,
     omitted: Mapping[type[BaseModel], frozenset[str]] | None = None,
     served: Mapping[type[BaseModel], Callable[[BaseModel], BaseModel]] | None = None,
+    kept: Mapping[int, object] | None = None,
 ) -> object:
     """Project a canonical value while checking the mirror's exact field inventory.
 
@@ -260,11 +261,13 @@ def project_public_mirror(
     not carry; every other field must exist on both sides. ``served`` names,
     per canonical model, the completion a transport serves on each node of that
     model before it is mirrored, such as words in the projecting process's
-    language; restoration keeps what was served.
+    language; restoration keeps what was served. ``kept`` holds mirrors the
+    caller already proved, by the identity of the node each mirrors; such a
+    node is served from it and not walked again.
     """
     from .public_mirror_projection import project_public_value
 
-    return project_public_value(value, canonical, public, omitted or {}, served or MappingProxyType({}))
+    return project_public_value(value, canonical, public, omitted or {}, served or MappingProxyType({}), kept)
 
 
 def restore_public_mirror(
@@ -274,15 +277,18 @@ def restore_public_mirror(
     *,
     withheld: frozenset[tuple[type[object], str]] = frozenset(),
     complete: MirrorCompletion | None = None,
+    kept: Mapping[int, object] | None = None,
 ) -> object:
     """Rebuild the canonical value from its public mirror, validating the canonical models.
 
     ``withheld`` names canonical fields not restored from their mirror; the
     ``complete`` hook fills them from the restored siblings before validation.
+    ``kept`` holds canonical values the caller already restored, by the identity
+    of the mirror node each restores; such a node is not restored again.
     """
     from .public_mirror_restoration import restore_public_value
 
-    return restore_public_value(value, canonical, public, withheld, complete)
+    return restore_public_value(value, canonical, public, withheld, complete, kept)
 
 
 __all__ = [

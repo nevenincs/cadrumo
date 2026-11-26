@@ -16,6 +16,8 @@ from . import public_mirror
 from .dataclass_fields import dataclass_type_fields, dataclass_type_hints
 
 type _MirrorCompletion = Callable[[type[object], dict[str, object], BaseModel], None]
+type _MirrorKept = Mapping[int, object]
+"""Canonical values a caller already holds, by the identity of the mirror node each restores."""
 
 
 def _unscalar(value: public_mirror.PublicScalarValueV1) -> str | int | bool | Decimal | date | None:
@@ -79,6 +81,7 @@ def _restore_sequence(
     public: object,
     withheld: frozenset[tuple[type[object], str]],
     complete: _MirrorCompletion | None,
+    kept: _MirrorKept | None,
 ) -> object:
     public_item = get_args(public)[0] if get_origin(public) is tuple else None
     if (mapping := _restore_ordered_mapping(value, public_item)) is not None:
@@ -89,10 +92,10 @@ def _restore_sequence(
     public_args = get_args(public)
     if len(canonical_args) == 2 and canonical_args[1] is Ellipsis:
         return tuple(
-            restore_public_value(item, canonical_args[0], public_args[0], withheld, complete) for item in value
+            restore_public_value(item, canonical_args[0], public_args[0], withheld, complete, kept) for item in value
         )
     return tuple(
-        restore_public_value(item, canonical_args[index], public_args[index], withheld, complete)
+        restore_public_value(item, canonical_args[index], public_args[index], withheld, complete, kept)
         for index, item in enumerate(value)
     )
 
@@ -118,6 +121,7 @@ def _restore_model_fields(
     withheld: frozenset[tuple[type[object], str]],
     complete: _MirrorCompletion | None,
     canonical_type: type[object],
+    kept: _MirrorKept | None,
 ) -> dict[str, object]:
     source_fields = type(value).model_fields
     if set(source_fields) - set(target_fields) - set(_computed_fields(canonical_type)):
@@ -129,6 +133,7 @@ def _restore_model_fields(
             source_fields[name].annotation,
             withheld,
             complete,
+            kept,
         )
         for name in target_fields
         if name in source_fields and (canonical_type, name) not in withheld
@@ -141,7 +146,10 @@ def _restore_model(
     canonical: object,
     withheld: frozenset[tuple[type[object], str]],
     complete: _MirrorCompletion | None,
+    kept: _MirrorKept | None,
 ) -> object:
+    if kept is not None and (held := kept.get(id(value))) is not None:
+        return held
     model_type = type(value)
     model_type.model_rebuild()
     if isinstance(canonical, type) and canonical is model_type:
@@ -155,13 +163,14 @@ def _restore_model(
         withheld,
         complete,
         canonical_type,
+        kept,
     )
     if complete is not None:
         complete(canonical_type, restored, value)
     if not issubclass(canonical_type, BaseModel):
         return canonical_type(**restored)
     model = canonical_type.model_validate(restored)
-    _require_served_decisions(value, model, withheld, complete)
+    _require_served_decisions(value, model, withheld, complete, kept)
     return model
 
 
@@ -177,6 +186,7 @@ def _require_served_decisions(
     model: BaseModel,
     withheld: frozenset[tuple[type[object], str]],
     complete: _MirrorCompletion | None,
+    kept: _MirrorKept | None,
 ) -> None:
     """Refuse a mirror that serves a decided value other than the one the restored model decides again."""
     source_fields = type(value).model_fields
@@ -184,7 +194,7 @@ def _require_served_decisions(
         if name not in source_fields:
             continue
         served = restore_public_value(
-            getattr(value, name), return_type, source_fields[name].annotation, withheld, complete
+            getattr(value, name), return_type, source_fields[name].annotation, withheld, complete, kept
         )
         if served != getattr(model, name):
             raise ValueError("public-mirror served decision differs from the one its canonical model decides")
@@ -196,6 +206,7 @@ def restore_public_value(
     public: object,
     withheld: frozenset[tuple[type[object], str]],
     complete: _MirrorCompletion | None,
+    kept: _MirrorKept | None = None,
 ) -> object:
     """Restore a canonical value from its public mirror form, refusing an invalid decimal."""
     if value is None:
@@ -204,9 +215,9 @@ def restore_public_value(
     if isinstance(value, public_mirror.PublicScalarValueV1):
         return _unscalar(value)
     if is_object_tuple(value):
-        return _restore_sequence(value, canonical, public, withheld, complete)
+        return _restore_sequence(value, canonical, public, withheld, complete, kept)
     if isinstance(value, BaseModel):
-        return _restore_model(value, canonical, withheld, complete)
+        return _restore_model(value, canonical, withheld, complete, kept)
     if canonical is Decimal and isinstance(value, str):
         try:
             decimal = Decimal(value)
