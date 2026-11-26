@@ -29,7 +29,7 @@ with it, on sign-out, lock, handover, expiry and shutdown.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Hashable
+from collections.abc import Callable, Hashable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from threading import Event, Lock, Thread
@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from ..domain.calculations.registry.authority_artifact import AuthorityGenerationPin
     from .modelo.workbench_form_read_memo import WorkbenchFormReadKey
     from .modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
-    from .modelo.workbench_projection_memory import FormProjectionPair
+    from .modelo.workbench_projection_memory import FormProjectionPair, FormSectionPair
     from .overview.agenda import OverviewAgenda
     from .overview.calendar_models import OverviewCalendar
     from .user_profile.censal_readback import CensalHistoryRead
@@ -168,6 +168,18 @@ class WorkbenchMemoSlot[KeyT: Hashable, ValueT]:
         with self._lock:
             self._entry = None
 
+    def recall(self, key: KeyT) -> ValueT | None:
+        """The result kept for exactly ``key``, or nothing; it never waits and never builds."""
+        with self._lock:
+            entry = self._entry
+        return entry[1] if entry is not None and entry[0] == key else None
+
+    def keep(self, key: KeyT, value: ValueT) -> None:
+        """Keep ``value`` for ``key`` in place of what is kept, unless the slot is closed."""
+        with self._lock:
+            if not self._closed:
+                self._entry = (key, value)
+
 
 @dataclass(frozen=True, slots=True)
 class WorkbenchCalendarMemoKey:
@@ -263,6 +275,7 @@ class WorkbenchCaptureMemory:
         self.calendar: WorkbenchMemoSlot[WorkbenchCalendarMemoKey, WorkbenchCalendarWork] = WorkbenchMemoSlot()
         self.census = WorkbenchCensusMemo()
         self.form_projection: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] = WorkbenchMemoSlot()
+        self.form_sections: WorkbenchMemoSlot[Hashable, Mapping[Hashable, FormSectionPair]] = WorkbenchMemoSlot()
         self.form_read: WorkbenchMemoSlot[WorkbenchFormReadKey, ModeloWorkbenchFormProjectionV1] = WorkbenchMemoSlot()
         self._refresh_lock = Lock()
         self._form_refresh: Callable[[], None] | None = None
@@ -320,6 +333,7 @@ class WorkbenchCaptureMemory:
         self.calendar.close()
         self.census.close()
         self.form_projection.close()
+        self.form_sections.close()
         self.form_read.close()
 
 

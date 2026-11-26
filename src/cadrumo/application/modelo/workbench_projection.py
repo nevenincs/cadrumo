@@ -27,7 +27,7 @@ value; it never mirrors the whole form.
 
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Hashable, Mapping
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
@@ -124,9 +124,11 @@ from .work_form_service import ModeloWorkFormLoadV1
 from .work_form_typing_effect import ModeloFormTypingEffect
 from .work_review import ModeloWorkProgress
 from .workbench_projection_memory import (
+    FormIdentities,
     FormProjectionContext,
     FormProjectionPair,
-    form_projection_identity,
+    FormSectionPair,
+    form_identities,
     form_projection_is_immutable,
 )
 from .workbench_read import ModeloFormLedgerHold, ModeloWorkbenchFilingStateReadV1, ModeloWorkbenchFormReadV1
@@ -669,18 +671,82 @@ def _require_reviewed_exclusions() -> None:
         raise ValueError("workbench form excluded-field inventory changed")
 
 
-def _project_form(load: ModeloWorkFormLoadV1) -> PublicModeloWorkFormLoadV1:
-    projected = project_public_mirror(load, ModeloWorkFormLoadV1, PublicModeloWorkFormLoadV1)
+def _project_form(load: ModeloWorkFormLoadV1, kept: Mapping[int, object] | None = None) -> PublicModeloWorkFormLoadV1:
+    projected = project_public_mirror(load, ModeloWorkFormLoadV1, PublicModeloWorkFormLoadV1, kept=kept)
     if not isinstance(projected, PublicModeloWorkFormLoadV1):
         raise TypeError("workbench form public projection failed")
     return projected
 
 
-def _restore_form(public: PublicModeloWorkFormLoadV1) -> ModeloWorkFormLoadV1:
-    restored = restore_public_mirror(public, ModeloWorkFormLoadV1, PublicModeloWorkFormLoadV1)
+def _restore_form(public: PublicModeloWorkFormLoadV1, kept: Mapping[int, object] | None = None) -> ModeloWorkFormLoadV1:
+    restored = restore_public_mirror(public, ModeloWorkFormLoadV1, PublicModeloWorkFormLoadV1, kept=kept)
     if not isinstance(restored, ModeloWorkFormLoadV1):
         raise TypeError("workbench form canonical restoration failed")
     return restored
+
+
+type FormSectionSlot = WorkbenchMemoSlot[Hashable, Mapping[Hashable, FormSectionPair]]
+"""The sections of the form a session was last served, each kept with its proven mirror, under their schemas."""
+
+
+def _mirrored_form(
+    load: ModeloWorkFormLoadV1,
+    sections: FormSectionSlot | None,
+    identities: FormIdentities | None,
+    spent: dict[str, int] | None = None,
+) -> tuple[FormProjectionPair, bool | None]:
+    """Mirror ``load`` and restore it, proving the two equal; sections proven before are not walked again.
+
+    A section kept in ``sections`` under its exact value stands for its own
+    mirror and restoration; every other part of the form is mirrored and
+    restored here. The restored form is compared whole with ``load`` before
+    anything is kept, so a kept section is always one a full proof covered.
+    The second answer is whether the pair is immutable, ``None`` when no
+    memory asked.
+    """
+    if sections is None or identities is None:
+        public = _project_form(load)
+        return _proven_pair(load, public, _restore_form(public)), None
+    kept = sections.recall(identities.schemas) or {}
+    held = {
+        id(section): pair
+        for page, page_keys in zip(load.form.pages, identities.sections, strict=True)
+        for section, key in zip(page.sections, page_keys, strict=True)
+        if (pair := kept.get(key)) is not None
+    }
+    public = _project_form(load, {identity: pair.public for identity, pair in held.items()})
+    restored = _restore_form(public, {id(pair.public): pair.canonical for pair in held.values()})
+    proven = _proven_pair(load, public, restored)
+    if spent is not None:
+        spent["projection_sections_reused"] = len(held)
+        spent["projection_sections"] = sum(len(page_keys) for page_keys in identities.sections)
+    # A kept section passed this check when it was kept, and it is the same object now.
+    immutable = form_projection_is_immutable(
+        public, PublicModeloWorkFormLoadV1, settled=[pair.public for pair in held.values()]
+    ) and form_projection_is_immutable(
+        restored, PublicModeloWorkFormLoadV1, settled=[pair.canonical for pair in held.values()]
+    )
+    if immutable:
+        sections.keep(identities.schemas, _section_pairs(identities.sections, public, restored))
+    return proven, immutable
+
+
+def _proven_pair(
+    load: ModeloWorkFormLoadV1, public: PublicModeloWorkFormLoadV1, restored: ModeloWorkFormLoadV1
+) -> FormProjectionPair:
+    if restored != load:
+        raise ValueError("workbench form public projection changed canonical meaning")
+    return FormProjectionPair(public, restored)
+
+
+def _section_pairs(
+    keys: tuple[tuple[Hashable, ...], ...], public: PublicModeloWorkFormLoadV1, restored: ModeloWorkFormLoadV1
+) -> dict[Hashable, FormSectionPair]:
+    return {
+        key: FormSectionPair(public_section, section)
+        for public_page, page, page_keys in zip(public.form.pages, restored.form.pages, keys, strict=True)
+        for public_section, section, key in zip(public_page.sections, page.sections, page_keys, strict=True)
+    }
 
 
 def _project_export_offer(offer: ModeloFormExportOffer | None) -> PublicModeloFormExportOffer | None:
@@ -768,16 +834,25 @@ def project_modelo_workbench_form(
     memory: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] | None = None,
     context: FormProjectionContext | None = None,
     spent: dict[str, int] | None = None,
+    sections: FormSectionSlot | None = None,
 ) -> ModeloWorkbenchFormProjectionV1:
     """Project one workbench read for its exact profile and prove nothing was lost.
 
     ``spent`` receives ``projection_pair_reused`` whenever the form could be
     kept in ``memory``: whether a projection kept for this exact form served it.
+    ``sections`` keeps each section's proven mirror, so a form read again after
+    a change mirrors and proves only the sections that changed.
     """
     _require_reviewed_exclusions()
     admission = read.admission
-    pair = _reusable_form(read, memory, context, spent)
-    public_form = pair.public if pair is not None else _project_form(read.load)
+    identities = (
+        form_identities(read.load, PublicModeloWorkFormLoadV1) if memory is not None or sections is not None else None
+    )
+    pair = (
+        _reusable_form(read, memory, context, identities, spent, sections)
+        or _mirrored_form(read.load, sections, identities, spent)[0]
+    )
+    public_form = pair.public
     if not isinstance(public_form, PublicModeloWorkFormLoadV1):
         raise TypeError("workbench form public projection failed")
     projection = ModeloWorkbenchFormProjectionV1(
@@ -813,8 +888,10 @@ def project_modelo_workbench_form(
     try:
         _require_projection_roundtrip(read, projection, pair)
     except ValueError:
-        if pair is not None and memory is not None:
+        if memory is not None:
             memory.clear()
+        if sections is not None:
+            sections.clear()
         raise
     return projection
 
@@ -823,29 +900,26 @@ def _reusable_form(
     read: ModeloWorkbenchFormReadV1,
     memory: WorkbenchMemoSlot[Hashable, FormProjectionPair | None] | None,
     context: FormProjectionContext | None,
+    identities: FormIdentities | None,
     spent: dict[str, int] | None = None,
+    sections: FormSectionSlot | None = None,
 ) -> FormProjectionPair | None:
     if memory is None or context is None or not isinstance(read.admission, ModeloEditAdmittedV1):
         return None
-    identity = form_projection_identity(read.load, PublicModeloWorkFormLoadV1)
-    if identity is None:
+    if identities is None:
         return None
     built: FormProjectionPair | None = None
 
     def build() -> FormProjectionPair | None:
         nonlocal built
-        public = _project_form(read.load)
-        canonical = _restore_form(public)
-        if canonical != read.load:
-            raise ValueError("workbench form public projection changed canonical meaning")
-        built = FormProjectionPair(public, canonical)
-        if not form_projection_is_immutable(public, PublicModeloWorkFormLoadV1) or not form_projection_is_immutable(
-            canonical, PublicModeloWorkFormLoadV1
-        ):
-            return None
-        return built
+        built, immutable = _mirrored_form(read.load, sections, identities, spent)
+        if immutable is None:
+            immutable = form_projection_is_immutable(
+                built.public, PublicModeloWorkFormLoadV1
+            ) and form_projection_is_immutable(built.canonical, PublicModeloWorkFormLoadV1)
+        return built if immutable else None
 
-    pair = memory.reuse((context, identity), build) or built
+    pair = memory.reuse((context, identities.form), build) or built
     if spent is not None:
         spent["projection_pair_reused"] = built is None and pair is not None
     return pair
