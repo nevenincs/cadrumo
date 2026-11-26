@@ -9,7 +9,7 @@ If you are starting or working on this kind of project, context, efficiency, and
 
 Read these files if the actual task is relevant to you.
 
-Use the reference indexes to select the files relevant to the actual task: the numbered references cover the Python application, the build references cover CMake, Rust, the Tauri desktop shell, the frontend and the Python build, and two cross-cutting references cover the external agent integration and the process environment contract. Do not preload the entire collection. Follow code-source links only when needed to resolve the task's ownership, implementation or verification questions. Scoped findings describe static inspection and require checking against current code before treating them as current defects.
+Use the reference indexes to select the files relevant to the actual task: the numbered references cover the Python application, the build references cover CMake, Rust, the Tauri desktop shell, the frontend and the Python build, and three cross-cutting references cover the external agent integration, the process environment contract, and the test lanes and local gate. Do not preload the entire collection. Follow code-source links only when needed to resolve the task's ownership, implementation or verification questions. Scoped findings describe static inspection and require checking against current code before treating them as current defects.
 
 All rules must be respected when working. Selective reading limits session context; it does not exempt work from applicable rules.
 
@@ -93,6 +93,8 @@ Build entry points:
 - Frontend: `just dev` republishes the registry authority when stale, then serves the frontend in a browser on fixed ports and compiles no Rust. In `native/desktop/frontend`, `npm run check` then `npm test`.
 - Python distributions and docs: `just build-distributions`, `just test-packaging-preflight`, `just docs-build`, `just docs-check`.
 - Python gates before finishing: `just check-code`, `just check-registry-gate`, `just test-gate`.
+- Tests while developing: run the focused file first (`uv run --no-sync pytest <file> -n 0`), then the narrowest lane recipe that owns it (`just test-cli`, `test-tui`, `test-calculations`, `test-registry`, `test-test-policy`, `test-repository-contracts`). Lanes are chosen by path and recipe, never by runtime; parallel and serial passes are separate verdicts.
+- Full local gate: `just gate-local <head label>` runs every lane and static check once as a graph of concurrent steps under one worker budget and writes a record under `var/gate-runs/`. It needs a quiet machine and a still tree (a source change during the run invalidates it), takes about an hour, and runs in the background. `just gate-local-sequential` is the earlier one-after-another form.
 
 Minimum tool versions are declared in [native/toolchain.json](../../../native/toolchain.json); configure refuses anything older and admits newer releases. A local build, package or export is a file on disk: it is not a published release, an installed and working product, or a submission to a tax authority.
 
@@ -105,10 +107,11 @@ Minimum tool versions are declared in [native/toolchain.json](../../../native/to
 | `pyproject.toml`, `justfile`, wheel and wheelhouse packaging, Python build actions, docs build, CI and release | [build-python-packaging-and-release](references/build-python-packaging-and-release.md) |
 | Packaging the separate agent service and cadrumo-agent; verified desktop/service admission, hosting frame, provider credentials, encrypted stores and separate MCP adapter | [agent-integration](references/agent-integration.md) |
 | Process environment: `native/application-environment.toml`, launch profiles and invocations, storage-root precedence, build and development variables | [environment-contract](references/environment-contract.md) |
+| Choosing which tests to run, how lanes and markers select tests, the local gate graph, its budget, record and reuse of clean results | [testing-lanes-and-gate](references/testing-lanes-and-gate.md) |
 
 `src/cadrumo` implements the deterministic tax/profile product; `src/cadrumo_runtime` owns generic login/custody/session authority and `src/cadrumo_client` owns neutral client contracts and transport. The sibling `src/cadrumo_agent_service` owns provider catalog consumption, credential interpretation, agent process/store lifecycle and conversation policy, supervises the separately implemented cadrumo-agent, and receives exact-profile opaque custody through verified runtime admission. Native desktop supervises this service. `src/cadrumo_mcp` owns the deterministic `cadrumo-mcp` service and its protocol; it carries no persona, rule or skill content, which belongs to cadrumo-agent. The Textual TUI is `cadrumo.entrypoints.tui` in the tax product, and `cadrumo_runtime` only launches it. Import contracts keep the service a runtime client: `cadrumo_agent_service` imports neither `cadrumo_runtime` nor `cadrumo.entrypoints`, `cadrumo_client` and `cadrumo_mcp` do not import it, and the Windows Job Object launcher they share is `cadrumo_client.transport.windows_process`. Runtime exports no DEK, contains no agent orchestration and grants no authority from declared IDs or JSON PIDs. Tax-domain model extraction remains under its existing consent policy.
 
-The build references are orientation written from static reading of the build sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
+The build and testing references are orientation written from reading the build and test sources. They mirror no numbered rule and add no rule authority; where one disagrees with the contract, a CMake refusal or a test, the repository is right. When a build file moves or changes shape, refresh the matching reference and its line anchors.
 
 ## Task-relevant references
 
