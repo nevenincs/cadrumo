@@ -224,17 +224,22 @@ class _Snapshot:
         return (tuple, tuple(self.value(child) for child in value))
 
     def _model(self, value: BaseModel) -> Hashable:
-        if (
-            bool(value.model_extra)
-            or bool(value.__pydantic_private__)
-            or set(vars(value)) != set(type(value).model_fields)
-        ):
+        cls = type(value)
+        declared = cls.model_fields
+        if bool(value.model_extra) or bool(value.__pydantic_private__) or vars(value).keys() != declared.keys():
             raise _NotReusableError
+        if cls is ModeloVerificationFinding:
+            if not self.capture:
+                for name in declared:
+                    self._field(value, name)
+                return None
+            return (cls, tuple((name, self._field(value, name)) for name in declared))
+        held = vars(value)
         if not self.capture:
-            for name in type(value).model_fields:
-                self._field(value, name)
+            for name in declared:
+                self.value(held[name])
             return None
-        return (type(value), tuple((name, self._field(value, name)) for name in type(value).model_fields))
+        return (cls, tuple((name, self.value(held[name])) for name in declared))
 
     def _record(self, value: object) -> Hashable:
         declared = dataclass_instance_fields(value)
