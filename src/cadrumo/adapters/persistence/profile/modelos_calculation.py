@@ -48,12 +48,14 @@ from __future__ import annotations
 
 import contextlib
 import json
+import logging
 from collections import OrderedDict
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import date
 from functools import cache
 from threading import Lock
+from time import perf_counter
 from types import MappingProxyType
 from typing import TYPE_CHECKING, TypedDict
 from weakref import ReferenceType, WeakKeyDictionary, ref
@@ -63,7 +65,7 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
-from ....core.diagnostic_log import diagnostic_timing_event
+from ....core.diagnostic_log import diagnostic_event, diagnostic_timing_event
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -645,6 +647,7 @@ class CalculationRevisionCatalogueRepository:
         referenced: tuple[str, ...],
     ) -> CalculationRevisionCatalogue:
         """Validate and hold ``payload``, verifying only the rendering bodies ``held`` cannot vouch for."""
+        began = perf_counter()
         reused = {} if held is None else held.reusable_rendering_bodies(inputs)
         rendering_bodies = {
             **reused,
@@ -667,6 +670,18 @@ class CalculationRevisionCatalogueRepository:
         )
         self._last_validated = validated
         _SESSION_VALIDATED_CATALOGUES.remember(self._objects.engine, validated)
+        # A write makes the next read decode what it changed; how much it decoded says why a read was slow.
+        diagnostic_event(
+            _LOGGER,
+            "calculation_catalogue_validated",
+            fields={
+                "revisions": len(catalogue),
+                "revisions_reused": len(revisions),
+                "validation_held": held is not None,
+                "validated_ms": round((perf_counter() - began) * 1000),
+            },
+            level=logging.INFO,
+        )
         return catalogue
 
     def _held_validation(self, engine: Engine) -> _ValidatedCatalogue | None:

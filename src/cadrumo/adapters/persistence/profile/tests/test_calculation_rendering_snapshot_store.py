@@ -11,6 +11,7 @@ a referenced row cannot vanish between the write's preparation and its commit.
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -24,6 +25,8 @@ from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_
 
 from .....application.export.review_form_data import capture_review_form
 from .....core.casilla_id import validated_casilla_id
+from .....core.diagnostic_log import DiagnosticFormatter
+from .....core.logging import LOG_FILE_FORMAT
 from .....core.period import Period, PeriodError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.errors import NoRevisionForPeriodError
@@ -533,8 +536,9 @@ def test_a_changed_catalogue_validates_only_the_revisions_whose_json_changed(
 
 
 def test_a_work_unit_written_between_reads_leaves_the_unchanged_revisions_validated(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
+    caplog.set_level(logging.INFO, logger=CalculationRevisionCatalogueRepository.__module__)
     with _converted_fixture(tmp_path) as (profile, operation, _digests_stored):
         reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
         warm, _revision_id = reader.load_revisioned(operation=operation)
@@ -544,12 +548,18 @@ def test_a_work_unit_written_between_reads_leaves_the_unchanged_revisions_valida
         renamed = tuple(unit.model_copy(update={"name": f"{unit.name} again"}) for unit in work_units.load())
         work_units.save(build_work_unit_catalogue(renamed))
         _rewrite_stored_catalogue(profile, lambda _stored: None)
+        caplog.clear()
         with _validated_payloads(monkeypatch) as validated:
             unchanged, _unchanged_revision_id = reader.load_revisioned(operation=operation)
 
     assert len(warm) > 1
     assert [payload["payload"]["revisions"] for payload in validated] == [{}]
     assert unchanged == warm
+    # The log file says how much of the catalogue the read after a write decoded.
+    (logged,) = [record for record in caplog.records if record.getMessage() == "calculation_catalogue_validated"]
+    fields = json.loads(DiagnosticFormatter(LOG_FILE_FORMAT).format(logged).split(" | ", 1)[1])
+    assert (fields["revisions"], fields["revisions_reused"], fields["validation_held"]) == (len(warm), len(warm), True)
+    assert isinstance(fields["validated_ms"], int)
 
 
 def test_a_changed_revision_is_validated_again_and_refused_when_invalid(tmp_path: Path) -> None:
