@@ -107,10 +107,9 @@ add_custom_target(native-installer
 if(WIN32 AND distribution_desktop)
   file(READ "${PROJECT_SOURCE_DIR}/native/package-layout.json" installer_layout)
   string(JSON bootstrap_directory GET "${installer_layout}" installation bootstrap directory)
-  # A desktop bundle must carry the provisioning artifacts its startup consumes.
+  # A staged desktop bundle has the kit its optional services installation consumes beside it.
+  # The kit is not installed into the portable archive: the archive and the installer are two deliveries.
   add_dependencies(bundle native-installer)
-  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}/"
-    DESTINATION "${bootstrap_directory}" USE_SOURCE_PERMISSIONS)
   cadrumo_register_clean(TARGET native-installer
     PATHS "${CADRUMO_PATH_STAGE}/$<CONFIG>/${bootstrap_directory}"
       "${PROJECT_BINARY_DIR}/generated/action-msi-bootstrap-kit-$<CONFIG>.json")

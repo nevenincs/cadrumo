@@ -348,12 +348,9 @@ if(BUILD_TESTING AND WIN32)
     set_tests_properties(bundle.runtime-lifecycle PROPERTIES FIXTURES_REQUIRED "desktop_package_ready;desktop_runtime_ready")
   endif()
 endif()
-if(WIN32 AND desktop_image_staged)
-  # Preserve the app/services relationship used by desktop provisioning.
-  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION app USE_SOURCE_PERMISSIONS)
-else()
-  install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION . USE_SOURCE_PERMISSIONS)
-endif()
+# The archive is the portable application alone. The services installation kit staged beside a
+# Windows desktop payload is the installer's delivery and never enters the archive.
+install(DIRECTORY "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/" DESTINATION . USE_SOURCE_PERMISSIONS)
 set(CPACK_GENERATOR ZIP)
 set(CPACK_VERBATIM_VARIABLES YES)
 set(CPACK_PACKAGE_NAME "${CADRUMO_ID_NAME}")
@@ -415,14 +412,8 @@ endif()
 if(BUILD_TESTING AND WIN32)
   add_dependencies(verify-app-distro rust_manager_lifecycle)
 endif()
-set(zip_delivery_inputs)
-if(WIN32 AND desktop_image_staged)
-  string(JSON zip_bootstrap_directory GET "${package_layout}" installation bootstrap directory)
-  list(APPEND zip_delivery_inputs "${CADRUMO_PATH_STAGE}/$<CONFIG>/${zip_bootstrap_directory}")
-endif()
 cadrumo_cached_command(zip_command zip
   INPUTS "${CADRUMO_PATH_STAGE}/$<CONFIG>/app" "${PROJECT_BINARY_DIR}/CPackConfig.cmake"
-    ${zip_delivery_inputs}
     "${PROJECT_BINARY_DIR}/CPackProject.cmake" "${PROJECT_BINARY_DIR}/Artifact.cmake"
     "${PROJECT_BINARY_DIR}/cmake_install.cmake" "${CADRUMO_PATH_GENERATED}/contract.json"
     "${PROJECT_SOURCE_DIR}/LICENSE" "${CMAKE_CPACK_COMMAND}"

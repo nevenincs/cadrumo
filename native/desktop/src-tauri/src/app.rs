@@ -178,6 +178,8 @@ pub fn run(
             .collect(),
     );
     let handler = dispatch(modules, token, diagnostics.clone())?;
+    #[cfg(windows)]
+    let startup_data_directory = shell::webview_environment::startup_data_directory(&parent);
     let startup = Arc::new(crate::startup::Startup::new(
         root,
         parent,
@@ -225,7 +227,7 @@ pub fn run(
                 loading.focused(false)
             };
             #[cfg(windows)]
-            let loading = match shell::webview_environment::startup_data_directory() {
+            let loading = match startup_data_directory {
                 Some(directory) => loading.data_directory(directory),
                 None => loading,
             };

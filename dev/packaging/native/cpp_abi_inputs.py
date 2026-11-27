@@ -14,7 +14,7 @@ from ..runtime_wheelhouse_contract import target_platform
 from .build_toolchain import builder_inputs
 from .hashing import digest
 from .linux_cxx_abi import admit_linux_cxx_proof, verify_linux_cxx_abi
-from .portable_provenance import checkout_relative
+from .portable_provenance import host_independent
 from .target import toolchain_for_target
 
 _FIELDS = {"target", "floor", "admitted_image", "proof", "proof_sha256", "provider", "provider_sha256"}
@@ -76,7 +76,7 @@ def _verified_builder_records(
             or cast(dict[str, object], record).get("sha256") != sha256
         ):
             raise ValueError(f"Linux C++ ABI input lacks its configured builder identity: {name}")
-        if cast(Mapping[str, object], shipped.get("builder_files", {})).get(name) != checkout_relative(record, root):
+        if cast(Mapping[str, object], shipped.get("builder_files", {})).get(name) != host_independent(record, root):
             raise ValueError(f"Packaged Linux C++ ABI builder input differs: {name}")
         records[name] = cast(dict[str, object], record)
     return records
@@ -100,7 +100,7 @@ def verify_linux_cpp_abi_inputs(
     pin = _floor(target, root)
     _require_floor_match(selection, target, pin)
     shipped = manifest.get("inputs", {}).get("build_toolchain", {})
-    if shipped.get("linux_cpp_abi") != checkout_relative(selection, root):
+    if shipped.get("linux_cpp_abi") != host_independent(selection, root):
         raise ValueError("Packaged Linux C++ ABI evidence differs from the configured builder")
     labels: dict[str, tuple[str, str]] = {
         "linux_cpp_abi/proof": (selection["proof"], selection["proof_sha256"]),

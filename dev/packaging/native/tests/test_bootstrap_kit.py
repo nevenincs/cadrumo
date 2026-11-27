@@ -111,3 +111,25 @@ def test_public_kit_publication_repairs_private_acl_and_allows_native_standard_r
     finally:
         win32api.CloseHandle(filtered)
         win32api.CloseHandle(token)
+
+
+def test_an_archive_carrying_the_kit_or_an_installer_is_refused(tmp_path: Path) -> None:
+    from ..artifact_verify import _require_no_installation_kit
+    from ..layout import load_layout
+
+    contract = load_layout("windows-x64")
+    package = tmp_path / "cadrumo-1.0-windows-x64-Release"
+    (package / "data").mkdir(parents=True)
+    (package / "cadrumo.exe").write_bytes(b"MZ")
+    _require_no_installation_kit(package, contract)
+
+    kit = package / contract["installation"]["bootstrap"]["directory"]
+    kit.mkdir()
+    (kit / "application.msi").write_bytes(b"installer")
+    with pytest.raises(AssertionError, match=r"separate delivery: services, services/application\.msi"):
+        _require_no_installation_kit(package, contract)
+
+    (kit / "application.msi").replace(package / "data" / "Setup.MSI")
+    kit.rmdir()
+    with pytest.raises(AssertionError, match=r"separate delivery: data/Setup\.MSI"):
+        _require_no_installation_kit(package, contract)

@@ -7,7 +7,7 @@ import json
 import os
 from collections.abc import Mapping
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from dev.paths import REPO_ROOT
 
@@ -20,8 +20,7 @@ from .build_timing import BuildTimings, measure_build
 from .cmake_build import reset
 from .cpp_abi_inputs import verify_linux_cpp_abi_inputs
 from .hashing import digest
-from .layout import ApplicationImage, backend, desktop_image, load_layout
-from .package_launch_smoke import verify_installation_kit
+from .layout import backend, load_layout
 from .release import verify_release
 from .verify import verify
 
@@ -52,16 +51,15 @@ def _check(build: Path, configuration: str, application_probe: list[str] | None,
     external.mkdir()
     target = artifacts["target"]
     contract = load_layout(target)
-    if contract["backend"] == "windows" and (package / "app").is_dir():
-        package /= "app"
+    _require_no_installation_kit(package, contract)
     environment = dict(os.environ)
     environment.update(CADRUMO_STORAGE_ROOT=str(destination / "state"), CADRUMO_EXTERNAL_BIN_DIRS=str(external))
     manifest_path = package / contract["files"]["package_manifest"]
     if digest(manifest_path) != artifacts["manifest_sha256"]:
         raise AssertionError("ZIP manifest differs from the packaged artifact locator")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    desktop = desktop_image(contract)
-    _require_package_identity(package, contract["backend"], desktop, manifest, target)
+    if manifest["build"]["target"] != target:
+        raise AssertionError("ZIP target differs from the packaged artifact locator")
     expectation = dict(artifacts["release"], manifest_sha256=artifacts["manifest_sha256"])
     verify_release(manifest, expectation)
     linux_cpp_abi = None
@@ -119,21 +117,13 @@ def _interpreter_images(
     return executables
 
 
-def _require_package_identity(
-    package: Path,
-    backend_name: str,
-    desktop: ApplicationImage | None,
-    manifest: Mapping[str, object],
-    target: str,
-) -> None:
-    if (
-        backend_name == "windows"
-        and desktop is not None
-        and desktop.package_path in cast("Mapping[str, object]", manifest["files"])
-    ):
-        verify_installation_kit(package)
-    if cast("Mapping[str, object]", manifest["build"])["target"] != target:
-        raise AssertionError("ZIP target differs from the packaged artifact locator")
+def _require_no_installation_kit(package: Path, contract: Mapping[str, Any]) -> None:
+    """Refuse an archive that carries an installer: the ZIP is the portable application alone."""
+    kit = package / contract["installation"]["bootstrap"]["directory"]
+    carried = [kit, *sorted(package.rglob("*.msi"))] if kit.exists() else sorted(package.rglob("*.msi"))
+    if carried:
+        names = ", ".join(path.relative_to(package).as_posix() for path in carried)
+        raise AssertionError(f"ZIP carries an installer, which is a separate delivery: {names}")
 
 
 def _admit_archive(archive_path: Path, expected_sha256: str, timings: BuildTimings) -> str:

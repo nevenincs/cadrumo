@@ -19,7 +19,12 @@
 //! `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` when it is exactly one
 //! `--remote-debugging-port=<port>` argument. No runtime switch relaxes the
 //! check.
+use crate::environment::Parent;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
+#[cfg(any(test, not(feature = "webview2-remote-debugging")))]
+use cadrumo_application::value::RelativePath;
+#[cfg(any(test, not(feature = "webview2-remote-debugging")))]
+use serde::Deserialize;
 use std::ffi::OsString;
 
 const ADDITIONAL_BROWSER_ARGUMENTS: &str = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
@@ -161,7 +166,7 @@ pub fn workspace_data_directory(
         Policy::of_this_build(),
         directory,
         arguments,
-        startup_data_directory(),
+        test_host_data_directory(),
     )
 }
 
@@ -188,15 +193,63 @@ fn owns_data_directory(policy: Policy, arguments: Option<&str>) -> bool {
 /// Its workspace window shares that browser, so without a directory of its
 /// own every concurrent test host would join one browser in the identifier's
 /// default directory, and the first host to exit would take every other
-/// host's pages with it. The product's startup window keeps Tauri's default.
+/// host's pages with it.
 #[cfg(feature = "webview2-remote-debugging")]
-pub fn startup_data_directory() -> Option<std::path::PathBuf> {
+fn test_host_data_directory() -> Option<std::path::PathBuf> {
     test_host_startup_directory(std::env::var_os(cadrumo_platform::ROOT_VARIABLE))
 }
 
 #[cfg(not(feature = "webview2-remote-debugging"))]
-pub fn startup_data_directory() -> Option<std::path::PathBuf> {
+fn test_host_data_directory() -> Option<std::path::PathBuf> {
     None
+}
+
+/// The data directory the startup window's browser runs in; `None` leaves it
+/// in Tauri's default directory, which is one per identifier in the user's
+/// local application data and so outside the storage root.
+///
+/// The product's startup window runs in the storage root's declared webview
+/// directory, the one its workspace window uses, so the application keeps
+/// nothing beside its storage root, wherever that root was placed. The window
+/// exists before the environment is projected, so the root is resolved here
+/// from the launching environment by the resolver the projection also uses.
+/// Only a launch whose root is refused, which the startup page then reports,
+/// has no directory of its own to name.
+#[cfg(feature = "webview2-remote-debugging")]
+pub fn startup_data_directory(_: &Parent) -> Option<std::path::PathBuf> {
+    test_host_data_directory()
+}
+
+#[cfg(not(feature = "webview2-remote-debugging"))]
+pub fn startup_data_directory(parent: &Parent) -> Option<std::path::PathBuf> {
+    let contract: Contract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).ok()?;
+    storage_webview_directory(&contract.desktop_defaults.webview, &|name| {
+        crate::startup_logging::environment_value(parent, name)
+    })
+}
+
+#[cfg(any(test, not(feature = "webview2-remote-debugging")))]
+#[derive(Deserialize)]
+struct Contract {
+    desktop_defaults: Defaults,
+}
+
+#[cfg(any(test, not(feature = "webview2-remote-debugging")))]
+#[derive(Deserialize)]
+struct Defaults {
+    webview: RelativePath,
+}
+
+/// The declared webview directory beneath the storage root `lookup` resolves.
+#[cfg(any(test, not(feature = "webview2-remote-debugging")))]
+fn storage_webview_directory(
+    webview: &RelativePath,
+    lookup: &dyn Fn(&str) -> Option<OsString>,
+) -> Option<std::path::PathBuf> {
+    use cadrumo_platform::storage::{resolve_storage_root_with, validated_absolute_path};
+    let root = resolve_storage_root_with(lookup).ok()?.root;
+    validated_absolute_path(&webview.under(&root)).ok()
 }
 
 #[cfg(any(test, feature = "webview2-remote-debugging"))]
@@ -316,6 +369,30 @@ mod tests {
         assert_eq!(test_host_startup_directory(Some(OsString::new())), None);
         assert_eq!(
             test_host_startup_directory(Some(OsString::from(r"relative\storage"))),
+            None
+        );
+    }
+
+    #[test]
+    fn the_product_startup_browser_runs_in_the_storage_roots_webview_directory() {
+        let contract: Contract =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
+        let webview = &contract.desktop_defaults.webview;
+        let root = std::fs::canonicalize(std::env::temp_dir())
+            .unwrap()
+            .join(format!("cadrumo-startup-webview-{}", std::process::id()));
+        let given = |value: OsString| {
+            move |name: &str| (name == cadrumo_platform::ROOT_VARIABLE).then(|| value.clone())
+        };
+        let directory =
+            storage_webview_directory(webview, &given(root.clone().into_os_string())).unwrap();
+        // Inside the root it was started on, never the identifier's own directory.
+        assert_eq!(directory, webview.under(&root));
+        assert!(directory.starts_with(&root));
+        assert!(!root.exists(), "naming the directory creates nothing");
+        // A refused root names no directory.
+        assert_eq!(
+            storage_webview_directory(webview, &given(OsString::from("relative-storage"))),
             None
         );
     }
