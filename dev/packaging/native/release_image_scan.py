@@ -1,9 +1,10 @@
-"""Refuse a staged release package that knows about a source checkout or a retired storage override.
+"""Refuse a staged release package that knows about a source checkout, its builder or a retired storage override.
 
 Every image resolves storage from the one storage variable, which names an absolute directory,
 or from the per-user default; no build bakes a root in. So no product-owned file of a release
 package may name a storage variable the package declaration retired, the former development
-default root or the checkout the build ran in. Third-party payloads (the Python standard library
+default root, the checkout the build ran in or the home directory of the account that built it,
+which names that account. Third-party payloads (the Python standard library
 and dependencies, the Node runtime and modules) are outside this product's control and are not
 scanned.
 """
@@ -31,6 +32,7 @@ RETIRED_STORAGE_VARIABLES = tuple(
     ]
 )
 _DEVELOPMENT_DEFAULT = ("var", "storage")
+BUILDER_HOME = "builder home directory"
 
 
 @dataclass(frozen=True)
@@ -41,16 +43,32 @@ class Finding:
     fact: str
 
 
-def development_spellings(checkout: Path) -> dict[str, tuple[str, ...]]:
-    """Every development-only fact a release image must not carry, by every spelling it can take."""
+def _path_spellings(path: Path) -> tuple[str, ...]:
+    native = str(path)
+    return tuple(dict.fromkeys((native, path.as_posix(), native.replace("\\", "\\\\"))))
+
+
+def _names_an_account(home: Path) -> bool:
+    # A home directly beneath a filesystem root, such as a service account's, names no person and
+    # is too short a string to tell from ordinary text.
+    return home.is_absolute() and len(home.parts) > 2
+
+
+def development_spellings(checkout: Path, home: Path | None = None) -> dict[str, tuple[str, ...]]:
+    """Every development-only fact a release image must not carry, by every spelling it can take.
+
+    ``home`` is the home directory of the account that built the package; without one, or with
+    one that names no account, no builder fact is looked for.
+    """
     default = _DEVELOPMENT_DEFAULT
-    native = str(checkout)
-    posix = checkout.as_posix()
-    return {
+    spellings = {
         **{f"retired storage variable {name}": (name,) for name in RETIRED_STORAGE_VARIABLES},
         "development storage default": ("/".join(default), "\\".join(default), "\\\\".join(default)),
-        "checkout path": tuple(dict.fromkeys((native, posix, native.replace("\\", "\\\\")))),
+        "checkout path": _path_spellings(checkout),
     }
+    if home is not None and _names_an_account(home):
+        spellings[BUILDER_HOME] = _path_spellings(home)
+    return spellings
 
 
 def _encodings(spelling: str) -> tuple[bytes, ...]:
@@ -80,11 +98,11 @@ def product_files(package: Path) -> Iterator[Path]:
             yield path
 
 
-def scan(package: Path, checkout: Path) -> list[Finding]:
+def scan(package: Path, checkout: Path, home: Path | None = None) -> list[Finding]:
     """Name every product-owned file of ``package`` that spells a development-only fact."""
     needles = {
         fact: tuple(encoded for spelling in spellings for encoded in _encodings(spelling))
-        for fact, spellings in development_spellings(checkout).items()
+        for fact, spellings in development_spellings(checkout, home).items()
     }
     findings: list[Finding] = []
     for path in product_files(package):
@@ -101,15 +119,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", type=Path, required=True, help="the staged release package root")
     parser.add_argument("--checkout", type=Path, required=True, help="the checkout the package was built from")
+    parser.add_argument(
+        "--home", type=Path, default=Path.home(), help="the home directory of the account that built the package"
+    )
     args = parser.parse_args(argv)
     package = args.package.resolve(strict=True)
-    findings = scan(package, args.checkout.resolve(strict=True))
+    findings = scan(package, args.checkout.resolve(strict=True), args.home)
     for finding in findings:
         print(f"{finding.path.as_posix()}: {finding.fact}")
     if findings:
         print(f"{len(findings)} development-only facts in the release package {package}", file=sys.stderr)
         return 1
-    print(f"The release package {package} names no development storage rule or checkout")
+    print(f"The release package {package} names no development storage rule, checkout or builder")
     return 0
 
 

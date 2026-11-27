@@ -9,7 +9,14 @@ import pytest
 from dev.paths import REPO_ROOT
 
 from ..application_environment import load
-from ..release_image_scan import RETIRED_STORAGE_VARIABLES, Finding, main, scan
+from ..release_image_scan import (
+    BUILDER_HOME,
+    RETIRED_STORAGE_VARIABLES,
+    Finding,
+    development_spellings,
+    main,
+    scan,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -63,6 +70,39 @@ def test_every_development_fact_in_a_product_file_is_found(tmp_path: Path) -> No
         Finding(PurePath("docs/overrides.html"), "retired storage variable CADRUMO_LOG_DIR"),
     ]
     assert main(["--package", str(package), "--checkout", str(tmp_path)]) == 1
+
+
+def test_the_builders_home_directory_is_found_in_an_image_and_a_manifest(tmp_path: Path) -> None:
+    home = tmp_path / "Users" / "Builder Name"
+    package = _clean_package(tmp_path)
+    registry = home / ".cargo" / "registry" / "src" / "tokio" / "lib.rs"
+    _write(package / "cadrumo.exe", b"MZ" + str(registry).encode())
+    _write(package / "cadrumo-manager.exe", b"MZ" + str(registry).lower().encode("utf-16-le"))
+    _write(package / "data" / "package-manifest.json", f'{{"uv": "{home.as_posix()}/uv.exe"}}'.encode())
+    # A third-party payload is not the product's to change.
+    _write(package / "cadrumo" / "site-packages" / "attrs" / "RECORD", str(home).encode())
+
+    assert scan(package, tmp_path / "checkout") == []
+    findings = scan(package, tmp_path / "checkout", home)
+
+    assert sorted(findings, key=lambda finding: finding.path.as_posix()) == [
+        Finding(PurePath("cadrumo-manager.exe"), BUILDER_HOME),
+        Finding(PurePath("cadrumo.exe"), BUILDER_HOME),
+        Finding(PurePath("data/package-manifest.json"), BUILDER_HOME),
+    ]
+    (tmp_path / "checkout").mkdir()
+    arguments = ["--package", str(package), "--checkout", str(tmp_path / "checkout")]
+    assert main([*arguments, "--home", str(home)]) == 1
+    assert main([*arguments, "--home", str(tmp_path / "Users" / "Another")]) == 0
+
+
+def test_a_home_directly_beneath_a_filesystem_root_is_not_looked_for(tmp_path: Path) -> None:
+    home = Path(tmp_path.anchor) / "root"
+    package = _clean_package(tmp_path)
+    _write(package / "cadrumo.exe", b"MZ" + home.as_posix().encode())
+
+    assert BUILDER_HOME not in development_spellings(tmp_path / "checkout", home)
+    assert scan(package, tmp_path / "checkout", home) == []
 
 
 @pytest.mark.parametrize("name", RETIRED_STORAGE_VARIABLES)

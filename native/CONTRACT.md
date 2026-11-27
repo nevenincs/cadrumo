@@ -1141,7 +1141,7 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `app-payload` | Internal payload assembly at `stage/<Config>/app`, including application images, runtime and documentation; a Windows desktop payload alone is not a complete delivery |
 | `native-process-quiesce` | Before replacing this build's product images, request shutdown only for verified product processes whose executable images resolve inside this build's `stage`, `cargo` or `bin` trees, including their children; wait 10 seconds, then terminate survivors and refuse replacement if any remain alive |
 | `verify-app-distro` | Build the complete bundle, run its smoke tests and inspect the package inventory, without ZIP or release verification |
-| `zip` | Build the complete bundle, then create its install-based ZIP; Windows desktop archives retain sibling `app` and `services` directories |
+| `zip` | Build the complete bundle, then create its install-based ZIP of the application alone; the services kit staged beside a Windows desktop payload is not archived |
 | `release` / `verify-release` | Build the ZIP and run native, extracted-artifact and live documentation verification |
 | `setup-native-builder` | Validate the existing development interpreter without installing tools |
 | `registry_authority` | Validate the existing publication and its source currency; refuse a missing or stale one without publishing |
@@ -2461,8 +2461,11 @@ For Windows desktop delivery, `msi-bootstrap-kit` publishes sibling
 `stage/<Config>/services/kit.json` with schema `2`, the authenticated maintenance
 runner and one `application.msi`. The kit's `artifacts` map has one `application`
 entry, binding that file's path, hash and product code. It does not contain
-separate scope or ownership-role MSI files. The root `bundle` and ZIP include
-this matching services kit.
+separate scope or ownership-role MSI files. The root `bundle` stages this
+matching services kit beside the application. The ZIP is the portable
+application alone: it holds the application at its root and never carries the
+kit or an MSI, and an application started from it reports the optional services
+installation as unavailable.
 
 The distribution graph also exposes `install-msi`, `remove-msi-version` and
 `unregister-msi`. They invoke the native maintenance runner after `msi-verify`
