@@ -70,8 +70,8 @@ Desktop targets can also be built directly once configured: `cmake --build --pre
 | Recipe | Does |
 |---|---|
 | `just test-native-bundle` | Builds the bundle and runs CTest, excluding tests that need external tools |
-| `just build-native-package` | Builds the bundle and the ZIP, no verification |
-| `just test-native-package` | Builds the ZIP, extracts it to a path with spaces and non-ASCII characters and probes it |
+| `just build-native-package` | Builds the bundle and the ZIP, no verification. The ZIP is the application alone at the archive's top folder; it carries no installer |
+| `just test-native-package` | Builds the ZIP, extracts it to a path with spaces and non-ASCII characters, refuses a carried services kit or `.msi`, and probes it |
 | `just test-native-release` | One graph: ZIP, CTest, extracted-artefact verification and documentation verification |
 
 ## Constraints on where things run
@@ -84,5 +84,8 @@ Desktop targets can also be built directly once configured: `cmake --build --pre
 ## Working notes
 
 - Build in the background and read the log when it ends; a quiet build is usually the documentation step, not a hang.
+- On a Windows desktop build, `bundle` also builds the services kit into `build/<preset>/stage/<Configuration>/services`, beside the application. The ZIP does not contain it.
+- Only a Release package is scanned for build-machine traces (checkout path, builder's home, retired storage names); do not hand out a Debug package.
+- Each component and the package carry their own content-keyed build stamp, so an unchanged component keeps an older stamp than the package; the package stamp in `data/build.json` identifies the build. Configuring with `CADRUMO_BUILD_ID`, `CADRUMO_BUILD_NUMBER` and `CADRUMO_BUILD_DATE` freezes one stamp for every component and the package, which is the form for a published release.
 - State what a build carries: which head, which configuration, documentation on or off. A local build, package or export is a file on disk, not a release and not an installed, working product.
 - Prove backend behaviour with tests before building. A build is for what only the assembled application can show.
